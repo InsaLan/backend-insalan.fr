@@ -12,6 +12,7 @@ framework used: https://www.django-rest-framework.org
 
 # Architecture
 The architecture of the project is the following:
+```
 ├── LICENSE
 ├── README.md
 ├── db.sqlite3
@@ -39,7 +40,7 @@ The architecture of the project is the following:
 │   │   └── views.py
 │   └── wsgi.py
 └── manage.py
-
+```
 `insalan` is the root directory of the web application.
 `pizza`, `user` are apps in the Django language. There are the micro-services that implement specific features of the application.
 
