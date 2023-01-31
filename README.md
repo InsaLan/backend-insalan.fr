@@ -24,17 +24,18 @@ for example, for the pizza module: `/api/version/pizza/`
 
 ### Modules
 - [ ] authentication
-- [ ] [user](user) @lugrim
+- [ ] [user](user) [@Lugrim](https://www.github.com/Lugrim)
 	- [ ] placement
-	- [ ] langate @lux
+	- [ ] langate [@Lux](https://www.github.com/Lymkwi)
 	- [ ] tournament
-- [ ] admin @mahal
+- [ ] admin [@Mahal](https://www.github.com/ShiroUsagi-san)
 - [ ] payment
 - [ ] archive
 - [ ] connectors
-- [ ] [pizza](pizza) @khagana
+- [ ] [pizza](pizza) [@Khagana](https://www.github.com/ThibaultDidier)
 - [ ] partos
+
 ## Frontend
-@mahal
+[@Mahal](https://www.github.com/ShiroUsagi-san)
 framework used: vuejs
 
