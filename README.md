@@ -23,6 +23,7 @@ for example, for the pizza module: `/api/version/pizza/`
 ## Backend
 
 ### Modules
+- [ ] authentication
 - [ ] [user](user) @lugrim
 	- [ ] placement
 	- [ ] langate @lux
