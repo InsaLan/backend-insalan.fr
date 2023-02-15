@@ -1,14 +1,23 @@
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group, Permission
+from insalan.user.models import User
 from rest_framework import serializers
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
-        fields = ['url', 'username', 'email', 'groups']
+        exclude = ()
+        # fields = ['url', 'username', 'email', 'groups']
+
+
+class PermissionSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Permission
+        exclude = ('content_type',)
 
 
 class GroupSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Group
-        fields = ['url', 'name']
+        exclude = ()
+        # fields = ['url', 'name']
