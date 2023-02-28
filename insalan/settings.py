@@ -1,3 +1,4 @@
+# flake8: noqa E501
 """
 Django settings for insalan project.
 
@@ -10,20 +11,20 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+from os import getenv
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-&s(%0f90_a(wa!hk5w9pzri%+6%46)pjn4tq5xycvk9t7dwe_d'
+SECRET_KEY = getenv('DJANGO_SECRET', 'django-insecure-&s(%0f90_a(wa!hk5w9pzri%+6%46)pjn4tq5xycvk9t7dwe_d')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = int(getenv("DEV", 0)) == 1
 
 ALLOWED_HOSTS = [
     '127.0.0.1',
@@ -79,9 +80,13 @@ WSGI_APPLICATION = 'insalan.wsgi.application'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    'default' : {
+        'ENGINE': 'django.db.backends.postgresql',
+        'USER': getenv('DB_USER', 'user'),
+        'NAME': getenv('DB_NAME', 'mydb'),
+        'PASSWORD': getenv('DB_PASSWORD', 'password'),
+        'HOST': getenv('DB_HOST', 'localhost'),
+        'PORT': getenv('DB_PORT', '5432')
     }
 }
 
