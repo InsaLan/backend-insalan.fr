@@ -5,7 +5,7 @@ from .models import Partner
 
 class PartnerAdmin(admin.ModelAdmin):
 
-    list_display = ('name', 'url', 'logo', 'partner_type')
+    list_display = ('id', 'name', 'url', 'logo', 'partner_type')
     search_fields = ['name']
 
 

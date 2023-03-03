@@ -5,7 +5,7 @@ from .serializers import PartnerSerializer
 
 
 class PartnerList(generics.ListCreateAPIView):
-    queryset = Partner.objects.all()
+    queryset = Partner.objects.all().order_by('id')
     serializer_class = PartnerSerializer
 
 

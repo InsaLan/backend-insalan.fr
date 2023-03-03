@@ -13,6 +13,7 @@ class Partner(models.Model):
         PARTNER = 'PA', _('Partenaire')
         SPONSOR = 'SP', _('Sponsor')
 
+    id: int
     name: models.CharField = models.CharField(max_length=200,
                                               verbose_name="Nom")
     url: models.URLField = models.URLField()
