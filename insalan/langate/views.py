@@ -1,19 +1,18 @@
 from django.shortcuts import render
 
 from rest_framework import status
-from rest_framework.parsers import JSONParser
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 
 from insalan.user.models import User
 
-from .models import LangateReply, ReplySerializer
+from .models import LangateReply
+from .serializers import ReplySerializer
 
 class LangateUserView(CreateAPIView):
     """
     API endpoint used by the langate to authenticate and verify a user's data
     """
-    parser_classes = [JSONParser]
     def post(self, request, format=None):
         """
         Function to handle retrieving and checking user data

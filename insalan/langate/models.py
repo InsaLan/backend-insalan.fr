@@ -1,5 +1,4 @@
 from django.db import models
-from rest_framework import serializers
 
 from insalan.user.models import User
 
@@ -30,14 +29,6 @@ class SimplifiedUserData:
 
         return s_user_data
 
-class SimplifiedUserDataSerializer(serializers.Serializer):
-    """
-    Serializer class for SimplifiedUserData
-    """
-    username = serializers.CharField(max_length=100)
-    name = serializers.CharField(max_length=100)
-    email = serializers.EmailField(max_length=255)
-
 # TODO: Update these once they are fixed in the tournament API
 class TournamentRegistration:
     """
@@ -48,16 +39,6 @@ class TournamentRegistration:
     team = models.CharField(max_length=25, blank=False)
     manager = models.BooleanField()
     has_paid = models.BooleanField()
-
-class TournamentRegistrationSerializer(serializers.Serializer):
-    """
-    Serializer for a TournamentRegistration
-    """
-    shortname = serializers.CharField(max_length=50)
-    game_name = serializers.CharField(max_length=25)
-    team = serializers.CharField(max_length=25)
-    manager = serializers.BooleanField()
-    has_paid = serializers.BooleanField()
 
 class LangateReply:
     """
@@ -105,10 +86,3 @@ class LangateReply:
 
         return reply
 
-class ReplySerializer(serializers.Serializer):
-    """
-    Serialize for LangateReplies
-    """
-    user = SimplifiedUserDataSerializer()
-    err = serializers.CharField(max_length=25)
-    tournaments = TournamentRegistrationSerializer(many=True)
