@@ -1,7 +1,9 @@
 from django.shortcuts import render
 
 from rest_framework import status
+from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.generics import CreateAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from insalan.user.models import User
@@ -10,6 +12,8 @@ from .models import LangateReply
 from .serializers import ReplySerializer
 
 class LangateUserView(CreateAPIView):
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
     """
     API endpoint used by the langate to authenticate and verify a user's data
     """
