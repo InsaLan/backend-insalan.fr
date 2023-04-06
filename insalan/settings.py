@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from os import getenv, path
 from pathlib import Path
+from sys import argv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -82,7 +83,7 @@ WSGI_APPLICATION = 'insalan.wsgi.application'
 DATABASES = {
     'default' : {
         'ENGINE': 'django.db.backends.postgresql',
-        'USER': getenv('DB_USER', 'user'),
+        'USER': getenv('DB_USER', 'user') + ('_test' if 'test' in argv else ''),
         'NAME': getenv('DB_NAME', 'mydb'),
         'PASSWORD': getenv('DB_PASS', 'password'),
         'HOST': getenv('DB_HOST', 'localhost'),
