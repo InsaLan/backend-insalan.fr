@@ -27,8 +27,7 @@ SECRET_KEY = getenv('DJANGO_SECRET', 'django-insecure-&s(%0f90_a(wa!hk5w9pzri%+6
 DEBUG = int(getenv("DEV", 0)) == 1
 
 ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost'
+    'api.' + getenv('WEBSITE_HOST', 'localhost')
 ]
 
 
@@ -116,7 +115,7 @@ AUTH_USER_MODEL = 'user.User'
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Paris'
 
 USE_I18N = True
 
