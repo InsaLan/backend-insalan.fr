@@ -19,7 +19,6 @@ from rest_framework import routers
 
 from insalan.user import views as user_views
 from insalan.langate import views as langate_views
-from insalan.misc import views as misc_views
 
 router = routers.DefaultRouter()
 router.register(r'users', user_views.UserViewSet)
@@ -34,5 +33,4 @@ urlpatterns = [
     path('api-auth/',
          include('rest_framework.urls', namespace='rest_framework')),
     path('langate/authenticate', langate_views.LangateUserView.as_view()),
-    path('coffee', misc_views.CoffeeView.as_view()),
 ]
