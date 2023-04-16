@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class PartnerConfig(AppConfig):
+class LangateConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'insalan.partner'
+    name = 'langate'
