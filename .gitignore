@@ -4,6 +4,9 @@
 # Pycache
 __pycache__/
 
+# Migration files
+insalan/*/migrations/[0-9]*.py
+
 # Virtual env stuff
 bin
 include

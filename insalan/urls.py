@@ -32,5 +32,5 @@ urlpatterns = [
     path('user/register/', user_views.UserRegister.as_view()),
     path('api-auth/',
          include('rest_framework.urls', namespace='rest_framework')),
-    path('langate/authenticate', langate_views.LangateUserView.as_view())
+    path('langate/authenticate', langate_views.LangateUserView.as_view()),
 ]
