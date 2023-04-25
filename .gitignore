@@ -4,6 +4,9 @@
 # Pycache
 __pycache__/
 
+# Migration files
+insalan/*/migrations/[0-9]*.py
+
 # Virtual env stuff
 bin
 include
@@ -14,4 +17,3 @@ pyvenv.cfg
 env
 
 insalan/static/partners
-insalan/partner/migrations/0001_initial.py
