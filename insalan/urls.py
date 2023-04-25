@@ -30,7 +30,7 @@ router.register(r'groups', user_views.GroupViewSet)
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
     path('', include(router.urls)),
-    path('api/partners/', include('insalan.partner.urls')),
+    path('partners/', include('insalan.partner.urls')),
     path('user/register/', user_views.UserRegister.as_view()),
     path('api-auth/',
          include('rest_framework.urls', namespace='rest_framework')),
