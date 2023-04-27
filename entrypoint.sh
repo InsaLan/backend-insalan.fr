@@ -9,4 +9,4 @@ python manage.py migrate --run-syncdb
 echo "=== DEPLOYING STATIC FILES ==="
 python manage.py collectstatic --noinput
 echo "=== STARTING SERVER... ==="
-python -m gunicorn --bind 0.0.0.0:8000 insalan.asgi:application -k uvicorn.workers.UvicornWorker
+exec python -m gunicorn --bind 0.0.0.0:8000 insalan.asgi:application -k uvicorn.workers.UvicornWorker
