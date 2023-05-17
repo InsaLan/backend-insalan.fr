@@ -42,8 +42,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'insalan.user',
     'corsheaders',
+    'insalan.user',
+    'insalan.partner',
 ]
 
 MIDDLEWARE = [
@@ -116,7 +117,7 @@ AUTH_USER_MODEL = 'user.User'
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'fr-FR'
 
 TIME_ZONE = 'Europe/Paris'
 
@@ -129,6 +130,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / STATIC_URL
+]
 STATIC_ROOT = getenv('STATIC_ROOT', path.join(BASE_DIR, 'static/'))
 
 # Default primary key field type
@@ -136,10 +140,10 @@ STATIC_ROOT = getenv('STATIC_ROOT', path.join(BASE_DIR, 'static/'))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Enable pagination
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 10,
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
 }
 #FIXME: not in production 
 CORS_ALLOW_CREDENTIALS = True
