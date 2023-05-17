@@ -128,7 +128,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = 'v1/static/'
 STATIC_ROOT = getenv('STATIC_ROOT', path.join(BASE_DIR, 'static/'))
 
 # Default primary key field type
@@ -141,6 +141,12 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10
 }
+
+# Login and logout
+LOGIN_URL = 'rest_framework:login',
+LOGIN_REDIRECT_URL = '/v1/' #FIXME: Change once we have a good admin page
+LOGOUT_URL = 'rest_framework:logout'
+
 #FIXME: not in production 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
