@@ -14,6 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import include, path
+from django.contrib import admin
 
 from rest_framework import routers
 
@@ -30,7 +31,12 @@ router.register(r'groups', user_views.GroupViewSet)
 urlpatterns = [
     path('v1/', include(router.urls)),
     path('v1/user/register/', user_views.UserRegister.as_view()),
+    path('v1/langate/authenticate', langate_views.LangateUserView.as_view()),
+
     path('v1/api-auth/',
          include('rest_framework.urls', namespace='rest_framework')),
-    path('v1/langate/authenticate', langate_views.LangateUserView.as_view()),
+    path('v1/admin/', admin.site.urls),
 ]
+
+# Set admin site url correctly for the admin panel
+admin.site.site_url = '/v1/'
