@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from os import getenv, path
 from pathlib import Path
+from sys import argv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,8 +28,7 @@ SECRET_KEY = getenv('DJANGO_SECRET', 'django-insecure-&s(%0f90_a(wa!hk5w9pzri%+6
 DEBUG = int(getenv("DEV", 0)) == 1
 
 ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost'
+    'api.' + getenv('WEBSITE_HOST', 'localhost')
 ]
 
 
@@ -42,8 +42,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'corsheaders',
     'insalan.user',
     'corsheader',
+    'insalan.partner',
 ]
 
 MIDDLEWARE = [
@@ -84,7 +86,7 @@ WSGI_APPLICATION = 'insalan.wsgi.application'
 DATABASES = {
     'default' : {
         'ENGINE': 'django.db.backends.postgresql',
-        'USER': getenv('DB_USER', 'user'),
+        'USER': getenv('DB_USER', 'user') + ('_test' if 'test' in argv else ''),
         'NAME': getenv('DB_NAME', 'mydb'),
         'PASSWORD': getenv('DB_PASS', 'password'),
         'HOST': getenv('DB_HOST', 'localhost'),
@@ -116,9 +118,9 @@ AUTH_USER_MODEL = 'user.User'
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'fr-FR'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Paris'
 
 USE_I18N = True
 
@@ -129,6 +131,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / STATIC_URL
+]
 STATIC_ROOT = getenv('STATIC_ROOT', path.join(BASE_DIR, 'static/'))
 
 # Default primary key field type
@@ -136,11 +141,17 @@ STATIC_ROOT = getenv('STATIC_ROOT', path.join(BASE_DIR, 'static/'))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Enable pagination
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 10,
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
 }
 #FIXME: not in production 
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_METHODS = ['DELETE','GET','OPTIONS','PATCH','POST','PUT']
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+        "http://localhost:5173"
+        ]
+
+ALLOWED_HOST = [
+        "http://localhost:5173"
+        ]
