@@ -33,7 +33,7 @@ for example, for the pizza module: `/api/version/pizza/`
 - [ ] archive
 - [ ] connectors
 - [ ] [pizza](pizza) [@Khagana](https://www.github.com/ThibaultDidier)
-- [ ] partos
+- [ ] partos [@somebody](https://github.com/floflo0/)
 
 ## Frontend
 [@Mahal](https://www.github.com/ShiroUsagi-san)
