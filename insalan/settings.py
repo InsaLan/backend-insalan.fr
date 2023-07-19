@@ -129,7 +129,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = 'v1/static/'
 STATICFILES_DIRS = [
     BASE_DIR / STATIC_URL
 ]
@@ -145,6 +145,12 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
 }
+
+# Login and logout
+LOGIN_URL = 'rest_framework:login',
+LOGIN_REDIRECT_URL = '/v1/' #FIXME: Change once we have a good admin page
+LOGOUT_URL = 'rest_framework:logout'
+
 #FIXME: not in production 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [

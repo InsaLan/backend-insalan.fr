@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from django.contrib import admin
 
 from rest_framework import routers
 
@@ -29,11 +30,16 @@ router.register(r'groups', user_views.GroupViewSet)
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
-    path('', include(router.urls)),
-    path('partners/', include('insalan.partner.urls')),
-    path('user/register/', user_views.UserRegister.as_view()),
-    path('api-auth/',
+    path('v1/', include(router.urls)),
+    path('v1/partners/', include('insalan.partner.urls')),
+    path('v1/user/register/', user_views.UserRegister.as_view()),
+    path('v1/langate/authenticate', langate_views.LangateUserView.as_view()),
+
+    path('v1/api-auth/',
          include('rest_framework.urls', namespace='rest_framework')),
-    path('langate/authenticate', langate_views.LangateUserView.as_view()),
-    path('admin/', admin.site.urls),
+    path('v1/admin/', admin.site.urls),
+
 ]
+
+# Set admin site url correctly for the admin panel
+admin.site.site_url = '/v1/'
