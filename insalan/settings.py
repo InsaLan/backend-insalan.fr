@@ -27,8 +27,12 @@ SECRET_KEY = getenv('DJANGO_SECRET', 'django-insecure-&s(%0f90_a(wa!hk5w9pzri%+6
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = int(getenv("DEV", 0)) == 1
 
+# Allow itself and the frontend
 ALLOWED_HOSTS = [
-    'api.' + getenv('WEBSITE_HOST', 'localhost')
+    'api.' + getenv('WEBSITE_HOST', 'localhost'),
+
+    getenv('WEBSITE_HOST', 'localhost'),
+    'dev.' + getenv('WEBSITE_HOST', 'localhost'),
 ]
 
 
@@ -154,9 +158,6 @@ LOGOUT_URL = 'rest_framework:logout'
 #FIXME: not in production 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-        "http://localhost:5173"
-        ]
-
-ALLOWED_HOST = [
-        "http://localhost:5173"
+        'http://'+getenv('WEBSITE_HOST', 'localhost'),
+        'http://dev.'+getenv('WEBSITE_HOST', 'localhost'),
         ]
