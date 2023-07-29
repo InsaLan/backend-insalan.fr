@@ -22,25 +22,25 @@ from insalan.user import views as user_views
 from insalan.langate import views as langate_views
 
 router = routers.DefaultRouter()
-router.register(r'users', user_views.UserViewSet)
-router.register(r'permissions', user_views.PermissionViewSet)
-router.register(r'groups', user_views.GroupViewSet)
+router.register(r"users", user_views.UserViewSet)
+router.register(r"permissions", user_views.PermissionViewSet)
+router.register(r"groups", user_views.GroupViewSet)
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
 urlpatterns = [
-    path('v1/', include(router.urls)),
-    path('v1/partners/', include('insalan.partner.urls')),
+    path("v1/", include(router.urls)),
+    path("v1/partners/", include("insalan.partner.urls")),
     path('v1/tournament/', include('insalan.tournament.urls')),
     path('v1/tickets/', include('insalan.tickets.urls')),
-    path('v1/user/register/', user_views.UserRegister.as_view()),
-    path('v1/langate/authenticate', langate_views.LangateUserView.as_view()),
-
-    path('v1/api-auth/',
-         include('rest_framework.urls', namespace='rest_framework')),
-    path('v1/admin/', admin.site.urls),
-
+    path("v1/register-user/", user_views.UserRegister.as_view()),
+    path("v1/login-user/", user_views.UserLogin.as_view()),
+    path("v1/logout-user/", user_views.UserLogout.as_view()),
+    path("v1/user/me/", user_views.UserView.as_view()),
+    path("v1/langate/authenticate", langate_views.LangateUserView.as_view()),
+    path("v1/api-auth/", include("rest_framework.urls", namespace="rest_framework")),
+    path("v1/admin/", admin.site.urls),
 ]
 
 # Set admin site url correctly for the admin panel
-admin.site.site_url = '/v1/'
+admin.site.site_url = "/v1/"
