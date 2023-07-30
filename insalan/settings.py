@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'insalan.user',
     'insalan.partner',
     'insalan.tournament',
+    'insalan.tickets',
 ]
 
 MIDDLEWARE = [
@@ -156,7 +157,7 @@ LOGIN_URL = 'rest_framework:login',
 LOGIN_REDIRECT_URL = '/v1/' #FIXME: Change once we have a good admin page
 LOGOUT_URL = 'rest_framework:logout'
 
-#FIXME: not in production 
+#FIXME: not in production
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
         'http://'+getenv('WEBSITE_HOST', 'localhost'),
