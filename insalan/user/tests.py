@@ -74,7 +74,7 @@ class UserEndToEndTestCase(TestCase):
 
     def test_register_invalid_data(self):
         def send_invalid_data(data):
-            request = self.client.post('/user/register/',
+            request = self.client.post('/v1/user/register/',
                                        data,
                                        format='json')
             self.assertEquals(request.status_code, 400)
@@ -88,7 +88,7 @@ class UserEndToEndTestCase(TestCase):
 
     def test_register_valid_account(self):
         def send_valid_data(data, check_fields=[]):
-            request = self.client.post('/user/register/',
+            request = self.client.post('/v1/user/register/',
                                        data,
                                        format='json')
 
