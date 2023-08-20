@@ -79,7 +79,7 @@ class EndpointTests(TestCase):
         """
         Tests that the API endpoint refuses to give information without auth
         """
-        request = self.client.post('/langate/authenticate', format='json')
+        request = self.client.post('/v1/langate/authenticate', format='json')
         self.assertEquals(request.status_code, 403)
 
     def test_authenticated_user(self):
@@ -92,7 +92,7 @@ class EndpointTests(TestCase):
         user.save()
 
         self.client.login(username="limefox", password="bad_pass")
-        reply = self.client.post('/langate/authenticate')
+        reply = self.client.post('/v1/langate/authenticate')
         self.assertEquals(reply.status_code, 200)
 
         ser = reply.data
