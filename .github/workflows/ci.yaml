@@ -1,0 +1,41 @@
+on:
+  pull_request:
+    type: [opened]
+  push:
+jobs:
+  unit-tests:
+    runs-on: ubuntu-22.04
+    env:
+      DB_NAME: insalan
+      DB_USER: insalan
+      DB_PASS: insalan
+      DB_HOST: "127.0.0.1"
+      DB_PORT: 5432
+    services:
+      postgresql:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: ${{ env.DB_PASS }}
+          POSTGRES_USER: ${{ env.DB_USER }}
+          POSTGRES_DB: ${{ env.DB_NAME }}
+        ports:
+          - "5432:5432"
+        options: --health-cmd pg_isready --health-interval 1s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v3
+
+      # Set the environment up
+      - run: python3 -m venv env
+      - run: source env/bin/activate
+
+      # Install dependencies
+      - run: pip3 install -r requirements.txt
+
+      # Initialize the database
+      - run: psql postgresql://${{ env.DB_USER }}:${{ env.DB_PASS }}@${{ env.DB_HOST }}:${{ env.DB_PORT }}/${{ env.DB_NAME }} -f .github/workflows/init_db.sql
+
+      # Prepare database
+      - run: python3 manage.py makemigrations
+      - run: python3 manage.py migrate
+
+      - run: python3 manage.py test
