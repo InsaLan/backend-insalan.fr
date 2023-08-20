@@ -12,7 +12,6 @@ from insalan.user.serializers import UserSerializer, \
     GroupSerializer, \
     PermissionSerializer
 
-
 # TODO: change permission
 class UserViewSet(viewsets.ModelViewSet):
     """
