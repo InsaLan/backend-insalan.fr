@@ -18,6 +18,38 @@ class GameTestCase(TestCase):
         """Create a simple game"""
         Game.objects.create(name="CS:GO")
 
+    def test_game_name_too_short(self):
+        """Verify that a game's name cannot be too short"""
+        gobj = Game(name="C", short_name="CSGO")
+        self.assertRaises(ValidationError, gobj.full_clean)
+
+        gobj.name = "CS"
+        gobj.full_clean()
+
+    def test_game_name_too_long(self):
+        """Verify that a game's name cannot be too long"""
+        gobj = Game(name="C" * 41, short_name="CSGO")
+        self.assertRaises(ValidationError, gobj.full_clean)
+
+        gobj.name = "C" * 40
+        gobj.full_clean()
+
+    def test_game_short_name_too_short(self):
+        """Verify that a game's short name cannot be too short"""
+        gobj = Game(name="CSGO", short_name="C")
+        self.assertRaises(ValidationError, gobj.full_clean)
+
+        gobj.short_name = "CS"
+        gobj.full_clean()
+
+    def test_game_short_name_too_long(self):
+        """Verify that a game's name cannot be too long"""
+        gobj = Game(name="CSGO", short_name="C" * 11)
+        self.assertRaises(ValidationError, gobj.full_clean)
+
+        gobj.short_name = "C" * 10
+        gobj.full_clean()
+
 
 class EventTestCase(TransactionTestCase):
     """Tests for the Event class"""
@@ -25,6 +57,54 @@ class EventTestCase(TransactionTestCase):
     def test_simple_event(self):
         """Test that we can create a simple event"""
         Event.objects.create(name="Insalan Test", year=2023, month=2, description="")
+
+    def test_name_minimum_length(self):
+        """Test that an Event cannot have too short a name"""
+        eobj = Event(name="Ins", year=2023, month=2)
+        self.assertRaises(ValidationError, eobj.full_clean)
+
+    def test_earlierst_event_year(self):
+        """Check that we can't have too early an event"""
+        eobj = Event(name="InsaLan", year=2002, month=2)
+        self.assertRaises(ValidationError, eobj.full_clean)
+
+    def test_low_event_month(self):
+        """Check that we cannot use too low an event month"""
+        eobj = Event(name="InsaLan", year=2023, month=0)
+        self.assertRaises(ValidationError, eobj.full_clean)
+
+        eobj.month = -1
+        self.assertRaises(ValidationError, eobj.full_clean)
+
+        eobj.month = -1000
+        self.assertRaises(ValidationError, eobj.full_clean)
+
+        eobj.month = 1
+        eobj.full_clean()
+
+    def test_high_event_month(self):
+        """Check that we cannot use too high an event month"""
+        eobj = Event(name="InsaLan", year=2023, month=13)
+        self.assertRaises(ValidationError, eobj.full_clean)
+
+        eobj.month = 839
+        self.assertRaises(ValidationError, eobj.full_clean)
+
+        eobj.month = 12
+        eobj.full_clean()
+
+    def test_ongoing_events(self):
+        """Test that we can find events that are ongoing"""
+        Event.objects.create(name="InsaLan", year=2023, month=8)
+        evobj_one = Event.objects.create(name="InsaLan", year=2023, month=9, ongoing=True)
+        Event.objects.create(name="InsaLan", year=2023, month=10)
+        evobj_two = Event.objects.create(name="InsaLan", year=2023, month=11, ongoing=True)
+
+        query_ongoing = Event.objects.filter(ongoing=True)
+        self.assertEqual(2, len(query_ongoing))
+
+        self.assertTrue(evobj_one in query_ongoing)
+        self.assertTrue(evobj_two in query_ongoing)
 
     def test_non_null_fields(self):
         """Test that all non-nullable fields should raise errors"""
@@ -138,6 +218,24 @@ class TournamentTestCase(TestCase):
         self.assertTrue(team_one in teams)
         self.assertTrue(team_two in teams)
         self.assertFalse(team_three in teams)
+
+    def test_name_too_short(self):
+        """Verify that a tournament name cannot be too short"""
+        tourneyobj = Tournament.objects.all()[0]
+        tourneyobj.name = "C" * 2
+        self.assertRaises(ValidationError, tourneyobj.full_clean)
+
+        tourneyobj.name = "C" * 3
+        tourneyobj.full_clean()
+
+    def test_name_too_long(self):
+        """Verify that a tournament name cannot be too long"""
+        tourney = Tournament.objects.all()[0]
+        tourney.name = "C" * 41
+        self.assertRaises(ValidationError, tourney.full_clean)
+
+        tourney.name = "C" * 40
+        tourney.full_clean()
 
 class TeamTestCase(TestCase):
     """
@@ -257,3 +355,21 @@ class TeamTestCase(TestCase):
 
         # Attempt to register another one
         self.assertRaises(IntegrityError, Team.objects.create, name="LaLooze", tournament=tourney)
+
+    def test_team_name_too_short(self):
+        """Verify that a team name cannot be too short"""
+        team = Team.objects.get(name="LaLooze")
+        team.name = "CC"
+        self.assertRaises(ValidationError, team.full_clean)
+
+        team.name += "C"
+        team.full_clean()
+
+    def test_team_name_too_long(self):
+        """Verify that a team name cannot be too long"""
+        team = Team.objects.get(name="LaLooze")
+        team.name = "C" * 43
+        self.assertRaises(ValidationError, team.full_clean)
+
+        team.name = "C" * 42
+        team.full_clean()
