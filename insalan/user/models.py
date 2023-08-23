@@ -43,6 +43,10 @@ class Player(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     team = models.ForeignKey("tournament.Team", on_delete=models.CASCADE)
 
+    def __str__(self) -> str:
+        """Format this player registration to a str"""
+        return f'{self.user.username} for {self.team} ({self.team.tournament})'
+
     def as_user(self) -> User:
         """Return the current player as a User object"""
         return self.user
@@ -94,6 +98,10 @@ class Manager(models.Model):
                 fields=["user", "team"], name="not_twice_same_manager"
             )
         ]
+
+    def __str__(self) -> str:
+        """Format this manager registration as a str"""
+        return f'(Manager) {self.user.username} for {self.team} ({self.team.tournament})'
 
     def as_user(self) -> User:
         """Return the current player as a User object"""

@@ -32,7 +32,7 @@ tags:
     description: Access to players
   - name: manager
     description: Access to managers
-  - name: partners
+  - name: partner
     description: Partner API
   - name: langate
     description: Langate API
@@ -46,7 +46,7 @@ tags:
 #  - name: user
 #    description: Operations about user
 paths:
-  /user/register:
+  /user/register/:
     post:
       tags:
         - user
@@ -68,7 +68,7 @@ paths:
         '405':
           description: Invalid data
 
-  /tournament/event:
+  /tournament/event/:
     get:
       tags:
         - event
@@ -113,7 +113,7 @@ paths:
           description: Not Authorized
 #      security:
 #        - insalan_auth:
-  /tournament/event/ongoing:
+  /tournament/event/ongoing/:
     get:
       tags:
         - event
@@ -129,7 +129,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Event'
-  /tournament/event/{eventId}:
+  /tournament/event/{eventId}/:
     get:
       tags:
         - event
@@ -218,7 +218,7 @@ paths:
         '403':
           description: Not Authorized
 
-  /tournament/tournament:
+  /tournament/tournament/:
     get:
       tags:
         - tournament
@@ -261,7 +261,7 @@ paths:
           description: Not Authorized
         '405':
           description: Invalid Input
-  /tournament/tournament/{tournamentId}:
+  /tournament/tournament/{tournamentId}/:
     get:
       tags:
         - tournament
@@ -350,7 +350,7 @@ paths:
         '403':
           description: Not Authorized
   
-  /tournament/game:
+  /tournament/game/:
     get:
       tags:
         - game
@@ -393,7 +393,7 @@ paths:
           description: Not Authorized
         '405':
           description: Invalid Input
-  /tournament/game/{gameId}:
+  /tournament/game/{gameId}/:
     get:
       tags:
         - game
@@ -482,7 +482,7 @@ paths:
         '403':
           description: Not Authorized
 
-  /tournament/team:
+  /tournament/team/:
     post:
       tags:
         - team
@@ -505,7 +505,7 @@ paths:
           description: Not Authorized
         '405':
           description: Invalid input data
-  /tournament/team/{teamId}:
+  /tournament/team/{teamId}/:
     get:
       tags:
         - team
@@ -591,7 +591,7 @@ paths:
         '403':
           description: Not Authorized
 
-  /tournament/player/{userId}:
+  /tournament/player/{userId}/:
     get:
       tags:
         - player
@@ -621,7 +621,7 @@ paths:
         '404':
           description: User not found
 
-  /tournament/manager/{userId}:
+  /tournament/manager/{userId}/:
     get:
       tags:
         - manager
@@ -651,7 +651,116 @@ paths:
         '404':
           description: User not found
 
-#  /langate/
+  /partners/:
+    get:
+      tags:
+        - partner
+      summary: Retrieve information about all partners
+      description: Retrieve a list of all existing partners and sponsors on the website
+      responses:
+        '200':
+          description: Sponsors found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    format: int64
+                    minimum: 0
+                    example: 1
+                  next:
+                    description: "???"
+                    type: string
+                    nullable: true
+                    example: null
+                  previous:
+                    description: "???"
+                    type: string
+                    nullable: true
+                    example: null
+                  results:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Partner"
+  /partner/partner/add/:
+    post:
+      tags:
+        - partner
+      summary: Create a new partner
+      description: Create a new partner, usually from the Django admin view
+      requestBody:
+        description: Partner/Sponsor data
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: "#/components/schemas/Partner/properties/name"
+                url:
+                  $ref: "#/components/schemas/Partner/properties/url"
+                logo:
+                  type: string
+                  description: Content of the logo
+                  format: binary
+                partner_type:
+                  $ref: "#/components/schemas/Partner/properties/partner_type"
+      responses:
+        '200':
+          description: Creation effective
+        '403':
+          description: Not allowed
+  /partners/{partnerId}/:
+    get:
+      tags:
+        - partner
+      summary: Get the information about a partner/sponsor
+      description: Get the details about a partner/sponsor based on its identifier
+      parameters:
+        - name: partnerId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/Partner/properties/id"
+      responses:
+        '200':
+          description: Partner/Sponsor found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Partner"
+        '404':
+          description: Partner/Sponsor not found
+
+  /langate/authenticate:
+    post:
+      tags:
+        - langate
+      summary: Obtain information about a user registration
+      description: Pull registration information for a user on currently ongoing events. This works by performing an authenticated `POST` to this endpoint, which looks at the username of the authenticated user, and pulls data to return it to the langate, which uses it to create the local account.
+      responses:
+        '200':
+          description: Data returned to the langate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LangateReply"
+        '403':
+          description: Authentication failed
+
+  /admin/:
+    get:
+      tags:
+        - admin
+      summary: Enter the administration panel
+      description: Open the web administrator view
+      responses:
+        '200':
+          description: Panel found
+        '403':
+          description: Not authorized
 
 components:
   schemas:
@@ -803,6 +912,76 @@ components:
         isStaff:
           type: boolean
           example: false
+          readOnly: true
+        isAdmin:
+          type: boolean
+          example: false
+          readOnly: true
+    LangateReply:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            username:
+              $ref: "#/components/schemas/User/properties/username"
+            name:
+              type: string
+              example: "John Doe"
+            email:
+              $ref: "#/components/schemas/User/properties/email"
+        err:
+          nullable: true
+          type: string
+          example: "err_not_found"
+          enum:
+            - "registration_not_found"
+            - "no_paid_place"
+        tournament:
+          type: object
+          properties:
+            shortname:
+              type: string
+              example: "CSGO"
+            game_name:
+              $ref: "#/components/schemas/Game/properties/name"
+            team:
+              allOf:
+                - $ref: "#/components/schemas/Team/properties/id"
+              readOnly: false
+            manager:
+              type: boolean
+              example: false
+            has_paid:
+              type: boolean
+              example: true
+    Partner:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 0
+          readOnly: true
+          example: 5
+        name:
+          type: string
+          description: Name of the partner
+          example: "CapGé"
+        url:
+          type: string
+          description: URL to the partner's website
+          example: "https://example.com"
+        logo:
+          type: string
+          description: "URL to the logo of the sponsor/partner"
+          example: "https://example.com/v1/static/partners/example.png"
+        partner_type:
+          type: string
+          description: Partner type (sponsor or partner)
+          enum:
+            - "PA" # Partner
+            - "SP" # Sponsor
 
   requestBodies:
     Event:
@@ -819,5 +998,4 @@ components:
             $ref: '#/components/schemas/User'
 
 #  securitySchemes:
-
 
