@@ -1,12 +1,13 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import Group, Permission
-from rest_framework import permissions, status, viewsets
+from rest_framework import permissions, status, generics
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveAPIView
+from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from insalan.user.models import User
+
 from insalan.user.serializers import (
     GroupSerializer,
     PermissionSerializer,
@@ -15,45 +16,31 @@ from insalan.user.serializers import (
     UserSerializer,
 )
 
-# TODO: change permission
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows users to be viewed or edited.
-    """
 
+class UserView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all().order_by("-date_joined")
-    serializer_class = UserSerializer
     permission_classes = [permissions.IsAdminUser]
-
-
-class UserView(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [SessionAuthentication]
     serializer_class = UserSerializer
 
 
+"""
 # TODO: change permission
-class PermissionViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows permissions to be viewed or edited.
-    """
+class PermissionViewSet(generics.ListCreateAPIView):
 
     queryset = Permission.objects.all().order_by("name")
     serializer_class = PermissionSerializer
     permission_classes = [permissions.IsAdminUser]
+"""
 
 
 # TODO: change permission
-class GroupViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows groups to be viewed or edited.
-    """
-
+"""
+class GroupViewSet(generics.ListCreateAPIView):
     queryset = Group.objects.all().order_by("name")
     serializer_class = GroupSerializer
     permission_classes = [permissions.IsAdminUser]
-
+"""
 
 # class UserRegister(APIView):
 class UserRegister(APIView):
