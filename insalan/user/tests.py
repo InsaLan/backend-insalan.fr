@@ -345,8 +345,22 @@ class PlayerTestCase(TestCase):
         self.assertEquals(team.get_name(), "La Team Test")
         self.assertEquals(team.get_tournament(), trnm)
 
+    def test_player_team_deletion(self):
+        """Verify the behaviour of a Player when their team gets deleted"""
+        user_obj = User.objects.get(username="testplayer")
+        # Create a team and player
+        team_obj = Team.objects.create(name="La Team Test", tournament=None)
+        play_obj = Player.objects.create(team=team_obj, user=user_obj)
 
-# No end-to-end tests: Players do not have an API
+        Player.objects.get(id=play_obj.id)
+
+        # Delete and verify
+        team_obj.delete()
+
+        self.assertRaises(Player.DoesNotExist, Player.objects.get, id=play_obj.id)
+
+
+# TODO: Add tests of the API
 
 
 # Manager Class Tests
@@ -535,3 +549,17 @@ class ManagerTestCase(TestCase):
 
         Manager.objects.create(user=fella, team=team_one).full_clean()
         Manager.objects.create(user=fella, team=team_two).full_clean()
+
+    def test_manager_team_deletion(self):
+        """Verify the behaviour of a Manager when their team gets deleted"""
+        user_obj = User.objects.get(username="testplayer")
+        # Create a team and player
+        team_obj = Team.objects.create(name="La Team Test", tournament=None)
+        play_obj = Manager.objects.create(team=team_obj, user=user_obj)
+
+        Manager.objects.get(id=play_obj.id)
+
+        # Delete and verify
+        team_obj.delete()
+
+        self.assertRaises(Manager.DoesNotExist, Manager.objects.get, id=play_obj.id)

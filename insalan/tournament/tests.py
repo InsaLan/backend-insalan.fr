@@ -1,4 +1,7 @@
 """Tournament Module Tests"""
+
+from types import NoneType
+
 from django.db.utils import IntegrityError
 from django.core.exceptions import ValidationError
 from django.test import TestCase, TransactionTestCase
@@ -237,6 +240,31 @@ class TournamentTestCase(TestCase):
         tourney.name = "C" * 40
         tourney.full_clean()
 
+    def test_game_deletion_cascade(self):
+        """Verify that a tournament is deleted when its game is"""
+        tourney = Tournament.objects.all()[0]
+        game_obj = tourney.game
+
+        Tournament.objects.get(id=tourney.id)
+
+        # Delete and verify
+        game_obj.delete()
+
+        self.assertRaises(Tournament.DoesNotExist, Tournament.objects.get, id=tourney.id)
+
+    def test_event_deletion_cascade(self):
+        """Verify that a tournament is deleted when its event is"""
+        tourney = Tournament.objects.all()[0]
+        ev_obj = tourney.game
+
+        Tournament.objects.get(id=tourney.id)
+
+        # Delete and verify
+        ev_obj.delete()
+
+        self.assertRaises(Tournament.DoesNotExist, Tournament.objects.get, id=tourney.id)
+
+
 class TeamTestCase(TestCase):
     """
     Tests for the Team model
@@ -373,3 +401,15 @@ class TeamTestCase(TestCase):
 
         team.name = "C" * 42
         team.full_clean()
+
+    def test_tournament_deletion_set_null(self):
+        """Verify that a Team is deleted when its Tournament is"""
+        team = Team.objects.all()[0]
+        tourney = team.tournament
+
+        Team.objects.get(id=team.id)
+
+        # Delete and verify
+        tourney.delete()
+
+        self.assertIsInstance(Team.objects.get(id=team.id).tournament, NoneType)
