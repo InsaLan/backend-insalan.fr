@@ -18,6 +18,7 @@ from django.utils.translation import gettext_lazy as _
 
 from insalan.user.models import User
 
+
 class Event(models.Model):
     """
     An Event is any single event that is characterized by the following:
@@ -167,7 +168,7 @@ class Team(models.Model):
         """
         return self.tournament
 
-    def get_players(self) -> List['Player']:
+    def get_players(self) -> List["Player"]:
         """
         Retrieve all the players in the database for that team
         """
@@ -179,7 +180,7 @@ class Team(models.Model):
         """
         return self.get_players().values_list("user_id", flat=True)
 
-    def get_managers(self) -> List['Manager']:
+    def get_managers(self) -> List["Manager"]:
         """
         Retrieve all the managers in the database for that team
         """
@@ -192,6 +193,14 @@ class Team(models.Model):
         return self.get_managers().values_list("user_id", flat=True)
 
 
+class PaymentStatus(models.TextChoices):
+    """Information about the current payment status of a Player/Manager"""
+
+    NOT_PAID = "NOTPAID", _("Not Paid")
+    PAID = "PAID", _("Paid")
+    PAY_LATER = "LATER", _("Will pay on site")
+
+
 class Player(models.Model):
     """
     A Player at InsaLan is simply anyone who is registered to participate in a
@@ -200,10 +209,17 @@ class Player(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     team = models.ForeignKey("tournament.Team", on_delete=models.CASCADE)
+    payment_status = models.CharField(
+        max_length=10,
+        blank=True,
+        default=PaymentStatus.NOT_PAID,
+        null=False,
+        verbose_name="Payment Status",
+    )
 
     def __str__(self) -> str:
         """Format this player registration to a str"""
-        return f'{self.user.username} for {self.team} ({self.team.tournament})'
+        return f"{self.user.username} for {self.team} ({self.team.tournament})"
 
     def as_user(self) -> User:
         """Return the current player as a User object"""
@@ -247,6 +263,13 @@ class Manager(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     team = models.ForeignKey("tournament.Team", on_delete=models.CASCADE)
+    payment_status = models.CharField(
+        max_length=10,
+        blank=True,
+        default=PaymentStatus.NOT_PAID,
+        null=False,
+        verbose_name="Payment Status",
+    )
 
     class Meta:
         """Meta Options"""
@@ -259,7 +282,9 @@ class Manager(models.Model):
 
     def __str__(self) -> str:
         """Format this manager registration as a str"""
-        return f'(Manager) {self.user.username} for {self.team} ({self.team.tournament})'
+        return (
+            f"(Manager) {self.user.username} for {self.team} ({self.team.tournament})"
+        )
 
     def as_user(self) -> User:
         """Return the current player as a User object"""
@@ -268,7 +293,6 @@ class Manager(models.Model):
     def get_team(self):
         """Return the Team object of the current team"""
         return self.team
-
 
 
 # vim: set cc=80 tw=80:

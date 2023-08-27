@@ -6,7 +6,7 @@ from django.db.utils import IntegrityError
 from django.core.exceptions import ValidationError
 from django.test import TestCase, TransactionTestCase
 
-from insalan.tournament.models import Player, Manager, Team, Tournament, Event, Game
+from insalan.tournament.models import PaymentStatus, Player, Manager, Team, Tournament, Event, Game
 from insalan.user.models import User
 
 
@@ -335,6 +335,28 @@ class TeamTestCase(TestCase):
         self.assertIsInstance(team.get_tournament(), Tournament)
         self.assertEqual(1, len(team.get_players()))
         self.assertEqual(1, len(team.get_managers()))
+
+    def test_payment_status_default(self):
+        """Verify what the default status of payment on a new player is"""
+        robert = User.objects.all()[0]
+        team = Team.objects.all()[0]
+
+        play_reg = Player.objects.create(user=robert, team=team)
+
+        self.assertEqual(PaymentStatus.NOT_PAID, play_reg.payment_status)
+
+    def test_payment_status_set(self):
+        """Verify that we can set a status for a Player at any point"""
+        robert = User.objects.all()[0]
+        team = Team.objects.all()[0]
+
+        play_reg = Player.objects.create(user=robert, team=team)
+
+        self.assertEqual(PaymentStatus.NOT_PAID, play_reg.payment_status)
+
+        play_reg.payment_status = PaymentStatus.PAY_LATER
+
+        self.assertEqual(PaymentStatus.PAY_LATER, play_reg.payment_status)
 
     def test_get_full_null_tournament(self):
         """Get a team with a null tournament"""
@@ -868,3 +890,25 @@ class ManagerTestCase(TestCase):
         user_obj.delete()
 
         self.assertRaises(Manager.DoesNotExist, Manager.objects.get, id=man_obj.id)
+
+    def test_payment_status_default(self):
+        """Verify what the default status of payment on a new manager is"""
+        robert = User.objects.all()[0]
+        team = Team.objects.all()[0]
+
+        man_reg = Manager.objects.create(user=robert, team=team)
+
+        self.assertEqual(PaymentStatus.NOT_PAID, man_reg.payment_status)
+
+    def test_payment_status_set(self):
+        """Verify that we can set a status for a Manager at any point"""
+        robert = User.objects.all()[0]
+        team = Team.objects.all()[0]
+
+        man_reg = Manager.objects.create(user=robert, team=team)
+
+        self.assertEqual(PaymentStatus.NOT_PAID, man_reg.payment_status)
+
+        man_reg.payment_status = PaymentStatus.PAY_LATER
+
+        self.assertEqual(PaymentStatus.PAY_LATER, man_reg.payment_status)
