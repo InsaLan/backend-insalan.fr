@@ -3,7 +3,33 @@ on:
     type: [opened]
   push:
 jobs:
+  linting:
+    env:
+      PYLINT_MINSCORE: 5.0
+    runs-on: ubuntu-22.04
+    steps:
+      - run: echo "### Linting" >> $GITHUB_STEP_SUMMARY
+      - uses: actions/checkout@v3
+
+      # Set the environment up
+      - run: python3 -m venv env
+      - run: source env/bin/activate
+
+      # Install dependencies
+      - run: pip3 install pylint
+
+      # Run lints
+      - name: Run linter evaluation
+        run: |
+          pylint --ignore=migrations insalan | tee >(grep "Your code has been" | sed 's/^Your code has been rated at \(.*\)\/10.*/PYLINT_SCORE=\1/' >> "$GITHUB_ENV")
+
+      # Summary
+      - name: Summary
+        run: echo ::notice title=Pylint Score::Your \`pylint\` score is ${{ env.PYLINT_SCORE }}
+      - run: echo Your \`pylint\` score is ${{ env.PYLINT_SCORE }} >> "$GITHUB_STEP_SUMMARY"
+
   unit-tests:
+    needs: [linting]
     runs-on: ubuntu-22.04
     env:
       DB_NAME: insalan

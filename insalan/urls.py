@@ -15,7 +15,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from django.contrib import admin
 
 from rest_framework import routers
 
@@ -32,6 +31,7 @@ router.register(r'groups', user_views.GroupViewSet)
 urlpatterns = [
     path('v1/', include(router.urls)),
     path('v1/partners/', include('insalan.partner.urls')),
+    path('v1/tournament/', include('insalan.tournament.urls')),
     path('v1/user/register/', user_views.UserRegister.as_view()),
     path('v1/langate/authenticate', langate_views.LangateUserView.as_view()),
 

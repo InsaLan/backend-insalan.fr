@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'insalan.user',
     'insalan.partner',
+    'insalan.tournament',
 ]
 
 MIDDLEWARE = [
@@ -93,7 +94,7 @@ DATABASES = {
         'NAME': getenv('DB_NAME', 'mydb'),
         'PASSWORD': getenv('DB_PASS', 'password'),
         'HOST': getenv('DB_HOST', 'localhost'),
-        'PORT': getenv('DB_PORT', '5432')
+        'PORT': getenv('DB_PORT', '5432'),
     }
 }
 

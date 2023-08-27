@@ -1,0 +1,1001 @@
+openapi: 3.0.3
+info:
+  title: InsaLan Back-end API
+  version: '1'
+  description: >-
+    This is the description of the backend API to
+    [`insalan.fr`](https://insalan.fr), a french student-run LAN event hosting
+    game tournaments every year.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
+servers:
+  - url: https://insalan.fr/api/v1/
+tags:
+  - name: user
+    description: Operations about users
+#    externalDocs:
+#      description: Find out more
+#      url: http://swagger.io
+  - name: event
+    description: Access to tournament events
+  - name: tournament
+    description: Access to tournaments
+  - name: game
+    description: Access to tournament games
+  - name: team
+    description: Access to teams
+  - name: player
+    description: Access to players
+  - name: manager
+    description: Access to managers
+  - name: partner
+    description: Partner API
+  - name: langate
+    description: Langate API
+  - name: auth
+    description: Authentication API
+  - name: admin
+    description: Administration panel
+#    externalDocs:
+#      description: Find out more about our store
+#      url: http://swagger.io
+#  - name: user
+#    description: Operations about user
+paths:
+  /user/register/:
+    post:
+      tags:
+        - user
+      summary: Create a new user on the website
+      description: Register a new user
+      requestBody:
+        description: User to register
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+      responses:
+        '200':
+          description: Registration effective
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        '405':
+          description: Invalid data
+
+  /tournament/event/:
+    get:
+      tags:
+        - event
+      summary: List all known events
+      description: Show all past, present and future events registered
+      operationId: getEvents
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+    post:
+      tags:
+        - event
+      summary: Add a new event
+      description: Add a new event to the database
+      operationId: addEvent
+      requestBody:
+        description: Create a new event in the database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Event'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '405':
+          description: Invalid Input
+        '403':
+          description: Not Authorized
+#      security:
+#        - insalan_auth:
+  /tournament/event/ongoing/:
+    get:
+      tags:
+        - event
+      summary: List all current events
+      description: Show all ongoing events registered, i.e. all events for which `ongoing=true`.
+      operationId: getOngoingEvents
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+  /tournament/event/{eventId}/:
+    get:
+      tags:
+        - event
+      summary: Find an event by its ID
+      description: Returns a single event from its identifier
+      operationId: getEventById
+      parameters:
+        - name: eventId
+          in: path
+          description: ID of event to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: Invalid ID supplied
+        '403':
+          description: Not Authorized
+        '404':
+          description: Event not found
+    put:
+      tags:
+        - event
+      summary: Update an existing event
+      description: Update an existing Event by its id
+      operationId: updateEvent
+      parameters:
+        - name: eventId
+          in: path
+          description: ID of event to modify
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      requestBody:
+        description: Update an existent event in the database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: Invalid ID supplied
+        '403':
+          description: Not Authorized
+        '404':
+          description: Event not found
+        '405':
+          description: Validation exception
+    delete:
+      tags:
+        - event
+      summary: Deletes an event
+      description: delete an event from the database from its identifier
+      operationId: deleteEvent
+      parameters:
+        - name: eventId
+          in: path
+          description: ID of event to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      responses:
+        '204':
+          description: Deletion effective
+        '400':
+          description: Invalid event value
+        '403':
+          description: Not Authorized
+
+  /tournament/tournament/:
+    get:
+      tags:
+        - tournament
+      summary: List all known tournaments
+      description: Show all past, present and future tournaments registered
+      operationId: getTournaments
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tournament'
+    post:
+      tags:
+        - tournament
+      summary: Add a new tournament
+      description: Add a new tournament to the database
+      operationId: addTournament
+      requestBody:
+        description: Create a new tournament in the database for a given event, with a given game
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tournament'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Tournament'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tournament'
+        '403':
+          description: Not Authorized
+        '405':
+          description: Invalid Input
+  /tournament/tournament/{tournamentId}/:
+    get:
+      tags:
+        - tournament
+      summary: Find a tournament by its ID
+      description: Returns a single tournament from its identifier
+      operationId: getTournamentById
+      parameters:
+        - name: tournamentId
+          in: path
+          description: ID of tournament to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tournament'
+        '400':
+          description: Invalid ID supplied
+        '403':
+          description: Not Authorized
+        '404':
+          description: Event not found
+    put:
+      tags:
+        - tournament
+      summary: Update an existing tournament
+      description: Update an existing tournament by its id
+      operationId: updateTournament
+      parameters:
+        - name: tournamentId
+          in: path
+          description: ID of tournament to modify
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      requestBody:
+        description: Update an existent tournament in the database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tournament'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tournament'
+        '400':
+          description: Invalid ID supplied
+        '403':
+          description: Not Authorized
+        '404':
+          description: Event not found
+        '405':
+          description: Validation exception
+    delete:
+      tags:
+        - tournament
+      summary: Deletes a tournament
+      description: delete a tournament from the database from its identifier
+      operationId: deleteTournament
+      parameters:
+        - name: tournamentId
+          in: path
+          description: ID of tournament to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      responses:
+        '204':
+          description: Deletion effective
+        '400':
+          description: Invalid tournament value
+        '403':
+          description: Not Authorized
+  
+  /tournament/game/:
+    get:
+      tags:
+        - game
+      summary: List all known games
+      description: Show all registered games
+      operationId: getGames
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Game'
+    post:
+      tags:
+        - game
+      summary: Register a new game
+      description: Add a new game to the database
+      operationId: addGame
+      requestBody:
+        description: Create a new game in the database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Game'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Game'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+        '403':
+          description: Not Authorized
+        '405':
+          description: Invalid Input
+  /tournament/game/{gameId}/:
+    get:
+      tags:
+        - game
+      summary: Find a game by its ID
+      description: Returns a single game from its identifier
+      operationId: getGameById
+      parameters:
+        - name: gameId
+          in: path
+          description: ID of game to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+        '400':
+          description: Invalid ID supplied
+        '403':
+          description: Not Authorized
+        '404':
+          description: Event not found
+    put:
+      tags:
+        - game
+      summary: Update an existing game
+      description: Update an existing game by its id
+      operationId: updateGame
+      parameters:
+        - name: gameId
+          in: path
+          description: ID of game to modify
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      requestBody:
+        description: Update an existent game in the database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Game'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+        '400':
+          description: Invalid ID supplied
+        '403':
+          description: Not Authorized
+        '404':
+          description: Event not found
+        '405':
+          description: Validation exception
+    delete:
+      tags:
+        - game
+      summary: Deletes a game
+      description: delete a game from the database from its identifier
+      operationId: deleteGame
+      parameters:
+        - name: gameId
+          in: path
+          description: ID of game to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      responses:
+        '204':
+          description: Deletion effective
+        '400':
+          description: Invalid game value
+        '403':
+          description: Not Authorized
+
+  /tournament/team/:
+    post:
+      tags:
+        - team
+      summary: Create a new team for a tournament
+      description: Register a new team for a tournament, providing the name of the team, the tournament ID, and the list of players.
+      requestBody:
+        description: Team to create
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Team"
+      responses:
+        '200':
+          description: Team created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Team"
+        '403':
+          description: Not Authorized
+        '405':
+          description: Invalid input data
+  /tournament/team/{teamId}/:
+    get:
+      tags:
+        - team
+      summary: Get a team based on its ID
+      description: Get the information about a team from its identifier
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+        '400':
+          description: Invalid ID supplied
+        '403':
+          description: Not Authorized
+        '404':
+          description: Event not found
+    put:
+      tags:
+        - team
+      summary: Update an existing team
+      description: Update an existing team by its id
+      operationId: updateTeam
+      parameters:
+        - name: teamId
+          in: path
+          description: ID of team to modify
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      requestBody:
+        description: Update an existent team in the database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Team'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+        '400':
+          description: Invalid ID supplied
+        '403':
+          description: Not Authorized
+        '404':
+          description: Event not found
+        '405':
+          description: Validation exception
+    delete:
+      tags:
+        - team
+      summary: Deletes a team
+      description: delete a team from the database from its identifier
+      operationId: deleteTeam
+      parameters:
+        - name: teamId
+          in: path
+          description: ID of team to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      responses:
+        '204':
+          description: Deletion effective
+        '400':
+          description: Invalid team value
+        '403':
+          description: Not Authorized
+
+  /tournament/player/{userId}/:
+    get:
+      tags:
+        - player
+      summary: Find user registrations
+      description: Find all registrations for a user as a player, returning the team identifiers
+      operationId: playerGet
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/User/properties/id"
+      responses:
+        '200':
+          description: Operation successful
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: "#/components/schemas/Team/properties/id"
+                example: [228, 172, 56]
+
+        '403':
+          description: Not authorized
+        '404':
+          description: User not found
+
+  /tournament/manager/{userId}/:
+    get:
+      tags:
+        - manager
+      summary: Find user registrations as manager
+      description: Find all registrations for a user as a manager, returning the team identifiers
+      operationId: managerGet
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/User/properties/id"
+      responses:
+        '200':
+          description: Operation successful
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: "#/components/schemas/Team/properties/id"
+                example: [213, 212, 103, 178]
+
+        '403':
+          description: Not authorized
+        '404':
+          description: User not found
+
+  /partners/:
+    get:
+      tags:
+        - partner
+      summary: Retrieve information about all partners
+      description: Retrieve a list of all existing partners and sponsors on the website
+      responses:
+        '200':
+          description: Sponsors found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    format: int64
+                    minimum: 0
+                    example: 1
+                  next:
+                    description: "???"
+                    type: string
+                    nullable: true
+                    example: null
+                  previous:
+                    description: "???"
+                    type: string
+                    nullable: true
+                    example: null
+                  results:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Partner"
+  /partner/partner/add/:
+    post:
+      tags:
+        - partner
+      summary: Create a new partner
+      description: Create a new partner, usually from the Django admin view
+      requestBody:
+        description: Partner/Sponsor data
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  $ref: "#/components/schemas/Partner/properties/name"
+                url:
+                  $ref: "#/components/schemas/Partner/properties/url"
+                logo:
+                  type: string
+                  description: Content of the logo
+                  format: binary
+                partner_type:
+                  $ref: "#/components/schemas/Partner/properties/partner_type"
+      responses:
+        '200':
+          description: Creation effective
+        '403':
+          description: Not allowed
+  /partners/{partnerId}/:
+    get:
+      tags:
+        - partner
+      summary: Get the information about a partner/sponsor
+      description: Get the details about a partner/sponsor based on its identifier
+      parameters:
+        - name: partnerId
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/Partner/properties/id"
+      responses:
+        '200':
+          description: Partner/Sponsor found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Partner"
+        '404':
+          description: Partner/Sponsor not found
+
+  /langate/authenticate:
+    post:
+      tags:
+        - langate
+      summary: Obtain information about a user registration
+      description: Pull registration information for a user on currently ongoing events. This works by performing an authenticated `POST` to this endpoint, which looks at the username of the authenticated user, and pulls data to return it to the langate, which uses it to create the local account.
+      responses:
+        '200':
+          description: Data returned to the langate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LangateReply"
+        '403':
+          description: Authentication failed
+
+  /admin/:
+    get:
+      tags:
+        - admin
+      summary: Enter the administration panel
+      description: Open the web administrator view
+      responses:
+        '200':
+          description: Panel found
+        '403':
+          description: Not authorized
+
+components:
+  schemas:
+    Event:
+      required:
+       - name
+       - description
+       - year
+       - month
+       - ongoing
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 17
+          readOnly: true
+        name:
+          type: string
+          example: "InsaLan XVI"
+        description:
+          type: string
+          example: "17ème édition de l'InsaLan!"
+        year:
+          type: integer
+          format: int64
+          example: 2022
+          minimum: 2003
+        month:
+          type: integer
+          format: int64
+          example: 3
+          minimum: 1
+          maximum: 12
+        ongoing:
+          type: boolean
+          example: true
+        tournaments:
+          type: array
+          items:
+            allOf:
+              - $ref: "#/components/schemas/Tournament/properties/id"
+            readOnly: false
+          uniqueItems: true
+          readOnly: true
+          example: [82, 83, 85, 81]
+    Tournament:
+      required:
+        - event
+        - game
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          example: 84
+        event:
+          allOf:
+            - $ref: "#/components/schemas/Event/properties/id"
+          readOnly: false
+        game:
+          allOf:
+            - $ref: "#/components/schemas/Game/properties/id"
+          readOnly: false
+        teams:
+          type: array
+          items:
+            allOf:
+              - $ref: "#/components/schemas/Team/properties/id"
+            readOnly: false
+          uniqueItems: true
+          example: [132, 137, 189, 203, 201, 179, 193, 228]
+          readOnly: true
+    Game:
+      required:
+        - name
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 0
+          example: 2
+          readOnly: true
+        name:
+          type: string
+          example: "Counter-Strike: Global Offensive"
+    Team:
+      required:
+        - name
+        - tournament
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 228
+          readOnly: true
+          minimum: 0
+        name:
+          type: string
+          example: "La Team du Bonheur"
+        players:
+          type: array
+          items:
+            allOf:
+              - $ref: "#/components/schemas/User/properties/id"
+            readOnly: false
+          uniqueItems: false
+          example: [303, 389, 279, 188]
+        managers:
+          type: array
+          items:
+            allOf:
+              - $ref: "#/components/schemas/User/properties/id"
+            readOnly: false
+          uniqueItems: false
+          example: [78]
+        tournament:
+          allOf:
+            - $ref: "#/components/schemas/Tournament/properties/id"
+          readOnly: false
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+          readOnly: true
+        username:
+          type: string
+          example: theUser
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: James
+        email:
+          type: string
+          example: john@email.com
+        password:
+          type: string
+          example: '12345'
+        phone:
+          type: string
+          example: '12345'
+        isStaff:
+          type: boolean
+          example: false
+          readOnly: true
+        isAdmin:
+          type: boolean
+          example: false
+          readOnly: true
+    LangateReply:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            username:
+              $ref: "#/components/schemas/User/properties/username"
+            name:
+              type: string
+              example: "John Doe"
+            email:
+              $ref: "#/components/schemas/User/properties/email"
+        err:
+          nullable: true
+          type: string
+          example: "err_not_found"
+          enum:
+            - "registration_not_found"
+            - "no_paid_place"
+        tournament:
+          type: object
+          properties:
+            shortname:
+              type: string
+              example: "CSGO"
+            game_name:
+              $ref: "#/components/schemas/Game/properties/name"
+            team:
+              allOf:
+                - $ref: "#/components/schemas/Team/properties/id"
+              readOnly: false
+            manager:
+              type: boolean
+              example: false
+            has_paid:
+              type: boolean
+              example: true
+    Partner:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 0
+          readOnly: true
+          example: 5
+        name:
+          type: string
+          description: Name of the partner
+          example: "CapGé"
+        url:
+          type: string
+          description: URL to the partner's website
+          example: "https://example.com"
+        logo:
+          type: string
+          description: "URL to the logo of the sponsor/partner"
+          example: "https://example.com/v1/static/partners/example.png"
+        partner_type:
+          type: string
+          description: Partner type (sponsor or partner)
+          enum:
+            - "PA" # Partner
+            - "SP" # Sponsor
+
+  requestBodies:
+    Event:
+      description: Event that will be added to the database
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Event'
+    User:
+      description: User to be registered or modified
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/User'
+
+#  securitySchemes:
+
