@@ -23,11 +23,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(max_length=50, required=False)
     last_name = serializers.CharField(max_length=50, required=False)
     password_validation = serializers.CharField(write_only=True, required=True)
+
     class Meta:
         model = User
-        read_only_fields = ('email',)
         fields = ['username', 'first_name', 'last_name', 'is_active', 'is_staff', 
                   'is_superuser', 'email', 'email_active', 'password', 'password_validation']
+        read_only_fields = ('is_superuser','is_active', 'is_staff')
+        write_only_fields = ('password', 'password_validation')
 
     def validate(self, data):
         """
