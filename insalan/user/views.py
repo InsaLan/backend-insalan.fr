@@ -1,12 +1,11 @@
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.models import Group, Permission
 from rest_framework import permissions, status, generics
 from rest_framework.authentication import SessionAuthentication
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from insalan.user.models import User
+from .models import User
 
 from insalan.user.serializers import (
     GroupSerializer,
@@ -15,7 +14,6 @@ from insalan.user.serializers import (
     UserRegisterSerializer,
     UserSerializer,
 )
-
 
 class UserView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all().order_by("-date_joined")
@@ -42,35 +40,13 @@ class GroupViewSet(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAdminUser]
 """
 
-# class UserRegister(APIView):
-class UserRegister(APIView):
+class UserRegister(generics.CreateAPIView):
     """
     API endpoint that allows user creation.
     """
-
+    queryset = User.objects.all()
     permission_classes = [permissions.AllowAny]
     serializer_class = UserRegisterSerializer
-
-    def post(self, request):
-        data = request.data  # TODO: add validation
-        serializer = UserRegisterSerializer(data=data)
-        if serializer.is_valid(raise_exception=True):
-            user = serializer.create(data)
-            if user:
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-
-    # def post(self, request, format=None):
-    #     # TODO: Use another serializer ?
-    #     # TODO: Check data validity
-    #     serializer = UserSerializer(data=request.data,
-    #                                 context={'request': request})
-    #     serializer.is_valid(raise_exception=True)
-    #     serializer.save()
-    #     # u: User = User.objects.create_user()
-    #
-    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
-
 
 class UserLogin(APIView):
     """
