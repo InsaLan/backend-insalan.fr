@@ -11,12 +11,16 @@ from django.utils.translation import gettext_lazy as _
 
 from django.contrib.auth.models import AbstractUser, PermissionsMixin
 from django.contrib.auth.base_user import BaseUserManager
+from django.utils.translation import gettext_lazy as _
+
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, username, password=None):
+
+    def create_user(self, email, username, password_validation, password=None,
+                    **extra_fields):
         if not email:
-            raise ValueError(_('An email is required')) # TODO: translation?
+            raise ValueError(_('An email is required'))
         if not username:
             raise ValueError(_('An username is required'))
         if not password:
@@ -24,11 +28,14 @@ class UserManager(BaseUserManager):
         user = self.model(
                 email=self.normalize_email(email),
                 username=username,
-                date_joined=date.today()
+                date_joined=date.today(),
+                **extra_fields
                 )
         user.set_password(password)
         user.save()
         return user
+
+
 class User(AbstractUser, PermissionsMixin):
     """
     A user is simply our own abstraction defined above the standard Django User
@@ -46,4 +53,9 @@ class User(AbstractUser, PermissionsMixin):
                               blank=False)
     email_active = models.BooleanField(verbose_name='Email Activated',
                                        default=False)
+    first_name = models.CharField(max_length=50, blank=True)
+    last_name = models.CharField(max_length=50, blank=True)
+    is_staff = models.BooleanField(verbose_name='Part of the insalan team', default=False)
+    is_superuser = models.BooleanField(verbose_name='Admin of the insalan team', default=False)
+    is_active = models.BooleanField(verbose_name='Email confirmed', default=True)
     object = UserManager()
