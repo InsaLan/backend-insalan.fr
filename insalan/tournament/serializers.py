@@ -6,8 +6,8 @@
 
 from rest_framework import serializers
 
-from .models import Event, Tournament, Game, Team
-from insalan.user.models import User, Player, Manager
+from .models import Event, Tournament, Game, Team, Player, Manager
+from insalan.user.models import User
 
 class EventSerializer(serializers.ModelSerializer):
     # pylint: disable=R0903

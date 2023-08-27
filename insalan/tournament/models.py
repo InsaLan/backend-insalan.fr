@@ -8,14 +8,15 @@ Module that contains the declaration of structures tied to tournaments
 
 from typing import List, Optional
 from django.db import models
+from django.core.exceptions import ValidationError
 from django.core.validators import (
     MaxValueValidator,
     MinValueValidator,
     MinLengthValidator,
 )
+from django.utils.translation import gettext_lazy as _
 
-from insalan.user.models import Player, Manager
-
+from insalan.user.models import User
 
 class Event(models.Model):
     """
@@ -166,7 +167,7 @@ class Team(models.Model):
         """
         return self.tournament
 
-    def get_players(self) -> List[Player]:
+    def get_players(self) -> List['Player']:
         """
         Retrieve all the players in the database for that team
         """
@@ -178,7 +179,7 @@ class Team(models.Model):
         """
         return self.get_players().values_list("user_id", flat=True)
 
-    def get_managers(self) -> List[Manager]:
+    def get_managers(self) -> List['Manager']:
         """
         Retrieve all the managers in the database for that team
         """
@@ -189,6 +190,85 @@ class Team(models.Model):
         Retrieve the user identifiers of all managers
         """
         return self.get_managers().values_list("user_id", flat=True)
+
+
+class Player(models.Model):
+    """
+    A Player at InsaLan is simply anyone who is registered to participate in a
+    tournamenent, whichever it might be.
+    """
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    team = models.ForeignKey("tournament.Team", on_delete=models.CASCADE)
+
+    def __str__(self) -> str:
+        """Format this player registration to a str"""
+        return f'{self.user.username} for {self.team} ({self.team.tournament})'
+
+    def as_user(self) -> User:
+        """Return the current player as a User object"""
+        return self.user
+
+    def get_team(self):
+        """Return the Team object of the current team"""
+        return self.team
+
+    def clean(self):
+        """
+        Assert that the user associated with the provided player does not already
+        exist in any team of any tournament of the event
+        """
+        event = self.get_team().get_tournament().get_event()
+
+        if (
+            len(
+                [
+                    player.user
+                    for players in [
+                        team.get_players()
+                        for teams in [
+                            trnm.get_teams() for trnm in event.get_tournaments()
+                        ]
+                        for team in teams
+                    ]
+                    for player in players
+                    if player.user == self.user
+                ]
+            )
+            > 1
+        ):
+            raise ValidationError(_("Player already registered for this event"))
+
+
+class Manager(models.Model):
+    """
+    A Manager is someone in charge of heading a team of players.
+    """
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    team = models.ForeignKey("tournament.Team", on_delete=models.CASCADE)
+
+    class Meta:
+        """Meta Options"""
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "team"], name="not_twice_same_manager"
+            )
+        ]
+
+    def __str__(self) -> str:
+        """Format this manager registration as a str"""
+        return f'(Manager) {self.user.username} for {self.team} ({self.team.tournament})'
+
+    def as_user(self) -> User:
+        """Return the current player as a User object"""
+        return self.user
+
+    def get_team(self):
+        """Return the Team object of the current team"""
+        return self.team
+
 
 
 # vim: set cc=80 tw=80:

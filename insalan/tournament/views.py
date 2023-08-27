@@ -9,10 +9,10 @@ from rest_framework.exceptions import NotFound
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework.serializers import PrimaryKeyRelatedField
 
-from insalan.user.models import User, Player, Manager
+from insalan.user.models import User
 import insalan.tournament.serializers as serializers
 
-from .models import Event, Tournament, Game, Team
+from .models import Player, Manager, Event, Tournament, Game, Team
 
 class ReadOnly(BasePermission):
     """Read-Only permissions"""
