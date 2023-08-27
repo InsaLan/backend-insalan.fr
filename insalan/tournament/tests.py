@@ -167,6 +167,43 @@ class EventTestCase(TransactionTestCase):
         self.assertTrue(trnm_three in trnms_found)
         self.assertFalse(trnm_four in trnms_found)
 
+    @staticmethod
+    def create_event_logo(file_name: str = "event-test.png") -> SimpleUploadedFile:
+        """Create a logo for event tests"""
+        test_img = BytesIO(f"test-image called {file_name}".encode("utf-8"))
+        test_img.name = file_name
+        return SimpleUploadedFile(test_img.name, test_img.getvalue())
+
+    def test_logo_extension_enforcement(self):
+        """Verify that we only accept logos as PNG, JPG, JPEG and SVG"""
+        ev_obj = Event.objects.create(name="Insalan Test", year=2023, month=2, description="")
+
+        # PNGs work
+        test_png = __class__.create_event_logo("event-test.png")
+        ev_obj.logo = test_png
+        ev_obj.full_clean()
+
+        # JPGs work
+        test_jpg = __class__.create_event_logo("event-test.jpg")
+        ev_obj.logo = test_jpg
+        ev_obj.full_clean()
+
+        # JPEGs work
+        test_jpeg = __class__.create_event_logo("event-test.jpeg")
+        ev_obj.logo = test_jpeg
+        ev_obj.full_clean()
+
+        # SVGs work
+        test_svg = __class__.create_event_logo("event-test.svg")
+        ev_obj.logo = test_svg
+        ev_obj.full_clean()
+
+        # Others won't
+        for ext in ['mkv', 'txt', 'md', 'php', 'exe', 'zip', '7z']:
+            test_icon = __class__.create_event_logo(f"event-test.{ext}")
+            ev_obj.logo = test_icon
+            self.assertRaises(ValidationError, ev_obj.full_clean)
+
 
 class TournamentTestCase(TestCase):
     """Tournament Tests"""

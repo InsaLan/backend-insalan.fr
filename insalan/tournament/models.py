@@ -47,6 +47,13 @@ class Event(models.Model):
         null=False, validators=[MinValueValidator(1), MaxValueValidator(12)]
     )
     ongoing = models.BooleanField(default=False)
+    logo: models.FileField = models.FileField(
+        blank=True,
+        null=True,
+        upload_to=os.path.join(STATIC_URL, 'event-icons'),
+        validators=[FileExtensionValidator(allowed_extensions=['png', 'jpg',
+                                                               'jpeg', 'svg'])]
+    )
 
     def __str__(self) -> str:
         """Format this Event to a str"""
