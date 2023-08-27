@@ -2,10 +2,11 @@ from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.models import Group, Permission
 from rest_framework import permissions, status, generics
 from rest_framework.authentication import SessionAuthentication
-from rest_framework import generics
+from rest_framework import (generics, viewsets)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import User
+from django.http import JsonResponse
 
 from insalan.user.serializers import (
     GroupSerializer,
@@ -21,7 +22,13 @@ class UserView(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = [SessionAuthentication]
     serializer_class = UserSerializer
 
+class UserMe(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
 
+    def get(self, request):
+        user = UserSerializer(request.user)
+        return Response(user.data)
 """
 # TODO: change permission
 class PermissionViewSet(generics.ListCreateAPIView):
