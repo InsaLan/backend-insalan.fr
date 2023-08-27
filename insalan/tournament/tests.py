@@ -1,9 +1,11 @@
 """Tournament Module Tests"""
 
+from io import BytesIO
 from types import NoneType
 
 from django.db.utils import IntegrityError
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, TransactionTestCase
 
 from insalan.tournament.models import PaymentStatus, Player, Manager, Team, Tournament, Event, Game
@@ -177,10 +179,10 @@ class TournamentTestCase(TestCase):
         game_one = Game.objects.create(name="Test Game One")
         game_two = Game.objects.create(name="Test Game Two")
         game_three = Game.objects.create(name="Test Game Three")
-        Tournament.objects.create(game=game_one, event=event)
-        Tournament.objects.create(game=game_two, event=event)
-        Tournament.objects.create(game=game_three, event=event)
-        Tournament.objects.create(game=game_three, event=event_two)
+        Tournament.objects.create(name="Tourney 1", game=game_one, event=event)
+        Tournament.objects.create(name="Tourney 2", game=game_two, event=event)
+        Tournament.objects.create(name="Tourney 3", game=game_three, event=event)
+        Tournament.objects.create(name="Tourney 4", game=game_three, event=event_two)
 
     def test_tournament_null_event(self):
         """Test failure of creation of a Tournament with no event"""
@@ -263,6 +265,58 @@ class TournamentTestCase(TestCase):
         ev_obj.delete()
 
         self.assertRaises(Tournament.DoesNotExist, Tournament.objects.get, id=tourney.id)
+
+    @staticmethod
+    def create_tourney_logo(file_name: str = "tourney-test.png") -> SimpleUploadedFile:
+        """Create a logo for tournament tests"""
+        test_img = BytesIO(f"test-image called {file_name}".encode("utf-8"))
+        test_img.name = file_name
+        return SimpleUploadedFile(test_img.name, test_img.getvalue())
+
+    def test_logo_extension_enforcement(self):
+        """Verify that we only accept logos as PNG, JPG, JPEG and SVG"""
+        tourney = Tournament.objects.all()[0]
+
+        # PNGs work
+        test_png = __class__.create_tourney_logo("tourney-test.png")
+        tourney.logo = test_png
+        tourney.full_clean()
+
+        # JPGs work
+        test_jpg = __class__.create_tourney_logo("tourney-test.jpg")
+        tourney.logo = test_jpg
+        tourney.full_clean()
+
+        # JPEGs work
+        test_jpeg = __class__.create_tourney_logo("tourney-test.jpeg")
+        tourney.logo = test_jpeg
+        tourney.full_clean()
+
+        # SVGs work
+        test_svg = __class__.create_tourney_logo("tourney-test.svg")
+        tourney.logo = test_svg
+        tourney.full_clean()
+
+        # Others won't
+        for ext in ['mkv', 'txt', 'md', 'php', 'exe', 'zip', '7z']:
+            test_icon = __class__.create_tourney_logo(f"tourney-test.{ext}")
+            tourney.logo = test_icon
+            self.assertRaises(ValidationError, tourney.full_clean)
+
+    def test_rules_size_limit(self):
+        """
+        Check that the rules of a tournament can overflow the limit.
+
+        This is a consequence of the way `max_length` is enforced in `TextField`
+        fields, i.e. not. It is only enforced on the text area for the input,
+        but not the database.
+
+        See: https://docs.djangoproject.com/en/4.2/ref/models/fields/#django.db.models.TextField
+        """
+        tourney = Tournament.objects.all()[0]
+
+        tourney.rules = "C" * 50001
+        tourney.full_clean()
 
 
 class TeamTestCase(TestCase):

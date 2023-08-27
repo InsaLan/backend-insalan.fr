@@ -6,16 +6,20 @@ Module that contains the declaration of structures tied to tournaments
 # "Too few public methods"
 # pylint: disable=R0903
 
+import os.path
+
 from typing import List, Optional
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import (
+    FileExtensionValidator,
     MaxValueValidator,
     MinValueValidator,
     MinLengthValidator,
 )
 from django.utils.translation import gettext_lazy as _
 
+from insalan.settings import STATIC_URL
 from insalan.user.models import User
 
 
@@ -97,9 +101,19 @@ class Tournament(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     name = models.CharField(
-        verbose_name="Tournament name",
+        verbose_name=_("Tournament name"),
         validators=[MinLengthValidator(3)],
         max_length=40,
+    )
+    rules = models.TextField(verbose_name=_("Tournament Rules"),
+                             max_length=50000, null=False, blank=True,
+                             default="")
+    logo: models.FileField = models.FileField(
+        blank=True,
+        null=True,
+        upload_to=os.path.join(STATIC_URL, 'tournament-icons'),
+        validators=[FileExtensionValidator(allowed_extensions=['png', 'jpg',
+                                                               'jpeg', 'svg'])]
     )
 
     def __str__(self) -> str:
@@ -125,6 +139,10 @@ class Tournament(models.Model):
     def get_teams_id(self) -> List[int]:
         """Return the list of identifiers of this Tournament's Teams"""
         return self.get_teams().values_list("id", flat=True)
+
+    def get_rules(self) -> str:
+        """Return the raw tournament rules"""
+        return self.rules
 
 
 class Team(models.Model):
