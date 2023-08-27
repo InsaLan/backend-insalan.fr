@@ -359,6 +359,20 @@ class PlayerTestCase(TestCase):
 
         self.assertRaises(Player.DoesNotExist, Player.objects.get, id=play_obj.id)
 
+    def test_user_deletion(self):
+        """Verify that a Player registration is deleted along with its user"""
+        user_obj = User.objects.get(username="testplayer")
+        # Create a Player registration
+        team_obj = Team.objects.create(name="La Team Test", tournament=None)
+        play_obj = Player.objects.create(team=team_obj, user=user_obj)
+
+        # Test
+        Player.objects.get(id=play_obj.id)
+
+        user_obj.delete()
+
+        self.assertRaises(Player.DoesNotExist, Player.objects.get, id=play_obj.id)
+
 
 # TODO: Add tests of the API
 
@@ -563,3 +577,17 @@ class ManagerTestCase(TestCase):
         team_obj.delete()
 
         self.assertRaises(Manager.DoesNotExist, Manager.objects.get, id=play_obj.id)
+
+    def test_user_deletion(self):
+        """Verify that a Manager registration is deleted along with its user"""
+        user_obj = User.objects.get(username="testplayer")
+        # Create a Manager registration
+        team_obj = Team.objects.create(name="La Team Test", tournament=None)
+        man_obj = Manager.objects.create(team=team_obj, user=user_obj)
+
+        # Test
+        Manager.objects.get(id=man_obj.id)
+
+        user_obj.delete()
+
+        self.assertRaises(Manager.DoesNotExist, Manager.objects.get, id=man_obj.id)
