@@ -11,7 +11,7 @@ from django.contrib.auth.password_validation import validate_password
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = '__all__'
+        exclude = ('password',)
         # fields = ['url', 'username', 'email', 'groups']
 
 class UserRegisterSerializer(serializers.ModelSerializer):
