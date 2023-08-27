@@ -2,7 +2,6 @@ from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.models import Group, Permission
 from rest_framework import permissions, status, generics
 from rest_framework.authentication import SessionAuthentication
-from rest_framework import (generics, viewsets)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import User

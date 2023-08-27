@@ -91,6 +91,50 @@ class UserEndToEndTestCase(TestCase):
         send_invalid_data({"username": "newuser", "email": "email@example.com"})
 
     def test_register_valid_account(self):
+            def send_valid_data(data, check_fields=[]):
+                request = self.client.post('/v1/user/register/',
+                                           data,
+                                           format='json')
+
+
+                self.assertEquals(request.status_code, 201)
+
+                created_data: Dict = request.data
+                for k, v in check_fields:
+                    self.assertEquals(created_data[k], v)
+
+            send_valid_data({
+                    'username': 'newplayer',
+                    'password': '1111qwer!',
+                    'password_validation': '1111qwer!',
+                    'email': 'email@example.com'
+                    },
+                            [('username', 'newplayer'),
+                             ('first_name', ''),
+                             ('last_name', ''),
+                             ('is_staff', False),
+                             ('is_superuser', False),
+                             ('is_active', True),
+                             ('email_active', False),
+                             ('email', 'email@example.com')])
+
+            send_valid_data({
+                    'username': 'PeachLover3003',
+                    'password': '1111qwer!',
+                    'password_validation': '1111qwer!',
+                    'email': 'mario@mushroom.kingdom',
+                    'first_name': 'Mario',
+                    'last_name': 'Bros'
+                    },
+                            [('username', 'PeachLover3003'),
+                             ('first_name', 'Mario'),
+                             ('last_name', 'Bros'),
+                             ('is_staff', False),
+                             ('is_superuser', False),
+                             ('is_active', True),
+                             ('email_active', False),
+                             ('email', 'mario@mushroom.kingdom')])
+    def test_register_read_only_fields(self):
         def send_valid_data(data, check_fields=[]):
             request = self.client.post('/v1/user/register/',
                                        data,
@@ -98,6 +142,7 @@ class UserEndToEndTestCase(TestCase):
 
 
             self.assertEquals(request.status_code, 201)
+
 
             created_data: Dict = request.data
             for k, v in check_fields:
@@ -107,7 +152,10 @@ class UserEndToEndTestCase(TestCase):
                 'username': 'newplayer',
                 'password': '1111qwer!',
                 'password_validation': '1111qwer!',
-                'email': 'email@example.com'
+                'email': 'email@example.com',
+                'is_staff':'true',
+                'is_superuser':'true',
+                'is_active':'false'
                 },
                         [('username', 'newplayer'),
                          ('first_name', ''),
@@ -134,30 +182,19 @@ class UserEndToEndTestCase(TestCase):
                          ('is_active', True),
                          ('email_active', False),
                          ('email', 'mario@mushroom.kingdom')])
+    def test_login_valid_account(self):
+        User.objects.create_user(username='newplayer', email='test@test.com', password='1111qwer!')
 
-    def test_get_me_data(self):
         def send_valid_data(data):
-            request = self.client.post('/v1/user/register/',
+            request = self.client.post('/v1/user/login/',
                                        data,
                                        format='json')
-            self.assertEquals(request.status_code, 201)
-            request = self.client.get('/v1/user/me',
-                                      format='json')
-            self.assertEquals(request.status_code, 200)
-            send_valid_data({
-                    'username': 'PeachLover3003',
-                    'password': '1111qwer!',
-                    'password_validation': '1111qwer!',
-                    'email': 'mario@mushroom.kingdom',
-                    'first_name': 'Mario',
-                    'last_name': 'Bros'
-                    },
-                            [('username', 'PeachLover3003'),
-                             ('first_name', 'Mario'),
-                             ('last_name', 'Bros'),
-                             ('is_staff', False),
-                             ('is_superuser', False),
-                             ('is_active', True),
-                             ('email_active', False),
-                             ('email', 'mario@mushroom.kingdom')])
 
+
+            self.assertEquals(request.status_code, 200)
+
+        send_valid_data({
+                'username': 'newplayer',
+                'password': '1111qwer!',
+                'email': 'email@example.com'
+                })
