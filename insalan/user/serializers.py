@@ -1,14 +1,17 @@
 """Data Serializers for the InsaLan User module"""
+# pylint: disable=too-few-public-methods
 
+from os import getenv
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import default_token_generator
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from .models import User
-
-# pylint: disable=too-few-public-methods
+from django.core.mail import send_mail
+from django.urls import reverse
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -51,6 +54,24 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         read_only_fields = ("is_superuser", "is_active", "is_staff")
         write_only_fields = ("password", "password_validation")
 
+    def send_email_confirmation(self, user_object: User):
+        """
+        Send an e-mail confirmation token to the user registring.
+        """
+        token = default_token_generator.make_token(user_object)
+        user = user_object.username
+        # TODO Give a frontend page instead of direct API link
+        send_mail(
+            _("Confirm your e-mail!"),
+            _("Confirm your e-mail by clicking ")
+            + "http://api."
+            + getenv("WEBSITE_HOST", "localhost")
+            + reverse("confirm-email", kwargs={"user": user, "token": token}),
+            None,  # Django falls back to default of settings.py
+            [user_object.email],
+            fail_silently=False,
+        )
+
     def validate(self, data):
         """
         Validate user registration (password shall be confirmed)
@@ -62,6 +83,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     def create(self, data):
         user_object = User.object.create_user(**data)
         user_object.save()
+        self.send_email_confirmation(user_object)
         return user_object
 
 

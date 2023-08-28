@@ -10,4 +10,9 @@ urlpatterns = [
     path("user/", views.UserView.as_view(), name="/"),
     path("me/", views.UserMe.as_view(), name="me"),
     path("get-csrf/", views.get_csrf, name="get-csrf"),
+    path(
+        "confirm/<str:user>/<str:token>",
+        views.EmailConfirmView.as_view(),
+        name="confirm-email",
+    ),
 ]

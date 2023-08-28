@@ -162,3 +162,14 @@ CORS_ALLOWED_ORIGINS = [
     "http://" + getenv("WEBSITE_HOST", "localhost"),
     "http://dev." + getenv("WEBSITE_HOST", "localhost"),
 ]
+
+# MAILER SETTINGS
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+EMAIL_HOST = getenv("MAIL_HOST", "localhost")
+EMAIL_HOST_PASSWORD = getenv("MAIL_PASS", "")
+EMAIL_HOST_USER = getenv("MAIL_FROM", "insalan@localhost")
+DEFAULT_FROM_EMAIL = getenv("MAIL_FROM", "email@localhost")
+EMAIL_PORT = int(getenv("MAIL_PORT", 25))
+EMAIL_USE_SSL = getenv("MAIL_SSL", "false").lower() in ["true", "1", "t", "y", "yes"]
+EMAIL_SUBJECT_PREFIX = "[InsaLan] "

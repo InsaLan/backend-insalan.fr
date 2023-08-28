@@ -1,5 +1,6 @@
 """User module API Endpoints"""
 
+from datetime import datetime
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import Group, Permission
 from django.http import JsonResponse
@@ -10,6 +11,7 @@ from rest_framework import permissions, status, generics
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.contrib.auth.tokens import default_token_generator
 from insalan.user.serializers import (
     GroupSerializer,
     PermissionSerializer,
@@ -50,6 +52,7 @@ class UserMe(APIView):
         return Response(user.data)
 
 
+# TODO: change permission
 class PermissionViewSet(generics.ListCreateAPIView):
 
     queryset = Permission.objects.all().order_by("name")
@@ -61,6 +64,35 @@ class GroupViewSet(generics.ListCreateAPIView):
     queryset = Group.objects.all().order_by("name")
     serializer_class = GroupSerializer
     permission_classes = [permissions.IsAdminUser]
+
+
+class EmailConfirmView(APIView):
+    permissions_classes = [permissions.AllowAny]
+    authentication_classes = [SessionAuthentication]
+
+    def get(self, request, user=None, token=None):
+        # For some reason, request.query_params gives an empty dict
+        # user = request.query_params.get("user", None)
+        # token = request.query_params.get("token", None)
+
+        error_text = _("Invalid confirmation user or token (or already confirmed)")
+
+        if user and token:
+            try:
+                user_object: User = User.objects.get(username=user)
+            except User.DoesNotExist:
+                return Response({"msg": error_text}, status=status.HTTP_400_BAD_REQUEST)
+
+            if default_token_generator.check_token(
+                user_object,
+                token,
+            ):
+                user_object.is_active = True
+                user_object.last_login = datetime.now()
+                user_object.save()
+                return Response()
+
+        return Response({"msg": error_text}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserRegister(generics.CreateAPIView):
