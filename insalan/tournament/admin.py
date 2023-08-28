@@ -6,7 +6,7 @@
 
 from django.contrib import admin
 
-from .models import Event, Tournament, Game, Team
+from .models import Event, Tournament, Game, Team, Player, Manager
 
 class EventAdmin(admin.ModelAdmin):
     """Admin handler for Events"""
@@ -35,3 +35,17 @@ class TeamAdmin(admin.ModelAdmin):
     search_fields = ['name', 'tournament']
 
 admin.site.register(Team, TeamAdmin)
+
+class PlayerAdmin(admin.ModelAdmin):
+    """Admin handler for Player Registrations"""
+    list_display = ('id', 'user', 'team', 'payment_status')
+    search_fields = ['user', 'team', 'payment_status']
+
+admin.site.register(Player, PlayerAdmin)
+
+class ManagerAdmin(admin.ModelAdmin):
+    """Admin handler for Manager Registrations"""
+    list_display = ('id', 'user', 'team', 'payment_status')
+    search_fields = ['user', 'team', 'payment_status']
+
+admin.site.register(Manager, ManagerAdmin)

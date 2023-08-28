@@ -67,6 +67,11 @@ class Event(models.Model):
         """Return the list of tournaments for that Event"""
         return Tournament.objects.filter(event=self)
 
+    @staticmethod
+    def get_ongoing_ids() -> List[int]:
+        """Return the identifiers of ongoing events"""
+        return __class__.objects.filter(ongoing=True).values_list("id", flat=True)
+
 
 class Game(models.Model):
     """
@@ -231,6 +236,10 @@ class Player(models.Model):
     A Player at InsaLan is simply anyone who is registered to participate in a
     tournamenent, whichever it might be.
     """
+    class Meta:
+        """Meta options"""
+        verbose_name = "Player Registration"
+        verbose_name_plural = "Player Registrations"
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     team = models.ForeignKey("tournament.Team", on_delete=models.CASCADE)
@@ -285,7 +294,6 @@ class Manager(models.Model):
     """
     A Manager is someone in charge of heading a team of players.
     """
-
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     team = models.ForeignKey("tournament.Team", on_delete=models.CASCADE)
     payment_status = models.CharField(
@@ -298,7 +306,8 @@ class Manager(models.Model):
 
     class Meta:
         """Meta Options"""
-
+        verbose_name = "Manager Registration"
+        verbose_name_plural = "Manager Registrations"
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "team"], name="not_twice_same_manager"
