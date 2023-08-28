@@ -198,3 +198,19 @@ class UserEndToEndTestCase(TestCase):
                 'password': '1111qwer!',
                 'email': 'email@example.com'
                 })
+
+    def test_login_invalid_account(self):
+        def send_valid_data(data):
+            request = self.client.post('/v1/user/login/',
+                                       data,
+                                       format='json')
+
+
+            self.assertEquals(request.status_code, 404)
+            self.assertEquals(request.data['msg'], "Wrong username or password")
+
+        send_valid_data({
+                'username': 'newplayer',
+                'password': '1111qwer!',
+                'email': 'email@example.com'
+                })
