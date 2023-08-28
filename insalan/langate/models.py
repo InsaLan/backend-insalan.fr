@@ -1,5 +1,12 @@
+"""Langate models"""
+
+# Disable lints:
+# "Too few public methods"
+# pylint: disable=R0903
+
 from django.db import models
 
+from insalan.tournament.models import PaymentStatus
 from insalan.user.models import User
 
 
@@ -31,8 +38,6 @@ class SimplifiedUserData:
 
         return s_user_data
 
-
-# TODO: Update these once they are fixed in the tournament API
 class TournamentRegistration:
     """
     Tournament Registration for a User
@@ -56,15 +61,14 @@ class LangateReply:
         """
         All possible "err" labels for langate reply information.
         """
-
-        OK = None
+        OK = ""
         NOT_PAID = "no_paid_place"
         NOT_REGISTERED = "registration_not_found"
         NOT_EXIST = "user_does_not_exist"
 
     user = SimplifiedUserData()
     err = models.CharField(max_length=25, choices=RegistrationStatus.choices)
-    tournaments = []
+    tournaments = list
 
     @classmethod
     def new(cls, user: User):
@@ -78,17 +82,6 @@ class LangateReply:
         reply = LangateReply()
 
         reply.user = SimplifiedUserData.new(user)
-
-        # FIXME: Default
-        reply.err = cls.RegistrationStatus.NOT_REGISTERED
-
-        # FIXME: Dummy registration
-        registration = TournamentRegistration()
-        registration.team = "la team chiante là"
-        registration.game_name = "CS:GO"
-        registration.shortname = "cs"
-        registration.has_paid = False
-        registration.manager = False
-        reply.tournaments = [registration]
+        reply.tournaments = []
 
         return reply

@@ -33,5 +33,5 @@ class ReplySerializer(serializers.Serializer):
     """
 
     user = SimplifiedUserDataSerializer()
-    err = serializers.CharField(max_length=25)
+    err = serializers.CharField(max_length=25, allow_null=True, allow_blank=True)
     tournaments = TournamentRegistrationSerializer(many=True)

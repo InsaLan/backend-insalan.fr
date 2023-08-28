@@ -1,4 +1,7 @@
 from django.shortcuts import render
+from django.core import serializers
+from django.core.exceptions import BadRequest
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import status
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
@@ -6,28 +9,34 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from insalan.tournament.models import Event, Tournament, Player, PaymentStatus, Manager
 from insalan.user.models import User
 
-from .models import LangateReply
+from .models import LangateReply, SimplifiedUserData, TournamentRegistration
 from .serializers import ReplySerializer
 
 
 class LangateUserView(CreateAPIView):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
+    serializer_class = ReplySerializer
     """
     API endpoint used by the langate to authenticate and verify a user's data
     """
 
-    def post(self, request, format=None):
+    def post(self, request):
         """
         Function to handle retrieving and checking user data
 
-        Per the langate, this check is done with an HTTP POST. It may have no
+        In the old langate, this check is done with an HTTP POST. It may have no
         data, but when it does, the data provided is a simple JSON object with
         a single field "tournaments" that contains a comma-separated list of the
         tournaments the user is supposed to be registered for. In practice, it
         is never used.
+
+        In this API, we need exactly one parameter: `event_id`. If there is
+        exactly one ongoing event, its ID is taken. Otherwise, it must be
+        provided and correspond to one ongoing event.
 
         Our response is lengthier, and should contain all of the information
         necessary for the langate to identify the user.
@@ -36,22 +45,91 @@ class LangateUserView(CreateAPIView):
         # If we reached here, they are authenticated correctly, so now we
         # fetch their data
         gate_user = request.user
-        print(f'Performing authentication for user "{gate_user}"')
 
-        # Try and retrieve the user
-        # See https://docs.djangoproject.com/en/4.1/topics/db/queries/#retrieving-objects
-        site_users = User.objects.filter(username=gate_user)
-        found_count = len(site_users)
+        # Attempt to determine what the event id is
+        # How many ongoing events are there?
+        ongoing_events = Event.get_ongoing_ids()
+        if len(ongoing_events) == 0:
+            return Response(
+                {"err": _("No event ongoing")},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        event_id = request.data.get("event_id")
+        if event_id is not None:
+            event_id = int(event_id)
+
+        # If there is only one event...
+        if len(ongoing_events) == 1:
+            # ...and there is none provided: use it
+            if event_id is not None and ongoing_events[0] != event_id:
+                return Response(
+                    {"err": _("Mismatching requested event")},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            event_id = ongoing_events[0]
+        else:
+            if event_id is None:
+                return Response(
+                    {"err": _("No provided ID")}, status=status.HTTP_400_BAD_REQUEST
+                )
+
+        if not event_id in ongoing_events:
+            return Response(
+                {"err": _("Event found is not ongoing")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Get the event
+        ev_obj = Event.objects.get(id=event_id)
+        if not ev_obj.ongoing:
+            return Response(
+                {"err": _("Event found is not ongoing")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Find a registration
+        user_obj = User.objects.get(username=gate_user)
+        regs_pl = Player.objects.filter(user=user_obj, team__tournament__event=ev_obj)
+        regs_man = Manager.objects.filter(user=user_obj, team__tournament__event=ev_obj)
+        regs = list(regs_pl) + list(regs_man)
+
+        found_count = len(regs)
+
+        # This will be our reply
+        reply_object = LangateReply.new(user_obj)
 
         if found_count == 0:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            reply_object.err = LangateReply.RegistrationStatus.NOT_REGISTERED
+            return Response(
+                ReplySerializer(reply_object).data, status=status.HTTP_404_NOT_FOUND
+            )
 
-        if found_count > 1:
-            # We need to have an HTTP code that is like
-            # "5XX - we have no idea how we messed up this bad"
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # Now we have our registrations
+        reply_object = LangateReply.new(user_obj)
 
-        # Now we have *one* user
-        reply_object = LangateReply.new(site_users[0])
+        err_not_paid = False
+
+        for regis in regs:
+            tourney = TournamentRegistration()
+            game = regis.team.tournament.game
+
+            tourney.shortname = game.short_name
+            tourney.game_name = game.name
+            tourney.team = regis.team.name
+
+            tourney.manager = isinstance(regis, Manager)
+
+            tourney.has_paid = regis.payment_status == PaymentStatus.PAID
+            err_not_paid = err_not_paid or not tourney.has_paid
+
+            reply_object.tournaments.append(tourney)
+
+        reply_object.err = (
+            LangateReply.RegistrationStatus.NOT_PAID
+            if err_not_paid
+            else None
+        )
+
         ret = ReplySerializer(reply_object)
         return Response(ret.data, status=status.HTTP_200_OK)
