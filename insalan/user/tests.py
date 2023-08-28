@@ -9,6 +9,8 @@ from rest_framework.test import APIClient
 # from django.contrib.contenttypes.models import ContentType
 
 from insalan.tournament.models import Team, Tournament, Event, Game
+from rest_framework import serializers
+from rest_framework.test import APIClient
 from insalan.user.models import User
 
 
@@ -208,6 +210,38 @@ class UserEndToEndTestCase(TestCase):
 
             self.assertEquals(request.status_code, 404)
             self.assertEquals(request.data['msg'], "Wrong username or password")
+
+        send_valid_data({
+                'username': 'newplayer',
+                'password': '1111qwer!',
+                'email': 'email@example.com'
+                })
+    def test_login_not_active_account(self):
+
+        User.objects.create_user(username='newplayer', email='test@test.com', password='1111qwer!')
+        def send_valid_data(data):
+            self.client.post('/v1/user/login/',
+                                       data,
+                                       format='json')
+
+
+            self.assertRaises(serializers.ValidationError)
+
+        send_valid_data({
+                'username': 'newplayer',
+                'password': '1111qwer!',
+                'email': 'email@example.com'
+                })
+    def test_login_account(self):
+
+        User.objects.create_user(username='newplayer', email='test@test.com', password='1111qwer!', is_active=True)
+        def send_valid_data(data):
+            request = self.client.post('/v1/user/login/',
+                                       data,
+                                       format='json')
+
+            self.assertTrue('sessionid' in self.client.cookies)
+
 
         send_valid_data({
                 'username': 'newplayer',

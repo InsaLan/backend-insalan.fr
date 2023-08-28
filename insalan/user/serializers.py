@@ -1,7 +1,6 @@
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth import authenticate
 from rest_framework import serializers, status
-
 from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
 from .models import User
@@ -54,6 +53,9 @@ class UserLoginSerializer(serializers.Serializer):
 
     def check_validity(self, data):
         user = authenticate(username=data['username'], password=data['password'])
+        if user is not None:
+            if not user.is_active:
+                raise serializers.ValidationError(_("Account not actived"))
         return user
 
 class PermissionSerializer(serializers.HyperlinkedModelSerializer):
