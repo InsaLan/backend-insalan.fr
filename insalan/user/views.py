@@ -4,9 +4,10 @@ from rest_framework import permissions, status, generics
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.serializers import ValidationError
 from .models import User
-from django.http import JsonResponse
-
+from rest_framework.response import Response
+from django.utils.translation import gettext_lazy as _
 from insalan.user.serializers import (
     GroupSerializer,
     PermissionSerializer,
@@ -65,11 +66,12 @@ class UserLogin(APIView):
     def post(self, request):
         data = request.data
         serializer = UserLoginSerializer(data=data)
-        if serializer.is_valid(raise_exception=True):
+        if serializer.is_valid():
             user = serializer.check_validity(data)
+            if user is None:
+                return Response({"msg":_("Wrong username or password")}, status=status.HTTP_404_NOT_FOUND)
             login(request, user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
+            return Response(status=status.HTTP_200_OK)
 
 class UserLogout(APIView):
     permission_classes = [permissions.AllowAny]

@@ -1,7 +1,8 @@
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth import authenticate
-from rest_framework import serializers
-from django.core.exceptions import ValidationError
+from rest_framework import serializers, status
+
+from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
 from .models import User
 from rest_framework.validators import UniqueValidator
@@ -48,10 +49,11 @@ class UserLoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField()
 
+    class Meta:
+        model = User
+
     def check_validity(self, data):
         user = authenticate(username=data['username'], password=data['password'])
-        if not user:
-            raise ValidationError('user not found')
         return user
 
 class PermissionSerializer(serializers.HyperlinkedModelSerializer):
