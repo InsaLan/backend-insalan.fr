@@ -247,6 +247,7 @@ class Player(models.Model):
         max_length=10,
         blank=True,
         default=PaymentStatus.NOT_PAID,
+        choices=PaymentStatus.choices,
         null=False,
         verbose_name="Payment Status",
     )
@@ -300,6 +301,7 @@ class Manager(models.Model):
         max_length=10,
         blank=True,
         default=PaymentStatus.NOT_PAID,
+        choices=PaymentStatus.choices,
         null=False,
         verbose_name="Payment Status",
     )
