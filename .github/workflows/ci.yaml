@@ -5,7 +5,7 @@ on:
 jobs:
   linting:
     env:
-      PYLINT_MINSCORE: 5.0
+      PYLINT_MINSCORE: 8.0
     runs-on: ubuntu-22.04
     steps:
       - run: echo "### Linting" >> $GITHUB_STEP_SUMMARY
@@ -16,12 +16,15 @@ jobs:
       - run: source env/bin/activate
 
       # Install dependencies
-      - run: pip3 install pylint
+      - name: Install dependencies
+        run: pip3 install -r requirements.txt
+      - name: Install pylint and pylint-django
+        run: pip3 install pylint pylint-django
 
       # Run lints
       - name: Run linter evaluation
         run: |
-          pylint --ignore=migrations insalan | tee >(grep "Your code has been" | sed 's/^Your code has been rated at \(.*\)\/10.*/PYLINT_SCORE=\1/' >> "$GITHUB_ENV")
+          pylint --load-plugins pylint_django --django-settings-module insalan.settings ./insalan | tee >(grep "Your code has been" | sed 's/^Your code has been rated at \(.*\)\/10.*/PYLINT_SCORE=\1/' >> "$GITHUB_ENV")
 
       # Summary
       - name: Summary
