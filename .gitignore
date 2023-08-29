@@ -17,3 +17,6 @@ pyvenv.cfg
 env
 
 insalan/static/partners
+
+# Translation files
+locale/**/*.mo

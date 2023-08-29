@@ -34,20 +34,30 @@ class Event(models.Model):
     """
 
     name = models.CharField(
-        verbose_name="Event Name",
+        verbose_name=_("Nom de l'évènement"),
         max_length=40,
         validators=[MinLengthValidator(4)],
         null=False,
     )
     description = models.CharField(
-        verbose_name="Event Description", max_length=128, default="", blank=True
+        verbose_name=_("Description de l'évènement"), max_length=128, default="", blank=True
     )
-    year = models.IntegerField(null=False, validators=[MinValueValidator(2003)])
+    year = models.IntegerField(
+        verbose_name=_("Année"),
+        null=False,
+        validators=[MinValueValidator(2003)]
+    )
     month = models.IntegerField(
-        null=False, validators=[MinValueValidator(1), MaxValueValidator(12)]
+        verbose_name=_("Mois"),
+        null=False,
+        validators=[MinValueValidator(1),MaxValueValidator(12)]
     )
-    ongoing = models.BooleanField(default=False)
+    ongoing = models.BooleanField(
+        verbose_name=_("En cours"),
+        default=False
+    )
     logo: models.FileField = models.FileField(
+        verbose_name=_("Logo"),
         blank=True,
         null=True,
         upload_to=os.path.join(STATIC_URL, "event-icons"),
@@ -55,6 +65,11 @@ class Event(models.Model):
             FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg"])
         ],
     )
+
+    class Meta:
+        """Meta options"""
+        verbose_name = _("Évènement")
+        verbose_name_plural = _("Évènements")
 
     def __str__(self) -> str:
         """Format this Event to a str"""
@@ -78,15 +93,19 @@ class Game(models.Model):
     """
     A Game is the representation of a Game that is being played at InsaLan
     """
+    class Meta:
+        """Meta options"""
+        verbose_name = _("Jeu")
+        verbose_name_plural = _("Jeux")
 
     name = models.CharField(
-        verbose_name="Game Name",
+        verbose_name=_("Nom du jeux"),
         validators=[MinLengthValidator(2)],
         max_length=40,
         null=False,
     )
     short_name = models.CharField(
-        verbose_name="Short Name",
+        verbose_name=_("Nom raccourci du jeu"),
         validators=[MinLengthValidator(2)],
         max_length=10,
         null=False,
@@ -111,21 +130,30 @@ class Tournament(models.Model):
     A Tournament happening during an event that Teams of players register for.
     """
 
-    event = models.ForeignKey(Event, on_delete=models.CASCADE)
-    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    event = models.ForeignKey(
+        Event,
+        verbose_name=_("Évènement"),
+        on_delete=models.CASCADE
+    )
+    game = models.ForeignKey(
+        Game,
+        verbose_name=_("Jeu"),
+        on_delete=models.CASCADE
+    )
     name = models.CharField(
-        verbose_name=_("Tournament name"),
+        verbose_name=_("Nom du tournoi"),
         validators=[MinLengthValidator(3)],
         max_length=40,
     )
     rules = models.TextField(
-        verbose_name=_("Tournament Rules"),
+        verbose_name=_("Règlement du tournoi"),
         max_length=50000,
         null=False,
         blank=True,
         default="",
     )
     logo: models.FileField = models.FileField(
+        verbose_name=_("Logo"),
         blank=True,
         null=True,
         upload_to=os.path.join(STATIC_URL, "tournament-icons"),
@@ -133,6 +161,11 @@ class Tournament(models.Model):
             FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg"])
         ],
     )
+
+    class Meta:
+        """Meta options"""
+        verbose_name = _("Tournoi")
+        verbose_name_plural = _("Tournois")
 
     def __str__(self) -> str:
         """Format this Tournament to a str"""
@@ -170,18 +203,23 @@ class Team(models.Model):
     """
 
     tournament = models.ForeignKey(
-        Tournament, null=True, blank=True, on_delete=models.SET_NULL
+        Tournament,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        verbose_name=_("Tournoi")
     )
     name = models.CharField(
         max_length=42,
         validators=[MinLengthValidator(3)],
         null=False,
-        verbose_name="Team Name",
+        verbose_name=_("Nom d'équipe"),
     )
 
     class Meta:
         """Meta Options"""
-
+        verbose_name = _("Équipe")
+        verbose_name_plural = _("Équipes")
         constraints = [
             models.UniqueConstraint(
                 fields=["tournament", "name"], name="no_name_conflict_in_tournament"
@@ -232,9 +270,9 @@ class Team(models.Model):
 class PaymentStatus(models.TextChoices):
     """Information about the current payment status of a Player/Manager"""
 
-    NOT_PAID = "NOTPAID", _("Not Paid")
-    PAID = "PAID", _("Paid")
-    PAY_LATER = "LATER", _("Will pay on site")
+    NOT_PAID = "NOTPAID", _("Pas payé")
+    PAID = "PAID", _("Payé")
+    PAY_LATER = "LATER", _("Payera sur place")
 
 
 class Player(models.Model):
@@ -246,18 +284,26 @@ class Player(models.Model):
     class Meta:
         """Meta options"""
 
-        verbose_name = "Player Registration"
-        verbose_name_plural = "Player Registrations"
+        verbose_name = _("Inscription d'un⋅e joueur⋅euse")
+        verbose_name_plural = _("Inscription de joueur⋅euses")
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    team = models.ForeignKey("tournament.Team", on_delete=models.CASCADE)
+    user = models.ForeignKey(
+            User,
+            on_delete=models.CASCADE,
+            verbose_name=_("Utilisateur⋅ice")
+    )
+    team = models.ForeignKey(
+        "tournament.Team",
+        on_delete=models.CASCADE,
+        verbose_name = _("Équipe"),
+    )
     payment_status = models.CharField(
         max_length=10,
         blank=True,
         default=PaymentStatus.NOT_PAID,
         choices=PaymentStatus.choices,
         null=False,
-        verbose_name="Payment Status",
+        verbose_name = _("Statut du paiement"),
     )
 
     def __str__(self) -> str:
@@ -296,7 +342,7 @@ class Player(models.Model):
             )
             > 1
         ):
-            raise ValidationError(_("Player already registered for this event"))
+            raise ValidationError(_("Joueur⋅euse déjà inscrit⋅e pour cet évènement"))
 
 
 class Manager(models.Model):
@@ -304,22 +350,27 @@ class Manager(models.Model):
     A Manager is someone in charge of heading a team of players.
     """
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    team = models.ForeignKey("tournament.Team", on_delete=models.CASCADE)
+    user = models.ForeignKey(User,
+                             verbose_name=_("Utilisateur⋅ice"),
+                             on_delete=models.CASCADE
+    )
+    team = models.ForeignKey("tournament.Team",
+                             verbose_name=_("Équipe"),
+                             on_delete=models.CASCADE)
     payment_status = models.CharField(
+        verbose_name=_("Statut du paiement"),
         max_length=10,
         blank=True,
         default=PaymentStatus.NOT_PAID,
         choices=PaymentStatus.choices,
         null=False,
-        verbose_name="Payment Status",
     )
 
     class Meta:
         """Meta Options"""
 
-        verbose_name = "Manager Registration"
-        verbose_name_plural = "Manager Registrations"
+        verbose_name = _("Inscription d'un⋅e manager")
+        verbose_name_plural = _("Inscriptions de managers")
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "team"], name="not_twice_same_manager"
@@ -339,6 +390,5 @@ class Manager(models.Model):
     def get_team(self):
         """Return the Team object of the current team"""
         return self.team
-
 
 # vim: set cc=80 tw=80:

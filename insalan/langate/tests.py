@@ -233,7 +233,7 @@ class EndpointTests(TestCase):
         reply = self.client.post('/v1/langate/authenticate', {"event_id": evobj.id+1})
         self.assertEqual(reply.status_code, 400)
 
-        self.assertEqual(reply.data["err"], _("Mismatching requested event"))
+        self.assertEqual(reply.data["err"], _("Évènement demandé incompatible"))
 
 
     def test_many_ongoing_events_no_id(self):
@@ -259,7 +259,7 @@ class EndpointTests(TestCase):
         reply = self.client.post('/v1/langate/authenticate')
         self.assertEqual(reply.status_code, 400)
 
-        self.assertEqual(reply.data["err"], _("No provided ID"))
+        self.assertEqual(reply.data["err"], _("Identifiant manquant"))
 
     def test_many_ongoing_events_wrong_id(self):
         """
@@ -284,7 +284,7 @@ class EndpointTests(TestCase):
         reply = self.client.post('/v1/langate/authenticate', {"event_id": evobj_get.id})
         self.assertEqual(reply.status_code, 400)
 
-        self.assertEqual(reply.data["err"], _("Event found is not ongoing"))
+        self.assertEqual(reply.data["err"], _("Évènement non en cours"))
 
     def test_many_ongoing_events_correct_id_with_registration(self):
         """

@@ -51,7 +51,7 @@ class LangateUserView(CreateAPIView):
         ongoing_events = Event.get_ongoing_ids()
         if len(ongoing_events) == 0:
             return Response(
-                {"err": _("No event ongoing")},
+                {"err": _("Pas d'évènement en cours")},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
@@ -64,19 +64,19 @@ class LangateUserView(CreateAPIView):
             # ...and there is none provided: use it
             if event_id is not None and ongoing_events[0] != event_id:
                 return Response(
-                    {"err": _("Mismatching requested event")},
+                    {"err": _("Évènement demandé incompatible")},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             event_id = ongoing_events[0]
         else:
             if event_id is None:
                 return Response(
-                    {"err": _("No provided ID")}, status=status.HTTP_400_BAD_REQUEST
+                    {"err": _("Identifiant manquant")}, status=status.HTTP_400_BAD_REQUEST
                 )
 
         if not event_id in ongoing_events:
             return Response(
-                {"err": _("Event found is not ongoing")},
+                {"err": _("Évènement non en cours")},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -84,7 +84,7 @@ class LangateUserView(CreateAPIView):
         ev_obj = Event.objects.get(id=event_id)
         if not ev_obj.ongoing:
             return Response(
-                {"err": _("Event found is not ongoing")},
+                {"err": _("Évènement non en cours")},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

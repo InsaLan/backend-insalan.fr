@@ -5,6 +5,7 @@
 # pylint: disable=R0903
 
 from django.contrib import admin
+from django.utils.translation import gettext as _
 
 from .models import Event, Tournament, Game, Team, Player, Manager
 

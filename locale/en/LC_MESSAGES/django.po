@@ -1,0 +1,188 @@
+# TRADUCTION ANGLOPHONE DU SITE WEB DE L'INSALAN
+# Copyright (C) 2023 INSALAN
+# This file is distributed under the same license as the insalan package.
+# Amélie Gonzalez <lymkwi@vulpinecitrus.info>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-08-29 23:58+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Amélie Gonzalez <lymkwi@vulpinecitrus.info>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+#: insalan/langate/tests.py:232 insalan/langate/views.py:67
+msgid "Évènement demandé incompatible"
+msgstr "Mismatched requested event"
+
+#: insalan/langate/tests.py:258 insalan/langate/views.py:74
+msgid "Identifiant manquant"
+msgstr "Missing identifier"
+
+#: insalan/langate/tests.py:283 insalan/langate/views.py:79
+#: insalan/langate/views.py:87
+msgid "Évènement non en cours"
+msgstr "Event not ongoing"
+
+#: insalan/langate/views.py:54
+msgid "Pas d'évènement en cours"
+msgstr "No ongoing event"
+
+#: insalan/partner/models.py:13
+msgid "Partenaire"
+msgstr "Partner"
+
+#: insalan/partner/models.py:14
+msgid "Sponsor"
+msgstr "Sponsor"
+
+#: insalan/settings.py:139
+msgid "Anglais"
+msgstr "English"
+
+#: insalan/settings.py:140
+msgid "Français"
+msgstr "French"
+
+#: insalan/settings.py:141
+msgid "Espagnol"
+msgstr "Spanish"
+
+#: insalan/settings.py:142
+msgid "Allemand"
+msgstr "German"
+
+#: insalan/tickets/models.py:13
+msgid "Annulé"
+msgstr "Canceled"
+
+#: insalan/tickets/models.py:14
+msgid "Scanné"
+msgstr "Scanned"
+
+#: insalan/tickets/models.py:15
+msgid "Valide"
+msgstr "Valid"
+
+#: insalan/tournament/apps.py:10 insalan/tournament/models.py:162
+msgid "Tournois"
+msgstr "Tournaments"
+
+#: insalan/tournament/models.py:37
+msgid "Nom de l'évènement"
+msgstr "Event name"
+
+#: insalan/tournament/models.py:43
+msgid "Description de l'évènement"
+msgstr "Event description"
+
+#: insalan/tournament/models.py:46
+msgid "Année"
+msgstr "Year"
+
+#: insalan/tournament/models.py:51
+msgid "Mois"
+msgstr "Month"
+
+#: insalan/tournament/models.py:56
+msgid "En cours"
+msgstr "Ongoing"
+
+#: insalan/tournament/models.py:60 insalan/tournament/models.py:151
+msgid "Logo"
+msgstr "Logo"
+
+#: insalan/tournament/models.py:70 insalan/tournament/models.py:134
+msgid "Évènement"
+msgstr "Event"
+
+#: insalan/tournament/models.py:71
+msgid "Évènements"
+msgstr "Events"
+
+#: insalan/tournament/models.py:97 insalan/tournament/models.py:139
+msgid "Jeu"
+msgstr "Game"
+
+#: insalan/tournament/models.py:98
+msgid "Jeux"
+msgstr "Games"
+
+#: insalan/tournament/models.py:101
+msgid "Nom du jeux"
+msgstr "Game name"
+
+#: insalan/tournament/models.py:107
+msgid "Nom raccourci du jeu"
+msgstr "Short game name"
+
+#: insalan/tournament/models.py:143
+msgid "Nom du tournoi"
+msgstr "Tournament name"
+
+#: insalan/tournament/models.py:147
+msgid "Règlement du tournoi"
+msgstr "Tournament rules"
+
+#: insalan/tournament/models.py:161 insalan/tournament/models.py:204
+msgid "Tournoi"
+msgstr "Tournament"
+
+#: insalan/tournament/models.py:210
+msgid "Nom d'équipe"
+msgstr "Team name"
+
+#: insalan/tournament/models.py:215 insalan/tournament/models.py:290
+#: insalan/tournament/models.py:349
+msgid "Équipe"
+msgstr "Team"
+
+#: insalan/tournament/models.py:216
+msgid "Équipes"
+msgstr "Teams"
+
+#: insalan/tournament/models.py:267
+msgid "Pas payé"
+msgstr "Not paid"
+
+#: insalan/tournament/models.py:268
+msgid "Payé"
+msgstr "Paid"
+
+#: insalan/tournament/models.py:269
+msgid "Payera sur place"
+msgstr "Will pay on site"
+
+#: insalan/tournament/models.py:279
+msgid "Inscription d'un⋅e joueur⋅euse"
+msgstr "Player Registration"
+
+#: insalan/tournament/models.py:280
+msgid "Inscription de joueur⋅euses"
+msgstr "Player Registrations"
+
+#: insalan/tournament/models.py:285 insalan/tournament/models.py:345
+msgid "Utilisateur⋅ice"
+msgstr "User"
+
+#: insalan/tournament/models.py:298 insalan/tournament/models.py:352
+msgid "Statut du paiement"
+msgstr "Payment Status"
+
+#: insalan/tournament/models.py:337
+msgid "Joueur⋅euse déjà inscrit⋅e pour cet évènement"
+msgstr "Player already registered for that event"
+
+#: insalan/tournament/models.py:362
+msgid "Inscription d'un⋅e manager"
+msgstr "Manager Registration"
+
+#: insalan/tournament/models.py:363
+msgid "Inscriptions de managers"
+msgstr "Manager Registrations"
