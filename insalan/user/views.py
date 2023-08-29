@@ -1,15 +1,15 @@
-from django.contrib.auth import authenticate, login, logout, get_user_model
+"""User module API Endpoints"""
+
+from django.contrib.auth import login, logout
 from django.contrib.auth.models import Group, Permission
+from django.http import JsonResponse
+from django.utils.translation import gettext_lazy as _
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_GET
 from rest_framework import permissions, status, generics
 from rest_framework.authentication import SessionAuthentication
-from django.http import JsonResponse
 from rest_framework.views import APIView
-from rest_framework.serializers import ValidationError
-from django.views.decorators.http import require_GET
-from .models import User
-from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.response import Response
-from django.utils.translation import gettext_lazy as _
 from insalan.user.serializers import (
     GroupSerializer,
     PermissionSerializer,
@@ -17,13 +17,20 @@ from insalan.user.serializers import (
     UserRegisterSerializer,
     UserSerializer,
 )
+from .models import User
+
 
 @require_GET
 @ensure_csrf_cookie
 def get_csrf(request):
-    return JsonResponse({'csrf':'Cookie has been set'})
+    return JsonResponse({'csrf': 'Cookie has been set'})
+
 
 class UserView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    API endpoint that allows users to be viewed or edited.
+    """
+
     queryset = User.objects.all().order_by("-date_joined")
     permission_classes = [permissions.IsAdminUser]
     authentication_classes = [SessionAuthentication]
@@ -31,6 +38,10 @@ class UserView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class UserMe(APIView):
+    """
+    API endpoint that allows a logged in user to get and set some of their own
+    account fields.
+    """
     authentication_classes = [SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -39,7 +50,6 @@ class UserMe(APIView):
         return Response(user.data)
 
 
-# TODO: change permission
 class PermissionViewSet(generics.ListCreateAPIView):
 
     queryset = Permission.objects.all().order_by("name")
@@ -47,11 +57,11 @@ class PermissionViewSet(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAdminUser]
 
 
-# TODO: change permission
 class GroupViewSet(generics.ListCreateAPIView):
     queryset = Group.objects.all().order_by("name")
     serializer_class = GroupSerializer
     permission_classes = [permissions.IsAdminUser]
+
 
 class UserRegister(generics.CreateAPIView):
     """
@@ -62,9 +72,10 @@ class UserRegister(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = UserRegisterSerializer
 
+
 class UserLogin(APIView):
     """
-    API endpoint that allows user login
+    API endpoint that allows user login.
     """
 
     permission_classes = [permissions.AllowAny]
@@ -82,9 +93,14 @@ class UserLogin(APIView):
                 )
             login(request, user)
             return Response(status=status.HTTP_200_OK)
+        return Response({"msg": "Invalid data submitted"},
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserLogout(APIView):
+    """
+    API endpoint that allows a user to logout.
+    """
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
 
