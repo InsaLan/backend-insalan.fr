@@ -8,7 +8,15 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, TransactionTestCase
 
-from insalan.tournament.models import PaymentStatus, Player, Manager, Team, Tournament, Event, Game
+from insalan.tournament.models import (
+    PaymentStatus,
+    Player,
+    Manager,
+    Team,
+    Tournament,
+    Event,
+    Game,
+)
 from insalan.user.models import User
 
 
@@ -101,9 +109,13 @@ class EventTestCase(TransactionTestCase):
     def test_ongoing_events(self):
         """Test that we can find events that are ongoing"""
         Event.objects.create(name="InsaLan", year=2023, month=8)
-        evobj_one = Event.objects.create(name="InsaLan", year=2023, month=9, ongoing=True)
+        evobj_one = Event.objects.create(
+            name="InsaLan", year=2023, month=9, ongoing=True
+        )
         Event.objects.create(name="InsaLan", year=2023, month=10)
-        evobj_two = Event.objects.create(name="InsaLan", year=2023, month=11, ongoing=True)
+        evobj_two = Event.objects.create(
+            name="InsaLan", year=2023, month=11, ongoing=True
+        )
 
         query_ongoing = Event.objects.filter(ongoing=True)
         self.assertEqual(2, len(query_ongoing))
@@ -176,7 +188,9 @@ class EventTestCase(TransactionTestCase):
 
     def test_logo_extension_enforcement(self):
         """Verify that we only accept logos as PNG, JPG, JPEG and SVG"""
-        ev_obj = Event.objects.create(name="Insalan Test", year=2023, month=2, description="")
+        ev_obj = Event.objects.create(
+            name="Insalan Test", year=2023, month=2, description=""
+        )
 
         # PNGs work
         test_png = __class__.create_event_logo("event-test.png")
@@ -199,7 +213,7 @@ class EventTestCase(TransactionTestCase):
         ev_obj.full_clean()
 
         # Others won't
-        for ext in ['mkv', 'txt', 'md', 'php', 'exe', 'zip', '7z']:
+        for ext in ["mkv", "txt", "md", "php", "exe", "zip", "7z"]:
             test_icon = __class__.create_event_logo(f"event-test.{ext}")
             ev_obj.logo = test_icon
             self.assertRaises(ValidationError, ev_obj.full_clean)
@@ -207,6 +221,7 @@ class EventTestCase(TransactionTestCase):
 
 class TournamentTestCase(TestCase):
     """Tournament Tests"""
+
     def setUp(self):
         """Set up the Tournaments"""
         event = Event.objects.create(name="Test", year=2023, month=3, description="")
@@ -224,12 +239,16 @@ class TournamentTestCase(TestCase):
     def test_tournament_null_event(self):
         """Test failure of creation of a Tournament with no event"""
         game = Game.objects.create(name="Test")
-        self.assertRaises(IntegrityError, Tournament.objects.create, event=None, game=game)
+        self.assertRaises(
+            IntegrityError, Tournament.objects.create, event=None, game=game
+        )
 
     def test_tournament_null_game(self):
         """Test failure of creation of a Tournament with no game"""
         event = Event.objects.create(name="Test", year=2023, month=2, description="")
-        self.assertRaises(IntegrityError, Tournament.objects.create, event=event, game=None)
+        self.assertRaises(
+            IntegrityError, Tournament.objects.create, event=event, game=None
+        )
 
     def test_get_event(self):
         """Get the event for a tournament"""
@@ -289,7 +308,9 @@ class TournamentTestCase(TestCase):
         # Delete and verify
         game_obj.delete()
 
-        self.assertRaises(Tournament.DoesNotExist, Tournament.objects.get, id=tourney.id)
+        self.assertRaises(
+            Tournament.DoesNotExist, Tournament.objects.get, id=tourney.id
+        )
 
     def test_event_deletion_cascade(self):
         """Verify that a tournament is deleted when its event is"""
@@ -301,7 +322,9 @@ class TournamentTestCase(TestCase):
         # Delete and verify
         ev_obj.delete()
 
-        self.assertRaises(Tournament.DoesNotExist, Tournament.objects.get, id=tourney.id)
+        self.assertRaises(
+            Tournament.DoesNotExist, Tournament.objects.get, id=tourney.id
+        )
 
     @staticmethod
     def create_tourney_logo(file_name: str = "tourney-test.png") -> SimpleUploadedFile:
@@ -335,7 +358,7 @@ class TournamentTestCase(TestCase):
         tourney.full_clean()
 
         # Others won't
-        for ext in ['mkv', 'txt', 'md', 'php', 'exe', 'zip', '7z']:
+        for ext in ["mkv", "txt", "md", "php", "exe", "zip", "7z"]:
             test_icon = __class__.create_tourney_logo(f"tourney-test.{ext}")
             tourney.logo = test_icon
             self.assertRaises(ValidationError, tourney.full_clean)
@@ -495,7 +518,9 @@ class TeamTestCase(TestCase):
         tourney = team.get_tournament()
 
         # Attempt to register another one
-        self.assertRaises(IntegrityError, Team.objects.create, name="LaLooze", tournament=tourney)
+        self.assertRaises(
+            IntegrityError, Team.objects.create, name="LaLooze", tournament=tourney
+        )
 
     def test_team_name_too_short(self):
         """Verify that a team name cannot be too short"""

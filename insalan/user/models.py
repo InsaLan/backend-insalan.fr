@@ -16,21 +16,21 @@ from django.utils.translation import gettext_lazy as _
 
 
 class UserManager(BaseUserManager):
-
-    def create_user(self, email, username, password_validation, password=None,
-                    **extra_fields):
+    def create_user(
+        self, email, username, password_validation, password=None, **extra_fields
+    ):
         if not email:
-            raise ValueError(_('An email is required'))
+            raise ValueError(_("An email is required"))
         if not username:
-            raise ValueError(_('An username is required'))
+            raise ValueError(_("An username is required"))
         if not password:
-            raise ValueError(_('A password is required'))
+            raise ValueError(_("A password is required"))
         user = self.model(
-                email=self.normalize_email(email),
-                username=username,
-                date_joined=date.today(),
-                **extra_fields
-                )
+            email=self.normalize_email(email),
+            username=username,
+            date_joined=date.today(),
+            **extra_fields
+        )
         user.set_password(password)
         user.save()
         return user
@@ -47,15 +47,19 @@ class User(AbstractUser, PermissionsMixin):
     USERNAME_FIELD = "username"
     EMAIL_FIELD = "email"
 
-    email = models.EmailField(verbose_name='email address',
-                              max_length=255,
-                              unique=True,
-                              blank=False)
-    email_active = models.BooleanField(verbose_name='Email Activated',
-                                       default=False)
+    email = models.EmailField(
+        verbose_name="email address", max_length=255, unique=True, blank=False
+    )
+    email_active = models.BooleanField(verbose_name="Email Activated", default=False)
     first_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=50, blank=True)
-    is_staff = models.BooleanField(verbose_name='Part of the insalan team', default=False)
-    is_superuser = models.BooleanField(verbose_name='Admin of the insalan team', default=False)
-    is_active = models.BooleanField(verbose_name='Email confirmed', default=True)
+    is_staff = models.BooleanField(
+        verbose_name="Part of the insalan team", default=False
+    )
+    is_superuser = models.BooleanField(
+        verbose_name="Admin of the insalan team", default=False
+    )
+    is_active = models.BooleanField(verbose_name="Email confirmed", default=True)
     object = UserManager()
+
+# vim: set tw=80 cc=80:

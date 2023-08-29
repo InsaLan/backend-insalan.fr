@@ -9,50 +9,66 @@ from rest_framework import serializers
 from .models import Event, Tournament, Game, Team, Player, Manager
 from insalan.user.models import User
 
+
 class EventSerializer(serializers.ModelSerializer):
     # pylint: disable=R0903
     """Serializer for the tournament Event"""
     tournaments = serializers.ListField(
-            required=False,
-            read_only=True,
-            source="get_tournaments_id"
-            )
+        required=False, read_only=True, source="get_tournaments_id"
+    )
+
     class Meta:
         """Serializer meta options"""
+
         model = Event
-        read_only_fields = ('id',)
-        fields = ['id', 'name', 'description', 'year', 'month', 'ongoing', 'tournaments']
+        read_only_fields = ("id",)
+        fields = [
+            "id",
+            "name",
+            "description",
+            "year",
+            "month",
+            "ongoing",
+            "tournaments",
+        ]
+
 
 class GameSerializer(serializers.ModelSerializer):
     """Serializer for the tournament Games"""
+
     class Meta:
         """Meta options of the serializer"""
+
         model = Game
-        read_only_fields=('id',)
-        fields = ['id', 'name', 'short_name']
+        read_only_fields = ("id",)
+        fields = ["id", "name", "short_name"]
+
 
 class TournamentSerializer(serializers.ModelSerializer):
     """Serializer class for Tournaments"""
-    teams = serializers.ListField(
-            required=False,
-            read_only=True,
-            source="get_teams_id"
-            )
+
+    teams = serializers.ListField(required=False, read_only=True, source="get_teams_id")
+
     class Meta:
         """Meta options of the serializer"""
+
         model = Tournament
-        read_only_fields=('id',)
-        fields = ['id', 'event', 'game', 'name', 'teams']
+        read_only_fields = ("id",)
+        fields = ["id", "event", "game", "name", "teams"]
+
 
 class TeamSerializer(serializers.ModelSerializer):
     """Serializer class for Teams"""
+
     players = serializers.ListField(required=False, source="get_players_id")
     managers = serializers.ListField(required=False, source="get_managers_id")
+
     class Meta:
         """Meta options of the team serializer"""
+
         model = Team
-        read_only_fields=('id',)
-        fields = ['id', 'tournament', 'name', 'players', 'managers']
+        read_only_fields = ("id",)
+        fields = ["id", "tournament", "name", "players", "managers"]
 
     def create(self, validated_data):
         """Create a Team from input data"""
@@ -102,28 +118,38 @@ class TeamSerializer(serializers.ModelSerializer):
 
         return instance
 
+
 class PlayerSerializer(serializers.ModelSerializer):
     """Serializer for a Player Registration"""
+
     class Meta:
         """Meta options for the serializer"""
+
         model = Player
-        fields = '__all__'
+        fields = "__all__"
+
 
 class PlayerIdSerializer(serializers.Serializer):
     """Serializer to verify a list of player IDs"""
+
     def to_representation(self, instance):
         """Turn a Django object into a serialized representation"""
         return instance.id
 
+
 class ManagerSerializer(serializers.ModelSerializer):
     """Serializer for a Manager Registration"""
+
     class Meta:
         """Meta options for the serializer"""
+
         model = Manager
-        fields = '__all__'
+        fields = "__all__"
+
 
 class ManagerIdSerializer(serializers.ModelSerializer):
     """Serializer to verify a list of manager IDs"""
+
     def to_representation(self, instance):
         """Turn a Django object into a serialized representation"""
         return instance.id

@@ -29,6 +29,7 @@ class UserView(generics.RetrieveUpdateDestroyAPIView):
     authentication_classes = [SessionAuthentication]
     serializer_class = UserSerializer
 
+
 class UserMe(APIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
@@ -36,6 +37,7 @@ class UserMe(APIView):
     def get(self, request):
         user = UserSerializer(request.user)
         return Response(user.data)
+
 
 # TODO: change permission
 class PermissionViewSet(generics.ListCreateAPIView):
@@ -55,6 +57,7 @@ class UserRegister(generics.CreateAPIView):
     """
     API endpoint that allows user creation.
     """
+
     queryset = User.objects.all()
     permission_classes = [permissions.AllowAny]
     serializer_class = UserRegisterSerializer
@@ -73,9 +76,13 @@ class UserLogin(APIView):
         if serializer.is_valid():
             user = serializer.check_validity(data)
             if user is None:
-                return Response({"msg":_("Wrong username or password")}, status=status.HTTP_404_NOT_FOUND)
+                return Response(
+                    {"msg": _("Wrong username or password")},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
             login(request, user)
             return Response(status=status.HTTP_200_OK)
+
 
 class UserLogout(APIView):
     permission_classes = [permissions.AllowAny]

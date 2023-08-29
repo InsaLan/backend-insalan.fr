@@ -30,7 +30,9 @@ urlpatterns = [
         name="player/listFromUsername",
     ),
     path("manager/", views.ManagerRegistrationList.as_view(), name="manager/list"),
-    path("manager/<int:pk>/", views.ManagerRegistration.as_view(), name="manager/details"),
+    path(
+        "manager/<int:pk>/", views.ManagerRegistration.as_view(), name="manager/details"
+    ),
     path(
         "manager/fromUserId/<int:user_id>/",
         views.ManagerRegistrationListId.as_view(),

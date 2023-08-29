@@ -11,12 +11,14 @@ from insalan.user.models import User
 from .models import LangateReply
 from .serializers import ReplySerializer
 
+
 class LangateUserView(CreateAPIView):
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
     """
     API endpoint used by the langate to authenticate and verify a user's data
     """
+
     def post(self, request, format=None):
         """
         Function to handle retrieving and checking user data
@@ -34,7 +36,7 @@ class LangateUserView(CreateAPIView):
         # If we reached here, they are authenticated correctly, so now we
         # fetch their data
         gate_user = request.user
-        print(f"Performing authentication for user \"{gate_user}\"")
+        print(f'Performing authentication for user "{gate_user}"')
 
         # Try and retrieve the user
         # See https://docs.djangoproject.com/en/4.1/topics/db/queries/#retrieving-objects

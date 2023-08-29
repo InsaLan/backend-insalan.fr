@@ -2,6 +2,7 @@ from django.db import models
 
 from insalan.user.models import User
 
+
 class SimplifiedUserData:
     """
     Simplified Representation of User Data
@@ -10,9 +11,10 @@ class SimplifiedUserData:
     identity that is sufficient for the langate to create an account without
     tournament data.
     """
+
     username = models.CharField(max_length=100, blank=False)
     name = models.CharField(max_length=100)
-    email = models.EmailField(verbose_name='email address', max_length=255, blank=False)
+    email = models.EmailField(verbose_name="email address", max_length=255, blank=False)
 
     @classmethod
     def new(cls, user: User):
@@ -29,16 +31,19 @@ class SimplifiedUserData:
 
         return s_user_data
 
+
 # TODO: Update these once they are fixed in the tournament API
 class TournamentRegistration:
     """
     Tournament Registration for a User
     """
+
     shortname = models.CharField(max_length=50, blank=False)
     game_name = models.CharField(max_length=25, blank=False)
     team = models.CharField(max_length=25, blank=False)
     manager = models.BooleanField()
     has_paid = models.BooleanField()
+
 
 class LangateReply:
     """
@@ -46,10 +51,12 @@ class LangateReply:
     authenticated. That information will help the langate create an account that
     can mirror the one found on the website.
     """
+
     class RegistrationStatus(models.TextChoices):
         """
         All possible "err" labels for langate reply information.
         """
+
         OK = None
         NOT_PAID = "no_paid_place"
         NOT_REGISTERED = "registration_not_found"
@@ -85,4 +92,3 @@ class LangateReply:
         reply.tournaments = [registration]
 
         return reply
-

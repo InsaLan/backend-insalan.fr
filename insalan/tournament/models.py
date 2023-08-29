@@ -50,9 +50,10 @@ class Event(models.Model):
     logo: models.FileField = models.FileField(
         blank=True,
         null=True,
-        upload_to=os.path.join(STATIC_URL, 'event-icons'),
-        validators=[FileExtensionValidator(allowed_extensions=['png', 'jpg',
-                                                               'jpeg', 'svg'])]
+        upload_to=os.path.join(STATIC_URL, "event-icons"),
+        validators=[
+            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg"])
+        ],
     )
 
     def __str__(self) -> str:
@@ -117,15 +118,20 @@ class Tournament(models.Model):
         validators=[MinLengthValidator(3)],
         max_length=40,
     )
-    rules = models.TextField(verbose_name=_("Tournament Rules"),
-                             max_length=50000, null=False, blank=True,
-                             default="")
+    rules = models.TextField(
+        verbose_name=_("Tournament Rules"),
+        max_length=50000,
+        null=False,
+        blank=True,
+        default="",
+    )
     logo: models.FileField = models.FileField(
         blank=True,
         null=True,
-        upload_to=os.path.join(STATIC_URL, 'tournament-icons'),
-        validators=[FileExtensionValidator(allowed_extensions=['png', 'jpg',
-                                                               'jpeg', 'svg'])]
+        upload_to=os.path.join(STATIC_URL, "tournament-icons"),
+        validators=[
+            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg"])
+        ],
     )
 
     def __str__(self) -> str:
@@ -236,8 +242,10 @@ class Player(models.Model):
     A Player at InsaLan is simply anyone who is registered to participate in a
     tournamenent, whichever it might be.
     """
+
     class Meta:
         """Meta options"""
+
         verbose_name = "Player Registration"
         verbose_name_plural = "Player Registrations"
 
@@ -295,6 +303,7 @@ class Manager(models.Model):
     """
     A Manager is someone in charge of heading a team of players.
     """
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     team = models.ForeignKey("tournament.Team", on_delete=models.CASCADE)
     payment_status = models.CharField(
@@ -308,6 +317,7 @@ class Manager(models.Model):
 
     class Meta:
         """Meta Options"""
+
         verbose_name = "Manager Registration"
         verbose_name_plural = "Manager Registrations"
         constraints = [

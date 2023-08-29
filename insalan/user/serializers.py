@@ -11,31 +11,43 @@ from django.contrib.auth.password_validation import validate_password
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        exclude = ('password',)
+        exclude = ("password",)
         # fields = ['url', 'username', 'email', 'groups']
+
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
-        required=True,
-        validators=[UniqueValidator(queryset=User.objects.all())]
+        required=True, validators=[UniqueValidator(queryset=User.objects.all())]
     )
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password = serializers.CharField(
+        write_only=True, required=True, validators=[validate_password]
+    )
     first_name = serializers.CharField(max_length=50, required=False)
     last_name = serializers.CharField(max_length=50, required=False)
     password_validation = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'is_active', 'is_staff', 
-                  'is_superuser', 'email', 'email_active', 'password', 'password_validation']
-        read_only_fields = ('is_superuser','is_active', 'is_staff')
-        write_only_fields = ('password', 'password_validation')
+        fields = [
+            "username",
+            "first_name",
+            "last_name",
+            "is_active",
+            "is_staff",
+            "is_superuser",
+            "email",
+            "email_active",
+            "password",
+            "password_validation",
+        ]
+        read_only_fields = ("is_superuser", "is_active", "is_staff")
+        write_only_fields = ("password", "password_validation")
 
     def validate(self, data):
         """
         Validate user registration (password shall be confirmed)
         """
-        if data['password'] != data['password_validation']:
+        if data["password"] != data["password_validation"]:
             raise serializers.ValidationError(_("Password doesn't match"))
         return data
 
@@ -43,6 +55,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user_object = User.object.create_user(**data)
         user_object.save()
         return user_object
+
 
 class UserLoginSerializer(serializers.Serializer):
     username = serializers.CharField()
@@ -52,16 +65,17 @@ class UserLoginSerializer(serializers.Serializer):
         model = User
 
     def check_validity(self, data):
-        user = authenticate(username=data['username'], password=data['password'])
+        user = authenticate(username=data["username"], password=data["password"])
         if user is not None:
             if not user.is_active:
                 raise serializers.ValidationError(_("Account not actived"))
         return user
 
+
 class PermissionSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Permission
-        exclude = ('content_type',)
+        exclude = ("content_type",)
 
 
 class GroupSerializer(serializers.HyperlinkedModelSerializer):
