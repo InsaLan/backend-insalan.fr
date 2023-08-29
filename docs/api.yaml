@@ -111,8 +111,9 @@ paths:
           description: Invalid Input
         '403':
           description: Not Authorized
-#      security:
-#        - insalan_auth:
+      security:
+       - basicAuth: [staff_tournois, staff_anim, bureau, concierge]
+
   /tournament/event/ongoing/:
     get:
       tags:
@@ -129,6 +130,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Event'
+
   /tournament/event/{eventId}/:
     get:
       tags:
@@ -195,6 +197,8 @@ paths:
           description: Event not found
         '405':
           description: Validation exception
+      security:
+       - basicAuth: [staff_tournois, staff_anim, bureau, concierge]
     delete:
       tags:
         - event
@@ -217,6 +221,8 @@ paths:
           description: Invalid event value
         '403':
           description: Not Authorized
+      security:
+       - basicAuth: [staff_tournois, staff_anim, bureau, concierge]
 
   /tournament/tournament/:
     get:
@@ -261,6 +267,9 @@ paths:
           description: Not Authorized
         '405':
           description: Invalid Input
+      security:
+       - basicAuth: [staff_tournois, staff_anim, bureau, concierge]
+
   /tournament/tournament/{tournamentId}/:
     get:
       tags:
@@ -327,6 +336,8 @@ paths:
           description: Event not found
         '405':
           description: Validation exception
+      security:
+       - basicAuth: [staff_tournois, staff_anim, bureau, concierge]
     delete:
       tags:
         - tournament
@@ -349,6 +360,8 @@ paths:
           description: Invalid tournament value
         '403':
           description: Not Authorized
+      security:
+       - basicAuth: [staff_tournois, staff_anim, bureau, concierge]
   
   /tournament/game/:
     get:
@@ -393,6 +406,9 @@ paths:
           description: Not Authorized
         '405':
           description: Invalid Input
+      security:
+        - basicAuth: [staff_tournois, bureau, concierge, staff_anim]
+
   /tournament/game/{gameId}/:
     get:
       tags:
@@ -459,6 +475,8 @@ paths:
           description: Event not found
         '405':
           description: Validation exception
+      security:
+       - basicAuth: [staff_tournois, staff_anim, bureau, concierge]
     delete:
       tags:
         - game
@@ -481,6 +499,8 @@ paths:
           description: Invalid game value
         '403':
           description: Not Authorized
+      security:
+       - basicAuth: [staff_tournois, staff_anim, bureau, concierge]
 
   /tournament/team/:
     post:
@@ -505,6 +525,9 @@ paths:
           description: Not Authorized
         '405':
           description: Invalid input data
+      security:
+       - basicAuth: [manager, staff_tournois, staff_anim, staff_sysrez, bureau, concierge]
+
   /tournament/team/{teamId}/:
     get:
       tags:
@@ -568,6 +591,8 @@ paths:
           description: Event not found
         '405':
           description: Validation exception
+      security:
+        - basicAuth: [manager_of_team, staff_anim, concierge, staff_tournois, staff_sysrez, bureau]
     delete:
       tags:
         - team
@@ -590,6 +615,8 @@ paths:
           description: Invalid team value
         '403':
           description: Not Authorized
+      security:
+       - basicAuth: [manager_of_team, staff_anim, staff_tournois, staff_sysrez, bureau, concierge]
 
   /tournament/player/{userId}/:
     get:
@@ -663,27 +690,10 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  count:
-                    type: integer
-                    format: int64
-                    minimum: 0
-                    example: 1
-                  next:
-                    description: "???"
-                    type: string
-                    nullable: true
-                    example: null
-                  previous:
-                    description: "???"
-                    type: string
-                    nullable: true
-                    example: null
-                  results:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Partner"
+                type: array
+                items:
+                  $ref: "#/components/schemas/Partner"
+
   /partner/partner/add/:
     post:
       tags:
@@ -712,6 +722,9 @@ paths:
           description: Creation effective
         '403':
           description: Not allowed
+      security:
+       - basicAuth: [staff_comm_partos, staff_sysrez, bureau, concierge]
+
   /partners/{partnerId}/:
     get:
       tags:
@@ -761,6 +774,8 @@ paths:
           description: Panel found
         '403':
           description: Not authorized
+      security:
+       - basicAuth: [bureau, concierge]
 
 components:
   schemas:
@@ -997,5 +1012,27 @@ components:
           schema:
             $ref: '#/components/schemas/User'
 
-#  securitySchemes:
+  securitySchemes:
+   basicAuth:
+    type: http
+    scheme: basic
+
+security:
+  - basicAuth:
+    - user
+    - player
+    - player_of_team
+    - player_itself
+    - manager
+    - manager_of_team
+    - manager_itself
+    - staff
+    - staff_bouffe
+    - staff_tournois
+    - staff_comm_partos
+    - staff_cosplay
+    - staff_anim
+    - staff_sysrez
+    - bureau
+    - concierge
 
