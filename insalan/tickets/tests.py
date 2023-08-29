@@ -2,6 +2,7 @@ import uuid
 
 from django.test import TestCase
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -81,7 +82,7 @@ class Ticket_TODO(APITestCase):
             reverse("tickets:get", args=["user1", "invalid-uuid"])
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json(), {"err": "Invalid uuid"})
+        self.assertEqual(response.json(), {"err": _("UUID invalide")})
 
         response = self.client.get(
             reverse(
@@ -89,7 +90,7 @@ class Ticket_TODO(APITestCase):
             )
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.json(), {"err": "User not found"})
+        self.assertEqual(response.json(), {"err": _("Utilisateur⋅ice non trouvé⋅e")})
 
         response = self.client.get(
             reverse(
@@ -97,7 +98,7 @@ class Ticket_TODO(APITestCase):
             )
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.json(), {"err": "Ticket not found"})
+        self.assertEqual(response.json(), {"err": _("Ticket non trouvé")})
 
         response = self.client.get(
             reverse(
@@ -149,25 +150,25 @@ class Ticket_TODO(APITestCase):
 
         response = self.client.get(reverse("tickets:scan", args=["invalid-uuid"]))
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json(), {"err": "Invalid uuid"})
+        self.assertEqual(response.json(), {"err": _("UUID invalide")})
 
         response = self.client.get(
             reverse("tickets:scan", args=["00000000-0000-0000-0000-000000000000"])
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.json(), {"err": "Ticket not found"})
+        self.assertEqual(response.json(), {"err": _("Ticket non trouvé")})
 
         response = self.client.get(
             reverse("tickets:scan", args=["00000000-0000-0000-0000-000000000002"])
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json(), {"err": "Ticket cancelled"})
+        self.assertEqual(response.json(), {"err": _("Ticket annulé")})
 
         response = self.client.get(
             reverse("tickets:scan", args=["00000000-0000-0000-0000-000000000003"])
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json(), {"err": "Ticket already scanned"})
+        self.assertEqual(response.json(), {"err": _("Ticket déjà scanné")})
 
     def test_qrcode(self) -> None:
         create_ticket("user1", "00000000-0000-0000-0000-000000000001")
@@ -183,19 +184,19 @@ class Ticket_TODO(APITestCase):
             reverse("tickets:qrcode", args=["00000000-0000-0000-0000-000000000001"])
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.json(), {"err": "Ticket not found"})
+        self.assertEqual(response.json(), {"err": _("Ticket non trouvé")})
 
         self.login("user1")
 
         response = self.client.get(reverse("tickets:qrcode", args=["invalid-uuid"]))
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.json(), {"err": "Invalid uuid"})
+        self.assertEqual(response.json(), {"err": _("UUID invalide")})
 
         response = self.client.get(
             reverse("tickets:qrcode", args=["00000000-0000-0000-0000-000000000002"])
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.json(), {"err": "Ticket not found"})
+        self.assertEqual(response.json(), {"err": _("Ticket non trouvé")})
 
         response = self.client.get(
             reverse("tickets:qrcode", args=["00000000-0000-0000-0000-000000000001"])

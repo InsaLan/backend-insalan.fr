@@ -65,6 +65,12 @@ class User(AbstractUser, PermissionsMixin):
     class.
     """
 
+    class Meta:
+        """Meta options"""
+
+        verbose_name = _("Utilisateur⋅ice")
+        verbose_name_plural = _("Utilisateur⋅ices")
+
     def __init__(self, *args, **kwargs):
         AbstractUser.__init__(self, *args, **kwargs)
 
@@ -72,9 +78,11 @@ class User(AbstractUser, PermissionsMixin):
     EMAIL_FIELD = "email"
 
     email = models.EmailField(
-        verbose_name="email address", max_length=255, unique=True, blank=False
+        verbose_name=_("Courriel"), max_length=255, unique=True, blank=False
     )
-    email_active = models.BooleanField(verbose_name="Email Activated", default=False)
+    email_active = models.BooleanField(
+        verbose_name=_("Courriel vérifié"), default=False
+    )
     first_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=50, blank=True)
     is_staff = models.BooleanField(

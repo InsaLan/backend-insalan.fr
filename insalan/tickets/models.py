@@ -12,11 +12,20 @@ class Ticket(models.Model):
         SCANNED = "SC", _("Scanné")
         VALID = "VA", _("Valide")
 
+    class Meta:
+        """Meta options"""
+
+        verbose_name = _("Ticket")
+        verbose_name_plural = _("Tickets")
+
     token: models.UUIDField = models.UUIDField(
-        unique=True, default=uuid.uuid4, editable=False
+        verbose_name=_("UUID"), unique=True, default=uuid.uuid4, editable=False
     )
-    user: models.ForeignKey = models.ForeignKey(User, on_delete=models.CASCADE)
+    user: models.ForeignKey = models.ForeignKey(
+        User, verbose_name=_("Utilisateur⋅ice"), on_delete=models.CASCADE
+    )
     status: models.CharField = models.CharField(
+        verbose_name=_("Statut"),
         max_length=2,
         choices=Status.choices,
         default=Status.VALID,
