@@ -57,7 +57,7 @@ class Event(models.Model):
 
     def __str__(self) -> str:
         """Format this Event to a str"""
-        return f"{self.name} ({self.year}-{self.month})"
+        return f"{self.name} ({self.year}-{self.month:02d})"
 
     def get_tournaments_id(self) -> List[int]:
         """Return the list of tournaments identifiers for that Event"""
@@ -130,7 +130,7 @@ class Tournament(models.Model):
 
     def __str__(self) -> str:
         """Format this Tournament to a str"""
-        return f"{self.name} (@ {self.event.__str__()})"
+        return f"{self.name} (@ {self.event})"
 
     def get_name(self) -> str:
         """Get the name of the tournament"""
@@ -184,7 +184,7 @@ class Team(models.Model):
 
     def __str__(self) -> str:
         """Format this team to a str"""
-        return f"{self.name}"
+        return f"{self.name} ({self.tournament.event})"
 
     def get_name(self):
         """
@@ -253,7 +253,7 @@ class Player(models.Model):
 
     def __str__(self) -> str:
         """Format this player registration to a str"""
-        return f"{self.user.username} for {self.team} ({self.team.tournament})"
+        return f"{self.user.username} for {self.team}"
 
     def as_user(self) -> User:
         """Return the current player as a User object"""
@@ -317,7 +317,7 @@ class Manager(models.Model):
     def __str__(self) -> str:
         """Format this manager registration as a str"""
         return (
-            f"(Manager) {self.user.username} for {self.team} ({self.team.tournament})"
+            f"(Manager) {self.user.username} for {self.team}"
         )
 
     def as_user(self) -> User:
