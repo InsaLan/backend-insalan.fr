@@ -194,24 +194,6 @@ class UserEndToEndTestCase(TestCase):
             ],
         )
 
-    def test_login_valid_account(self):
-        User.objects.create_user(
-            username="newplayer", email="test@test.com", password="1111qwer!"
-        )
-
-        def send_valid_data(data):
-            request = self.client.post("/v1/user/login/", data, format="json")
-
-            self.assertEquals(request.status_code, 200)
-
-        send_valid_data(
-            {
-                "username": "newplayer",
-                "password": "1111qwer!",
-                "email": "email@example.com",
-            }
-        )
-
     def test_login_invalid_account(self):
         def send_valid_data(data):
             request = self.client.post("/v1/user/login/", data, format="json")
@@ -251,6 +233,7 @@ class UserEndToEndTestCase(TestCase):
             email="test@test.com",
             password="1111qwer!",
             is_active=True,
+            email_active=True,
         )
 
         def send_valid_data(data):
