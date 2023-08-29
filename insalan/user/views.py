@@ -87,7 +87,7 @@ class EmailConfirmView(APIView):
                 user_object,
                 token,
             ):
-                user_object.is_active = True
+                user_object.email_active = True
                 user_object.last_login = datetime.now()
                 user_object.save()
                 return Response()
