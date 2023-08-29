@@ -2,23 +2,23 @@
 Module for the definition of models tied to users
 """
 
-from typing import Optional, List
 from datetime import date
-from django.contrib.auth.models import AbstractUser
-from django.db import models
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
-
 from django.contrib.auth.models import AbstractUser, PermissionsMixin
+from django.db import models
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import gettext_lazy as _
 
 
-
 class UserManager(BaseUserManager):
+    """
+    Managers the User objects (kind of like a serializer but not quite that)
+    """
     def create_user(
         self, email, username, password_validation, password=None, **extra_fields
     ):
+        """
+        check that all required fields are present and create an user
+        """
         if not email:
             raise ValueError(_("An email is required"))
         if not username:
@@ -28,7 +28,7 @@ class UserManager(BaseUserManager):
         user = self.model(
             email=self.normalize_email(email),
             username=username,
-            date_joined=date.today(),
+            date_joined=date.today(),  # TODO this generates a warning, see tests
             **extra_fields
         )
         user.set_password(password)
