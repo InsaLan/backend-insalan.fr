@@ -3,9 +3,11 @@ Module for the definition of models tied to users
 """
 
 from datetime import datetime
-from django.contrib.auth.models import AbstractUser, PermissionsMixin
-from django.db import models
+
 from django.contrib.auth.base_user import BaseUserManager
+from django.contrib.auth.models import AbstractUser, PermissionsMixin
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -14,6 +16,7 @@ class UserManager(BaseUserManager):
     """
     Managers the User objects (kind of like a serializer but not quite that)
     """
+
     def create_user(
         self, email, username, password, password_validation=None, **extra_fields
     ):
@@ -55,6 +58,7 @@ class User(AbstractUser, PermissionsMixin):
     A user is simply our own abstraction defined above the standard Django User
     class.
     """
+
     def __init__(self, *args, **kwargs):
         AbstractUser.__init__(self, *args, **kwargs)
 
@@ -75,6 +79,12 @@ class User(AbstractUser, PermissionsMixin):
     )
     is_active = models.BooleanField(default=True)
     object = UserManager()
+
+
+class EmailConfirmationTokenGenerator(PasswordResetTokenGenerator):
+    def __init__(self):
+        super().__init__()
+        self.key_salt = "IWontLaunch8TwitchStreamsWhenConnectionIsAlreadyBad"
 
 
 # vim: set tw=80 cc=80:

@@ -2,22 +2,25 @@
 # pylint: disable=too-few-public-methods
 
 from os import getenv
-from django.contrib.auth.models import Group, Permission
+
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.password_validation import validate_password
-from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from .models import User
-from django.core.mail import send_mail
-from django.urls import reverse
+
+from .models import EmailConfirmationTokenGenerator, User
 
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for an User"""
+
     class Meta:
         """Meta class, used to set parameters"""
+
         model = User
         exclude = ("password",)
         # fields = ['url', 'username', 'email', 'groups']
@@ -25,6 +28,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     """Serializer for a register for submission"""
+
     email = serializers.EmailField(
         required=True,
         validators=[UniqueValidator(queryset=User.objects.all())],
@@ -38,6 +42,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         """Meta class, used to set parameters"""
+
         model = User
         fields = [
             "username",
@@ -58,7 +63,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         """
         Send an e-mail confirmation token to the user registring.
         """
-        token = default_token_generator.make_token(user_object)
+        token = EmailConfirmationTokenGenerator().make_token(user_object)
         user = user_object.username
         # TODO Give a frontend page instead of direct API link
         send_mail(
@@ -89,11 +94,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
 class UserLoginSerializer(serializers.Serializer):
     """Serializer for a login form submission"""
+
     username = serializers.CharField()
     password = serializers.CharField()
 
     class Meta:
         """Meta class, used to set parameters"""
+
         model = User
 
     def check_validity(self, data):
@@ -102,8 +109,7 @@ class UserLoginSerializer(serializers.Serializer):
             - Username & Password combination gives a good user
             - The account has not been deactivated
         """
-        user = authenticate(username=data["username"],
-                            password=data["password"])
+        user = authenticate(username=data["username"], password=data["password"])
         if user is not None:
             if not user.is_active or not user.email_active:
                 raise serializers.ValidationError(_("Account not actived"))
@@ -112,16 +118,20 @@ class UserLoginSerializer(serializers.Serializer):
 
 class PermissionSerializer(serializers.HyperlinkedModelSerializer):
     """Serializer for a django Permission"""
+
     class Meta:
         """Meta class, used to set parameters"""
+
         model = Permission
         exclude = ("content_type",)
 
 
 class GroupSerializer(serializers.HyperlinkedModelSerializer):
     """Serializer for a django Group (used with Permissions)"""
+
     class Meta:
         """Meta class, used to set parameters"""
+
         model = Group
         exclude = ()
         # fields = ['url', 'name']
