@@ -2,10 +2,12 @@ from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.models import Group, Permission
 from rest_framework import permissions, status, generics
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.response import Response
+from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.serializers import ValidationError
+from django.views.decorators.http import require_GET
 from .models import User
+from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.response import Response
 from django.utils.translation import gettext_lazy as _
 from insalan.user.serializers import (
@@ -15,6 +17,11 @@ from insalan.user.serializers import (
     UserRegisterSerializer,
     UserSerializer,
 )
+
+@require_GET
+@ensure_csrf_cookie
+def get_csrf(request):
+    return JsonResponse({'csrf':'Cookie has been set'})
 
 class UserView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all().order_by("-date_joined")
@@ -29,23 +36,20 @@ class UserMe(APIView):
     def get(self, request):
         user = UserSerializer(request.user)
         return Response(user.data)
-"""
+
 # TODO: change permission
 class PermissionViewSet(generics.ListCreateAPIView):
 
     queryset = Permission.objects.all().order_by("name")
     serializer_class = PermissionSerializer
     permission_classes = [permissions.IsAdminUser]
-"""
 
 
 # TODO: change permission
-"""
 class GroupViewSet(generics.ListCreateAPIView):
     queryset = Group.objects.all().order_by("name")
     serializer_class = GroupSerializer
     permission_classes = [permissions.IsAdminUser]
-"""
 
 class UserRegister(generics.CreateAPIView):
     """
