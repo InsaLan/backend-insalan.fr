@@ -32,6 +32,7 @@ jobs:
       - run: echo Your \`pylint\` score is ${{ env.PYLINT_SCORE }} >> "$GITHUB_STEP_SUMMARY"
 
   unit-tests:
+    if: always()
     needs: [linting]
     runs-on: ubuntu-22.04
     env:
