@@ -119,7 +119,6 @@ class UserEndToEndTestCase(TestCase):
                 ("email", "email@example.com"),
             ],
         )
-
         send_valid_data(
             {
                 "username": "PeachLover3003",
@@ -172,28 +171,22 @@ class UserEndToEndTestCase(TestCase):
                 ("email", "email@example.com"),
             ],
         )
-
-        send_valid_data(
-            {
-                "username": "PeachLover3003",
-                "password": "1111qwer!",
-                "password_validation": "1111qwer!",
-                "email": "mario@mushroom.kingdom",
-                "first_name": "Mario",
-                "last_name": "Bros",
-            },
-            [
-                ("username", "PeachLover3003"),
-                ("first_name", "Mario"),
-                ("last_name", "Bros"),
-                ("is_staff", False),
-                ("is_superuser", False),
-                ("is_active", True),
-                ("email_active", False),
-                ("email", "mario@mushroom.kingdom"),
-            ],
-        )
-
+        send_valid_data({
+                'username': 'PeachLover3003',
+                'password': '1111qwer!',
+                'password_validation': '1111qwer!',
+                'email': 'mario@mushroom.kingdom',
+                'first_name': 'Mario',
+                'last_name': 'Bros'
+                },
+                        [('username', 'PeachLover3003'),
+                         ('first_name', 'Mario'),
+                         ('last_name', 'Bros'),
+                         ('is_staff', False),
+                         ('is_superuser', False),
+                         ('is_active', True),
+                         ('email_active', False),
+                         ('email', 'mario@mushroom.kingdom')])
     def test_login_invalid_account(self):
         def send_valid_data(data):
             request = self.client.post("/v1/user/login/", data, format="json")
@@ -235,7 +228,6 @@ class UserEndToEndTestCase(TestCase):
             is_active=True,
             email_active=True,
         )
-
         def send_valid_data(data):
             request = self.client.post("/v1/user/login/", data, format="json")
 
