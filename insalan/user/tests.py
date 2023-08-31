@@ -191,7 +191,7 @@ class UserEndToEndTestCase(TestCase):
             "username": "ILoveMail",
             "password": "1111qwer!",
             "password_validation": "1111qwer!",
-            "email": "livreur@chronopost.fr",
+            "email": "postman@example.com",
             "first_name": "Postman",
             "last_name": "Chronopost",
         }
@@ -199,14 +199,14 @@ class UserEndToEndTestCase(TestCase):
         request = self.client.post("/v1/user/register/", data, format="json")
 
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].to, ["livreur@chronopost.fr"])
+        self.assertEqual(mail.outbox[0].to, ["postman@example.com"])
 
     def test_register_can_confirm_email(self):
         data = {
             "username": "ILoveEmail",
             "password": "1111qwer!",
             "password_validation": "1111qwer!",
-            "email": "livreur@chronopost.fr",
+            "email": "postman@example.com",
             "first_name": "Postman",
             "last_name": "Chronopost",
         }
@@ -235,7 +235,7 @@ class UserEndToEndTestCase(TestCase):
             "username": "ILoveEmail",
             "password": "1111qwer!",
             "password_validation": "1111qwer!",
-            "email": "livreur@chronopost.fr",
+            "email": "postman@example.com",
             "first_name": "Postman",
             "last_name": "Chronopost",
         }
@@ -249,9 +249,10 @@ class UserEndToEndTestCase(TestCase):
         username = match["username"]
         token = match["token"]
 
-        self.client.get(f"/v1/user/confirm/{username}/{token}")
         request = self.client.get(f"/v1/user/confirm/{username}/{token}")
+        self.assertEquals(request.status_code, 200)
 
+        request = self.client.get(f"/v1/user/confirm/{username}/{token}")
         self.assertEquals(request.status_code, 400)
 
     def test_confirmation_email_is_token_checked(self):
@@ -259,7 +260,7 @@ class UserEndToEndTestCase(TestCase):
             "username": "ILoveEmail",
             "password": "1111qwer!",
             "password_validation": "1111qwer!",
-            "email": "livreur@chronopost.fr",
+            "email": "postman@example.com",
             "first_name": "Postman",
             "last_name": "Chronopost",
         }
@@ -332,3 +333,61 @@ class UserEndToEndTestCase(TestCase):
                 "email": "email@example.com",
             }
         )
+
+    def can_resend_confirmation_email(self):
+        data = {
+            "username": "ILoveEmail",
+            "password": "1111qwer!",
+            "password_validation": "1111qwer!",
+            "email": "postman@example.com",
+            "first_name": "Postman",
+            "last_name": "Chronopost",
+        }
+
+        self.client.post("/v1/user/register/", data, format="json")
+
+        self.assertEqual(mail.outbox, 1)
+
+        self.client.post("/v1/user/register/",
+                         {
+                             "username": "ILoveEmail"
+                         },
+                         format="json")
+
+        self.assertEqual(mail.outbox, 2)
+
+        self.client.post("/v1/user/register/",
+                         {
+                             "username": "ILoveEmail"
+                         },
+                         format="json")
+
+        self.assertEqual(mail.outbox, 3)
+
+    def cant_resend_confirmation_if_already_valid(self):
+        User.objects.create_user(
+            username="newplayer",
+            email="test@example.com",
+            password="1111qwer!",
+            email_active=True
+        )
+
+        request = self.client.post("/v1/user/resend-email/",
+                                   { "username": "ILoveEmail" },
+                                   format="json")
+
+        self.assertEqual(request.status_code, 400)
+
+    def cant_resend_confirmation_if_nonexisting_user(self):
+        request = self.client.post("/v1/user/resend-email/",
+                                   { "username": "IDontExistLol" },
+                                   format="json")
+
+        self.assertEqual(request.status_code, 400)
+
+    def dont_crash_resend_confirmation_if_empty(self):
+        request = self.client.post("/v1/user/resend-email/",
+                                   { },
+                                   format="json")
+
+        self.assertEqual(request.status_code, 400)

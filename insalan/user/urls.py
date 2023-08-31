@@ -9,6 +9,8 @@ urlpatterns = [
     path("logout/", views.UserLogout.as_view(), name="/logout"),
     path("user/", views.UserView.as_view(), name="/"),
     path("me/", views.UserMe.as_view(), name="me"),
+    path("resend-email/", views.ResendEmailConfirmView.as_view(),
+         name="resend-confirm"),
     path("get-csrf/", views.get_csrf, name="get-csrf"),
     path(
         "confirm/<str:user>/<str:token>",

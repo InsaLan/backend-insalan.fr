@@ -73,11 +73,7 @@ class EmailConfirmView(APIView):
     authentication_classes = [SessionAuthentication]
 
     def get(self, request, user=None, token=None):
-        # For some reason, request.query_params gives an empty dict
-        # user = request.query_params.get("user", None)
-        # token = request.query_params.get("token", None)
-
-        error_text = _("Invalid confirmation user or token (or already confirmed)")
+        error_text = _("Utilisateur ou jeton invalide (ou adresse déjà confirmée)")
 
         if user and token:
             try:
@@ -95,6 +91,33 @@ class EmailConfirmView(APIView):
                 return Response()
 
         return Response({"msg": error_text}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ResendEmailConfirmView(APIView):
+    permissions_classes = [permissions.AllowAny]
+    authentication_classes = [SessionAuthentication]
+
+    def post(self, request):
+        error_text = _("Impossible de renvoyer le courriel de confirmation")
+
+        username = request.data.get("username")
+
+        if not username:
+            return Response({"msg": error_text},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user_object: User = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({"msg": error_text},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        if user_object.email_active:
+            return Response({"msg": error_text},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        UserRegisterSerializer.send_mail(user_object)
+        return Response()
 
 
 class UserRegister(generics.CreateAPIView):

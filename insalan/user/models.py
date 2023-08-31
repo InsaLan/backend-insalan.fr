@@ -82,6 +82,12 @@ class User(AbstractUser, PermissionsMixin):
 
 
 class EmailConfirmationTokenGenerator(PasswordResetTokenGenerator):
+    """
+    Generate an email confirmation token.
+    It's just a PasswordResetTokenGenerator with a different salt.
+    
+    (NB: the django app secret is also used as a salt)
+    """
     def __init__(self):
         super().__init__()
         self.key_salt = "IWontLaunch8TwitchStreamsWhenConnectionIsAlreadyBad"

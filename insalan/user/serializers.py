@@ -67,8 +67,8 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user = user_object.username
         # TODO Give a frontend page instead of direct API link
         send_mail(
-            _("Confirm your e-mail!"),
-            _("Confirm your e-mail by clicking ")
+            _("Confirmez votre e-mail"),
+            _("Confirmez votre adresse e-mail en cliquant sur ")
             + "http://api."
             + getenv("WEBSITE_HOST", "localhost")
             + reverse("confirm-email", kwargs={"user": user, "token": token}),
@@ -82,7 +82,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         Validate user registration (password shall be confirmed)
         """
         if data["password"] != data["password_validation"]:
-            raise serializers.ValidationError(_("Password doesn't match"))
+            raise serializers.ValidationError(_("Les mots de passe diffèrent"))
         return data
 
     def create(self, data):
