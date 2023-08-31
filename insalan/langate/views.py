@@ -4,7 +4,7 @@ from django.core.exceptions import BadRequest
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import status
-from rest_framework.authentication import BasicAuthentication, SessionAuthentication
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -17,7 +17,7 @@ from .serializers import ReplySerializer
 
 
 class LangateUserView(CreateAPIView):
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
     serializer_class = ReplySerializer
     """
