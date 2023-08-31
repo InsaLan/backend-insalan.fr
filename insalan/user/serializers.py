@@ -83,7 +83,7 @@ class UserLoginSerializer(serializers.Serializer):
         user = authenticate(username=data["username"],
                             password=data["password"])
         if user is not None:
-            if not user.is_active or not user.email_active:
+            if not user.email_active:
                 raise serializers.ValidationError(_("Account not actived"))
         return user
 
