@@ -14,7 +14,7 @@ class UserManager(BaseUserManager):
     Managers the User objects (kind of like a serializer but not quite that)
     """
     def create_user(
-        self, email, username, password_validation, password=None, **extra_fields
+        self, email, username, password, **extra_fields
     ):
         """
         check that all required fields are present and create an user
@@ -35,6 +35,15 @@ class UserManager(BaseUserManager):
         user.save()
         return user
 
+    def create_superuser(self, email,username, password, **extra_fields):
+        if password is None:
+            raise TypeError('Superusers must have a password.')
+        user = self.create_user(email, username, password, **extra_fields)
+        user.is_superuser = True
+        user.is_staff = True
+        user.save()
+
+        return user
 
 class User(AbstractUser, PermissionsMixin):
     """
