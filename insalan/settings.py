@@ -154,10 +154,9 @@ REST_FRAMEWORK = {
 
 # Login and logout
 LOGIN_URL = ("rest_framework:login",)
-LOGIN_REDIRECT_URL = "/v1/"  # FIXME: Change once we have a good admin page
+LOGIN_REDIRECT_URL = "/v1/"
 LOGOUT_URL = "rest_framework:logout"
 
-# FIXME: not in production
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://" + getenv("WEBSITE_HOST", "localhost"),
