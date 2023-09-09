@@ -13,3 +13,5 @@ The following behaviours are enforced:
  - Deleting a `Team` deletes:
     - `Player`s on it
     - `Manager`s on it
+ - Deleting a `Tree` deletes:
+    - `Match`es on it

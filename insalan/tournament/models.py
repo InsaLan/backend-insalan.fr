@@ -104,7 +104,7 @@ class Game(models.Model):
     def get_short_name(self) -> str:
         """Return the short name of the game"""
         return self.short_name
-
+    
 
 class Tournament(models.Model):
     """
@@ -134,6 +134,12 @@ class Tournament(models.Model):
         ],
     )
 
+    tree = models.ManyToOneRel(
+        to="tournament.Match",
+        verbose_name=_("Tournament Tree"),
+        on_delete=models.CASCADE
+    )
+
     def __str__(self) -> str:
         """Format this Tournament to a str"""
         return f"{self.name} (@ {self.event})"
@@ -161,6 +167,14 @@ class Tournament(models.Model):
     def get_rules(self) -> str:
         """Return the raw tournament rules"""
         return self.rules
+    
+    def get_tree(self) -> List["Match"]:
+        """Return the tree of the tournament"""
+        return Match.objects.filter(tournament=self, order_by="position")
+    
+    def get_match(self) -> "Match":
+        """Returns a match from the tournament tree"""
+        return Match.objects.get(tournament=self, position=self.position)
 
 
 class Team(models.Model):
@@ -178,6 +192,23 @@ class Team(models.Model):
         null=False,
         verbose_name="Team Name",
     )
+    wins = models.IntegerField(default=0)
+    losses = models.IntegerField(default=0)
+    logo: models.FileField = models.FileField(
+        blank=True,
+        null=True,
+        upload_to=os.path.join(STATIC_URL, "team-icons"),
+        validators=[
+            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg"])
+        ],
+        verbose_name=_("Team Logo")
+    )
+    max_size = models.IntegerField(
+        default=5,
+        validators=[MinValueValidator(1)],
+        verbose_name=_("Maximum number of players"),
+    )
+
 
     class Meta:
         """Meta Options"""
@@ -227,6 +258,39 @@ class Team(models.Model):
         Retrieve the user identifiers of all managers
         """
         return self.get_managers().values_list("user_id", flat=True)
+    
+    def get_wins(self) -> int:
+        """
+        Retrieve the number of wins of the team
+        """
+        return self.wins
+    
+    def get_losses(self) -> int:
+        """
+        Retrieve the number of losses of the team
+        """
+        return self.losses
+    
+    def get_max_size(self) -> int:
+        """
+        Retrieve the maximum size of the team
+        """
+        return self.max_size
+
+
+class Match(models.Model):
+    """
+    A Match between N teams
+    """
+
+    # Position of the match in the tree
+    position = models.IntegerField(null=False)
+
+    teams = models.ManyToManyField(Team)
+    winner = models.ForeignKey(
+        Team, null=True, blank=True, on_delete=models.SET_NULL, related_name="winner"
+    )
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
 
 
 class PaymentStatus(models.TextChoices):
