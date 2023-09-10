@@ -121,6 +121,55 @@ class TournamentDetails(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAdminUser | ReadOnly]
 
 
+class TournamentDetailsFull(APIView):
+    """Details about a tournament, with full dereferencing of data"""
+
+    def get(self, _, primary_key: int):
+        """Handle the GET word"""
+
+        # Alright, let's try and get the object
+        tourneys = Tournament.objects.filter(id=primary_key)
+        if len(tourneys) == 0:
+            raise Http404
+        if len(tourneys) > 1:
+            return Response("", status=status.HTTP_400_BAD_REQUEST)
+
+        tourney = tourneys[0]
+
+        tourney_serialized = serializers.TournamentSerializer(tourney).data
+
+        # Dereference the event
+        event = tourney.event
+        tourney_serialized["event"] = serializers.EventSerializer(event).data
+        del tourney_serialized["event"]["tournaments"]
+
+        # Dereference the game
+        tourney_serialized["game"] = serializers.GameSerializer(tourney.game).data
+
+        # Dereference the teams
+        teams_serialized = []
+        for team in tourney_serialized["teams"]:
+            team_preser = serializers.TeamSerializer(Team.objects.get(id=team)).data
+            del team_preser["tournament"]
+
+            # Dereference players/managers to users (username)
+            team_preser["players"] = [
+                User.objects.get(id=pid).username
+                for pid in team_preser["players"]
+            ]
+            team_preser["managers"] = [
+                User.objects.get(id=pid).username
+                for pid in team_preser["managers"]
+            ]
+
+            teams_serialized.append(team_preser)
+
+        tourney_serialized["teams"].clear()
+        tourney_serialized["teams"] = teams_serialized
+
+        return Response(tourney_serialized, status=status.HTTP_200_OK)
+
+
 # Teams
 class TeamList(generics.ListCreateAPIView):
     """List all known teams"""

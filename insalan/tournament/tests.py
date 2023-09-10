@@ -7,6 +7,7 @@ from django.db.utils import IntegrityError
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, TransactionTestCase
+from django.urls import reverse
 
 from insalan.tournament.models import (
     PaymentStatus,
@@ -792,6 +793,86 @@ class PlayerTestCase(TestCase):
 # TODO: Add tests of the API
 
 
+class TournamentFullDerefEndpoint(TestCase):
+    """Test the endpoint that fully dereferences everything about a tournament"""
+
+    def test_not_found(self):
+        """Test what happens on a tournament not found"""
+        candidates = Tournament.objects.all().values_list("id", flat=True)
+        if len(candidates) == 0:
+            candidates = [1]
+        not_used = max(candidates) + 1
+
+        request = self.client.get(
+            f"/v1/tournament/tournament/{not_used}/full", format="sjon"
+        )
+        self.assertEqual(request.status_code, 404)
+
+    def test_example(self):
+        """Test a simple example"""
+        uobj_one = User.objects.create(
+            username="test_user_one", email="one@example.com"
+        )
+        uobj_two = User.objects.create(
+            username="test_user_two", email="two@example.com"
+        )
+        uobj_three = User.objects.create(
+            username="test_user_three", email="three@example.com"
+        )
+
+        game_obj = Game.objects.create(name="Test Game", short_name="TFG")
+
+        evobj = Event.objects.create(
+            name="Test Event",
+            description="This is a test",
+            year=2021,
+            month=12,
+            ongoing=False,
+        )
+        tourneyobj_one = Tournament.objects.create(
+            event=evobj, name="Test Tournament", rules="have fun!", game=game_obj
+        )
+        team_one = Team.objects.create(name="Team One", tournament=tourneyobj_one)
+        Player.objects.create(user=uobj_one, team=team_one)
+        Player.objects.create(user=uobj_two, team=team_one)
+        Manager.objects.create(user=uobj_three, team=team_one)
+
+        request = self.client.get(
+            reverse("tournament/details-full", args=[tourneyobj_one.id]), format="json"
+        )
+        self.assertEqual(request.status_code, 200)
+
+        self.assertEqual(
+            request.data,
+            {
+                "id": tourneyobj_one.id,
+                "event": {
+                    "id": evobj.id,
+                    "name": "Test Event",
+                    "description": "This is a test",
+                    "year": 2021,
+                    "month": 12,
+                    "ongoing": False,
+                },
+                "game": {"id": game_obj.id, "name": "Test Game", "short_name": "TFG"},
+                "name": "Test Tournament",
+                "teams": [
+                    {
+                        "id": team_one.id,
+                        "name": "Team One",
+                        "players": [
+                            "test_user_one",
+                            "test_user_two",
+                        ],
+                        "managers": [
+                            "test_user_three",
+                        ],
+                    }
+                ],
+            },
+        )
+
+
 class EventDerefAndGroupingEndpoints(TestCase):
     """Test endpoints for dereferencing/fetching grouped events"""
 
@@ -852,7 +933,9 @@ class EventDerefAndGroupingEndpoints(TestCase):
         """Test a simple example of a dereference"""
         evobj = Event.objects.create(name="Test", year=2023, month=3, ongoing=True)
         gobj = Game.objects.create(name="Test Game", short_name="TG")
-        tourney = Tournament.objects.create(name="Test Tournament", game=gobj, event=evobj, rules="have fun!")
+        tourney = Tournament.objects.create(
+            name="Test Tournament", game=gobj, event=evobj, rules="have fun!"
+        )
 
         request = self.client.get(
             f"/v1/tournament/event/{evobj.id}/tournaments", format="json"
@@ -860,7 +943,6 @@ class EventDerefAndGroupingEndpoints(TestCase):
 
         self.assertEqual(request.status_code, 200)
 
-        print(request.data)
         self.assertEqual(
             request.data,
             {
