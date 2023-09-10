@@ -7,6 +7,12 @@ urlpatterns = [
     path("event/", views.EventList.as_view(), name="event/list"),
     path("event/ongoing/", views.OngoingEventList.as_view(), name="event/ongoing"),
     path("event/<int:pk>/", views.EventDetails.as_view(), name="event/details"),
+    path(
+        "event/<int:primary_key>/tournaments",
+        views.EventDetailsSomeDeref.as_view(),
+        name="event/details-tournaments",
+    ),
+    path("event/year/<int:year>", views.EventByYear.as_view(), name="event/by-year"),
     path("game/", views.GameList.as_view(), name="game/list"),
     path("game/<int:pk>/", views.GameDetails.as_view(), name="game/details"),
     path("tournament/", views.TournamentList.as_view(), name="tournament/list"),

@@ -792,6 +792,96 @@ class PlayerTestCase(TestCase):
 # TODO: Add tests of the API
 
 
+class EventDerefAndGroupingEndpoints(TestCase):
+    """Test endpoints for dereferencing/fetching grouped events"""
+
+    @staticmethod
+    def create_multiple_events():
+        """Create some of events"""
+        Event.objects.create(name="Event 1", year=2018, month=8)
+        Event.objects.create(name="Event 2", year=2019, month=3)
+        Event.objects.create(name="Event 3", year=2019, month=7)
+        Event.objects.create(name="Event 4", year=2021, month=11)
+
+    def test_year_group_empty(self):
+        """Test what happens when events are in the database but we query an empty year"""
+        self.create_multiple_events()
+
+        request = self.client.get("/v1/tournament/event/year/2020", format="json")
+
+        self.assertEqual(request.status_code, 200)
+        self.assertEqual(len(request.data), 0)
+
+    def test_year_one_found(self):
+        """Test what happens when one event is found"""
+        self.create_multiple_events()
+
+        request = self.client.get("/v1/tournament/event/year/2018", format="json")
+
+        self.assertEqual(request.status_code, 200)
+        self.assertEqual(len(request.data), 1)
+
+    def test_year_two_found(self):
+        """Test what happens when multiple events are found"""
+        self.create_multiple_events()
+
+        request = self.client.get("/v1/tournament/event/year/2019", format="json")
+        self.assertEqual(request.status_code, 200)
+        self.assertEqual(len(request.data), 2)
+
+    def test_year_garbage(self):
+        """Test that if you put anything but a year it's not recognized"""
+        self.create_multiple_events()
+
+        request = self.client.get("/v1/tournament/event/year/00d1686a", format="json")
+        self.assertEqual(request.status_code, 404)
+
+    def test_deref_not_found(self):
+        """Test what happens on a not found event"""
+        not_assigned_list = Event.objects.all().values_list("id", flat=True)
+        if len(not_assigned_list) == 0:
+            not_assigned_list = [1]
+        not_assigned = max(not_assigned_list) + 1
+        request = self.client.get(
+            f"/v1/tournament/event/{not_assigned}/tournaments", format="json"
+        )
+
+        self.assertEqual(request.status_code, 404)
+
+    def test_deref(self):
+        """Test a simple example of a dereference"""
+        evobj = Event.objects.create(name="Test", year=2023, month=3, ongoing=True)
+        gobj = Game.objects.create(name="Test Game", short_name="TG")
+        tourney = Tournament.objects.create(name="Test Tournament", game=gobj, event=evobj, rules="have fun!")
+
+        request = self.client.get(
+            f"/v1/tournament/event/{evobj.id}/tournaments", format="json"
+        )
+
+        self.assertEqual(request.status_code, 200)
+
+        print(request.data)
+        self.assertEqual(
+            request.data,
+            {
+                "id": evobj.id,
+                "name": "Test",
+                "description": "",
+                "year": 2023,
+                "month": 3,
+                "ongoing": True,
+                "tournaments": [
+                    {
+                        "id": tourney.id,
+                        "name": "Test Tournament",
+                        "game": gobj.id,
+                        "teams": [],
+                    }
+                ],
+            },
+        )
+
+
 # Manager Class Tests
 class ManagerTestCase(TestCase):
     """Manager Unit Test Class"""
