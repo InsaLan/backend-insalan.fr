@@ -25,7 +25,7 @@ jobs:
       - name: Run linter evaluation
         shell: bash
         run: |
-          pylint  --fail-under ${{ env.PYLINT_MINSCORE }}--load-plugins pylint_django --django-settings-module insalan.settings ./insalan | tee >(grep "Your code has been" | sed 's/^Your code has been rated at \(.*\)\/10.*/PYLINT_SCORE=\1/' >> "$GITHUB_ENV")
+          pylint  --fail-under ${{ env.PYLINT_MINSCORE }} --load-plugins pylint_django --django-settings-module insalan.settings ./insalan | tee >(grep "Your code has been" | sed 's/^Your code has been rated at \(.*\)\/10.*/PYLINT_SCORE=\1/' >> "$GITHUB_ENV")
 
       # Summary
       - name: Summary
