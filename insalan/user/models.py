@@ -2,10 +2,11 @@
 Module for the definition of models tied to users
 """
 
-from datetime import date
+from datetime import datetime
 from django.contrib.auth.models import AbstractUser, PermissionsMixin
 from django.db import models
 from django.contrib.auth.base_user import BaseUserManager
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
@@ -28,7 +29,7 @@ class UserManager(BaseUserManager):
         user = self.model(
             email=self.normalize_email(email),
             username=username,
-            date_joined=date.today(),  # TODO this generates a warning, see tests
+            date_joined=timezone.make_aware(datetime.now()),
             **extra_fields
         )
         user.set_password(password)
