@@ -217,6 +217,58 @@ paths:
           description: Invalid event value
         '403':
           description: Not Authorized
+  /tournament/event/{eventId}/tournaments/:
+    get:
+      tags:
+        - event
+      summary: Find an event by its ID and dereference the tournaments
+      description: Returns a single event from its identifier with tournament objects instead of keys
+      operationId: getEventByIdTournamentDeref
+      parameters:
+        - name: eventId
+          in: path
+          description: ID of event to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTournamentDeref'
+        '400':
+          description: Multiple events found (impossible)
+        '404':
+          description: Event not found
+  /tournament/event/year/{year}/:
+    get:
+      tags:
+        - event
+      summary: List all events of a year
+      description: Show all events of a given year
+      operationId: getYearEvents
+      parameters:
+        - name: year
+          in: path
+          description: Year to search events for
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
 
   /tournament/tournament/:
     get:
@@ -349,7 +401,34 @@ paths:
           description: Invalid tournament value
         '403':
           description: Not Authorized
-  
+  /tournament/tournament/{tournamentId}/full:
+    get:
+      tags:
+        - tournament
+      summary: Get a tournament, fully dereferencing foreign keys
+      description: Returns a single full tournament from its identifier
+      operationId: getTournamentByIdFull
+      parameters:
+        - name: tournamentId
+          in: path
+          description: ID of tournament to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TournamentFull'
+        '400':
+          description: Multiple such events found (impossible))
+        '404':
+          description: Event not found
+
   /tournament/game/:
     get:
       tags:
@@ -807,6 +886,59 @@ components:
           uniqueItems: true
           readOnly: true
           example: [82, 83, 85, 81]
+    EventTournamentDeref:
+      required:
+       - name
+       - description
+       - year
+       - month
+       - ongoing
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 17
+          readOnly: true
+        name:
+          type: string
+          example: "InsaLan XVI"
+        description:
+          type: string
+          example: "17ème édition de l'InsaLan!"
+        year:
+          type: integer
+          format: int64
+          example: 2022
+          minimum: 2003
+        month:
+          type: integer
+          format: int64
+          example: 3
+          minimum: 1
+          maximum: 12
+        ongoing:
+          type: boolean
+          example: true
+        tournaments:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                allOf:
+                  - $ref: "#/components/schemas/Tournament/properties/id"
+              name:
+                allOf:
+                  - $ref: "#/components/schemas/Tournament/properties/name"
+              game:
+                allOf:
+                  - $ref: "#/components/schemas/Tournament/properties/game"
+              teams:
+                allOf:
+                  - $ref: "#/components/schemas/Tournament/properties/teams"
+            readOnly: false
+          readOnly: true
     Tournament:
       required:
         - event
@@ -818,6 +950,10 @@ components:
           format: int64
           readOnly: true
           example: 84
+        name:
+          type: string
+          readOnly: false
+          example: "Tournois LoL"
         event:
           allOf:
             - $ref: "#/components/schemas/Event/properties/id"
@@ -835,6 +971,51 @@ components:
           uniqueItems: true
           example: [132, 137, 189, 203, 201, 179, 193, 228]
           readOnly: true
+    TournamentFull:
+      required:
+        - event
+        - game
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          example: 84
+        event:
+          readOnly: false
+          type: object
+          properties:
+            id:
+              allOf:
+                - $ref: "#/components/schemas/Event/properties/id"
+            name:
+              allOf:
+                - $ref: "#/components/schemas/Event/properties/name"
+            description:
+              allOf:
+                - $ref: "#/components/schemas/Event/properties/description"
+            year:
+              allOf:
+                - $ref: "#/components/schemas/Event/properties/year"
+            month:
+              allOf:
+                - $ref: "#/components/schemas/Event/properties/month"
+            ongoing:
+              allOf:
+                - $ref: "#/components/schemas/Event/properties/ongoing"
+        game:
+          allOf:
+            - $ref: "#/components/schemas/Game"
+          readOnly: false
+
+        teams:
+          type: array
+          items:
+            allOf:
+              - $ref: "#/components/schemas/TeamDeref"
+            readOnly: false
+          readOnly: true
     Game:
       required:
         - name
@@ -849,6 +1030,9 @@ components:
         name:
           type: string
           example: "Counter-Strike: Global Offensive"
+        short_name:
+          type: string
+          example: "CSGO"
     Team:
       required:
         - name
@@ -883,6 +1067,36 @@ components:
           allOf:
             - $ref: "#/components/schemas/Tournament/properties/id"
           readOnly: false
+    TeamDeref:
+      required:
+        - name
+        - tournament
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 228
+          readOnly: true
+          minimum: 0
+        name:
+          type: string
+          example: "La Team du Bonheur"
+        players:
+          type: array
+          items:
+            allOf:
+              - $ref: "#/components/schemas/User/properties/username"
+            readOnly: false
+          uniqueItems: false
+          example: ["user_one", "test_user", "its_a_me_mario"]
+        managers:
+          type: array
+          items:
+            allOf:
+              - $ref: "#/components/schemas/User/properties/username"
+            readOnly: false
+          uniqueItems: false
+          example: ["i_am_the_manager"]
     User:
       type: object
       properties:
