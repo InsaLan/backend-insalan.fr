@@ -2,13 +2,17 @@
 Module for the definition of models tied to users
 """
 
+from os import getenv
 from datetime import datetime
 
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser, PermissionsMixin
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.mail import send_mail
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import urlencode
 from django.utils.translation import gettext_lazy as _
 
 
@@ -85,12 +89,67 @@ class EmailConfirmationTokenGenerator(PasswordResetTokenGenerator):
     """
     Generate an email confirmation token.
     It's just a PasswordResetTokenGenerator with a different salt.
-    
+
     (NB: the django app secret is also used as a salt)
     """
+
     def __init__(self):
         super().__init__()
         self.key_salt = "IWontLaunch8TwitchStreamsWhenConnectionIsAlreadyBad"
+
+
+class UserMailer:
+    """
+    Send emails.
+    """
+
+    @staticmethod
+    def send_email_confirmation(user_object: User):
+        """
+        Send an e-mail confirmation token to the user registring.
+        """
+        token = EmailConfirmationTokenGenerator().make_token(user_object)
+        user = user_object.username
+        # TODO Give a frontend page instead of direct API link
+        send_mail(
+            _("Confirmez votre e-mail"),
+            _("Confirmez votre adresse e-mail en cliquant sur ")
+            + "http://api."
+            + getenv("WEBSITE_HOST", "localhost")
+            + reverse("confirm-email", kwargs={"user": user, "token": token}),
+            None,  # Django falls back to default of settings.py
+            [user_object.email],
+            fail_silently=False,
+        )
+
+    def send_password_reset(user_object: User):
+        """
+        Send a password reset token.
+        """
+        token = default_token_generator.make_token(user_object)
+        user = user_object.username
+        # TODO Give a frontend page instead of direct API link
+        send_mail(
+            _("Demande de ré-initialisation de mot de passe"),
+            _(
+                "Une demande de ré-initialisation de mot de passe a été effectuée"
+                "pour votre compte. Si vous êtes à l'origine de cette demande,"
+                "vous pouvez cliquer sur le lien suivant: "
+            )
+            + "http://api."
+            + getenv("WEBSITE_HOST", "localhost")
+            + reverse("reset-password")
+            + "?"
+            + urlencode(
+                {
+                    "user": user,
+                    "token": token,
+                }
+            ),
+            None,  # Django falls back to default of settings.py
+            [user_object.email],
+            fail_silently=False,
+        )
 
 
 # vim: set tw=80 cc=80:

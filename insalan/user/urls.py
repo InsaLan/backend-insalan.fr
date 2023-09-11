@@ -9,12 +9,21 @@ urlpatterns = [
     path("logout/", views.UserLogout.as_view(), name="/logout"),
     path("user/", views.UserView.as_view(), name="/"),
     path("me/", views.UserMe.as_view(), name="me"),
-    path("resend-email/", views.ResendEmailConfirmView.as_view(),
-         name="resend-confirm"),
+    path(
+        "resend-email/", views.ResendEmailConfirmView.as_view(), name="resend-confirm"
+    ),
     path("get-csrf/", views.get_csrf, name="get-csrf"),
     path(
         "confirm/<str:user>/<str:token>",
         views.EmailConfirmView.as_view(),
         name="confirm-email",
+    ),
+    path(
+        "password/reset/ask/",
+        views.AskForPasswordReset.as_view(),
+        name="ask-for-password",
+    ),
+    path(
+        "password/reset/submit/", views.ResetPassword.as_view(), name="reset-password"
     ),
 ]

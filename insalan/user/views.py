@@ -4,6 +4,8 @@ from datetime import datetime
 
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.password_validation import validate_password
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -21,7 +23,7 @@ from insalan.user.serializers import (
     UserSerializer,
 )
 
-from .models import EmailConfirmationTokenGenerator, User
+from .models import EmailConfirmationTokenGenerator, User, UserMailer
 
 
 @require_GET
@@ -93,7 +95,57 @@ class EmailConfirmView(APIView):
         return Response({"msg": error_text}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class AskForPasswordReset(APIView):
+    permissions_classes = [permissions.AllowAny]
+    authentication_classes = [SessionAuthentication]
+
+    def post(self, request):
+        try:
+            user_object: User = User.objects.get(email=request.data["email"])
+            UserMailer.send_password_reset(user_object)
+        except User.DoesNotExist:
+            pass
+
+        return Response()
+
+
+class ResetPassword(APIView):
+    permissions_classes = [permissions.AllowAny]
+    authentication_classes = [SessionAuthentication]
+
+    def post(self, request):
+        data = request.data
+        if not (
+            "user" in data
+            and "token" in data
+            and "password" in data
+            and "password_confirm" in data
+        ):
+            return Response(
+                {"msg": _("Champ manquant dans la ré-initialisation de mot de passe")},
+                status=HTTP_400_BAD_REQUEST,
+            )
+        try:
+            user_object: User = User.objects.get(user=data["user"])
+            if (
+                default_token_generator.check_token(user_object, data["token"])
+                and password == password_confirm
+                and validate_password(password)
+            ):
+                user_object.set_password(password)
+        except User.DoesNotExist:
+            return Response(
+                {"msg": _("Utilisateur non trouvé")}, status=HTTP_400_BAD_REQUEST
+            )
+
+        return Response()
+
+
 class ResendEmailConfirmView(APIView):
+    """
+    API endpoint to re-send
+    """
+
     permissions_classes = [permissions.AllowAny]
     authentication_classes = [SessionAuthentication]
 
@@ -103,20 +155,17 @@ class ResendEmailConfirmView(APIView):
         username = request.data.get("username")
 
         if not username:
-            return Response({"msg": error_text},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response({"msg": error_text}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             user_object: User = User.objects.get(username=username)
         except User.DoesNotExist:
-            return Response({"msg": error_text},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response({"msg": error_text}, status=status.HTTP_400_BAD_REQUEST)
 
         if user_object.email_active:
-            return Response({"msg": error_text},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response({"msg": error_text}, status=status.HTTP_400_BAD_REQUEST)
 
-        UserRegisterSerializer.send_mail(user_object)
+        UserMailer.send_email_confirmation(user_object)
         return Response()
 
 
