@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from insalan.user.models import User
+import uuid
 
 class TransactionStatus(models.TextChoices):
     """Information about the current transaction status"""
@@ -11,6 +12,7 @@ class TransactionStatus(models.TextChoices):
 
 class Transaction(models.Model):
     """A transaction"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     payer = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.DecimalField(null=False)
     payment_status = models.CharField(
