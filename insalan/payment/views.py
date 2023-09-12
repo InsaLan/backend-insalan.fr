@@ -4,6 +4,7 @@ from os import getenv
 import requests
 from .models import Transaction
 from datetime import date
+from .tokens import tokens
 
 from django.shortcuts import render
 
@@ -16,7 +17,7 @@ def pay(request):
     product_list=[]
     amount=0
     name=""
-    user=request.user #not that but this is the idea
+    user=request.user
     for asked_product in user_request_body:
         try:
             product = Product.objects.get(pk=asked_product[id])
@@ -34,14 +35,14 @@ def pay(request):
     # need to put a list field of product in Transaction model
 
     # lets init a checkout to helloasso
-    url = f"https://api.helloasso.com/v5/organizations/{getenv('HELLOASSO_NAME')}/checkout-intents"
+    url = f"https://{getenv('HELLOASSO_URL')}/organizations/{getenv('ASSOCIATION_NAME')}/checkout-intents"
     body = {
         "totalAmount": amount,
         "initialAmount": amount,
         "itemName": name[:255],
-        "backUrl": getenv("BACK_URL"),
-        "errorUrl": getenv("ERROR_URL"),
-        "returnUrl": getenv("RETURN_URL"),
+        "backUrl": back_url,
+        "errorUrl": error_url,
+        "returnUrl": return_url,
         "containsDonation": False,
         "payer": {
             "firstName": user.first_name,
@@ -52,9 +53,26 @@ def pay(request):
             "id": transaction.id,
         },
     }
-    token=request.
+    headers = {
+        'authorization': 'Bearer ' + tokens.get_token(),
+        'Content-Type': 'application/json',
+    }
+    request_status=False
+    while request_status!=True:
+        checkout_init=requests.post(url = url, headers=headers, data=json.dumps(body))
+        if checkout_init.status_code==200:
+            request_status=True
+        elif checkout_init.status_code==401:
+            tokens.refresh()
+        elif checkout_init.status_code==403:
+            pass # cry, problem concerning the perms of the token
+        elif checkout_init.status_code==400:
+            pass # the value are false
+        else:
+            pass
+    # redirect to json.loads(checkout_init.text)['id']
 
-    # need to put BACK_URL, ERROR_URL and RETURN_URL in .env
+
 
 
 
