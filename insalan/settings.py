@@ -37,6 +37,16 @@ ALLOWED_HOSTS = [
     "dev." + getenv("WEBSITE_HOST", "localhost"),
 ]
 
+# Add any additional host for development
+if DEBUG:
+    ALLOWED_HOSTS.extend(
+        [
+            host.strip()
+            for host in getenv("EXTRA_ALLOWED_HOSTS", "").split(",")
+            if len(host.strip()) > 0
+        ]
+    )
+
 
 # Application definition
 
