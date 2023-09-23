@@ -87,10 +87,7 @@ class UserLogin(APIView):
         if serializer.is_valid():
             user = serializer.check_validity(data)
             if user is None:
-                return Response(
-                    {"msg": _("Wrong username or password")},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
+                return Response({"user":[_("Wrong username or password")]}, status=status.HTTP_404_NOT_FOUND)
             login(request, user)
             return Response(status=status.HTTP_200_OK)
         return Response({"msg": "Invalid data submitted"},
