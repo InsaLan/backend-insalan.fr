@@ -44,6 +44,8 @@ class UserManager(BaseUserManager):
         user = self.create_user(email, username, password, **extra_fields)
         user.is_superuser = True
         user.is_staff = True
+        user.email_active = True
+        user.is_active = True
         user.save()
 
         return user
@@ -71,7 +73,8 @@ class User(AbstractUser, PermissionsMixin):
     is_superuser = models.BooleanField(
         verbose_name="Admin of the insalan team", default=False
     )
-    is_active = models.BooleanField(verbose_name="Email confirmed", default=True)
+    is_active = models.BooleanField(default=True)
     object = UserManager()
+
 
 # vim: set tw=80 cc=80:
