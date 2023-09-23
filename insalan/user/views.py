@@ -8,6 +8,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.password_validation import validate_password
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET
 from rest_framework import generics, permissions, status
@@ -88,7 +89,7 @@ class EmailConfirmView(APIView):
                 token,
             ):
                 user_object.email_active = True
-                user_object.last_login = datetime.now()
+                user_object.last_login = timezone.make_aware(datetime.now())
                 user_object.save()
                 return Response()
 
