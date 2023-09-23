@@ -192,8 +192,7 @@ class UserEndToEndTestCase(TestCase):
             request = self.client.post("/v1/user/login/", data, format="json")
 
             self.assertEquals(request.status_code, 404)
-            self.assertEquals(request.data["msg"], "Wrong username or password")
-
+            self.assertEquals(request.data['user'][0], "Wrong username or password")
         send_valid_data(
             {
                 "username": "newplayer",
