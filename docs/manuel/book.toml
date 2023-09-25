@@ -1,0 +1,6 @@
+[book]
+authors = ["Amélie \"Lymkwi\" González"]
+language = "fr"
+multilingual = false
+src = "src"
+title = "Manuel de Prise en Main du Backend"
