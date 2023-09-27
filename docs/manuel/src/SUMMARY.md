@@ -16,18 +16,21 @@
     - [Manuel]()
     - [Via Docker (dev)]()
 - [Structure](./02-structure/README.md)
-    - [Projet](./02-structure/projet/SUMMARY.md)
+    - [Projet](./02-structure/projet/README.md)
         - [Configuration](./02-structure/projet/configuration.md)
-    - [Applications](./02-structure/applications/SUMMARY.md)
-        - [Modèles](./02-structure/applications/modeles.md)
-            - [Les Champs](./02-structure/appliactions/modeles-champs.md)
-            - [Métadonnées](./02-structure/applications/modeles-meta.md)
-        - [Vues](./02-structure/applications/vues.md)
-        - [Endpoints](./02-structure/applications/vues.md)
-    - [Migrations]()
+        - [URLs](./02-structure/projet/urls.md)
+    - [Applications]() <!--(./02-structure/applications/README.md)-->
+        - [Modèles]()<!--(./02-structure/applications/modeles.md)-->
+            - [Les Champs]()<!--(./02-structure/applications/modeles-champs.md)-->
+            - [Métadonnées]()<!--(./02-structure/applications/modeles-meta.md)-->
+        - [Vues]()<!--(./02-structure/applications/vues.md)-->
+        - [Endpoints]()<!--(./02-structure/applications/endpoints.md)-->
+    - [Migrations]()<!--(./02-structure/migrations.md)-->
+    - [Panel Admin]() <!--(./02-structure/panel-admin.md)-->
+    <!-- - [Statiques](./02-structure/statiques.md) -->
 - [Existant](./03-existant/README.md)
     - [Configuration]()
-    - [Modules]() #(./03-existant/modules/README.md)
+    - [Modules]() <!--(./03-existant/modules/README.md)-->
         - [User]()
         - [Tournament]()
         - [Partner]()
@@ -37,4 +40,4 @@
 
 # Modifier
 
-- [Ajouts](./04-ajouts/README.md)
+- [Ajouts]() <!--(./04-ajouts/README.md)-->
