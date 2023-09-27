@@ -14,6 +14,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 from os import getenv, path
 from pathlib import Path
 from sys import argv
+import djongo
 
 from django.utils.translation import gettext_lazy as _
 
@@ -67,6 +68,7 @@ INSTALLED_APPS = [
     "insalan.partner",
     "insalan.tournament",
     "insalan.tickets",
+    "insalan.cms"
 ]
 
 MIDDLEWARE = [
@@ -113,6 +115,16 @@ DATABASES = {
         "PASSWORD": getenv("DB_PASS", "password"),
         "HOST": getenv("DB_HOST", "localhost"),
         "PORT": getenv("DB_PORT", "5432"),
+    },
+    "cms": {
+        "ENGINE": 'djongo',
+        "NAME": "cms-db",
+        "CLIENT": {
+            "password": getenv("MONGODB_PASS", "password"),
+            "host": getenv("DB_HOST", "localhost"),
+            "port": getenv("DB_MONGO_PORT", "5433"),
+            "username": getenv("MONGODB_USER", "admin")
+        }
     }
 }
 

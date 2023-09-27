@@ -31,6 +31,7 @@ urlpatterns = [
     path("v1/user/", include("insalan.user.urls")),
     path("v1/tickets/", include("insalan.tickets.urls")),
     path("v1/langate/authenticate", langate_views.LangateUserView.as_view()),
+    path("v1/content/", include("insalan.cms.urls")),
     #path("v1/api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("v1/admin/", admin.site.urls),
 ]
