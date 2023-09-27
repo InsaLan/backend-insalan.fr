@@ -31,7 +31,7 @@ class UserTestCase(TestCase):
 
         User.objects.create_user(
             username="randomplayer",
-            email="randomplayer@gmail.com",
+            email="randomplayer@example.com",
             password="IUseAVerySecurePassword",
             first_name="Random",
             last_name="Player",
@@ -73,6 +73,15 @@ class UserEndToEndTestCase(TestCase):
 
     def setUp(self):
         self.client = APIClient()
+        User.objects.create_user(
+            username="randomplayer",
+            email="randomplayer@example.com",
+            password="IUseAVerySecurePassword",
+            first_name="Random",
+            last_name="Player",
+            is_active=True,
+            email_active=True,
+        )
 
     def test_register_invalid_data(self):
         def send_invalid_data(data):
@@ -286,12 +295,12 @@ class UserEndToEndTestCase(TestCase):
             request = self.client.post("/v1/user/login/", data, format="json")
 
             self.assertEquals(request.status_code, 404)
-            self.assertEquals(request.data['user'][0], "Wrong username or password")
+            self.assertEquals(request.data["user"][0], "Wrong username or password")
+
         send_valid_data(
             {
                 "username": "newplayer",
                 "password": "1111qwer!",
-                "email": "email@example.com",
             }
         )
 
@@ -309,7 +318,6 @@ class UserEndToEndTestCase(TestCase):
             {
                 "username": "newplayer",
                 "password": "1111qwer!",
-                "email": "email@example.com",
             }
         )
 
@@ -321,6 +329,7 @@ class UserEndToEndTestCase(TestCase):
             is_active=True,
             email_active=True,
         )
+
         def send_valid_data(data):
             request = self.client.post("/v1/user/login/", data, format="json")
 
@@ -330,7 +339,6 @@ class UserEndToEndTestCase(TestCase):
             {
                 "username": "newplayer",
                 "password": "1111qwer!",
-                "email": "email@example.com",
             }
         )
 
@@ -348,19 +356,15 @@ class UserEndToEndTestCase(TestCase):
 
         self.assertEqual(mail.outbox, 1)
 
-        self.client.post("/v1/user/register/",
-                         {
-                             "username": "ILoveEmail"
-                         },
-                         format="json")
+        self.client.post(
+            "/v1/user/register/", {"username": "ILoveEmail"}, format="json"
+        )
 
         self.assertEqual(mail.outbox, 2)
 
-        self.client.post("/v1/user/register/",
-                         {
-                             "username": "ILoveEmail"
-                         },
-                         format="json")
+        self.client.post(
+            "/v1/user/register/", {"username": "ILoveEmail"}, format="json"
+        )
 
         self.assertEqual(mail.outbox, 3)
 
@@ -369,25 +373,141 @@ class UserEndToEndTestCase(TestCase):
             username="newplayer",
             email="test@example.com",
             password="1111qwer!",
-            email_active=True
+            email_active=True,
         )
 
-        request = self.client.post("/v1/user/resend-email/",
-                                   { "username": "ILoveEmail" },
-                                   format="json")
+        request = self.client.post(
+            "/v1/user/resend-email/", {"username": "ILoveEmail"}, format="json"
+        )
 
         self.assertEqual(request.status_code, 400)
 
     def cant_resend_confirmation_if_nonexisting_user(self):
-        request = self.client.post("/v1/user/resend-email/",
-                                   { "username": "IDontExistLol" },
-                                   format="json")
+        request = self.client.post(
+            "/v1/user/resend-email/", {"username": "IDontExistLol"}, format="json"
+        )
 
         self.assertEqual(request.status_code, 400)
 
     def dont_crash_resend_confirmation_if_empty(self):
-        request = self.client.post("/v1/user/resend-email/",
-                                   { },
-                                   format="json")
+        request = self.client.post("/v1/user/resend-email/", {}, format="json")
 
         self.assertEqual(request.status_code, 400)
+
+    def test_can_reset_password(self):
+        data = {
+            "email": "randomplayer@example.com",
+        }
+
+        self.client.post("/v1/user/password/reset/ask/", data, format="json")
+
+        match = re.search(
+            # "https?://[^ ]*/password/reset/ask[^ ]*",
+            ".*https?://[^ ]*/\?user=(?P<username>[^ &]*)&token=(?P<token>[^ /]*)",
+            mail.outbox[0].body,
+        )
+
+        username = match["username"]
+        token = match["token"]
+
+        # self.assertFalse(User.objects.get(username=data["username"]).email_active)
+
+        # self.assertEquals(username, data["username"])
+        data = {
+            "user": username,
+            "token": token,
+            "password": "UwU*nuzzles*621!",
+            "password_confirm": "UwU*nuzzles*621!",
+        }
+
+        request = self.client.post(
+            "/v1/user/password/reset/submit/", data, format="json"
+        )
+        self.assertEquals(request.status_code, 200)
+        self.client.post("/v1/user/logout/", format="json")
+
+        login_data = {
+            "username": username,
+            "password": "UwU*nuzzles*621!",
+        }
+        request = self.client.post("/v1/user/login/", login_data, format="json")
+        self.assertEquals(request.status_code, 200)
+        self.client.post("/v1/user/logout/", format="json")
+
+        login_data = {
+            "username": username,
+            "password": "IUseAVerySecurePassword",
+        }
+        request = self.client.post("/v1/user/login/", login_data, format="json")
+        self.assertEquals(request.status_code, 404)
+
+    def test_can_reset_password_only_once(self):
+        data = {
+            "email": "randomplayer@example.com",
+        }
+
+        self.client.post("/v1/user/password/reset/ask/", data, format="json")
+
+        match = re.search(
+            # "https?://[^ ]*/password/reset/ask[^ ]*",
+            ".*https?://[^ ]*/\?user=(?P<username>[^ &]*)&token=(?P<token>[^ /]*)",
+            mail.outbox[0].body,
+        )
+
+        username = match["username"]
+        token = match["token"]
+
+        data = {
+            "user": username,
+            "token": token,
+            "password": "UwU*nuzzles*621!",
+            "password_confirm": "UwU*nuzzles*621!",
+        }
+
+        request = self.client.post(
+            "/v1/user/password/reset/submit/", data, format="json"
+        )
+        self.assertEquals(request.status_code, 200)
+
+        data = {
+            "user": username,
+            "token": token,
+            "password": "UwU*nuzzles*926!",
+            "password_confirm": "UwU*nuzzles*926!",
+        }
+
+        request = self.client.post(
+            "/v1/user/password/reset/submit/", data, format="json"
+        )
+        self.assertEquals(request.status_code, 400)
+
+    def test_password_reset_is_token_checked(self):
+        data = {
+            "email": "randomplayer@example.com",
+        }
+
+        self.client.post("/v1/user/password/reset/ask/", data, format="json")
+
+        match = re.search(
+            # "https?://[^ ]*/password/reset/ask[^ ]*",
+            ".*https?://[^ ]*/\?user=(?P<username>[^ &]*)&token=(?P<token>[^ /]*)",
+            mail.outbox[0].body,
+        )
+
+        username = match["username"]
+        token = match["token"]
+        token = list(token)
+        token[-1] = "x"
+        token = "".join(token)
+
+        data = {
+            "user": username,
+            "token": token,
+            "password": "UwU*nuzzles*621!",
+            "password_confirm": "UwU*nuzzles*621!",
+        }
+
+        request = self.client.post(
+            "/v1/user/password/reset/submit/", data, format="json"
+        )
+        self.assertEquals(request.status_code, 400)

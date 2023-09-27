@@ -7,7 +7,10 @@ from datetime import datetime
 
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser, PermissionsMixin
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.contrib.auth.tokens import (
+    PasswordResetTokenGenerator,
+    default_token_generator,
+)
 from django.core.mail import send_mail
 from django.db import models
 from django.urls import reverse
@@ -43,11 +46,9 @@ class UserManager(BaseUserManager):
         user.save()
         return user
 
-    def create_superuser(
-            self, email, username, password, **extra_fields
-            ):
+    def create_superuser(self, email, username, password, **extra_fields):
         if password is None:
-            raise TypeError('Superusers must have a password.')
+            raise TypeError("Superusers must have a password.")
         user = self.create_user(email, username, password, **extra_fields)
         user.is_superuser = True
         user.is_staff = True
@@ -56,6 +57,7 @@ class UserManager(BaseUserManager):
         user.save()
 
         return user
+
 
 class User(AbstractUser, PermissionsMixin):
     """
