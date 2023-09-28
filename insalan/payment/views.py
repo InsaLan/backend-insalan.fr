@@ -8,6 +8,7 @@ from .models import Transaction, TransactionStatus, Product
 from .serializers import TransactionSerializer
 from datetime import date
 from .tokens import tokens
+from .static_urls import static_urls
 
 from django.shortcuts import render
 
@@ -38,14 +39,14 @@ def pay(request):
     # need to put a list field of product in Transaction model
 
     # lets init a checkout to helloasso
-    url = "https://api.helloasso-sandbox.com/organizations/insalan-test/checkout-intents"
+    url = static_urls.get_checkout_url()
     body = {
         "totalAmount": amount,
         "initialAmount": amount,
         "itemName": name[:255],
-        "backUrl": "back_url"+"/"+transaction.id,
-        "errorUrl": "error_url",
-        "returnUrl": "return_url",
+        "backUrl": static_urls.get_back_url()+"/"+transaction.id,
+        "errorUrl": static_urls.get_error_url(),
+        "returnUrl": static_urls.get_return_url(),
         "containsDonation": False,
         "payer": {
             "firstName": user.first_name,

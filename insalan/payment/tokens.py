@@ -1,7 +1,7 @@
 import json
 import requests
 from os import getenv
-
+from .static_urls import static_urls
 
 class tokens :
     instance=None
@@ -9,7 +9,7 @@ class tokens :
         if tokens.instance is None:
             tokens.instance = self
         request = requests.post(
-            url="https://api.helloasso-sandbox.com/oauth2/token",
+            url=static_urls.get_tokens_url(),
             headers={'Content-Type': "application/x-www-form-urlencoded"},
             data={
                 'client_id': getenv("CLIENT_ID"),
@@ -24,7 +24,7 @@ class tokens :
 
     def refresh(self):
         request = requests.post(
-            url="https://api.helloasso-sandbox.com/oauth2/token",
+            url=static_urls.get_tokens_url(),
             headers={'Content-Type': "application/x-www-form-urlencoded"},
             data={
                 'client_id': getenv("CLIENT_ID"),
