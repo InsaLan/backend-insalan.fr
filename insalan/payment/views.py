@@ -2,7 +2,7 @@ import json
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from os import getenv
 import requests
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from .models import Transaction, TransactionStatus, Product
 from .serializers import TransactionSerializer
@@ -38,7 +38,7 @@ def pay(request):
     # need to put a list field of product in Transaction model
 
     # lets init a checkout to helloasso
-    url = f"https://{getenv('HELLOASSO_URL')}/organizations/{getenv('ASSOCIATION_NAME')}/checkout-intents"
+    url = "https://api.helloasso-sandbox.com/organizations/insalan-test/checkout-intents"
     body = {
         "totalAmount": amount,
         "initialAmount": amount,
@@ -70,7 +70,7 @@ def pay(request):
             pass # the value are false
         else:
             pass
-    # redirect to json.loads(checkout_init.text)['id']
+    return HttpResponseRedirect(redirect_to=json.loads(checkout_init.text)['id'])
 @csrf_exempt
 def validate_payment(request, id):
     Transaction.objects.get(id=id).payment_status=TransactionStatus.SUCCEDED
