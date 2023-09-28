@@ -68,6 +68,75 @@ paths:
         '405':
           description: Invalid data
 
+  /user/login/:
+    post:
+      tags:
+        - auth
+      summary: Login on to the website
+      description: Login via session cookie
+      requestBody:
+        description: Identifiers of an existing and valid user
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginData"
+      responses:
+        '200':
+          description: Log-in effective
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: String having the format `sessionid=<token>; expires=<date>; HttpOnly; Max-Age=1209600; Path=/; SameSite=Lax`
+        '400':
+          description: Invalid shaped data sent
+        '404':
+          description: Valid shaped data but user not found or password incorrect
+
+  /user/resend-email/:
+    post:
+      tags:
+        - user
+      summary: Resend a confirmation e-mail
+      description: Send another e-mail confirmation e-mail, in case one has been lost for some reason
+      parameters:
+        - name: username
+          in: query
+          description: The username whose require an e-mail resend
+          required: true
+          schema:
+            $ref: "#/components/schemas/User/properties/username"
+      responses:
+        '200':
+          description: Another confirmation e-mail will be sent soon
+        '400':
+          description: Either the email is already confirmed, the user is not found or username field not present
+  
+  /user/confirm/{user}/{token}/:
+    get:
+      tags:
+        - user
+      summary: Confirm the email of an user
+      description: Through registering, a confirmation e-mail is sent with a link reaching ultimately the current route.
+      parameters:
+          - name: user
+            in: path
+            description: The username whose require an e-mail resend
+            required: true
+            schema:
+              $ref: "#/components/schemas/User/properties/username"
+          - name: token
+            in: path
+            description: The username whose require an e-mail resend
+            required: true
+            schema:
+              $ref: "#/components/schemas/User/properties/username"
+      responses:
+        '200':
+          description: The email is confirmed. The user may now log in.
+        '400':
+          description: Either the email is already confirmed, the request is malformed or the token invalid
+
   /tournament/event/:
     get:
       tags:
@@ -1131,6 +1200,13 @@ components:
           type: boolean
           example: false
           readOnly: true
+    LoginData:
+      type: object
+      properties:
+        username:
+          $ref: "#/components/schemas/User/properties/username"
+        password:
+          $ref: "#/components/schemas/User/properties/password"
     LangateReply:
       type: object
       properties:
@@ -1196,6 +1272,9 @@ components:
           enum:
             - "PA" # Partner
             - "SP" # Sponsor
+    Token:
+      type: string
+      format: xxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
   requestBodies:
     Event:
@@ -1212,4 +1291,5 @@ components:
             $ref: '#/components/schemas/User'
 
 #  securitySchemes:
+
 

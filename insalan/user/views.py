@@ -124,22 +124,44 @@ class ResetPassword(APIView):
         ):
             return Response(
                 {"msg": _("Champ manquant dans la ré-initialisation de mot de passe")},
-                status=HTTP_400_BAD_REQUEST,
+                status=status.HTTP_400_BAD_REQUEST,
             )
         try:
-            user_object: User = User.objects.get(user=data["user"])
-            if (
-                default_token_generator.check_token(user_object, data["token"])
-                and password == password_confirm
-                and validate_password(password)
-            ):
-                user_object.set_password(password)
+            user_object: User = User.object.get(username=data["user"])
+            if default_token_generator.check_token(user_object, data["token"]):
+                if data["password"] == data["password_confirm"]:
+                    validation_errors = validate_password(
+                        data["password"], user=user_object
+                    )
+                    if validation_errors is None:
+                        user_object.set_password(data["password"])
+                        user_object.save()
+                        return Response()
+                    else:
+                        return Response(
+                            {
+                                "msg": _("Mot de passe trop simple ou invalide"),
+                                "errors": validation_errors,
+                            },
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                else:
+                    return Response(
+                        {"msg": _("Les mots de passe diffèrent")},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+            else:
+                return Response(
+                    {"msg": _("Jeton de ré-initialisation invalide")},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         except User.DoesNotExist:
             return Response(
-                {"msg": _("Utilisateur non trouvé")}, status=HTTP_400_BAD_REQUEST
+                {"msg": _("Utilisateur non trouvé")}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        return Response()
+        return Response({}, status=status.HTTP_501_NOT_IMPLEMENTED)
 
 
 class ResendEmailConfirmView(APIView):
@@ -194,7 +216,10 @@ class UserLogin(APIView):
         if serializer.is_valid():
             user = serializer.check_validity(data)
             if user is None:
-                return Response({"user":[_("Wrong username or password")]}, status=status.HTTP_404_NOT_FOUND)
+                return Response(
+                    {"user": [_("Wrong username or password")]},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
             login(request, user)
             return Response(status=status.HTTP_200_OK)
         return Response(
