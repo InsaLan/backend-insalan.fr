@@ -2,7 +2,10 @@ import json
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from os import getenv
 import requests
-from .models import Transaction
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import Transaction, TransactionStatus, Product
+from .serializers import TransactionSerializer
 from datetime import date
 from .tokens import tokens
 
@@ -40,17 +43,14 @@ def pay(request):
         "totalAmount": amount,
         "initialAmount": amount,
         "itemName": name[:255],
-        "backUrl": back_url,
-        "errorUrl": error_url,
-        "returnUrl": return_url,
+        "backUrl": "back_url"+"/"+transaction.id,
+        "errorUrl": "error_url",
+        "returnUrl": "return_url",
         "containsDonation": False,
         "payer": {
             "firstName": user.first_name,
             "lastName": user.last_name,
             "email": user.email,
-        },
-        "metadata" :{
-            "id": transaction.id,
         },
     }
     headers = {
@@ -71,9 +71,13 @@ def pay(request):
         else:
             pass
     # redirect to json.loads(checkout_init.text)['id']
+@csrf_exempt
+def validate_payment(request, id):
+    Transaction.objects.get(id=id).payment_status=TransactionStatus.SUCCEDED
 
-
-
+def get_transactions(request):
+    transactions=TransactionSerializer(Transaction.objects.all(), many=True)
+    return JsonResponse(transactions.data)
 
 
 

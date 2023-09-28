@@ -25,3 +25,6 @@ class Transaction(models.Model):
     )
     date = models.DateField()
 
+class Product(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    amount = models.DecimalField(null=False)

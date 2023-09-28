@@ -4,7 +4,10 @@ from os import getenv
 
 
 class tokens :
+    instance=None
     def __init__(self):
+        if tokens.instance is None:
+            tokens.instance = self
         request = requests.post(
             url="https://api.helloasso-sandbox.com/oauth2/token",
             headers={'Content-Type': "application/x-www-form-urlencoded"},
