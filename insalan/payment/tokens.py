@@ -12,8 +12,8 @@ class tokens :
             url="https://api.helloasso-sandbox.com/oauth2/token",
             headers={'Content-Type': "application/x-www-form-urlencoded"},
             data={
-                'client_id': "44c0e9bd5b214b5296cacac2e748b927",
-                'client_secret': "GXZxQnob508Cnj+szBpqoXONtJYzknIU",
+                'client_id': getenv("CLIENT_ID"),
+                'client_secret': getenv("CLIENT_SECRET"),
                 'grant_type': "client_credentials",
             },
         )
@@ -27,7 +27,7 @@ class tokens :
             url="https://api.helloasso-sandbox.com/oauth2/token",
             headers={'Content-Type': "application/x-www-form-urlencoded"},
             data={
-                'client_id': "44c0e9bd5b214b5296cacac2e748b927",
+                'client_id': getenv("CLIENT_ID"),
                 'client_secret': self.refresh_token,
                 'grant_type': "refresh_token",
             },
