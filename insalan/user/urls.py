@@ -19,11 +19,11 @@ urlpatterns = [
         name="confirm-email",
     ),
     path(
-        "password/reset/ask/",
+        "password-reset/ask/",
         views.AskForPasswordReset.as_view(),
         name="ask-for-password",
     ),
     path(
-        "password/reset/submit/", views.ResetPassword.as_view(), name="reset-password"
+        "password-reset/submit/", views.ResetPassword.as_view(), name="reset-password"
     ),
 ]

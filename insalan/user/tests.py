@@ -399,10 +399,10 @@ class UserEndToEndTestCase(TestCase):
             "email": "randomplayer@example.com",
         }
 
-        self.client.post("/v1/user/password/reset/ask/", data, format="json")
+        self.client.post("/v1/user/password-reset/ask/", data, format="json")
 
         match = re.search(
-            # "https?://[^ ]*/password/reset/ask[^ ]*",
+            # "https?://[^ ]*/password-reset/ask[^ ]*",
             ".*https?://[^ ]*/\?user=(?P<username>[^ &]*)&token=(?P<token>[^ /]*)",
             mail.outbox[0].body,
         )
@@ -421,7 +421,7 @@ class UserEndToEndTestCase(TestCase):
         }
 
         request = self.client.post(
-            "/v1/user/password/reset/submit/", data, format="json"
+            "/v1/user/password-reset/submit/", data, format="json"
         )
         self.assertEquals(request.status_code, 200)
         self.client.post("/v1/user/logout/", format="json")
@@ -446,10 +446,10 @@ class UserEndToEndTestCase(TestCase):
             "email": "randomplayer@example.com",
         }
 
-        self.client.post("/v1/user/password/reset/ask/", data, format="json")
+        self.client.post("/v1/user/password-reset/ask/", data, format="json")
 
         match = re.search(
-            # "https?://[^ ]*/password/reset/ask[^ ]*",
+            # "https?://[^ ]*/password-reset/ask[^ ]*",
             ".*https?://[^ ]*/\?user=(?P<username>[^ &]*)&token=(?P<token>[^ /]*)",
             mail.outbox[0].body,
         )
@@ -465,7 +465,7 @@ class UserEndToEndTestCase(TestCase):
         }
 
         request = self.client.post(
-            "/v1/user/password/reset/submit/", data, format="json"
+            "/v1/user/password-reset/submit/", data, format="json"
         )
         self.assertEquals(request.status_code, 200)
 
@@ -477,7 +477,7 @@ class UserEndToEndTestCase(TestCase):
         }
 
         request = self.client.post(
-            "/v1/user/password/reset/submit/", data, format="json"
+            "/v1/user/password-reset/submit/", data, format="json"
         )
         self.assertEquals(request.status_code, 400)
 
@@ -486,10 +486,10 @@ class UserEndToEndTestCase(TestCase):
             "email": "randomplayer@example.com",
         }
 
-        self.client.post("/v1/user/password/reset/ask/", data, format="json")
+        self.client.post("/v1/user/password-reset/ask/", data, format="json")
 
         match = re.search(
-            # "https?://[^ ]*/password/reset/ask[^ ]*",
+            # "https?://[^ ]*/password-reset/ask[^ ]*",
             ".*https?://[^ ]*/\?user=(?P<username>[^ &]*)&token=(?P<token>[^ /]*)",
             mail.outbox[0].body,
         )
@@ -508,6 +508,6 @@ class UserEndToEndTestCase(TestCase):
         }
 
         request = self.client.post(
-            "/v1/user/password/reset/submit/", data, format="json"
+            "/v1/user/password-reset/submit/", data, format="json"
         )
         self.assertEquals(request.status_code, 400)
