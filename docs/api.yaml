@@ -80,6 +80,9 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/LoginData"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/LoginData"
       responses:
         '200':
           description: Log-in effective
@@ -136,6 +139,56 @@ paths:
           description: The email is confirmed. The user may now log in.
         '400':
           description: Either the email is already confirmed, the request is malformed or the token invalid
+          
+  /user/password-reset/ask/:
+    post:
+      tags:
+        - user
+      summary: Ask for a password reset email
+      description: POSTing to this route will send a password reset email to the user if the user is found in the database
+      requestBody:
+        description: Email which the password reset will be sent
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  $ref: "#/components/schemas/User/properties/email"
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                email:
+                  $ref: "#/components/schemas/User/properties/email"
+        required: true
+
+      responses:
+        '200':
+          description: If the email is found in database, the password reset is sent.
+
+  /user/password-reset/submit/:
+    post:
+      tags:
+        - user
+      summary: Submit a password reset form
+      description: POSTing to this route will reset a given user's password if everything is valid
+      requestBody:
+        description: Password reset required data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordReset"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/PasswordReset"
+
+      responses:
+        '200':
+          description: If the email is found in database, the password reset is sent.
+        '400':
+          description: Either the user is not found, the token invalid, the password too weak or passwords different
 
   /tournament/event/:
     get:
@@ -161,6 +214,7 @@ paths:
       operationId: addEvent
       requestBody:
         description: Create a new event in the database
+        required: true
         content:
           application/json:
             schema:
@@ -168,7 +222,6 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/Event'
-        required: true
       responses:
         '200':
           description: Successful operation
@@ -1201,12 +1254,33 @@ components:
           example: false
           readOnly: true
     LoginData:
+      required:
+        - username
+        - password
       type: object
       properties:
         username:
           $ref: "#/components/schemas/User/properties/username"
         password:
           $ref: "#/components/schemas/User/properties/password"
+
+    PasswordReset:
+      type: object
+      required:
+        - username
+        - token
+        - password
+        - password_confirmation
+      properties:
+        username:
+          $ref: "#/components/schemas/User/properties/username"
+        token:
+          $ref: '#/components/schemas/Token'
+        password:
+          $ref: "#/components/schemas/User/properties/password"
+        password_confirmation:
+          $ref: "#/components/schemas/User/properties/password"
+
     LangateReply:
       type: object
       properties:
@@ -1275,6 +1349,7 @@ components:
     Token:
       type: string
       format: xxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      example: xxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
   requestBodies:
     Event:
@@ -1291,5 +1366,4 @@ components:
             $ref: '#/components/schemas/User'
 
 #  securitySchemes:
-
 
