@@ -37,6 +37,10 @@ ALLOWED_HOSTS = [
     "dev." + getenv("WEBSITE_HOST", "localhost"),
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://api." + getenv("WEBSITE_HOST", "localhost"),
+    "https://" + getenv("WEBSITE_HOST", "localhost"),
+]
 
 # Application definition
 
@@ -159,8 +163,8 @@ LOGOUT_URL = "rest_framework:logout"
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://" + getenv("WEBSITE_HOST", "localhost"),
-    "http://dev." + getenv("WEBSITE_HOST", "localhost"),
+    "https://" + getenv("WEBSITE_HOST", "localhost"),
+    "https://api." + getenv("WEBSITE_HOST", "localhost"),
 ]
 
 # MAILER SETTINGS
