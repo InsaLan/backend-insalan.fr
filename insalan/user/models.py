@@ -56,7 +56,6 @@ class UserManager(BaseUserManager):
         user = self.create_user(email, username, password, **extra_fields)
         user.is_superuser = True
         user.is_staff = True
-        user.email_active = True
         user.is_active = True
         user.save()
 
@@ -74,6 +73,7 @@ class User(AbstractUser, PermissionsMixin):
 
         verbose_name = _("Utilisateur⋅rice")
         verbose_name_plural = _("Utilisateur⋅ices")
+        permissions = [("email_active", "The user has activated their e-mail")]
 
     def __init__(self, *args, **kwargs):
         AbstractUser.__init__(self, *args, **kwargs)

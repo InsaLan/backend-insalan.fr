@@ -57,7 +57,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             "is_superuser",
             "email",
             "image",
-            "email_active",
             "password",
             "password_validation",
         ]
@@ -98,8 +97,8 @@ class UserLoginSerializer(serializers.Serializer):
         """
         user = authenticate(username=data["username"], password=data["password"])
         if user is not None:
-            if not user.is_active or not user.email_active:
-                raise serializers.ValidationError(_("Compte non activé"))
+            if not user.is_active:
+                raise serializers.ValidationError(_("Compte supprimé"))
         return user
 
 

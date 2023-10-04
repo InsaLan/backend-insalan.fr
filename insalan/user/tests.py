@@ -105,7 +105,6 @@ class UserEndToEndTestCase(TestCase):
             first_name="Random",
             last_name="Player",
             is_active=True,
-            email_active=True,
         )
 
     def test_register_invalid_data(self):
@@ -153,7 +152,6 @@ class UserEndToEndTestCase(TestCase):
                 ("is_staff", False),
                 ("is_superuser", False),
                 ("is_active", True),
-                ("email_active", False),
                 ("email", "email@example.com"),
             ],
         )
@@ -173,7 +171,6 @@ class UserEndToEndTestCase(TestCase):
                 ("is_staff", False),
                 ("is_superuser", False),
                 ("is_active", True),
-                ("email_active", False),
                 ("email", "mario@mushroom.kingdom"),
             ],
         )
@@ -209,7 +206,6 @@ class UserEndToEndTestCase(TestCase):
                 ("is_staff", False),
                 ("is_superuser", False),
                 ("is_active", True),
-                ("email_active", False),
                 ("email", "email@example.com"),
             ],
         )
@@ -230,7 +226,6 @@ class UserEndToEndTestCase(TestCase):
                 ("is_staff", False),
                 ("is_superuser", False),
                 ("is_active", True),
-                ("email_active", False),
                 ("email", "mario@mushroom.kingdom"),
             ],
         )
@@ -268,8 +263,9 @@ class UserEndToEndTestCase(TestCase):
 
         request = self.client.post("/v1/user/register/", data, format="json")
 
-        self.assertFalse(User.objects.get(username=data["username"]).email_active)
-
+        self.assertFalse(
+            User.objects.get(username=data["username"]).has_perm("user.email_active")
+        )
         match = re.match(
             ".*https?://[^ ]*/(?P<username>[^ /]*)/(?P<token>[^ /]*)",
             mail.outbox[0].body,
@@ -283,7 +279,9 @@ class UserEndToEndTestCase(TestCase):
         request = self.client.get(f"/v1/user/confirm/{username}/{token}")
         self.assertEqual(request.status_code, 200)
 
-        self.assertTrue(User.objects.get(username=data["username"]).email_active)
+        self.assertTrue(
+            User.objects.get(username=data["username"]).has_perm("user.email_active")
+        )
 
     def test_can_confirm_email_only_once(self):
         """
@@ -392,7 +390,6 @@ class UserEndToEndTestCase(TestCase):
             email="test@test.com",
             password="1111qwer!",
             is_active=True,
-            email_active=True,
         )
 
         def send_valid_data(data):
@@ -442,12 +439,13 @@ class UserEndToEndTestCase(TestCase):
         Test that an user cannot resend a confirmation email if they already
         confirmed their email
         """
-        User.objects.create_user(
+        user_object = User.objects.create_user(
             username="newplayer",
             email="test@example.com",
             password="1111qwer!",
-            email_active=True,
         )
+        user_object.permissions.add("insalan.user.email_active")
+        user_object.save()
 
         request = self.client.post(
             "/v1/user/resend-email/", {"username": "ILoveEmail"}, format="json"
@@ -494,9 +492,6 @@ class UserEndToEndTestCase(TestCase):
         username = match["username"]
         token = match["token"]
 
-        # self.assertFalse(User.objects.get(username=data["username"]).email_active)
-
-        # self.assertEqual(username, data["username"])
         data = {
             "user": username,
             "token": token,

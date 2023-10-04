@@ -168,7 +168,9 @@ class EmailConfirmView(APIView):
                 user_object,
                 token,
             ):
-                user_object.email_active = True
+                user_object.user_permissions.add(
+                    Permission.objects.get(codename="email_active")
+                )
                 user_object.last_login = timezone.make_aware(datetime.now())
                 user_object.save()
                 return Response()
@@ -287,11 +289,8 @@ class ResendEmailConfirmView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if user_object.email_active:
-            return Response(
-                {"user": [error_text]},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        if user_object.has_perm("email_active"):
+            return Response({"msg": error_text}, status=status.HTTP_400_BAD_REQUEST)
 
         UserMailer.send_email_confirmation(user_object)
         return Response()
