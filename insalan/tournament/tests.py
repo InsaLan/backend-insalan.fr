@@ -4,6 +4,7 @@ from io import BytesIO
 from types import NoneType
 
 from django.db.utils import IntegrityError
+from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, TransactionTestCase
@@ -1278,3 +1279,151 @@ class ManagerTestCase(TestCase):
         man_reg.payment_status = PaymentStatus.PAY_LATER
 
         self.assertEqual(PaymentStatus.PAY_LATER, man_reg.payment_status)
+
+
+class TournamentTeamEndpoints(TestCase):
+    """Tournament Registration Endpoint Test Class"""
+
+    # TODO Test all endpoints
+
+    def setUp(self):
+        """Setup method for Tournament Registrations Unit Tests"""
+
+        # Basic setup for a one-tournamnent game event
+        event = Event.objects.create(
+            name="InsaLan Test", year=2023, month=3, description=""
+        )
+        game = Game.objects.create(name="Test Game")
+        trnm = Tournament.objects.create(game=game, event=event)
+        team_one = Team.objects.create(name="La Team Test", tournament=trnm)
+
+        # user_one = User.objects.create_user(
+        #     username="testplayer",
+        #     email="player.user.test@insalan.fr",
+        #     password="^ThisIsAnAdminPassword42$",
+        #     first_name="Iam",
+        #     last_name="Staff",
+        # )
+
+        invalid_email_user: User = User.objects.create_user(
+            username="invalidemail",
+            email="randomplayer@gmail.com",
+            password="IUseAVerySecurePassword",
+            first_name="Random",
+            last_name="Player",
+        )
+
+        valid_email_user: User = User.objects.create_user(
+            username="validemail",
+            password="ThisIsPassword",
+        )
+
+        valid_email_user.user_permissions.add(
+            Permission.objects.get(codename="email_active")
+        )
+
+        # Player.objects.create(team=team_one, user=user_one)
+        # Player.objects.create(team=team_one, user=another_player)
+        # Manager.objects.create(team=team_one, user=random_player)
+
+    def test_can_create_a_team_with_valid_email(self):
+        """Try to create a team with a valid email"""
+        user: User = User.objects.get(username="validemail")
+        self.client.force_login(user=user)
+
+        event = Event.objects.get(name="InsaLan Test")
+        trnm = event.get_tournaments()[0]
+
+        request = self.client.post(
+            "/v1/tournament/team/",
+            {
+                "name": "Les emails valides",
+                "tournament": trnm.id,
+                "players": [user.id],
+            },
+            format="json",
+        )
+
+        self.assertEquals(request.status_code, 200)
+
+    def test_cant_create_a_team_with_no_valid_email(self):
+        """Try to create a team with email not validated"""
+        user: User = User.objects.get(username="invalidemail")
+        self.client.force_login(user=user)
+
+        event = Event.objects.get(name="InsaLan Test")
+        trnm = event.get_tournaments()[0]
+
+        request = self.client.post(
+            "/v1/tournament/team/",
+            {
+                "name": "Flemme de valider",
+                "tournament": trnm.id,
+                "players": [
+                    user.id,
+                ],
+            },
+            format="json",
+        )
+
+        self.assertEquals(request.status_code, 403)
+
+    def test_can_join_a_team_with_a_valid_email(self):
+        """Try to join an existing team with a valid email"""
+        user: User = User.objects.get(username="validemail")
+        self.client.force_login(user=user)
+        team: Team = Team.objects.get(name="La Team Test")
+        event: Event = Event.objects.get(name="InsaLan Test")
+
+        trnm = event.get_tournaments()[0]
+
+        request = self.client.put(
+            f"/v1/tournament/team/{team.id}/",
+            {
+                "managers": [user.id],
+            },
+            format="json",
+        )
+
+        self.assertEquals(request.status_code, 200)
+
+        request = self.client.put(
+            f"/v1/tournament/team/{team.id}/",
+            {
+                "managers": [],
+                "players": [user.id],
+            },
+            format="json",
+        )
+
+        self.assertEquals(request.status_code, 200)
+
+    def test_cant_join_a_team_with_no_valid_email(self):
+        """Try to join an existing team with no valid email"""
+        user: User = User.objects.get(username="invalidemail")
+        self.client.force_login(user=User.objects.get(username="invalidemail"))
+        team: Team = Team.objects.get(name="La Team Test")
+        event: Event = Event.objects.get(name="InsaLan Test")
+
+        trnm = event.get_tournaments()[0]
+
+        request = self.client.put(
+            f"/v1/tournament/team/{team.id}/",
+            {
+                "managers": [user.id],
+            },
+            format="json",
+        )
+
+        self.assertEquals(request.status_code, 403)
+
+        request = self.client.put(
+            f"/v1/tournament/team/{team.id}/",
+            {
+                "managers": [],
+                "players": [user.id],
+            },
+            format="json",
+        )
+
+        self.assertEquals(request.status_code, 403)
