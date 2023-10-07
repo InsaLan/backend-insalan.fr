@@ -10,7 +10,14 @@ import re
 
 
 class UserTestCase(TestCase):
+    """
+    Tests of the User model
+    """
+
     def setUp(self):
+        """
+        Create some base users to do operations on
+        """
         u: User = User.objects.create_user(
             username="staffplayer",
             email="staff@insalan.fr",
@@ -43,6 +50,9 @@ class UserTestCase(TestCase):
         )
 
     def test_get_existing_full_user(self):
+        """
+        Test getting all the fields of an already created user
+        """
         u: User = User.objects.get(username="randomplayer")
         self.assertEquals(u.get_username(), "randomplayer")
         self.assertEquals(u.get_short_name(), "Random")
@@ -54,6 +64,9 @@ class UserTestCase(TestCase):
         self.assertFalse(u.is_staff)
 
     def test_get_existing_minimal_user(self):
+        """
+        Test getting all the fields of an user created with only the required fields
+        """
         u: User = User.objects.get(username="anotherplayer")
         self.assertEquals(u.get_username(), "anotherplayer")
         self.assertEquals(u.get_short_name(), "")
@@ -65,14 +78,24 @@ class UserTestCase(TestCase):
         self.assertFalse(u.is_staff)
 
     def test_get_non_existing_user(self):
+        """
+        Test that getting an user which does not exist throws an `User.DoesNotExist` error
+        """
         with self.assertRaises(User.DoesNotExist):
             User.objects.get(username="idontexist")
 
 
 class UserEndToEndTestCase(TestCase):
+    """
+    Test cases of the API endpoints and workflows related to user model
+    """
+
     client: APIClient
 
     def setUp(self):
+        """
+        Create a player to test getters
+        """
         self.client = APIClient()
         User.objects.create_user(
             username="randomplayer",
@@ -85,6 +108,10 @@ class UserEndToEndTestCase(TestCase):
         )
 
     def test_register_invalid_data(self):
+        """
+        Test trying to register a few invalid users
+        """
+
         def send_invalid_data(data):
             request = self.client.post("/v1/user/register/", data, format="json")
             self.assertEquals(request.status_code, 400)
@@ -95,7 +122,14 @@ class UserEndToEndTestCase(TestCase):
         send_invalid_data({"username": "newuser", "email": "email@example.com"})
 
     def test_register_valid_account(self):
+        """
+        Test registering valid users
+        """
+
         def send_valid_data(data, check_fields=[]):
+            """
+            Helper function that will request a register and check its output
+            """
             request = self.client.post("/v1/user/register/", data, format="json")
 
             self.assertEquals(request.status_code, 201)
@@ -144,6 +178,10 @@ class UserEndToEndTestCase(TestCase):
         )
 
     def test_register_read_only_fields(self):
+        """
+        Test that the read-only register fields are indeed read-only
+        """
+
         def send_valid_data(data, check_fields=[]):
             request = self.client.post("/v1/user/register/", data, format="json")
 
@@ -197,6 +235,9 @@ class UserEndToEndTestCase(TestCase):
         )
 
     def test_register_email_is_sent(self):
+        """
+        Test that an email is sent upon registration
+        """
         data = {
             "username": "ILoveMail",
             "password": "1111qwer!",
@@ -212,6 +253,9 @@ class UserEndToEndTestCase(TestCase):
         self.assertEqual(mail.outbox[0].to, ["postman@example.com"])
 
     def test_register_can_confirm_email(self):
+        """
+        Test that an user can confirm their email with the link they received
+        """
         data = {
             "username": "ILoveEmail",
             "password": "1111qwer!",
@@ -241,6 +285,9 @@ class UserEndToEndTestCase(TestCase):
         self.assertTrue(User.objects.get(username=data["username"]).email_active)
 
     def test_can_confirm_email_only_once(self):
+        """
+        Test that an user can confirm their email only once
+        """
         data = {
             "username": "ILoveEmail",
             "password": "1111qwer!",
@@ -266,6 +313,9 @@ class UserEndToEndTestCase(TestCase):
         self.assertEquals(request.status_code, 400)
 
     def test_confirmation_email_is_token_checked(self):
+        """
+        Test that the token sent to an user for their email confirmation is really checked
+        """
         data = {
             "username": "ILoveEmail",
             "password": "1111qwer!",
@@ -292,6 +342,10 @@ class UserEndToEndTestCase(TestCase):
         self.assertEquals(request.status_code, 400)
 
     def test_login_invalid_account(self):
+        """
+        Try to login with invalid requests
+        """
+
         def send_valid_data(data):
             request = self.client.post("/v1/user/login/", data, format="json")
 
@@ -309,6 +363,9 @@ class UserEndToEndTestCase(TestCase):
         )
 
     def test_login_not_active_account(self):
+        """
+        Test trying to login to an account which email is not already activated
+        """
         User.objects.create_user(
             username="newplayer", email="test@test.com", password="1111qwer!"
         )
@@ -326,6 +383,9 @@ class UserEndToEndTestCase(TestCase):
         )
 
     def test_login_account(self):
+        """
+        Test that when everything is ok, an user is able to login
+        """
         User.objects.create_user(
             username="newplayer",
             email="test@test.com",
@@ -347,6 +407,10 @@ class UserEndToEndTestCase(TestCase):
         )
 
     def can_resend_confirmation_email(self):
+        """
+        Test that an user can request another confirmation email when
+        requesting the right route
+        """
         data = {
             "username": "ILoveEmail",
             "password": "1111qwer!",
@@ -373,6 +437,10 @@ class UserEndToEndTestCase(TestCase):
         self.assertEqual(mail.outbox, 3)
 
     def cant_resend_confirmation_if_already_valid(self):
+        """
+        Test that an user cannot resend a confirmation email if they already
+        confirmed their email
+        """
         User.objects.create_user(
             username="newplayer",
             email="test@example.com",
@@ -387,6 +455,10 @@ class UserEndToEndTestCase(TestCase):
         self.assertEqual(request.status_code, 400)
 
     def cant_resend_confirmation_if_nonexisting_user(self):
+        """
+        Test that we cannot resend a confirmation email for a non existing user
+        without crashing the server
+        """
         request = self.client.post(
             "/v1/user/resend-email/", {"username": "IDontExistLol"}, format="json"
         )
@@ -394,11 +466,18 @@ class UserEndToEndTestCase(TestCase):
         self.assertEqual(request.status_code, 400)
 
     def dont_crash_resend_confirmation_if_empty(self):
+        """
+        Test that server doesn't crash if ask to resend an email without any
+        valid data in request
+        """
         request = self.client.post("/v1/user/resend-email/", {}, format="json")
 
         self.assertEqual(request.status_code, 400)
 
     def test_can_reset_password(self):
+        """
+        Test that an user can reset their password (full workflow)
+        """
         data = {
             "email": "randomplayer@example.com",
         }
@@ -446,6 +525,9 @@ class UserEndToEndTestCase(TestCase):
         self.assertEquals(request.status_code, 404)
 
     def test_can_reset_password_only_once(self):
+        """
+        Test that an user can reset their password only once with a token
+        """
         data = {
             "email": "randomplayer@example.com",
         }
@@ -486,6 +568,9 @@ class UserEndToEndTestCase(TestCase):
         self.assertEquals(request.status_code, 400)
 
     def test_password_reset_is_token_checked(self):
+        """
+        Test that the password reset token is actually checked
+        """
         data = {
             "email": "randomplayer@example.com",
         }

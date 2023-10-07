@@ -47,6 +47,9 @@ class UserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, username, password, **extra_fields):
+        """
+        Check that all required fields are present and create a superuser
+        """
         if password is None:
             raise TypeError(_("Les superutilisateur·rices requièrent un mot de passe"))
         user = self.create_user(email, username, password, **extra_fields)
@@ -132,6 +135,7 @@ class UserMailer:
             fail_silently=False,
         )
 
+    @staticmethod
     def send_password_reset(user_object: User):
         """
         Send a password reset token.

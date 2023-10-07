@@ -60,22 +60,37 @@ class UserMe(APIView):
 
 # TODO: change permission
 class PermissionViewSet(generics.ListCreateAPIView):
+    """
+    Django's `Permission` ViewSet to be able to add them to the admin panel
+    """
+
     queryset = Permission.objects.all().order_by("name")
     serializer_class = PermissionSerializer
     permission_classes = [permissions.IsAdminUser]
 
 
 class GroupViewSet(generics.ListCreateAPIView):
+    """
+    Django's `Group` ViewSet to be able to add them to the admin panel
+    """
+
     queryset = Group.objects.all().order_by("name")
     serializer_class = GroupSerializer
     permission_classes = [permissions.IsAdminUser]
 
 
 class EmailConfirmView(APIView):
+    """
+    Email confirmation user API Endpoint
+    """
+
     permissions_classes = [permissions.AllowAny]
     authentication_classes = [SessionAuthentication]
 
     def get(self, request, user=None, token=None):
+        """
+        If requested with valid parameters, will validate an user's email
+        """
         error_text = _("Utilisateur ou jeton invalide (ou adresse déjà confirmée)")
 
         if user and token:
@@ -100,10 +115,18 @@ class EmailConfirmView(APIView):
 
 
 class AskForPasswordReset(APIView):
+    """
+    Asking for a password reset API Endpoint
+    """
+
     permissions_classes = [permissions.AllowAny]
     authentication_classes = [SessionAuthentication]
 
     def post(self, request):
+        """
+        If requested with valid parameters, will send a password reset email to
+        an user given their email address
+        """
         try:
             user_object: User = User.objects.get(email=request.data["email"])
             UserMailer.send_password_reset(user_object)
@@ -114,10 +137,17 @@ class AskForPasswordReset(APIView):
 
 
 class ResetPassword(APIView):
+    """
+    Password Reset API Endpoint
+    """
+
     permissions_classes = [permissions.AllowAny]
     authentication_classes = [SessionAuthentication]
 
     def post(self, request):
+        """
+        If requested with valid parameters, will reset an user password
+        """
         data = request.data
         if not (
             "user" in data
@@ -170,13 +200,16 @@ class ResetPassword(APIView):
 
 class ResendEmailConfirmView(APIView):
     """
-    API endpoint to re-send
+    API endpoint to re-send a confirmation email
     """
 
     permissions_classes = [permissions.AllowAny]
     authentication_classes = [SessionAuthentication]
 
     def post(self, request):
+        """
+        If the user is found, will send again a confirmation email
+        """
         error_text = _("Impossible de renvoyer le courriel de confirmation")
 
         username = request.data.get("username")
@@ -250,5 +283,8 @@ class UserLogout(APIView):
     authentication_classes = []
 
     def post(self, request):
+        """
+        Will logout an user.
+        """
         logout(request)
         return Response(status=status.HTTP_200_OK)
