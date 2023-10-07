@@ -152,7 +152,7 @@ LOCALE_PATHS = [path.join(BASE_DIR, 'locale')]
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = "v1/static/"
-STATICFILES_DIRS = [BASE_DIR / STATIC_URL]
+STATICFILES_DIRS = [BASE_DIR / "v1" ]
 STATIC_ROOT = getenv("STATIC_ROOT", path.join(BASE_DIR, "static/"))
 
 # Default primary key field type
