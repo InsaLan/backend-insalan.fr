@@ -165,6 +165,9 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "https://" + getenv("WEBSITE_HOST", "localhost"),
     "https://api." + getenv("WEBSITE_HOST", "localhost"),
+    "http://" + getenv("WEBSITE_HOST", "localhost"),
+    "http://api." + getenv("WEBSITE_HOST", "localhost")
+
 ]
 
 # MAILER SETTINGS
