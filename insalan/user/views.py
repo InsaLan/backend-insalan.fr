@@ -161,7 +161,7 @@ class ResetPassword(APIView):
 
         except User.DoesNotExist:
             return Response(
-                {"user": [_("Utilisateur non trouvé")]},
+                {"user": [_("Utilisateur⋅ice non trouvé⋅e")]},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

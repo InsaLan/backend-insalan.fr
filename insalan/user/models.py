@@ -31,11 +31,11 @@ class UserManager(BaseUserManager):
         check that all required fields are present and create an user
         """
         if not email:
-            raise ValueError(_("An email is required"))
+            raise ValueError(_("Un courriel est requis"))
         if not username:
-            raise ValueError(_("An username is required"))
+            raise ValueError(_("Un nom d'utilisateur·rice est requis"))
         if not password:
-            raise ValueError(_("A password is required"))
+            raise ValueError(_("Un mot de passe est requis"))
         user = self.model(
             email=self.normalize_email(email),
             username=username,
@@ -48,7 +48,7 @@ class UserManager(BaseUserManager):
 
     def create_superuser(self, email, username, password, **extra_fields):
         if password is None:
-            raise TypeError("Superusers must have a password.")
+            raise TypeError(_("Les superutilisateur·rices requièrent un mot de passe"))
         user = self.create_user(email, username, password, **extra_fields)
         user.is_superuser = True
         user.is_staff = True
@@ -122,8 +122,8 @@ class UserMailer:
         user = user_object.username
         # TODO Give a frontend page instead of direct API link
         send_mail(
-            _("Confirmez votre e-mail"),
-            _("Confirmez votre adresse e-mail en cliquant sur ")
+            _("Confirmez votre courriel"),
+            _("Confirmez votre adresse de courriel en cliquant sur ")
             + "http://api."
             + getenv("WEBSITE_HOST", "localhost")
             + reverse("confirm-email", kwargs={"user": user, "token": token}),

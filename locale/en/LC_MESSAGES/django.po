@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-08-30 01:19+0200\n"
+"POT-Creation-Date: 2023-10-07 22:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: Amélie Gonzalez <lymkwi@vulpinecitrus.info>\n"
+"Last-Translator: Aurore Poirier <foss@borale.si>\n"
 "Language-Team: SysRez-Dev <contact@insalan.fr>\n"
 "Language: English\n"
 "MIME-Version: 1.0\n"
@@ -18,243 +18,327 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: langate/tests.py:232 langate/views.py:67
+#: insalan/langate/tests.py:236 insalan/langate/views.py:67
 msgid "Évènement demandé incompatible"
 msgstr "Mismatched requested event"
 
-#: langate/tests.py:258 langate/views.py:74
+#: insalan/langate/tests.py:262 insalan/langate/views.py:74
 msgid "Identifiant manquant"
 msgstr "Missing identifier"
 
-#: langate/tests.py:283 langate/views.py:79 langate/views.py:87
+#: insalan/langate/tests.py:287 insalan/langate/views.py:79
+#: insalan/langate/views.py:87
 msgid "Évènement non en cours"
 msgstr "Event not ongoing"
 
-#: langate/views.py:54
+#: insalan/langate/views.py:54
 msgid "Pas d'évènement en cours"
 msgstr "No ongoing event"
 
-#: partner/apps.py:8
+#: insalan/partner/apps.py:8
 msgid "Partenaires & Sponsors"
 msgstr "Partners & Sponsors"
 
-#: partner/models.py:14 partner/models.py:19
+#: insalan/partner/models.py:14 insalan/partner/models.py:20
 msgid "Partenaire"
 msgstr "Partner"
 
-#: partner/models.py:15
+#: insalan/partner/models.py:15
 msgid "Sponsor"
 msgstr "Sponsor"
 
-#: partner/models.py:20
+#: insalan/partner/models.py:21
 msgid "Partenaires"
 msgstr "Partners"
 
-#: partner/models.py:25
+#: insalan/partner/models.py:25
 msgid "Nom du partenaire/sponsor"
 msgstr "Partner/Sponsor name"
 
-#: partner/models.py:27
+#: insalan/partner/models.py:27
 msgid "URL"
 msgstr "URL"
 
-#: partner/models.py:29 tournament/models.py:60 tournament/models.py:151
+#: insalan/partner/models.py:29 insalan/tournament/models.py:60
+#: insalan/tournament/models.py:156
 msgid "Logo"
 msgstr "Logo"
 
-#: partner/models.py:35
+#: insalan/partner/models.py:36
 msgid "Type de partenariat"
 msgstr "Partnership Type"
 
-#: settings.py:139
+#: insalan/settings.py:143
 msgid "Anglais"
 msgstr "English"
 
-#: settings.py:140
+#: insalan/settings.py:144
 msgid "Français"
 msgstr "French"
 
-#: settings.py:141
+#: insalan/settings.py:145
 msgid "Espagnol"
 msgstr "Spanish"
 
-#: settings.py:142
+#: insalan/settings.py:146
 msgid "Allemand"
 msgstr "German"
 
-#: tickets/apps.py:8 tickets/models.py:20
+#: insalan/tickets/apps.py:8 insalan/tickets/models.py:19
 msgid "Tickets"
 msgstr "Tickets"
 
-#: tickets/models.py:13
+#: insalan/tickets/models.py:11
 msgid "Annulé"
 msgstr "Canceled"
 
-#: tickets/models.py:14
+#: insalan/tickets/models.py:12
 msgid "Scanné"
 msgstr "Scanned"
 
-#: tickets/models.py:15
+#: insalan/tickets/models.py:13
 msgid "Valide"
 msgstr "Valid"
 
-#: tickets/models.py:19
+#: insalan/tickets/models.py:18
 msgid "Ticket"
 msgstr "Ticket"
 
-#: tickets/models.py:23
+#: insalan/tickets/models.py:22
 msgid "UUID"
 msgstr "UUID"
 
-#: tickets/models.py:29 tournament/models.py:285 tournament/models.py:345
-#: user/models.py:32
+#: insalan/tickets/models.py:25 insalan/tournament/models.py:293
+#: insalan/tournament/models.py:354 insalan/user/models.py:73
 msgid "Utilisateur⋅ice"
 msgstr "User"
 
-#: tickets/models.py:32
+#: insalan/tickets/models.py:28
 msgid "Statut"
 msgstr "Status"
 
-#: tickets/views.py:26 tickets/views.py:55 tickets/views.py:83
+#: insalan/tickets/tests.py:85 insalan/tickets/tests.py:153
+#: insalan/tickets/tests.py:193 insalan/tickets/views.py:26
+#: insalan/tickets/views.py:57 insalan/tickets/views.py:85
 msgid "UUID invalide"
 msgstr "Invalid UUID"
 
-#: tickets/views.py:32
+#: insalan/tickets/tests.py:93 insalan/tickets/views.py:32
+#: insalan/user/views.py:164
 msgid "Utilisateur⋅ice non trouvé⋅e"
 msgstr "User not found"
 
-#: tickets/views.py:38 tickets/views.py:61 tickets/views.py:89
+#: insalan/tickets/tests.py:101 insalan/tickets/tests.py:159
+#: insalan/tickets/tests.py:187 insalan/tickets/tests.py:199
+#: insalan/tickets/views.py:38 insalan/tickets/views.py:63
+#: insalan/tickets/views.py:91
 msgid "Ticket non trouvé"
 msgstr "Ticket not found"
 
-#: tickets/views.py:65
+#: insalan/tickets/tests.py:165 insalan/tickets/views.py:67
 msgid "Ticket annulé"
 msgstr "Ticket canceled"
 
-#: tickets/views.py:68
+#: insalan/tickets/tests.py:171 insalan/tickets/views.py:70
 msgid "Ticket déjà scanné"
 msgstr "Ticket already scanned"
 
-#: tournament/apps.py:10 tournament/models.py:162
+#: insalan/tournament/apps.py:11 insalan/tournament/models.py:168
 msgid "Tournois"
 msgstr "Tournaments"
 
-#: tournament/models.py:37
+#: insalan/tournament/models.py:37
 msgid "Nom de l'évènement"
 msgstr "Event name"
 
-#: tournament/models.py:43
+#: insalan/tournament/models.py:43
 msgid "Description de l'évènement"
 msgstr "Event description"
 
-#: tournament/models.py:46
+#: insalan/tournament/models.py:46
 msgid "Année"
 msgstr "Year"
 
-#: tournament/models.py:51
+#: insalan/tournament/models.py:51
 msgid "Mois"
 msgstr "Month"
 
-#: tournament/models.py:56
+#: insalan/tournament/models.py:56
 msgid "En cours"
 msgstr "Ongoing"
 
-#: tournament/models.py:70 tournament/models.py:134
+#: insalan/tournament/models.py:71 insalan/tournament/models.py:135
 msgid "Évènement"
 msgstr "Event"
 
-#: tournament/models.py:71
+#: insalan/tournament/models.py:72
 msgid "Évènements"
 msgstr "Events"
 
-#: tournament/models.py:97 tournament/models.py:139
+#: insalan/tournament/models.py:98 insalan/tournament/models.py:140
 msgid "Jeu"
 msgstr "Game"
 
-#: tournament/models.py:98
+#: insalan/tournament/models.py:99
 msgid "Jeux"
 msgstr "Games"
 
-#: tournament/models.py:101
+#: insalan/tournament/models.py:102
 msgid "Nom du jeux"
 msgstr "Game name"
 
-#: tournament/models.py:107
+#: insalan/tournament/models.py:108
 msgid "Nom raccourci du jeu"
 msgstr "Short game name"
 
-#: tournament/models.py:143
+#: insalan/tournament/models.py:144
 msgid "Nom du tournoi"
 msgstr "Tournament name"
 
-#: tournament/models.py:147
+#: insalan/tournament/models.py:149
 msgid "Règlement du tournoi"
 msgstr "Tournament rules"
 
-#: tournament/models.py:161 tournament/models.py:204
+#: insalan/tournament/models.py:167 insalan/tournament/models.py:210
 msgid "Tournoi"
 msgstr "Tournament"
 
-#: tournament/models.py:210
+#: insalan/tournament/models.py:216
 msgid "Nom d'équipe"
 msgstr "Team name"
 
-#: tournament/models.py:215 tournament/models.py:290 tournament/models.py:349
+#: insalan/tournament/models.py:221 insalan/tournament/models.py:298
+#: insalan/tournament/models.py:358
 msgid "Équipe"
 msgstr "Team"
 
-#: tournament/models.py:216
+#: insalan/tournament/models.py:222
 msgid "Équipes"
 msgstr "Teams"
 
-#: tournament/models.py:267
+#: insalan/tournament/models.py:273
 msgid "Pas payé"
 msgstr "Not paid"
 
-#: tournament/models.py:268
+#: insalan/tournament/models.py:274
 msgid "Payé"
 msgstr "Paid"
 
-#: tournament/models.py:269
+#: insalan/tournament/models.py:275
 msgid "Payera sur place"
 msgstr "Will pay on site"
 
-#: tournament/models.py:279
+#: insalan/tournament/models.py:287
 msgid "Inscription d'un⋅e joueur⋅euse"
 msgstr "Player Registration"
 
-#: tournament/models.py:280
+#: insalan/tournament/models.py:288
 msgid "Inscription de joueur⋅euses"
 msgstr "Player Registrations"
 
-#: tournament/models.py:298 tournament/models.py:352
+#: insalan/tournament/models.py:306 insalan/tournament/models.py:361
 msgid "Statut du paiement"
 msgstr "Payment Status"
 
-#: tournament/models.py:337
+#: insalan/tournament/models.py:345
 msgid "Joueur⋅euse déjà inscrit⋅e pour cet évènement"
 msgstr "Player already registered for that event"
 
-#: tournament/models.py:362
+#: insalan/tournament/models.py:372
 msgid "Inscription d'un⋅e manager"
 msgstr "Manager Registration"
 
-#: tournament/models.py:363
+#: insalan/tournament/models.py:373
 msgid "Inscriptions de managers"
 msgstr "Manager Registrations"
 
-#: user/apps.py:7
+#: insalan/user/apps.py:13
 msgid "Gestionnaire d'utilisateur⋅ices"
 msgstr "User Management Application"
 
-#: user/models.py:26
+#: insalan/user/models.py:34
+msgid "Un courriel est requis"
+msgstr "An email is required"
+
+#: insalan/user/models.py:36
+msgid "Un nom d'utilisateur·rice est requis"
+msgstr "An username is required"
+
+#: insalan/user/models.py:38
+msgid "Un mot de passe est requis"
+msgstr "A password is required"
+
+#: insalan/user/models.py:52
+msgid "Les superutilisateur·rices requièrent un mot de passe"
+msgstr "Superusers require a password"
+
+#: insalan/user/models.py:74
+msgid "Utilisateur⋅ices"
+msgstr "Users"
+
+#: insalan/user/models.py:83
 msgid "Courriel"
 msgstr "Email"
 
-#: user/models.py:28
+#: insalan/user/models.py:86
 msgid "Courriel vérifié"
 msgstr "Email activated"
 
-#: user/models.py:33
-msgid "Utilisateur⋅ices"
-msgstr "Users"
+#: insalan/user/models.py:127
+msgid "Confirmez votre courriel"
+msgstr "Confirm your email"
+
+#: insalan/user/models.py:128
+msgid "Confirmez votre adresse de courriel en cliquant sur "
+msgstr "Confirm your email by clicking on "
+
+#: insalan/user/models.py:145
+msgid "Demande de ré-initialisation de mot de passe"
+msgstr "Ask for a password reset"
+
+#: insalan/user/models.py:147
+msgid ""
+"Une demande de ré-initialisation de mot de passe a été effectuéepour votre "
+"compte. Si vous êtes à l'origine de cette demande,vous pouvez cliquer sur le "
+"lien suivant: "
+msgstr ""
+
+#: insalan/user/serializers.py:63 insalan/user/views.py:153
+msgid "Les mots de passe diffèrent"
+msgstr "Passwords are different"
+
+#: insalan/user/serializers.py:93
+msgid "Compte non activé"
+msgstr "Account not activated"
+
+#: insalan/user/tests.py:301 insalan/user/views.py:233
+msgid "Nom d'utilisateur ou mot de passe incorrect"
+msgstr "Username or password incorrect"
+
+#: insalan/user/views.py:33
+msgid "Le cookie a été défini"
+msgstr "Cookie has been defined"
+
+#: insalan/user/views.py:79
+msgid "Utilisateur ou jeton invalide (ou adresse déjà confirmée)"
+msgstr "User or token invalid, or account is already confirmed"
+
+#: insalan/user/views.py:129
+msgid "Champ manquant"
+msgstr "Missing field"
+
+#: insalan/user/views.py:146
+msgid "Mot de passe trop simple ou invalide"
+msgstr "Password too simple or invalid"
+
+#: insalan/user/views.py:158
+msgid "Jeton de ré-initialisation invalide"
+msgstr "Reset token invalid"
+
+#: insalan/user/views.py:180
+msgid "Impossible de renvoyer le courriel de confirmation"
+msgstr "Impossible to send confirmation email again"
+
+#: insalan/user/views.py:239
+msgid "Format des données soumises invalide"
+msgstr "Submitted data format invalid"
