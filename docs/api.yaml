@@ -46,6 +46,59 @@ tags:
 #  - name: user
 #    description: Operations about user
 paths:
+  /user/me/:
+    get:
+      tags:
+        - user
+      summary: Get an user's own object
+      description: Get a logged-in user's own object representation
+      responses:
+        '200':
+          description: Registration effective
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    patch:
+      tags:
+        - user
+      summary: Edit an user's own fields
+      description: Edit a logged-in user's own fields
+      requestBody:
+        description: Email which the password reset will be sent
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                current_password:
+                  type: string
+                  required: true
+                  example: "MyCurrentPassword"
+                new_password:
+                  type: string
+                  example: "MyNewPassword"
+                password_validation:
+                  type: string
+                  example: "MyNewPassword"
+                email:
+                  $ref: "#/components/schemas/User/properties/email"
+                first_name:
+                  $ref: "#/components/schemas/User/properties/firstName"
+                last_name:
+                  $ref: "#/components/schemas/User/properties/lastName"
+      responses:
+        '200':
+          description: Registration effective
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        '400':
+          description: Invalid data
+        '401':
+          description: Invalid user or password
+
   /user/register/:
     post:
       tags:
@@ -57,7 +110,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/User"
+              $ref: "#/components/schemas/UserRegister"
       responses:
         '200':
           description: Registration effective
@@ -1232,10 +1285,10 @@ components:
           example: theUser
         firstName:
           type: string
-          example: John
+          example: Noah
         lastName:
           type: string
-          example: James
+          example: Doe
         email:
           type: string
           example: john@email.com
@@ -1253,6 +1306,32 @@ components:
           type: boolean
           example: false
           readOnly: true
+
+    UserRegister:
+      type: object
+      properties:
+        username:
+          type: string
+          example: theUser
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: James
+        email:
+          type: string
+          example: john@email.com
+        password:
+          type: string
+          example: '12345'
+        password_confirmation:
+          type: string
+          example: '12345'
+        phone:
+          type: string
+          example: '012345'
+
     LoginData:
       required:
         - username
@@ -1366,4 +1445,5 @@ components:
             $ref: '#/components/schemas/User'
 
 #  securitySchemes:
+
 
