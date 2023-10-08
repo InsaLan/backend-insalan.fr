@@ -841,7 +841,7 @@ class TournamentFullDerefEndpoint(TestCase):
             reverse("tournament/details-full", args=[tourneyobj_one.id]), format="json"
         )
         self.assertEqual(request.status_code, 200)
-
+        print(request.data)
         self.assertEqual(
             request.data,
             {
@@ -853,6 +853,7 @@ class TournamentFullDerefEndpoint(TestCase):
                     "year": 2021,
                     "month": 12,
                     "ongoing": False,
+                    "logo": None,
                 },
                 "game": {"id": game_obj.id, "name": "Test Game", "short_name": "TFG"},
                 "name": "Test Tournament",
@@ -869,6 +870,7 @@ class TournamentFullDerefEndpoint(TestCase):
                         ],
                     }
                 ],
+                "logo": None,
             },
         )
 
@@ -952,12 +954,14 @@ class EventDerefAndGroupingEndpoints(TestCase):
                 "year": 2023,
                 "month": 3,
                 "ongoing": True,
+                "logo": None,
                 "tournaments": [
                     {
                         "id": tourney.id,
                         "name": "Test Tournament",
                         "game": gobj.id,
                         "teams": [],
+                        "logo": None,
                     }
                 ],
             },

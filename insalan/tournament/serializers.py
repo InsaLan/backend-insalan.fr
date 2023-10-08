@@ -30,6 +30,7 @@ class EventSerializer(serializers.ModelSerializer):
             "month",
             "ongoing",
             "tournaments",
+            "logo"
         ]
 
 
@@ -54,7 +55,7 @@ class TournamentSerializer(serializers.ModelSerializer):
 
         model = Tournament
         read_only_fields = ("id",)
-        fields = ["id", "event", "game", "name", "teams"]
+        fields = ["id", "event", "game", "name", "teams", "logo"]
 
 
 class TeamSerializer(serializers.ModelSerializer):
