@@ -54,10 +54,10 @@ class UserTestCase(TestCase):
         Test getting all the fields of an already created user
         """
         u: User = User.objects.get(username="randomplayer")
-        self.assertEquals(u.get_username(), "randomplayer")
-        self.assertEquals(u.get_short_name(), "Random")
-        self.assertEquals(u.get_full_name(), "Random Player")
-        self.assertEquals(u.get_user_permissions(), set())
+        self.assertEqual(u.get_username(), "randomplayer")
+        self.assertEqual(u.get_short_name(), "Random")
+        self.assertEqual(u.get_full_name(), "Random Player")
+        self.assertEqual(u.get_user_permissions(), set())
         self.assertTrue(u.has_usable_password())
         self.assertTrue(u.check_password("IUseAVerySecurePassword"))
         self.assertTrue(u.is_active)
@@ -68,10 +68,10 @@ class UserTestCase(TestCase):
         Test getting all the fields of an user created with only the required fields
         """
         u: User = User.objects.get(username="anotherplayer")
-        self.assertEquals(u.get_username(), "anotherplayer")
-        self.assertEquals(u.get_short_name(), "")
-        self.assertEquals(u.get_full_name(), "")
-        self.assertEquals(u.get_user_permissions(), set())
+        self.assertEqual(u.get_username(), "anotherplayer")
+        self.assertEqual(u.get_short_name(), "")
+        self.assertEqual(u.get_full_name(), "")
+        self.assertEqual(u.get_user_permissions(), set())
         self.assertTrue(u.has_usable_password())
         self.assertTrue(u.check_password("ThisIsPassword"))
         self.assertTrue(u.is_active)
@@ -114,7 +114,7 @@ class UserEndToEndTestCase(TestCase):
 
         def send_invalid_data(data):
             request = self.client.post("/v1/user/register/", data, format="json")
-            self.assertEquals(request.status_code, 400)
+            self.assertEqual(request.status_code, 400)
 
         send_invalid_data({})
         send_invalid_data({"username": "newuser"})
@@ -132,11 +132,11 @@ class UserEndToEndTestCase(TestCase):
             """
             request = self.client.post("/v1/user/register/", data, format="json")
 
-            self.assertEquals(request.status_code, 201)
+            self.assertEqual(request.status_code, 201)
 
             created_data: Dict = request.data
             for k, v in check_fields:
-                self.assertEquals(created_data[k], v)
+                self.assertEqual(created_data[k], v)
 
         send_valid_data(
             {
@@ -185,11 +185,11 @@ class UserEndToEndTestCase(TestCase):
         def send_valid_data(data, check_fields=[]):
             request = self.client.post("/v1/user/register/", data, format="json")
 
-            self.assertEquals(request.status_code, 201)
+            self.assertEqual(request.status_code, 201)
 
             created_data: Dict = request.data
             for k, v in check_fields:
-                self.assertEquals(created_data[k], v)
+                self.assertEqual(created_data[k], v)
 
         send_valid_data(
             {
@@ -277,10 +277,10 @@ class UserEndToEndTestCase(TestCase):
         username = match["username"]
         token = match["token"]
 
-        self.assertEquals(username, data["username"])
+        self.assertEqual(username, data["username"])
 
         request = self.client.get(f"/v1/user/confirm/{username}/{token}")
-        self.assertEquals(request.status_code, 200)
+        self.assertEqual(request.status_code, 200)
 
         self.assertTrue(User.objects.get(username=data["username"]).email_active)
 
@@ -307,10 +307,10 @@ class UserEndToEndTestCase(TestCase):
         token = match["token"]
 
         request = self.client.get(f"/v1/user/confirm/{username}/{token}")
-        self.assertEquals(request.status_code, 200)
+        self.assertEqual(request.status_code, 200)
 
         request = self.client.get(f"/v1/user/confirm/{username}/{token}")
-        self.assertEquals(request.status_code, 400)
+        self.assertEqual(request.status_code, 400)
 
     def test_confirmation_email_is_token_checked(self):
         """
@@ -339,7 +339,7 @@ class UserEndToEndTestCase(TestCase):
 
         request = self.client.get(f"/v1/user/confirm/{username}/{token}")
 
-        self.assertEquals(request.status_code, 400)
+        self.assertEqual(request.status_code, 400)
 
     def test_login_invalid_account(self):
         """
@@ -349,8 +349,8 @@ class UserEndToEndTestCase(TestCase):
         def send_valid_data(data):
             request = self.client.post("/v1/user/login/", data, format="json")
 
-            self.assertEquals(request.status_code, 404)
-            self.assertEquals(
+            self.assertEqual(request.status_code, 404)
+            self.assertEqual(
                 request.data["user"][0],
                 _("Nom d'utilisateur ou mot de passe incorrect"),
             )
@@ -495,7 +495,7 @@ class UserEndToEndTestCase(TestCase):
 
         # self.assertFalse(User.objects.get(username=data["username"]).email_active)
 
-        # self.assertEquals(username, data["username"])
+        # self.assertEqual(username, data["username"])
         data = {
             "user": username,
             "token": token,
@@ -506,7 +506,7 @@ class UserEndToEndTestCase(TestCase):
         request = self.client.post(
             "/v1/user/password-reset/submit/", data, format="json"
         )
-        self.assertEquals(request.status_code, 200)
+        self.assertEqual(request.status_code, 200)
         self.client.post("/v1/user/logout/", format="json")
 
         login_data = {
@@ -514,7 +514,7 @@ class UserEndToEndTestCase(TestCase):
             "password": "UwU*nuzzles*621!",
         }
         request = self.client.post("/v1/user/login/", login_data, format="json")
-        self.assertEquals(request.status_code, 200)
+        self.assertEqual(request.status_code, 200)
         self.client.post("/v1/user/logout/", format="json")
 
         login_data = {
@@ -522,7 +522,7 @@ class UserEndToEndTestCase(TestCase):
             "password": "IUseAVerySecurePassword",
         }
         request = self.client.post("/v1/user/login/", login_data, format="json")
-        self.assertEquals(request.status_code, 404)
+        self.assertEqual(request.status_code, 404)
 
     def test_can_reset_password_only_once(self):
         """
@@ -553,7 +553,7 @@ class UserEndToEndTestCase(TestCase):
         request = self.client.post(
             "/v1/user/password-reset/submit/", data, format="json"
         )
-        self.assertEquals(request.status_code, 200)
+        self.assertEqual(request.status_code, 200)
 
         data = {
             "user": username,
@@ -565,7 +565,7 @@ class UserEndToEndTestCase(TestCase):
         request = self.client.post(
             "/v1/user/password-reset/submit/", data, format="json"
         )
-        self.assertEquals(request.status_code, 400)
+        self.assertEqual(request.status_code, 400)
 
     def test_password_reset_is_token_checked(self):
         """
@@ -599,4 +599,4 @@ class UserEndToEndTestCase(TestCase):
         request = self.client.post(
             "/v1/user/password-reset/submit/", data, format="json"
         )
-        self.assertEquals(request.status_code, 400)
+        self.assertEqual(request.status_code, 400)

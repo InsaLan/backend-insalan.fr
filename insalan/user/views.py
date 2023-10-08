@@ -30,6 +30,9 @@ from .models import EmailConfirmationTokenGenerator, User, UserMailer
 @require_GET
 @ensure_csrf_cookie
 def get_csrf(request):
+    """
+    Returns a response setting CSRF cookie in headers
+    """
     return JsonResponse({"csrf": _("Le cookie a été défini")})
 
 
@@ -54,6 +57,9 @@ class UserMe(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
+        """
+        Returns an user's own informations
+        """
         user = UserSerializer(request.user)
         return Response(user.data)
 
@@ -170,24 +176,21 @@ class ResetPassword(APIView):
                         user_object.set_password(data["password"])
                         user_object.save()
                         return Response()
-                    else:
-                        return Response(
-                            {
-                                "user": [_("Mot de passe trop simple ou invalide")],
-                                "errors": validation_errors,
-                            },
-                            status=status.HTTP_400_BAD_REQUEST,
-                        )
-                else:
                     return Response(
-                        {"user": [_("Les mots de passe diffèrent")]},
+                        {
+                            "user": [_("Mot de passe trop simple ou invalide")],
+                            "errors": validation_errors,
+                        },
                         status=status.HTTP_400_BAD_REQUEST,
                     )
-            else:
                 return Response(
-                    {"user": [_("Jeton de ré-initialisation invalide")]},
+                    {"user": [_("Les mots de passe diffèrent")]},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            return Response(
+                {"user": [_("Jeton de ré-initialisation invalide")]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         except User.DoesNotExist:
             return Response(
@@ -257,6 +260,9 @@ class UserLogin(APIView):
     authentication_classes = [SessionAuthentication]
 
     def post(self, request):
+        """
+        Submit a login form
+        """
         data = request.data
         serializer = UserLoginSerializer(data=data)
         if serializer.is_valid():
