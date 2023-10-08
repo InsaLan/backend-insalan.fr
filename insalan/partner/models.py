@@ -4,9 +4,6 @@ from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from insalan.settings import STATIC_URL
-
-
 class Partner(models.Model):
     class PartnerType(models.TextChoices):
         """There are two types of sponsors"""
@@ -27,7 +24,7 @@ class Partner(models.Model):
     url: models.URLField = models.URLField(verbose_name=_("URL"))
     logo: models.FileField = models.FileField(
         verbose_name=_("Logo"),
-        upload_to=os.path.join(STATIC_URL, "partners"),
+        upload_to="partners",
         validators=[
             FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg"])
         ],

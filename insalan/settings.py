@@ -152,7 +152,10 @@ LOCALE_PATHS = [path.join(BASE_DIR, 'locale')]
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = "v1/static/"
-STATIC_ROOT = getenv("STATIC_ROOT", path.join(BASE_DIR, "static/"))
+STATIC_ROOT = "v1/" + getenv("STATIC_ROOT", "static/")
+
+MEDIA_URL = 'v1/media/'
+MEDIA_ROOT = 'v1/' + getenv("MEDIA_ROOT", "media/")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field

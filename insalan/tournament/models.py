@@ -19,9 +19,7 @@ from django.core.validators import (
 )
 from django.utils.translation import gettext_lazy as _
 
-from insalan.settings import STATIC_URL
 from insalan.user.models import User
-
 
 class Event(models.Model):
     """
@@ -60,7 +58,7 @@ class Event(models.Model):
         verbose_name=_("Logo"),
         blank=True,
         null=True,
-        upload_to=os.path.join(STATIC_URL, "event-icons"),
+        upload_to="event-icons",
         validators=[
             FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg"])
         ],
@@ -156,7 +154,7 @@ class Tournament(models.Model):
         verbose_name=_("Logo"),
         blank=True,
         null=True,
-        upload_to=os.path.join(STATIC_URL, "tournament-icons"),
+        upload_to="tournament-icons",
         validators=[
             FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg"])
         ],
