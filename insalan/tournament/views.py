@@ -54,7 +54,7 @@ class EventDetails(generics.RetrieveUpdateDestroyAPIView):
 class EventDetailsSomeDeref(APIView):
     """Details about an Event that dereferences tournaments, but nothing else"""
 
-    def get(self, _, primary_key: int):
+    def get(self, request, primary_key: int):
         """GET handler"""
         candidates = Event.objects.filter(id=primary_key)
         if len(candidates) == 0:
@@ -64,10 +64,10 @@ class EventDetailsSomeDeref(APIView):
 
         event = candidates[0]
 
-        event_serialized = serializers.EventSerializer(event).data
+        event_serialized = serializers.EventSerializer(event, context={"request": request}).data
 
         event_serialized["tournaments"] = [
-            serializers.TournamentSerializer(Tournament.objects.get(id=id)).data
+            serializers.TournamentSerializer(Tournament.objects.get(id=id), context={"request": request}).data
             for id in event_serialized["tournaments"]
         ]
 
@@ -124,7 +124,7 @@ class TournamentDetails(generics.RetrieveUpdateDestroyAPIView):
 class TournamentDetailsFull(APIView):
     """Details about a tournament, with full dereferencing of data"""
 
-    def get(self, _, primary_key: int):
+    def get(self, request, primary_key: int):
         """Handle the GET word"""
 
         # Alright, let's try and get the object
@@ -136,20 +136,20 @@ class TournamentDetailsFull(APIView):
 
         tourney = tourneys[0]
 
-        tourney_serialized = serializers.TournamentSerializer(tourney).data
+        tourney_serialized = serializers.TournamentSerializer(tourney, context={"request": request}).data
 
         # Dereference the event
         event = tourney.event
-        tourney_serialized["event"] = serializers.EventSerializer(event).data
+        tourney_serialized["event"] = serializers.EventSerializer(event, context={"request": request}).data
         del tourney_serialized["event"]["tournaments"]
 
         # Dereference the game
-        tourney_serialized["game"] = serializers.GameSerializer(tourney.game).data
+        tourney_serialized["game"] = serializers.GameSerializer(tourney.game, context={"request": request}).data
 
         # Dereference the teams
         teams_serialized = []
         for team in tourney_serialized["teams"]:
-            team_preser = serializers.TeamSerializer(Team.objects.get(id=team)).data
+            team_preser = serializers.TeamSerializer(Team.objects.get(id=team), context={"request": request}).data
             del team_preser["tournament"]
 
             # Dereference players/managers to users (username)
