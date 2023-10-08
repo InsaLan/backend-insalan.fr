@@ -6,6 +6,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import PermissionDenied, BadRequest
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
@@ -62,6 +63,30 @@ class UserMe(APIView):
         """
         user = UserSerializer(request.user, context={"request": request})
         return Response(user.data)
+
+    def patch(self, request):
+        if "current_password" not in request.data:
+            raise BadRequest()
+        if not request.user.IsAuthenticated:
+            raise PermissionDenied()
+        if not request.user.check_password(request.data["current_password"]):
+            raise PermissionDenied()
+
+        if "new_password" in request.data and "password_validation" in request.data:
+            if request.data["new_password"] != request.data["password_validation"]:
+                raise BadRequest()
+            validation_errors = validate_password(data["new_password"], user=user)
+            if validation_errors is not None:
+                raise BadRequest(validation_errors)
+            user.set_password(request.data["new_password"])
+
+        if "email" in request.data:
+            user.set_email(request.data["email"])
+
+        user.save()
+        return Response()
+
+        # TODO Finish
 
 
 # TODO: change permission
