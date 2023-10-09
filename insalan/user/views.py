@@ -126,7 +126,7 @@ class ResetPassword(APIView):
             and "password_confirm" in data
         ):
             return Response(
-                {[_("user")]: [_("Champ manquant")]},
+                {"user": [_("Champ manquant")]},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
