@@ -1,0 +1,37 @@
+on:
+  push:
+    paths:
+      - 'docs/manuel/**'
+      - '.github/workflows/manual.yaml'
+jobs:
+  build-manual:
+    runs-on: ubuntu-22.04
+    container:
+      image: rust:latest
+      options: --user 1001 # So we avoid ownership issues
+    env:
+      book-dir: ./docs/manuel
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Declare some variables
+        shell: bash
+        run: |
+          echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
+          echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> "$GITHUB_ENV"
+
+      # Install mdbook
+      - name: Install `mdbook`
+        run: cargo install mdbook
+
+      # Build the book
+      - name: Build the book
+        run: mdbook build
+        working-directory: ${{ env.book-dir }}
+
+      # Package artifact
+      - name: Package artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: manuel-backend-${{ env.branch }}-${{ env.sha_short }}
+          path: ${{ env.book-dir }}/book
