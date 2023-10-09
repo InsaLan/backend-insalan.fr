@@ -28,6 +28,6 @@ class Transaction(models.Model):
         choices=TransactionStatus.choices,
         null=False,
         verbose_name=_("Transaction status"),
-    )
+        )
     date = models.DateField()
-
+    amount =  models.DecimalField(null=False, max_digits=5, decimal_places=2)

@@ -8,8 +8,10 @@ from .models import Transaction, TransactionStatus, Product
 from .serializers import TransactionSerializer
 from datetime import date
 from .tokens import tokens
-from rest_framework import generics, permissions
-
+from rest_framework import generics, permissions, status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.authentication import SessionAuthentication
 from django.shortcuts import render
 import insalan.payment.serializers as serializers
 from .models import Product, Transaction
@@ -40,12 +42,21 @@ class TransactionPerId(generics.RetrieveAPIView):
     queryset = Transaction.objects.all().order_by('date')
     permission_classes = [permissions.IsAdminUser]
 
-
 class CreateProduct(generics.CreateAPIView):
-    pass
+    serializer_class = serializers.ProductSerializer
+    queryset = Product.objects.all()
+    permission_classes = [permissions.IsAdminUser]
 
 class PayView(generics.CreateAPIView):
-    pass
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [SessionAuthentication]
+    serializer_class =  serializers.TransactionSerializer
+
+    def create(self, request):
+        product_list = serializers.ProductSerializer(request.data['products'], many=True)
+        transaction = Transaction(payer=request.user)
+        transaction.products.set(product_list)
+        return Response(TransactionSerializer(transaction), status=status.HTTP_200_OK)  
     """
     # lets parse the request
     user=request.user
