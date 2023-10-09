@@ -22,7 +22,7 @@ aléatoire unique et connue seulement de la personne qui déploie le site en
 production. Elle est mise dans `DJANGO_KEY`, et piochée dans la variable
 d'environnement `DJANGO_SECRET`.
 
-## Allowed Hosts, URLs et CORS
+## Allowed Hosts, URLs, CSRF et CORS
 
 Le web est un système compliqué qui repose sur l'intercommunication de plein
 d'acteur⋅ices différent⋅es. Cependant, autoriser des communications de partout
@@ -45,6 +45,21 @@ au frontend de nous passer des informations d'authentification
 
 Enfin, on indique à Django quel module contient la liste des URLs de l'API dans
 `ROOT_URLCONF`.
+
+Ensuite viennent les CSRF, qui permettent d'éviter les attaques de *Cross-Site
+Request Forgery*. C'est un mécanisme via lequel le navigateur va obtenir un
+cookie via une requête à un point d'API, puis l'utiliser dans un appel pour
+prouver sa bonne foi.
+
+On peut contrôler quels noms de domaines sont autorisés à effectuer ces requêtes
+de CSRF, et nous avons notamment besoin que le frontend y soit autorisé. On a du
+coup:
+```python
+CSRF_TRUSTED_ORIGINS = [
+    "https://api." + getenv("WEBSITE_HOST", "localhost"),
+    "https://" + getenv("WEBSITE_HOST", "localhost"),
+]
+```
 
 ## Applications & Middlewares
 
