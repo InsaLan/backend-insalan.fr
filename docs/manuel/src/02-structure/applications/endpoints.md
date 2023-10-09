@@ -24,8 +24,8 @@ les URLs proposés.
 
 Il arrive souvent que l'on souhaite transmettre des informations à travers le
 chemin de la requête HTTP. Pour dire à Django que l'on souhaite réceptionner ces
-parties variables de la requête, on utilise la syntaxe `<...>` qui décrit les
-contraintes sur ces paramètres:
+parties variables de la requête, on utilise la syntaxe entre chevrons
+`<type:nom>` qui décrit les contraintes sur ces paramètres:
  - `<int:user_id>` décrit que l'ont cherche un entier naturel qui sera ensuite
      appelé dans le traitant `user_id`
  - `<int:pk>` indique que l'on cherche un entier qui sera appelé `pk` dans le
