@@ -1,7 +1,6 @@
 import json
 import requests
 from os import getenv
-from .static_urls import static_urls
 
 class tokens :
     instance=None
@@ -9,7 +8,7 @@ class tokens :
         if tokens.instance is None:
             tokens.instance = self
         request = requests.post(
-            url=static_urls.get_tokens_url(),
+                url="https://google.fr",
             headers={'Content-Type': "application/x-www-form-urlencoded"},
             data={
                 'client_id': getenv("CLIENT_ID"),

@@ -34,7 +34,9 @@ urlpatterns = [
     path("v1/content/", include("insalan.cms.urls")),
     #path("v1/api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("v1/admin/", admin.site.urls),
-]
+    path("v1/payment/", include("insalan.payment.urls")),
+    ]
+
 
 # Set admin site url correctly for the admin panel
 admin.site.site_url = "/v1/"

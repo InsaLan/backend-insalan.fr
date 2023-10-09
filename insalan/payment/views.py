@@ -8,19 +8,46 @@ from .models import Transaction, TransactionStatus, Product
 from .serializers import TransactionSerializer
 from datetime import date
 from .tokens import tokens
-from .static_urls import static_urls
+from rest_framework import generics, permissions
 
 from django.shortcuts import render
+import insalan.payment.serializers as serializers
+from .models import Product, Transaction
 
 # Create your views here.
 
+class ProductList(generics.ListAPIView):
+    pagination = None
+    serializer_class =  serializers.ProductSerializer
+    queryset = Product.objects.all()
+    permission_classes = [permissions.IsAdminUser]
 
-def pay(request):
+class ProductDetails(generics.RetrieveUpdateDestroyAPIView):
+    pagination = None
+    serializer_class= serializers.ProductSerializer
+    queryset = Product.objects.all()
+    permission_classes = [permissions.IsAdminUser]
+
+class TransactionList(generics.ListAPIView):
+    pagination = None
+    serializer_class =serializers.TransactionSerializer
+    queryset = Transaction.objects.all()
+    permission_classes = [permissions.IsAdminUser]
+
+class TransactionPerId(generics.RetrieveAPIView):
+    pagination = None
+    serializer_class = serializers.TransactionSerializer
+    queryset = Transaction.objects.all().order_by('date')
+    permission_classes = [permissions.IsAdminUser]
+
+
+class CreateProduct(generics.CreateAPIView):
+    pass
+
+class PayView(generics.CreateAPIView):
+    pass
+    """
     # lets parse the request
-    user_request_body = json.loads(request.body)
-    product_list=[]
-    amount=0
-    name=""
     user=request.user
     for asked_product in user_request_body:
         try:
@@ -73,14 +100,14 @@ def pay(request):
             pass
     return HttpResponseRedirect(redirect_to=json.loads(checkout_init.text)['id'])
 @csrf_exempt
-def validate_payment(request, id):
+class validate_payment(request, id):
     Transaction.objects.get(id=id).payment_status=TransactionStatus.SUCCEDED
 
-def get_transactions(request):
+class get_transactions(request):
     transactions=TransactionSerializer(Transaction.objects.all(), many=True)
     return JsonResponse(transactions.data)
 
-
+"""
 
 
 
