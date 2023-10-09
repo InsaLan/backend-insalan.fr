@@ -25,7 +25,7 @@
             - [Métadonnées]()<!--(./02-structure/applications/modeles-meta.md)-->
         - [Vues]()<!--(./02-structure/applications/vues.md)-->
         - [Endpoints]()<!--(./02-structure/applications/endpoints.md)-->
-    - [Migrations]()<!--(./02-structure/migrations.md)-->
+    - [Migrations](./02-structure/migrations.md)
     - [Panel Admin]() <!--(./02-structure/panel-admin.md)-->
     <!-- - [Statiques](./02-structure/statiques.md) -->
 - [Existant](./03-existant/README.md)
