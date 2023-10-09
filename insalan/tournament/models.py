@@ -226,7 +226,9 @@ class Team(models.Model):
 
     def __str__(self) -> str:
         """Format this team to a str"""
-        return f"{self.name} ({self.tournament.event})"
+        if self.tournament is not None:    
+            return f"{self.name} ({self.tournament.event})"
+        return f"{self.name} (???)"
 
     def get_name(self):
         """
