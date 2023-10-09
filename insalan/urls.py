@@ -31,9 +31,10 @@ urlpatterns = [
     path("v1/tickets/", include("insalan.tickets.urls")),
     path("v1/langate/authenticate", langate_views.LangateUserView.as_view()),
     path("v1/content/", include("insalan.cms.urls")),
-    path("v1/admin/", admin.site.urls)
-
+    path("v1/admin/", admin.site.urls),
+    path("v1/payment/", include("insalan.payment.urls")),
 ]
+
 if not int(getenv("DEV", "1")):
     urlpatterns.insert(1,
         path("v1/admin/login/", RedirectView.as_view(url=f"{getenv('HTTP_PROTOCOL')}://{getenv('WEBSITE_HOST')}/register")))
