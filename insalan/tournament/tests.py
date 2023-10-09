@@ -481,6 +481,15 @@ class TeamTestCase(TestCase):
 
         self.assertIsNone(team.get_tournament())
 
+    def test_team_null_tourney_repr(self):
+        """
+        Test that the representation of a Team when its tournament is null is as
+        expectde.
+        """
+        team = Team.objects.create(name="LaZone", tournament=None)
+
+        self.assertEqual(str(team), "LaZone (???)")
+
     def test_get_team_players(self):
         """Get the players of a Team"""
         team = Team.objects.get(name="LaLooze")
