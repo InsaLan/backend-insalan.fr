@@ -71,7 +71,7 @@ class User(AbstractUser, PermissionsMixin):
     class Meta:
         """Meta options"""
 
-        verbose_name = _("Utilisateur⋅ice")
+        verbose_name = _("Utilisateur⋅rice")
         verbose_name_plural = _("Utilisateur⋅ices")
 
     def __init__(self, *args, **kwargs):

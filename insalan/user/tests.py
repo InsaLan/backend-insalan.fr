@@ -352,7 +352,7 @@ class UserEndToEndTestCase(TestCase):
             self.assertEqual(request.status_code, 404)
             self.assertEqual(
                 request.data["user"][0],
-                _("Nom d'utilisateur ou mot de passe incorrect"),
+                _("Nom d'utilisateur·rice ou mot de passe incorrect"),
             )
 
         send_valid_data(

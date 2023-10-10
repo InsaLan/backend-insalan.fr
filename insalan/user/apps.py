@@ -10,5 +10,5 @@ class UserConfig(AppConfig):
     """Configuration of the User Django App"""
 
     name = "insalan.user"
-    verbose_name = _("Gestionnaire d'utilisateur⋅ices")
+    verbose_name = _("Gestionnaire d'utilisateur⋅rices")
     default_auto_field = "django.db.models.BigAutoField"

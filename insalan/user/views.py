@@ -97,7 +97,7 @@ class EmailConfirmView(APIView):
         """
         If requested with valid parameters, will validate an user's email
         """
-        error_text = _("Utilisateur ou jeton invalide (ou adresse déjà confirmée)")
+        error_text = _("Utilisateur·rice ou jeton invalide (ou adresse déjà confirmée)")
 
         if user and token:
             try:
@@ -194,7 +194,7 @@ class ResetPassword(APIView):
 
         except User.DoesNotExist:
             return Response(
-                {"user": [_("Utilisateur⋅ice non trouvé⋅e")]},
+                {"user": [_("Utilisateur⋅rice non trouvé⋅e")]},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -269,7 +269,7 @@ class UserLogin(APIView):
             user = serializer.check_validity(data)
             if user is None:
                 return Response(
-                    {"user": [_("Nom d'utilisateur ou mot de passe incorrect")]},
+                    {"user": [_("Nom d'utilisateur·rice ou mot de passe incorrect")]},
                     status=status.HTTP_404_NOT_FOUND,
                 )
             login(request, user)
