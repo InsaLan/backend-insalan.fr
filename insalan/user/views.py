@@ -30,7 +30,7 @@ from .models import EmailConfirmationTokenGenerator, User, UserMailer
 @require_GET
 @ensure_csrf_cookie
 def get_csrf(request):
-    return JsonResponse({"csrf": "Cookie has been set"})
+    return JsonResponse({"csrf": _("Le cookie a été défini")})
 
 
 class UserView(generics.RetrieveUpdateDestroyAPIView):
@@ -82,7 +82,10 @@ class EmailConfirmView(APIView):
             try:
                 user_object: User = User.objects.get(username=user)
             except User.DoesNotExist:
-                return Response({"msg": error_text}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"user": [error_text]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             if EmailConfirmationTokenGenerator().check_token(
                 user_object,
@@ -93,7 +96,7 @@ class EmailConfirmView(APIView):
                 user_object.save()
                 return Response()
 
-        return Response({"msg": error_text}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"user": [error_text]}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class AskForPasswordReset(APIView):
@@ -123,7 +126,7 @@ class ResetPassword(APIView):
             and "password_confirm" in data
         ):
             return Response(
-                {"msg": _("Champ manquant dans la ré-initialisation de mot de passe")},
+                {"user": [_("Champ manquant")]},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
@@ -140,25 +143,26 @@ class ResetPassword(APIView):
                     else:
                         return Response(
                             {
-                                "msg": _("Mot de passe trop simple ou invalide"),
+                                "user": [_("Mot de passe trop simple ou invalide")],
                                 "errors": validation_errors,
                             },
                             status=status.HTTP_400_BAD_REQUEST,
                         )
                 else:
                     return Response(
-                        {"msg": _("Les mots de passe diffèrent")},
+                        {"user": [_("Les mots de passe diffèrent")]},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
             else:
                 return Response(
-                    {"msg": _("Jeton de ré-initialisation invalide")},
+                    {"user": [_("Jeton de ré-initialisation invalide")]},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
         except User.DoesNotExist:
             return Response(
-                {"msg": _("Utilisateur non trouvé")}, status=status.HTTP_400_BAD_REQUEST
+                {"user": [_("Utilisateur non trouvé")]},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         return Response({}, status=status.HTTP_501_NOT_IMPLEMENTED)
@@ -178,15 +182,24 @@ class ResendEmailConfirmView(APIView):
         username = request.data.get("username")
 
         if not username:
-            return Response({"msg": error_text}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"user": [error_text]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
             user_object: User = User.objects.get(username=username)
         except User.DoesNotExist:
-            return Response({"msg": error_text}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"user": [error_text]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if user_object.email_active:
-            return Response({"msg": error_text}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"user": [error_text]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         UserMailer.send_email_confirmation(user_object)
         return Response()
@@ -217,13 +230,14 @@ class UserLogin(APIView):
             user = serializer.check_validity(data)
             if user is None:
                 return Response(
-                    {"user": [_("Wrong username or password")]},
+                    {"user": [_("Nom d'utilisateur ou mot de passe incorrect")]},
                     status=status.HTTP_404_NOT_FOUND,
                 )
             login(request, user)
             return Response(status=status.HTTP_200_OK)
         return Response(
-            {"msg": "Invalid data submitted"}, status=status.HTTP_400_BAD_REQUEST
+            {"user": [_("Format des données soumises invalide")]},
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
 

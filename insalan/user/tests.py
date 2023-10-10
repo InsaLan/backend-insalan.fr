@@ -5,6 +5,7 @@ from rest_framework.test import APIClient
 from django.core import mail
 from rest_framework import serializers
 from insalan.user.models import User
+from django.utils.translation import gettext_lazy as _
 import re
 
 
@@ -295,7 +296,10 @@ class UserEndToEndTestCase(TestCase):
             request = self.client.post("/v1/user/login/", data, format="json")
 
             self.assertEquals(request.status_code, 404)
-            self.assertEquals(request.data["user"][0], "Wrong username or password")
+            self.assertEquals(
+                request.data["user"][0],
+                _("Nom d'utilisateur ou mot de passe incorrect"),
+            )
 
         send_valid_data(
             {
