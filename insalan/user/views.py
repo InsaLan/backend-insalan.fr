@@ -60,7 +60,7 @@ class UserMe(APIView):
         """
         Returns an user's own informations
         """
-        user = UserSerializer(request.user)
+        user = UserSerializer(request.user, context={"request": request})
         return Response(user.data)
 
 
@@ -264,7 +264,7 @@ class UserLogin(APIView):
         Submit a login form
         """
         data = request.data
-        serializer = UserLoginSerializer(data=data)
+        serializer = UserLoginSerializer(data=data, context={"request": request})
         if serializer.is_valid():
             user = serializer.check_validity(data)
             if user is None:
