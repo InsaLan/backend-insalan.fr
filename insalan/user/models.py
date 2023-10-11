@@ -17,7 +17,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import urlencode
 from django.utils.translation import gettext_lazy as _
-
+from django.core.validators import FileExtensionValidator
 
 class UserManager(BaseUserManager):
     """
@@ -39,6 +39,7 @@ class UserManager(BaseUserManager):
         user = self.model(
             email=self.normalize_email(email),
             username=username,
+            image=None,
             date_joined=timezone.make_aware(datetime.now()),
             **extra_fields
         )
@@ -79,6 +80,16 @@ class User(AbstractUser, PermissionsMixin):
 
     USERNAME_FIELD = "username"
     EMAIL_FIELD = "email"
+
+    image = models.FileField(
+        verbose_name=_("photo de profil"),
+        blank=True,
+        null=True,
+        upload_to="profile-pictures",
+        validators=[
+            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg"])
+        ],
+    )
 
     email = models.EmailField(
         verbose_name=_("Courriel"), max_length=255, unique=True, blank=False

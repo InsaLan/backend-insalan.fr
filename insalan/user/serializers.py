@@ -7,6 +7,8 @@ from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+from django.core.validators import FileExtensionValidator
+
 
 from .models import User, UserMailer
 
@@ -35,6 +37,12 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(max_length=50, required=False)
     last_name = serializers.CharField(max_length=50, required=False)
     password_validation = serializers.CharField(write_only=True, required=True)
+    image = serializers.FileField(
+        required=False,
+        validators=[
+            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg"])
+        ],
+    )
 
     class Meta:
         """Meta class, used to set parameters"""
@@ -48,6 +56,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             "is_staff",
             "is_superuser",
             "email",
+            "image",
             "email_active",
             "password",
             "password_validation",
