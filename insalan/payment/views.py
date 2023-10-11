@@ -16,8 +16,6 @@ from django.shortcuts import render
 import insalan.payment.serializers as serializers
 from .models import Product, Transaction
 
-# Create your views here.
-
 class ProductList(generics.ListAPIView):
     pagination = None
     serializer_class =  serializers.ProductSerializer
@@ -55,8 +53,8 @@ class PayView(generics.CreateAPIView):
     def create(self, request):
         product_list = serializers.ProductSerializer(request.data['products'], many=True)
         transaction = Transaction(payer=request.user)
-        transaction.products.set(product_list)
-        return Response(TransactionSerializer(transaction), status=status.HTTP_200_OK)  
+        #transaction.products.set(product_list.data)
+        return Response(product_list.data, status=status.HTTP_200_OK)  
     """
     # lets parse the request
     user=request.user
