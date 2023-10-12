@@ -251,6 +251,71 @@ class TournamentTestCase(TestCase):
             IntegrityError, Tournament.objects.create, event=event, game=None
         )
 
+    def test_manager_player_duplication(self):
+        """Verify that a user cannot be a manager and a player on the same tournament"""
+        event = Event.objects.create(name="Test", year=2023, month=2, description="")
+        game_obj = Game.objects.create(name="Game 1", short_name="G1")
+        tourney_one = Tournament.objects.create(
+            name="Tourney 1", game=game_obj, event=event
+        )
+        tourney_two = Tournament.objects.create(
+            name="Tourney 2", game=game_obj, event=event
+        )
+
+        # This should work (Player in tourney 1, Manager in Tourney 2)
+        user_one = User.objects.create_user(
+            username="user_test_one", email="user_test_one@example.com"
+        )
+
+        Player.objects.create(
+            user=user_one,
+            team=Team.objects.create(name="Team One", tournament=tourney_one),
+        )
+        Manager.objects.create(
+            user=user_one,
+            team=Team.objects.create(name="Team Two", tournament=tourney_two),
+        )
+
+        # This should not work (Player and Manager in tourney 1 in different teams)
+        user_two = User.objects.create_user(
+            username="user_test_two", email="user_test_two@example.com"
+        )
+        team_three = Team.objects.create(name="Team Three", tournament=tourney_one)
+        team_four = Team.objects.create(name="Team Four", tournament=tourney_one)
+
+        Player.objects.create(user=user_two, team=team_three)
+        man_obj = Manager.objects.create(user=user_two, team=team_four)
+        self.assertRaises(ValidationError, man_obj.full_clean)
+
+        user_three = User.objects.create_user(
+            username="user_test_three", email="user_test_three@example.com"
+        )
+
+        Manager.objects.create(user=user_three, team=team_three)
+        play_obj = Player.objects.create(user=user_three, team=team_four)
+        self.assertRaises(ValidationError, play_obj.full_clean)
+
+        # This should not work (Player and Manager in tourney 1 in the same team)
+        team_five = Team.objects.create(name="Team Five", tournament=tourney_one)
+
+        user_four = User.objects.create_user(
+            username="user_test_four", email="user_test_four@example.com"
+        )
+        Player.objects.create(user=user_four, team=team_five)
+        self.assertRaises(
+            ValidationError,
+            Manager.objects.create(user=user_four, team=team_five).full_clean,
+        )
+
+        user_five = User.objects.create_user(
+            username="user_test_five", email="user_test_five@example.com"
+        )
+        Manager.objects.create(user=user_five, team=team_five)
+        self.assertRaises(
+            ValidationError,
+            Player.objects.create(user=user_five, team=team_five).full_clean,
+        )
+
     def test_get_event(self):
         """Get the event for a tournament"""
         event = Event.objects.get(year=2023, month=3)

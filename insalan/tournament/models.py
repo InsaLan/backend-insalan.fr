@@ -21,6 +21,7 @@ from django.utils.translation import gettext_lazy as _
 
 from insalan.user.models import User
 
+
 class Event(models.Model):
     """
     An Event is any single event that is characterized by the following:
@@ -38,22 +39,20 @@ class Event(models.Model):
         null=False,
     )
     description = models.CharField(
-        verbose_name=_("Description de l'évènement"), max_length=128, default="", blank=True
+        verbose_name=_("Description de l'évènement"),
+        max_length=128,
+        default="",
+        blank=True,
     )
     year = models.IntegerField(
-        verbose_name=_("Année"),
-        null=False,
-        validators=[MinValueValidator(2003)]
+        verbose_name=_("Année"), null=False, validators=[MinValueValidator(2003)]
     )
     month = models.IntegerField(
         verbose_name=_("Mois"),
         null=False,
-        validators=[MinValueValidator(1),MaxValueValidator(12)]
+        validators=[MinValueValidator(1), MaxValueValidator(12)],
     )
-    ongoing = models.BooleanField(
-        verbose_name=_("En cours"),
-        default=False
-    )
+    ongoing = models.BooleanField(verbose_name=_("En cours"), default=False)
     logo: models.FileField = models.FileField(
         verbose_name=_("Logo"),
         blank=True,
@@ -66,6 +65,7 @@ class Event(models.Model):
 
     class Meta:
         """Meta options"""
+
         verbose_name = _("Évènement")
         verbose_name_plural = _("Évènements")
 
@@ -91,8 +91,10 @@ class Game(models.Model):
     """
     A Game is the representation of a Game that is being played at InsaLan
     """
+
     class Meta:
         """Meta options"""
+
         verbose_name = _("Jeu")
         verbose_name_plural = _("Jeux")
 
@@ -129,15 +131,9 @@ class Tournament(models.Model):
     """
 
     event = models.ForeignKey(
-        Event,
-        verbose_name=_("Évènement"),
-        on_delete=models.CASCADE
+        Event, verbose_name=_("Évènement"), on_delete=models.CASCADE
     )
-    game = models.ForeignKey(
-        Game,
-        verbose_name=_("Jeu"),
-        on_delete=models.CASCADE
-    )
+    game = models.ForeignKey(Game, verbose_name=_("Jeu"), on_delete=models.CASCADE)
     name = models.CharField(
         verbose_name=_("Nom du tournoi"),
         validators=[MinLengthValidator(3)],
@@ -162,6 +158,7 @@ class Tournament(models.Model):
 
     class Meta:
         """Meta options"""
+
         verbose_name = _("Tournoi")
         verbose_name_plural = _("Tournois")
 
@@ -205,7 +202,7 @@ class Team(models.Model):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        verbose_name=_("Tournoi")
+        verbose_name=_("Tournoi"),
     )
     name = models.CharField(
         max_length=42,
@@ -216,6 +213,7 @@ class Team(models.Model):
 
     class Meta:
         """Meta Options"""
+
         verbose_name = _("Équipe")
         verbose_name_plural = _("Équipes")
         constraints = [
@@ -226,7 +224,7 @@ class Team(models.Model):
 
     def __str__(self) -> str:
         """Format this team to a str"""
-        if self.tournament is not None:    
+        if self.tournament is not None:
             return f"{self.name} ({self.tournament.event})"
         return f"{self.name} (???)"
 
@@ -275,6 +273,23 @@ class PaymentStatus(models.TextChoices):
     PAY_LATER = "LATER", _("Payera sur place")
 
 
+def player_manager_user_unique_validator(user: User):
+    """
+    Validate that a user cannot be a player and manager of the same
+    tournament
+    """
+    p_regs = {
+        (obj.user, obj.team.tournament) for obj in Player.objects.filter(user=user)
+    }
+    m_regs = {
+        (obj.user, obj.team.tournament) for obj in Manager.objects.filter(user=user)
+    }
+    if len(m_regs.intersection(p_regs)) > 0:
+        raise ValidationError(
+            _("Utilisateur⋅rice déjà inscrit⋅e dans ce tournois (rôles distincts)")
+        )
+
+
 class Player(models.Model):
     """
     A Player at InsaLan is simply anyone who is registered to participate in a
@@ -288,14 +303,15 @@ class Player(models.Model):
         verbose_name_plural = _("Inscription de joueur⋅euses")
 
     user = models.ForeignKey(
-            User,
-            on_delete=models.CASCADE,
-            verbose_name=_("Utilisateur⋅ice")
+        User,
+        on_delete=models.CASCADE,
+        verbose_name=_("Utilisateur⋅ice"),
+        validators=[player_manager_user_unique_validator],
     )
     team = models.ForeignKey(
         "tournament.Team",
         on_delete=models.CASCADE,
-        verbose_name = _("Équipe"),
+        verbose_name=_("Équipe"),
     )
     payment_status = models.CharField(
         max_length=10,
@@ -303,7 +319,7 @@ class Player(models.Model):
         default=PaymentStatus.NOT_PAID,
         choices=PaymentStatus.choices,
         null=False,
-        verbose_name = _("Statut du paiement"),
+        verbose_name=_("Statut du paiement"),
     )
 
     def __str__(self) -> str:
@@ -350,13 +366,15 @@ class Manager(models.Model):
     A Manager is someone in charge of heading a team of players.
     """
 
-    user = models.ForeignKey(User,
-                             verbose_name=_("Utilisateur⋅ice"),
-                             on_delete=models.CASCADE
+    user = models.ForeignKey(
+        User,
+        verbose_name=_("Utilisateur⋅ice"),
+        on_delete=models.CASCADE,
+        validators=[player_manager_user_unique_validator],
     )
-    team = models.ForeignKey("tournament.Team",
-                             verbose_name=_("Équipe"),
-                             on_delete=models.CASCADE)
+    team = models.ForeignKey(
+        "tournament.Team", verbose_name=_("Équipe"), on_delete=models.CASCADE
+    )
     payment_status = models.CharField(
         verbose_name=_("Statut du paiement"),
         max_length=10,
@@ -379,9 +397,7 @@ class Manager(models.Model):
 
     def __str__(self) -> str:
         """Format this manager registration as a str"""
-        return (
-            f"(Manager) {self.user.username} for {self.team}"
-        )
+        return f"(Manager) {self.user.username} for {self.team}"
 
     def as_user(self) -> User:
         """Return the current player as a User object"""
@@ -390,5 +406,6 @@ class Manager(models.Model):
     def get_team(self):
         """Return the Team object of the current team"""
         return self.team
+
 
 # vim: set cc=80 tw=80:
