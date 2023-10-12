@@ -14,8 +14,11 @@ from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
 from django.shortcuts import render
 import insalan.payment.serializers as serializers
+from django.http import HttpResponseRedirect
 from .models import Product, Transaction
+import logging
 
+logger = logging.getLogger(__name__)
 class ProductList(generics.ListAPIView):
     pagination = None
     serializer_class =  serializers.ProductSerializer
@@ -37,24 +40,68 @@ class TransactionList(generics.ListAPIView):
 class TransactionPerId(generics.RetrieveAPIView):
     pagination = None
     serializer_class = serializers.TransactionSerializer
-    queryset = Transaction.objects.all().order_by('date')
+    queryset = Transaction.objects.all().order_by('last_modification_date')
     permission_classes = [permissions.IsAdminUser]
 
 class CreateProduct(generics.CreateAPIView):
     serializer_class = serializers.ProductSerializer
     queryset = Product.objects.all()
     permission_classes = [permissions.IsAdminUser]
-
+    
+class BackView(generics.ListAPIView):
+    pass
+class ReturnView(generics.ListAPIView):
+    pass
+class ErrorView(generics.ListAPIView):
+    pass
 class PayView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [SessionAuthentication]
-    serializer_class =  serializers.TransactionSerializer
+    queryset = Transaction.objects.all()
+    serializer_class = serializers.TransactionSerializer
 
     def create(self, request):
-        product_list = serializers.ProductSerializer(request.data['products'], many=True)
-        transaction = Transaction(payer=request.user)
-        #transaction.products.set(product_list.data)
-        return Response(product_list.data, status=status.HTTP_200_OK)  
+        token = tokens()
+        payer = request.user
+        data = request.data.copy()
+        data['payer'] = payer.id
+        logger.debug(f"data in view = {data}") # contient des données
+
+        transaction = serializers.TransactionSerializer(data=data)
+        transaction.is_valid()
+        logger.debug(transaction.validated_data)
+        if transaction.is_valid(raise_exception=True):
+            transaction_obj = transaction.save()
+            # helloasso intent
+            HELLOASSO_URL = getenv('HELLOASSO_ENDPOINT')
+            intent_body = {
+                    "totalAmount": int(transaction_obj.amount*10),
+                    "initialAmount": int(transaction_obj.amount*10),
+                    "itemName": str(transaction_obj.id),
+                    "backUrl":   f"{getenv('HELLOASSO_BACK_URL')}?id={transaction_obj.id}",
+                    "errorUrl":  f"{getenv('HELLOASSO_ERROR_URL')}?id={transaction_obj.id}",
+                    "returnUrl": f"{getenv('HELLOASSO_RETURN_URL')}?id={transaction_obj.id}",
+                    "containsDonation": False,
+                    "payer": {
+                        "firstName": payer.first_name,
+                        "lastName": payer.last_name,
+                        "email": payer.email,
+                    },
+            }
+            headers = {
+               'authorization': 'Bearer ' + token.get_token(),
+                'Content-Type': 'application/json',
+            }
+
+            checkout_init = requests.post(f"{HELLOASSO_URL}/v5/organizations/insalan-test/checkout-intents", data=json.dumps(intent_body), headers=headers)# initiate a helloasso intent
+            logger.debug(checkout_init.text)
+            redirect_url = checkout_init.json()['redirectUrl']
+            logger.debug(intent_body)
+            return HttpResponseRedirect(redirect_to=redirect_url)
+        return JsonResponse({'problem': 'oui'})
+        #return HttpResponseRedirect(checkout_init.redirectUrl)
+
+
     """
     # lets parse the request
     user=request.user
@@ -76,20 +123,6 @@ class PayView(generics.CreateAPIView):
 
     # lets init a checkout to helloasso
     url = static_urls.get_checkout_url()
-    body = {
-        "totalAmount": amount,
-        "initialAmount": amount,
-        "itemName": name[:255],
-        "backUrl": static_urls.get_back_url()+"/"+transaction.id,
-        "errorUrl": static_urls.get_error_url(),
-        "returnUrl": static_urls.get_return_url(),
-        "containsDonation": False,
-        "payer": {
-            "firstName": user.first_name,
-            "lastName": user.last_name,
-            "email": user.email,
-        },
-    }
     headers = {
         'authorization': 'Bearer ' + tokens.get_token(),
         'Content-Type': 'application/json',

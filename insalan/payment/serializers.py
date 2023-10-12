@@ -1,27 +1,21 @@
 from rest_framework import serializers
 from .models import Transaction, TransactionStatus, Product
+from insalan.user.models import User
 import logging
 
-class TransactionSerializer(serializers.ModelSerializer):
-    products = serializers.ListField(required=True, source="get_products_id")
+logger = logging.getLogger(__name__)
 
+class TransactionSerializer(serializers.ModelSerializer):
+    payer = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     class Meta:
         model=Transaction
-        fields = ['payer', 'amount', 'payment_status', 'date', 'products']
-        read_only_fields = ['amount']
+        fields = "__all__"
+        read_only_fields = ['amount', 'payer', 'payment_status', 'creation_date', 'last_modification_date']
     
     def create(self, validated_data):
         """ Create a transaction with products based on the request"""
-        amount = 0
-        transaction_obj = Transaction.objects.create(**validated_data)
-        products = validated_data.pop("get_products_id", [])
-
-        print(prodcuts)
-        for product in products:
-            prod_obj = Product.objects.get(id=product)
-            amount += prod_obj.price
-
-        transaction_obj.amount = amount
+        logger.debug(f"in the serializer {validated_data}")
+        transaction_obj = Transaction.new(**validated_data)
         return transaction_obj
 
 class ProductSerializer(serializers.ModelSerializer):

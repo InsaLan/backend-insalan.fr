@@ -11,4 +11,7 @@ urlpatterns = [
     path("product/new/", views.CreateProduct.as_view(), name="new-product"),
     path("transaction/", views.TransactionList.as_view(), name="transactions"),
     path("transaction/<int:pk>", views.TransactionPerId.as_view(), name="transactions/id"),
+    path("back/", views.BackView.as_view(), name="transaction/back"),
+    path("return/", views.ReturnView.as_view(), name="transaction/return"),
+    path("error/", views.ErrorView.as_view(), name="transaction/error"),
     ]
