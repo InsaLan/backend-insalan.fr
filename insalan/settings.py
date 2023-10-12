@@ -41,6 +41,21 @@ else:
 
 PROTOCOL = getenv("HTTP_PROTOCOL", "http")
 
+# LOGGING Setup
+LOGGING = {
+    "version":1,
+    "disable_existing_loggers":False,
+    "handlers":{
+        "console":{
+                "class":"logging.StreamHandler",
+            },
+        },
+    "root": {
+        "handlers": ["console"],
+        "level":"DEBUG"
+        },
+}
+
 # Allow itself and the frontend
 ALLOWED_HOSTS = [
     "api." + getenv("WEBSITE_HOST", "localhost"),
@@ -199,7 +214,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://" + getenv("WEBSITE_HOST", "localhost"),
     "https://api." + getenv("WEBSITE_HOST", "localhost"),
     "http://" + getenv("WEBSITE_HOST", "localhost"),
-    "http://api." + getenv("WEBSITE_HOST", "localhost")
+    "http://api." + getenv("WEBSITE_HOST", "localhost"),
+    "https://www.helloasso-sandbox.com" # helloasso has be to trusted
 
 ]
 CSRF_COOKIE_DOMAIN = '.' + getenv("WEBSITE_HOST", "localhost")
