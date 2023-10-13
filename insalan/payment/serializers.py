@@ -7,6 +7,7 @@ logger = logging.getLogger(__name__)
 
 class TransactionSerializer(serializers.ModelSerializer):
     payer = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    products = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all(), many=True)
     class Meta:
         model=Transaction
         fields = "__all__"

@@ -3,11 +3,11 @@ import requests
 from os import getenv
 import logging
 logger = logging.getLogger(__name__)
-class tokens :
+class Tokens :
     instance=None
     def __init__(self):
-        if tokens.instance is None:
-            tokens.instance = self
+        if Tokens.instance is None:
+            Tokens.instance = self
         logger.debug(getenv("HELLOASSO_ENDPOINT"))
         request = requests.post(
                 url=f"{getenv('HELLOASSO_ENDPOINT')}/oauth2/token",
@@ -26,7 +26,7 @@ class tokens :
 
     def refresh(self):
         request = requests.post(
-            url=static_urls.get_tokens_url(),
+            url=static_urls.get_Tokens_url(),
             headers={'Content-Type': "application/x-www-form-urlencoded"},
             data={
                 'client_id': getenv("CLIENT_ID"),
