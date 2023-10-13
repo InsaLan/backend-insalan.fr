@@ -17,15 +17,15 @@ class TransactionStatus(models.TextChoices):
 
 class Product(models.Model):
     """ Object to represent in database anything sellable"""
-    price = models.DecimalField(null=False, max_digits=5, decimal_places=2)
-    name = models.CharField(max_length=50)
+    price = models.DecimalField(null=False, max_digits=5, decimal_places=2, verbose_name=_("prix"))
+    name = models.CharField(max_length=50, verbose_name=_("intitulé"))
     desc = models.CharField(max_length=50, verbose_name=_("description"))
 
 
 class Transaction(models.Model):
     """A transaction is a record from helloasso intent. A transaction cannot exist alone and should be used only to reflect helloasso payment"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    payer = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    payer = models.ForeignKey(User, null=True, on_delete=models.SET_NULL,verbose_name=_("Utilisateur"))
     products = models.ManyToManyField(Product) # A transaction can be composed of n products
     payment_status = models.CharField(
         max_length=10,
@@ -33,11 +33,11 @@ class Transaction(models.Model):
         default=TransactionStatus.PENDING,
         choices=TransactionStatus.choices,
         null=False,
-        verbose_name=_("Transaction status"),
+        verbose_name=_("État de la Transaction"),
         )
-    creation_date = models.DateTimeField()
-    last_modification_date = models.DateTimeField()
-    amount = models.DecimalField(null=False, default=0.00, max_digits=5, decimal_places=2)
+    creation_date = models.DateTimeField(verbose_name=_("Date de creation"))
+    last_modification_date = models.DateTimeField(verbose_name=_("Date de dernière modification"))
+    amount = models.DecimalField(null=False, default=0.00, max_digits=5, decimal_places=2, verbose_name=_("Montant"))
 
     @staticmethod
     def new(**data):
