@@ -19,7 +19,10 @@ admin.site.register(Product, ProductAdmin)
 
 
 class TransactionAdmin(admin.ModelAdmin):
-    """Admin handler for Transactions"""
+    """
+    Admin handler for Transactions
+    In the backoffice, Transactions can only be seen, they cannot be add, removed or changed this way
+    """
 
     list_display = (
         "id",
@@ -38,12 +41,17 @@ class TransactionAdmin(admin.ModelAdmin):
         "last_modification_date",
         "amount",
     ]
-    readonly_fields = ["amount"]
 
-    def save_model(self, request, obj, form, change):
-        """Save the model, recomputing the amount"""
-        obj.synchronize_amount()
-        super().save_model(request, obj, form, change)
+    def has_add_permission(self, request):
+        """Remove the ability to add a transaction from the backoffice """
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        """ Remove the ability to edit a transaction from the backoffice """
+        return False
 
+    def has_delete_permission(self, request, obj=None):
+        """ Remove the ability to edit a transaction from the backoffice """
+        return False
 
 admin.site.register(Transaction, TransactionAdmin)
