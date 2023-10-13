@@ -1,41 +1,51 @@
+"""Views for the Payment module"""
+
 import json
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from os import getenv
-import requests
-from django.http import JsonResponse, HttpResponseRedirect
-from django.views.decorators.csrf import csrf_exempt
-from .models import Transaction, TransactionStatus, Product
-from .serializers import TransactionSerializer
+import logging
+
 from datetime import date
-from .tokens import Tokens
+from os import getenv
+
+import requests
+
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from django.http import JsonResponse, HttpResponseRedirect
+from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
-from django.shortcuts import render
+
 import insalan.payment.serializers as serializers
-from django.http import HttpResponseRedirect
+
+from .models import Transaction, TransactionStatus, Product
+from .tokens import Tokens
 from .models import Product, Transaction
-import logging
 
 logger = logging.getLogger(__name__)
+
+
 class ProductList(generics.ListAPIView):
     paginator = None
-    serializer_class =  serializers.ProductSerializer
+    serializer_class = serializers.ProductSerializer
     queryset = Product.objects.all()
     permission_classes = [permissions.IsAdminUser]
+
 
 class ProductDetails(generics.RetrieveUpdateDestroyAPIView):
     paginator = None
-    serializer_class= serializers.ProductSerializer
+    serializer_class = serializers.ProductSerializer
     queryset = Product.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
+
 class TransactionList(generics.ListAPIView):
     paginator = None
-    serializer_class =serializers.TransactionSerializer
-    queryset = Transaction.objects.all().order_by('last_modification_date')
+    serializer_class = serializers.TransactionSerializer
+    queryset = Transaction.objects.all().order_by("last_modification_date")
     permission_classes = [permissions.IsAdminUser]
+
 
 class TransactionPerId(generics.RetrieveAPIView):
     paginator = None
@@ -43,17 +53,25 @@ class TransactionPerId(generics.RetrieveAPIView):
     queryset = Transaction.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
+
 class CreateProduct(generics.CreateAPIView):
     serializer_class = serializers.ProductSerializer
     queryset = Product.objects.all()
     permission_classes = [permissions.IsAdminUser]
-    
+
+
 class BackView(generics.ListAPIView):
     pass
+
+
 class ReturnView(generics.ListAPIView):
     pass
+
+
 class ErrorView(generics.ListAPIView):
     pass
+
+
 class PayView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [SessionAuthentication]
@@ -64,43 +82,48 @@ class PayView(generics.CreateAPIView):
         token = Tokens()
         payer = request.user
         data = request.data.copy()
-        data['payer'] = payer.id
-        logger.debug(f"data in view = {data}") # contient des données
+        data["payer"] = payer.id
+        logger.debug(f"data in view = {data}")  # contient des données
         transaction = serializers.TransactionSerializer(data=data)
         transaction.is_valid()
         logger.debug(transaction.validated_data)
         if transaction.is_valid(raise_exception=True):
             transaction_obj = transaction.save()
             # helloasso intent
-            helloasso_amount = int(transaction_obj.amount * 100) # helloasso reads prices in cents
-            HELLOASSO_URL = getenv('HELLOASSO_ENDPOINT')
+            helloasso_amount = int(
+                transaction_obj.amount * 100
+            )  # helloasso reads prices in cents
+            HELLOASSO_URL = getenv("HELLOASSO_ENDPOINT")
             intent_body = {
-                    "totalAmount": helloasso_amount,
-                    "initialAmount": helloasso_amount,
-                    "itemName": str(transaction_obj.id),
-                    "backUrl":   f"{getenv('HELLOASSO_BACK_URL')}?id={transaction_obj.id}",
-                    "errorUrl":  f"{getenv('HELLOASSO_ERROR_URL')}?id={transaction_obj.id}",
-                    "returnUrl": f"{getenv('HELLOASSO_RETURN_URL')}?id={transaction_obj.id}",
-                    "containsDonation": False,
-                    "payer": {
-                        "firstName": payer.first_name,
-                        "lastName": payer.last_name,
-                        "email": payer.email,
-                    },
+                "totalAmount": helloasso_amount,
+                "initialAmount": helloasso_amount,
+                "itemName": str(transaction_obj.id),
+                "backUrl": f"{getenv('HELLOASSO_BACK_URL')}?id={transaction_obj.id}",
+                "errorUrl": f"{getenv('HELLOASSO_ERROR_URL')}?id={transaction_obj.id}",
+                "returnUrl": f"{getenv('HELLOASSO_RETURN_URL')}?id={transaction_obj.id}",
+                "containsDonation": False,
+                "payer": {
+                    "firstName": payer.first_name,
+                    "lastName": payer.last_name,
+                    "email": payer.email,
+                },
             }
             headers = {
-               'authorization': 'Bearer ' + token.get_token(),
-                'Content-Type': 'application/json',
+                "authorization": "Bearer " + token.get_token(),
+                "Content-Type": "application/json",
             }
 
-            checkout_init = requests.post(f"{HELLOASSO_URL}/v5/organizations/insalan-test/checkout-intents", data=json.dumps(intent_body), headers=headers)# initiate a helloasso intent
+            checkout_init = requests.post(
+                f"{HELLOASSO_URL}/v5/organizations/insalan-test/checkout-intents",
+                data=json.dumps(intent_body),
+                headers=headers,
+            )  # initiate a helloasso intent
             logger.debug(checkout_init.text)
-            redirect_url = checkout_init.json()['redirectUrl']
+            redirect_url = checkout_init.json()["redirectUrl"]
             logger.debug(intent_body)
             return HttpResponseRedirect(redirect_to=redirect_url)
-        return JsonResponse({'problem': 'oui'})
-        #return HttpResponseRedirect(checkout_init.redirectUrl)
-
+        return JsonResponse({"problem": "oui"})
+        # return HttpResponseRedirect(checkout_init.redirectUrl)
 
     """
     # lets parse the request
@@ -150,6 +173,3 @@ class get_transactions(request):
     return JsonResponse(transactions.data)
 
 """
-
-
-
