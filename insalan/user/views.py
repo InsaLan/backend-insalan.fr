@@ -1,5 +1,7 @@
 """User module API Endpoints"""
 
+import sys
+
 from datetime import datetime
 
 from django.contrib.auth import login, logout
@@ -25,7 +27,7 @@ from insalan.user.serializers import (
     UserSerializer,
 )
 
-from .models import EmailConfirmationTokenGenerator, User, UserMailer
+from .models import EmailConfirmationTokenGenerator, User, UserMailer, UserManager
 
 
 @require_GET
@@ -70,33 +72,51 @@ class UserMe(APIView):
         """
         user: User = request.user
         data = request.data
+        resp = Response()
 
         if user is None:
             raise PermissionDenied()
-        if "current_password" not in data:
-            raise BadRequest()
-        if not user.check_password(data["current_password"]):
-            raise PermissionDenied()
-
         if "new_password" in data and "password_validation" in data:
+            # We need the old password to change...
+            if "current_password" not in data:
+                raise BadRequest()
+            # ...and we need it to be correct
+            if not user.check_password(data["current_password"]):
+                raise PermissionDenied()
+
+            # We need password and its confirmation
             if data["new_password"] != data["password_validation"]:
                 raise BadRequest()
+
+            # We need a strong-enough password
             validation_errors = validate_password(data["new_password"], user=user)
             if validation_errors is not None:
                 raise BadRequest(validation_errors)
+
+            # Everything good, we set the new password
             user.set_password(data["new_password"])
 
+            # And we log-out
+            logout(request)
+            resp.data = {
+                "logout": [
+                    _(
+                        "Votre mot de passe a bien été changé. Merci de vous re-connecter"
+                    )
+                ]
+            }
+
         if "email" in data:
-            user.set_email(data["email"])
+            user.email = UserManager.normalize_email(data["email"])
 
         if "first_name" in data:
-            user.set_first_name(data["first_name"])
+            user.first_name = data["first_name"]
 
         if "last_name" in data:
-            user.set_last_name(data["last_name"])
+            user.last_name = data["last_name"]
 
         user.save()
-        return Response()
+        return resp
 
 
 # TODO: change permission
