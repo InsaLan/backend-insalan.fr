@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Transaction, TransactionStatus, Product
 from .serializers import TransactionSerializer
 from datetime import date
-from .tokens import tokens
+from .tokens import Tokens
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -20,27 +20,27 @@ import logging
 
 logger = logging.getLogger(__name__)
 class ProductList(generics.ListAPIView):
-    pagination = None
+    paginator = None
     serializer_class =  serializers.ProductSerializer
     queryset = Product.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
 class ProductDetails(generics.RetrieveUpdateDestroyAPIView):
-    pagination = None
+    paginator = None
     serializer_class= serializers.ProductSerializer
     queryset = Product.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
 class TransactionList(generics.ListAPIView):
-    pagination = None
+    paginator = None
     serializer_class =serializers.TransactionSerializer
-    queryset = Transaction.objects.all()
+    queryset = Transaction.objects.all().order_by('last_modification_date')
     permission_classes = [permissions.IsAdminUser]
 
 class TransactionPerId(generics.RetrieveAPIView):
-    pagination = None
+    paginator = None
     serializer_class = serializers.TransactionSerializer
-    queryset = Transaction.objects.all().order_by('last_modification_date')
+    queryset = Transaction.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
 class CreateProduct(generics.CreateAPIView):
@@ -61,22 +61,22 @@ class PayView(generics.CreateAPIView):
     serializer_class = serializers.TransactionSerializer
 
     def create(self, request):
-        token = tokens()
+        token = Tokens()
         payer = request.user
         data = request.data.copy()
         data['payer'] = payer.id
         logger.debug(f"data in view = {data}") # contient des données
-
         transaction = serializers.TransactionSerializer(data=data)
         transaction.is_valid()
         logger.debug(transaction.validated_data)
         if transaction.is_valid(raise_exception=True):
             transaction_obj = transaction.save()
             # helloasso intent
+            helloasso_amount = int(transaction_obj.amount * 100) # helloasso reads prices in cents
             HELLOASSO_URL = getenv('HELLOASSO_ENDPOINT')
             intent_body = {
-                    "totalAmount": int(transaction_obj.amount*10),
-                    "initialAmount": int(transaction_obj.amount*10),
+                    "totalAmount": helloasso_amount,
+                    "initialAmount": helloasso_amount,
                     "itemName": str(transaction_obj.id),
                     "backUrl":   f"{getenv('HELLOASSO_BACK_URL')}?id={transaction_obj.id}",
                     "errorUrl":  f"{getenv('HELLOASSO_ERROR_URL')}?id={transaction_obj.id}",

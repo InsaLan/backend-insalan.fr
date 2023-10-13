@@ -51,6 +51,7 @@ class Transaction(models.Model):
         fields['amount'] = Decimal(0.00)
         for product in data['products']:
             fields['amount'] += product.price
+            logger.debug(f"{fields['amount']} and {product.price}")
         transaction = Transaction.objects.create(**fields)
         transaction.products.set(data['products'])
         return transaction
