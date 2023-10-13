@@ -32,6 +32,14 @@ SECRET_KEY = getenv(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = int(getenv("DEV", 0)) == 1
 
+OUTSIDE_PORT = getenv("NGINX_PORT", "80")
+if OUTSIDE_PORT == "80":
+    OUTSIDE_PORT = "" # Don't specify it
+else:
+    OUTSIDE_PORT = f":{OUTSIDE_PORT}"
+
+PROTOCOL = getenv("HTTP_PROTOCOL", "http")
+
 # Allow itself and the frontend
 ALLOWED_HOSTS = [
     "api." + getenv("WEBSITE_HOST", "localhost"),
@@ -40,8 +48,8 @@ ALLOWED_HOSTS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://api." + getenv("WEBSITE_HOST", "localhost"),
-    "https://" + getenv("WEBSITE_HOST", "localhost"),
+     PROTOCOL + "://api." + getenv("WEBSITE_HOST", "localhost") + OUTSIDE_PORT,
+     PROTOCOL + "://" + getenv("WEBSITE_HOST", "localhost") + OUTSIDE_PORT,
 ]
 
 # Application definition
