@@ -19,14 +19,15 @@ class Tokens :
             },
         )
         logger.debug(request.text)
-        self.bearer_token = json.loads(request.text)["access_token"]
-        self.refresh_token = json.loads(request.text)["refresh_token"]
+        self.bearer_token = request.json["access_token"]
+        self.refresh_token = request.json["refresh_token"]
+
     def get_token(self):
         return self.bearer_token
 
     def refresh(self):
         request = requests.post(
-            url=static_urls.get_Tokens_url(),
+            url=f"{getenv('HELLOASSO_ENDPOINT')}/oauth2/token",
             headers={'Content-Type': "application/x-www-form-urlencoded"},
             data={
                 'client_id': getenv("CLIENT_ID"),
@@ -34,5 +35,5 @@ class Tokens :
                 'grant_type': "refresh_token",
             },
         )
-        self.bearer_token=json.loads(request.text)["access_token"]
-        self.refresh_token=json.loads(request.text)["refresh_token"]
+        self.bearer_token=request.json["access_token"]
+        self.refresh_token=request.json["refresh_token"]
