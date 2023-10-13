@@ -263,9 +263,7 @@ class UserEndToEndTestCase(TestCase):
 
         request = self.client.post("/v1/user/register/", data, format="json")
 
-        self.assertFalse(
-            User.objects.get(username=data["username"]).has_perm("user.email_active")
-        )
+        self.assertFalse(User.objects.get(username=data["username"]).is_email_active())
         match = re.match(
             ".*https?://[^ ]*/(?P<username>[^ /]*)/(?P<token>[^ /]*)",
             mail.outbox[0].body,
@@ -279,9 +277,7 @@ class UserEndToEndTestCase(TestCase):
         request = self.client.get(f"/v1/user/confirm/{username}/{token}")
         self.assertEqual(request.status_code, 200)
 
-        self.assertTrue(
-            User.objects.get(username=data["username"]).has_perm("user.email_active")
-        )
+        self.assertTrue(User.objects.get(username=data["username"]).is_email_active())
 
     def test_can_confirm_email_only_once(self):
         """
@@ -444,7 +440,7 @@ class UserEndToEndTestCase(TestCase):
             email="test@example.com",
             password="1111qwer!",
         )
-        user_object.permissions.add("insalan.user.email_active")
+        user_object.set_email_active()
         user_object.save()
 
         request = self.client.post(

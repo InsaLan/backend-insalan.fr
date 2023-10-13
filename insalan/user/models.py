@@ -6,7 +6,7 @@ from os import getenv
 from datetime import datetime
 
 from django.contrib.auth.base_user import BaseUserManager
-from django.contrib.auth.models import AbstractUser, PermissionsMixin
+from django.contrib.auth.models import AbstractUser, PermissionsMixin, Permission
 from django.contrib.auth.tokens import (
     PasswordResetTokenGenerator,
     default_token_generator,
@@ -104,6 +104,18 @@ class User(AbstractUser, PermissionsMixin):
     )
     is_active = models.BooleanField(default=True)
     object = UserManager()
+
+    def is_email_active(self):
+        return self.has_perm("email_active")
+
+    def set_email_active(self, active=True):
+        if active:
+            self.user_permissions.add(Permission.objects.get(codename="email_active"))
+        else:
+            self.user_permissions.remove(
+                Permission.objects.get(codename="email_active")
+            )
+        self.save()
 
 
 class EmailConfirmationTokenGenerator(PasswordResetTokenGenerator):

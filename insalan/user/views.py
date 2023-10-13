@@ -168,9 +168,7 @@ class EmailConfirmView(APIView):
                 user_object,
                 token,
             ):
-                user_object.user_permissions.add(
-                    Permission.objects.get(codename="email_active")
-                )
+                user_object.set_email_active()
                 user_object.last_login = timezone.make_aware(datetime.now())
                 user_object.save()
                 return Response()
