@@ -23,7 +23,7 @@ class Product(models.Model):
 
 
 class Transaction(models.Model):
-    """A transaction"""
+    """A transaction is a record from helloasso intent. A transaction cannot exist alone and should be used only to reflect helloasso payment"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     payer = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
     products = models.ManyToManyField(Product) # A transaction can be composed of n products
@@ -52,13 +52,6 @@ class Transaction(models.Model):
         transaction.synchronize_amount()
         return transaction
 
-    def synchronize_amount(self):
-        """Recompute the amount from the product list"""
-        self.amount = Decimal(0.00)
-        for product in self.products.all():
-            self.amount += product.price
-            logger.debug(f"{self.amount} and {product.price}")
- 
     def validate_transaction(self):
         """ set payment_statut to validated """
 
