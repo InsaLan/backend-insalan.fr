@@ -65,28 +65,38 @@ class UserMe(APIView):
         return Response(user.data)
 
     def patch(self, request):
-        if "current_password" not in request.data:
-            raise BadRequest()
-        if not request.user.IsAuthenticated:
+        """
+        Edit the current user following some limitations
+        """
+        user: User = request.user
+        data = request.data
+
+        if user is None:
             raise PermissionDenied()
-        if not request.user.check_password(request.data["current_password"]):
+        if "current_password" not in data:
+            raise BadRequest()
+        if not user.check_password(data["current_password"]):
             raise PermissionDenied()
 
-        if "new_password" in request.data and "password_validation" in request.data:
-            if request.data["new_password"] != request.data["password_validation"]:
+        if "new_password" in data and "password_validation" in data:
+            if data["new_password"] != data["password_validation"]:
                 raise BadRequest()
             validation_errors = validate_password(data["new_password"], user=user)
             if validation_errors is not None:
                 raise BadRequest(validation_errors)
-            user.set_password(request.data["new_password"])
+            user.set_password(data["new_password"])
 
-        if "email" in request.data:
-            user.set_email(request.data["email"])
+        if "email" in data:
+            user.set_email(data["email"])
+
+        if "first_name" in data:
+            user.set_first_name(data["first_name"])
+
+        if "last_name" in data:
+            user.set_last_name(data["last_name"])
 
         user.save()
         return Response()
-
-        # TODO Finish
 
 
 # TODO: change permission

@@ -406,7 +406,7 @@ class UserEndToEndTestCase(TestCase):
             }
         )
 
-    def can_resend_confirmation_email(self):
+    def test_can_resend_confirmation_email(self):
         """
         Test that an user can request another confirmation email when
         requesting the right route
@@ -422,21 +422,21 @@ class UserEndToEndTestCase(TestCase):
 
         self.client.post("/v1/user/register/", data, format="json")
 
-        self.assertEqual(mail.outbox, 1)
+        self.assertEqual(len(mail.outbox), 1)
 
         self.client.post(
-            "/v1/user/register/", {"username": "ILoveEmail"}, format="json"
+            "/v1/user/resend-email/", {"username": "ILoveEmail"}, format="json"
         )
 
-        self.assertEqual(mail.outbox, 2)
+        self.assertEqual(len(mail.outbox), 2)
 
         self.client.post(
-            "/v1/user/register/", {"username": "ILoveEmail"}, format="json"
+            "/v1/user/resend-email/", {"username": "ILoveEmail"}, format="json"
         )
 
-        self.assertEqual(mail.outbox, 3)
+        self.assertEqual(len(mail.outbox), 3)
 
-    def cant_resend_confirmation_if_already_valid(self):
+    def test_cant_resend_confirmation_if_already_valid(self):
         """
         Test that an user cannot resend a confirmation email if they already
         confirmed their email
@@ -454,7 +454,7 @@ class UserEndToEndTestCase(TestCase):
 
         self.assertEqual(request.status_code, 400)
 
-    def cant_resend_confirmation_if_nonexisting_user(self):
+    def test_cant_resend_confirmation_if_nonexisting_user(self):
         """
         Test that we cannot resend a confirmation email for a non existing user
         without crashing the server
@@ -465,7 +465,7 @@ class UserEndToEndTestCase(TestCase):
 
         self.assertEqual(request.status_code, 400)
 
-    def dont_crash_resend_confirmation_if_empty(self):
+    def test_dont_crash_resend_confirmation_if_empty(self):
         """
         Test that server doesn't crash if ask to resend an email without any
         valid data in request
@@ -600,3 +600,147 @@ class UserEndToEndTestCase(TestCase):
             "/v1/user/password-reset/submit/", data, format="json"
         )
         self.assertEqual(request.status_code, 400)
+
+    def test_cant_edit_user_if_not_connected(self):
+        request = self.client.patch(
+            "/v1/user/me/",
+            data={
+                "username": "randomplayer",
+                "current_password": "IUseAVerySecurePassword",
+                "new_password": "AsDf!621$",
+                "password_validation": "AsDf!621$",
+            },
+        )
+        self.assertEqual(request.status_code, 403)
+
+        request = self.client.patch(
+            "/v1/user/me/",
+            data={
+                "username": "randomplayer",
+                "current_password": "IUseAVerySecurePassword",
+                "email": "kevin@example.com",
+            },
+        )
+        self.assertEqual(request.status_code, 403)
+
+        request = self.client.patch(
+            "/v1/user/me/",
+            data={
+                "username": "randomplayer",
+                "current_password": "IUseAVerySecurePassword",
+                "last_name": "LesMaths",
+            },
+        )
+        self.assertEqual(request.status_code, 403)
+
+        request = self.client.patch(
+            "/v1/user/me/",
+            data={
+                "username": "randomplayer",
+                "current_password": "IUseAVerySecurePassword",
+                "first_name": "Kevin",
+            },
+        )
+        self.assertEqual(request.status_code, 403)
+
+    def test_cant_edit_other_user(self):
+        c = APIClient()
+
+        c.login(username="anotherplayer", password="ThisIsPassword")
+
+        request = c.patch(
+            "/v1/user/me/",
+            data={
+                "username": "randomplayer",
+                "current_password": "IUseAVerySecurePassword",
+                "new_password": "AsDf!621$",
+                "password_validation": "AsDf!621$",
+            },
+        )
+        self.assertEqual(request.status_code, 403)
+
+        request = c.patch(
+            "/v1/user/me/",
+            data={
+                "username": "randomplayer",
+                "current_password": "IUseAVerySecurePassword",
+                "email": "kevin@example.com",
+            },
+        )
+        self.assertEqual(request.status_code, 403)
+
+        request = c.patch(
+            "/v1/user/me/",
+            data={
+                "username": "randomplayer",
+                "current_password": "IUseAVerySecurePassword",
+                "last_name": "LesMaths",
+            },
+        )
+        self.assertEqual(request.status_code, 403)
+
+        request = c.patch(
+            "/v1/user/me/",
+            data={
+                "username": "randomplayer",
+                "current_password": "IUseAVerySecurePassword",
+                "first_name": "Kevin",
+            },
+        )
+        self.assertEqual(request.status_code, 403)
+
+    def test_can_edit_self_single_field(self):
+        c = APIClient()
+
+        c.login(username="randomplayer", password="IUseAVerySecurePassword")
+
+        request = c.patch(
+            "/v1/user/me/",
+            data={
+                "username": "randomplayer",
+                "current_password": "IUseAVerySecurePassword",
+                "new_password": "AsDf!621$",
+                "password_validation": "AsDf!621$",
+            },
+        )
+        self.assertEqual(request.status_code, 200)
+        self.assertTrue(
+            User.objects.get(username="randomplayer").check_password("AsDf!621!")
+        )
+
+        request = c.patch(
+            "/v1/user/me/",
+            data={
+                "username": "randomplayer",
+                "current_password": "IUseAVerySecurePassword",
+                "email": "kevin@example.com",
+            },
+        )
+        self.assertEqual(request.status_code, 200)
+        self.assertEqual(
+            User.objects.get(username="randomplayer").email, "kevin@example.com"
+        )
+
+        request = c.patch(
+            "/v1/user/me/",
+            data={
+                "username": "randomplayer",
+                "current_password": "IUseAVerySecurePassword",
+                "last_name": "Les Maths",
+            },
+        )
+        self.assertEqual(request.status_code, 200)
+        self.assertEqual(
+            User.objects.get(username="randomplayer").last_name, "Les Maths"
+        )
+
+        request = c.patch(
+            "/v1/user/me/",
+            data={
+                "username": "randomplayer",
+                "current_password": "IUseAVerySecurePassword",
+                "first_name": "Kevin",
+            },
+        )
+        self.assertEqual(request.status_code, 200)
+        self.assertEqual(User.objects.get(username="randomplayer").first_name, "Kevin")
