@@ -108,6 +108,7 @@ class UserMe(APIView):
 
         if "email" in data:
             user.email = UserManager.normalize_email(data["email"])
+            UserMailer.send_email_confirmation(user)
 
         if "first_name" in data:
             user.first_name = data["first_name"]
