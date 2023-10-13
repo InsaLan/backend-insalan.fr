@@ -47,15 +47,18 @@ class Transaction(models.Model):
         fields['creation_date'] = timezone.make_aware(datetime.now())
         fields['last_modification_date'] = fields['creation_date']
         fields['payer'] = data['payer']
-        products = data['products']
-        fields['amount'] = Decimal(0.00)
-        for product in data['products']:
-            fields['amount'] += product.price
-            logger.debug(f"{fields['amount']} and {product.price}")
         transaction = Transaction.objects.create(**fields)
         transaction.products.set(data['products'])
+        transaction.synchronize_amount()
         return transaction
-    
+
+    def synchronize_amount(self):
+        """Recompute the amount from the product list"""
+        self.amount = Decimal(0.00)
+        for product in self.products.all():
+            self.amount += product.price
+            logger.debug(f"{self.amount} and {product.price}")
+ 
     def validate_transaction(self):
         """ set payment_statut to validated """
 
