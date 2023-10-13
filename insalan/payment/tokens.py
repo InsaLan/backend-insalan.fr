@@ -19,8 +19,8 @@ class Tokens :
             },
         )
         logger.debug(request.text)
-        self.bearer_token = request.json["access_token"]
-        self.refresh_token = request.json["refresh_token"]
+        self.bearer_token = request.json()["access_token"]
+        self.refresh_token = request.json()["refresh_token"]
 
     def get_token(self):
         return self.bearer_token
@@ -35,5 +35,5 @@ class Tokens :
                 'grant_type': "refresh_token",
             },
         )
-        self.bearer_token=request.json["access_token"]
-        self.refresh_token=request.json["refresh_token"]
+        self.bearer_token=request.json()["access_token"]
+        self.refresh_token=request.json()["refresh_token"]
