@@ -6,6 +6,7 @@ from django.core import mail
 from rest_framework import serializers
 from insalan.user.models import User
 from django.utils.translation import gettext_lazy as _
+import json
 import re
 
 
@@ -578,7 +579,6 @@ class UserEndToEndTestCase(TestCase):
         self.client.post("/v1/user/password-reset/ask/", data, format="json")
 
         match = re.search(
-            # "https?://[^ ]*/password-reset/ask[^ ]*",
             ".*https?://[^ ]*/\?user=(?P<username>[^ &]*)&token=(?P<token>[^ /]*)",
             mail.outbox[0].body,
         )
@@ -602,10 +602,12 @@ class UserEndToEndTestCase(TestCase):
         self.assertEqual(request.status_code, 400)
 
     def test_cant_edit_user_if_not_connected(self):
+        """
+        Test that we can't edit any field if we are not connected
+        """
         request = self.client.patch(
             "/v1/user/me/",
             data={
-                "username": "randomplayer",
                 "current_password": "IUseAVerySecurePassword",
                 "new_password": "AsDf!621$",
                 "password_validation": "AsDf!621$",
@@ -616,8 +618,6 @@ class UserEndToEndTestCase(TestCase):
         request = self.client.patch(
             "/v1/user/me/",
             data={
-                "username": "randomplayer",
-                "current_password": "IUseAVerySecurePassword",
                 "email": "kevin@example.com",
             },
         )
@@ -626,8 +626,6 @@ class UserEndToEndTestCase(TestCase):
         request = self.client.patch(
             "/v1/user/me/",
             data={
-                "username": "randomplayer",
-                "current_password": "IUseAVerySecurePassword",
                 "last_name": "LesMaths",
             },
         )
@@ -636,14 +634,15 @@ class UserEndToEndTestCase(TestCase):
         request = self.client.patch(
             "/v1/user/me/",
             data={
-                "username": "randomplayer",
-                "current_password": "IUseAVerySecurePassword",
                 "first_name": "Kevin",
             },
         )
         self.assertEqual(request.status_code, 403)
 
     def test_cant_edit_other_user(self):
+        """
+        Test we can't edit any field of another user
+        """
         c = APIClient()
 
         c.login(username="anotherplayer", password="ThisIsPassword")
@@ -651,7 +650,6 @@ class UserEndToEndTestCase(TestCase):
         request = c.patch(
             "/v1/user/me/",
             data={
-                "username": "randomplayer",
                 "current_password": "IUseAVerySecurePassword",
                 "new_password": "AsDf!621$",
                 "password_validation": "AsDf!621$",
@@ -662,8 +660,6 @@ class UserEndToEndTestCase(TestCase):
         request = c.patch(
             "/v1/user/me/",
             data={
-                "username": "randomplayer",
-                "current_password": "IUseAVerySecurePassword",
                 "email": "kevin@example.com",
             },
         )
@@ -672,8 +668,6 @@ class UserEndToEndTestCase(TestCase):
         request = c.patch(
             "/v1/user/me/",
             data={
-                "username": "randomplayer",
-                "current_password": "IUseAVerySecurePassword",
                 "last_name": "LesMaths",
             },
         )
@@ -682,14 +676,15 @@ class UserEndToEndTestCase(TestCase):
         request = c.patch(
             "/v1/user/me/",
             data={
-                "username": "randomplayer",
-                "current_password": "IUseAVerySecurePassword",
                 "first_name": "Kevin",
             },
         )
         self.assertEqual(request.status_code, 403)
 
     def test_can_edit_self_single_field(self):
+        """
+        Test that we can edit our own fields individually
+        """
         c = APIClient()
 
         c.login(username="randomplayer", password="IUseAVerySecurePassword")
@@ -697,7 +692,6 @@ class UserEndToEndTestCase(TestCase):
         request = c.patch(
             "/v1/user/me/",
             data={
-                "username": "randomplayer",
                 "current_password": "IUseAVerySecurePassword",
                 "new_password": "AsDf!621$",
                 "password_validation": "AsDf!621$",
@@ -705,14 +699,14 @@ class UserEndToEndTestCase(TestCase):
         )
         self.assertEqual(request.status_code, 200)
         self.assertTrue(
-            User.objects.get(username="randomplayer").check_password("AsDf!621!")
+            User.objects.get(username="randomplayer").check_password("AsDf!621$")
         )
+
+        c.login(username="randomplayer", password="AsDf!621$")
 
         request = c.patch(
             "/v1/user/me/",
             data={
-                "username": "randomplayer",
-                "current_password": "IUseAVerySecurePassword",
                 "email": "kevin@example.com",
             },
         )
@@ -724,8 +718,6 @@ class UserEndToEndTestCase(TestCase):
         request = c.patch(
             "/v1/user/me/",
             data={
-                "username": "randomplayer",
-                "current_password": "IUseAVerySecurePassword",
                 "last_name": "Les Maths",
             },
         )
@@ -737,10 +729,100 @@ class UserEndToEndTestCase(TestCase):
         request = c.patch(
             "/v1/user/me/",
             data={
-                "username": "randomplayer",
-                "current_password": "IUseAVerySecurePassword",
                 "first_name": "Kevin",
             },
         )
         self.assertEqual(request.status_code, 200)
         self.assertEqual(User.objects.get(username="randomplayer").first_name, "Kevin")
+
+    def test_can_edit_several_fields_at_once(self):
+        """
+        Test that we can edit our own fields individually
+        """
+        c = APIClient()
+
+        c.login(username="randomplayer", password="IUseAVerySecurePassword")
+
+        request = c.patch(
+            "/v1/user/me/",
+            data={
+                "current_password": "IUseAVerySecurePassword",
+                "new_password": "AsDf!621$",
+                "password_validation": "AsDf!621$",
+            },
+        )
+        self.assertEqual(request.status_code, 200)
+        self.assertTrue(
+            User.objects.get(username="randomplayer").check_password("AsDf!621$")
+        )
+
+        c.login(username="randomplayer", password="AsDf!621$")
+
+        request = c.patch(
+            "/v1/user/me/",
+            data={
+                "email": "kevin@example.com",
+                "first_name": "Kevin",
+                "last_name": "Les Maths",
+            },
+        )
+        self.assertEqual(request.status_code, 200)
+        self.assertEqual(
+            User.objects.get(username="randomplayer").email, "kevin@example.com"
+        )
+        self.assertEqual(
+            User.objects.get(username="randomplayer").last_name, "Les Maths"
+        )
+        self.assertEqual(User.objects.get(username="randomplayer").first_name, "Kevin")
+
+    def test_is_user_logged_out_on_password_change(self):
+        """
+        Test that when we change our password, we are logged out
+        """
+        c = APIClient()
+
+        c.login(username="randomplayer", password="IUseAVerySecurePassword")
+
+        request = c.patch(
+            "/v1/user/me/",
+            data={
+                "current_password": "IUseAVerySecurePassword",
+                "new_password": "AsDf!621$",
+                "password_validation": "AsDf!621$",
+            },
+        )
+        self.assertEqual(request.status_code, 200)
+        self.assertTrue(
+            User.objects.get(username="randomplayer").check_password("AsDf!621$")
+        )
+
+        self.assertEqual(c.cookies["sessionid"].value, "")
+        self.assertEqual(
+            json.loads(request.content),
+            {
+                "logout": [
+                    _(
+                        "Votre mot de passe a bien été changé. Merci de vous re-connecter"
+                    )
+                ]
+            },
+        )
+
+    def test_permission_is_removed_when_changing_email(self):
+        """
+        Test that the email is no-longer considered as confirmed when we change it
+        """
+        c = APIClient()
+
+        c.login(username="randomplayer", password="IUseAVerySecurePassword")
+
+        request = c.patch(
+            "/v1/user/me/",
+            data={
+                "email": "kevin@example.com",
+            },
+        )
+
+        self.assertFalse(
+            User.objects.get(username="randomplayer").has_perm("user.email_active")
+        )
