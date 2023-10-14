@@ -4,7 +4,9 @@
 # "Too few public methods"
 # pylint: disable=R0903
 
+from django.core.exceptions import PermissionDenied
 from django.http import Http404
+from django.utils.translation import gettext_lazy as _
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import BasePermission, SAFE_METHODS
@@ -15,7 +17,7 @@ from rest_framework.views import APIView
 from insalan.user.models import User
 import insalan.tournament.serializers as serializers
 
-from .models import Player, Manager, Event, Tournament, Game, Team
+from .models import Player, Manager, Event, Tournament, Game, Team, PaymentStatus
 
 
 class ReadOnly(BasePermission):
@@ -51,6 +53,7 @@ class EventDetails(generics.RetrieveUpdateDestroyAPIView):
     queryset = Event.objects.all().order_by("id")
     permission_classes = [permissions.IsAdminUser | ReadOnly]
 
+
 class EventDetailsSomeDeref(APIView):
     """Details about an Event that dereferences tournaments, but nothing else"""
 
@@ -64,10 +67,14 @@ class EventDetailsSomeDeref(APIView):
 
         event = candidates[0]
 
-        event_serialized = serializers.EventSerializer(event, context={"request": request}).data
+        event_serialized = serializers.EventSerializer(
+            event, context={"request": request}
+        ).data
 
         event_serialized["tournaments"] = [
-            serializers.TournamentSerializer(Tournament.objects.get(id=id), context={"request": request}).data
+            serializers.TournamentSerializer(
+                Tournament.objects.get(id=id), context={"request": request}
+            ).data
             for id in event_serialized["tournaments"]
         ]
 
@@ -76,14 +83,17 @@ class EventDetailsSomeDeref(APIView):
 
         return Response(event_serialized, status=status.HTTP_200_OK)
 
+
 class EventByYear(generics.ListAPIView):
     """Get all of the events of a year"""
+
     pagination_class = None
     serializer_class = serializers.EventSerializer
 
     def get_queryset(self):
         """Return the queryset"""
         return Event.objects.filter(year=int(self.kwargs["year"]))
+
 
 # Games
 class GameList(generics.ListCreateAPIView):
@@ -136,30 +146,36 @@ class TournamentDetailsFull(APIView):
 
         tourney = tourneys[0]
 
-        tourney_serialized = serializers.TournamentSerializer(tourney, context={"request": request}).data
+        tourney_serialized = serializers.TournamentSerializer(
+            tourney, context={"request": request}
+        ).data
 
         # Dereference the event
         event = tourney.event
-        tourney_serialized["event"] = serializers.EventSerializer(event, context={"request": request}).data
+        tourney_serialized["event"] = serializers.EventSerializer(
+            event, context={"request": request}
+        ).data
         del tourney_serialized["event"]["tournaments"]
 
         # Dereference the game
-        tourney_serialized["game"] = serializers.GameSerializer(tourney.game, context={"request": request}).data
+        tourney_serialized["game"] = serializers.GameSerializer(
+            tourney.game, context={"request": request}
+        ).data
 
         # Dereference the teams
         teams_serialized = []
         for team in tourney_serialized["teams"]:
-            team_preser = serializers.TeamSerializer(Team.objects.get(id=team), context={"request": request}).data
+            team_preser = serializers.TeamSerializer(
+                Team.objects.get(id=team), context={"request": request}
+            ).data
             del team_preser["tournament"]
 
             # Dereference players/managers to users (username)
             team_preser["players"] = [
-                User.objects.get(id=pid).username
-                for pid in team_preser["players"]
+                User.objects.get(id=pid).username for pid in team_preser["players"]
             ]
             team_preser["managers"] = [
-                User.objects.get(id=pid).username
-                for pid in team_preser["managers"]
+                User.objects.get(id=pid).username for pid in team_preser["managers"]
             ]
 
             teams_serialized.append(team_preser)
@@ -195,12 +211,36 @@ class PlayerRegistration(generics.RetrieveAPIView):
     queryset = Player.objects.all().order_by("id")
 
 
-class PlayerRegistrationList(generics.ListAPIView):
+class PlayerRegistrationList(generics.ListCreateAPIView):
     """Get all player registrations"""
 
     pagination_class = None
     serializer_class = serializers.PlayerSerializer
     queryset = Player.objects.all().order_by("id")
+
+    def post(this, request, *args, **kwargs):
+        user = request.user
+        data = request.data
+
+        if user is None or "team" not in data or "payment" in data:
+            raise PermissionDenied()
+
+        if not user.is_email_active():
+            raise PermissionDenied(
+                {
+                    "email": [
+                        _(
+                            "Veuillez activer votre courriel pour vous inscrire à un tournoi"
+                        )
+                    ]
+                }
+            )
+        mut = data._mutable
+        data._mutable = True
+        data["user"] = user.id
+        data["payment"] = PaymentStatus.NOT_PAID
+        data._mutable = mut
+        return super().post(request, *args, **kwargs)
 
 
 class PlayerRegistrationListId(generics.ListAPIView):
@@ -237,12 +277,36 @@ class ManagerRegistration(generics.RetrieveAPIView):
     queryset = Manager.objects.all().order_by("id")
 
 
-class ManagerRegistrationList(generics.ListAPIView):
+class ManagerRegistrationList(generics.ListCreateAPIView):
     """Show all manager registrations"""
 
     pagination_class = None
     serializer_class = serializers.ManagerSerializer
     queryset = Manager.objects.all().order_by("id")
+
+    def post(this, request, *args, **kwargs):
+        user = request.user
+        data = request.data
+
+        if user is None or "team" not in data or "payment" in data:
+            raise PermissionDenied()
+
+        if not user.is_email_active():
+            raise PermissionDenied(
+                {
+                    "email": [
+                        _(
+                            "Veuillez activer votre courriel pour vous inscrire à un tournoi"
+                        )
+                    ]
+                }
+            )
+        mut = data._mutable
+        data._mutable = True
+        data["user"] = user.id
+        data["payment"] = PaymentStatus.NOT_PAID
+        data._mutable = mut
+        return super().post(request, *args, **kwargs)
 
 
 class ManagerRegistrationListId(generics.ListAPIView):

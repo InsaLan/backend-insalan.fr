@@ -106,7 +106,7 @@ class User(AbstractUser, PermissionsMixin):
     object = UserManager()
 
     def is_email_active(self):
-        return self.has_perm("email_active")
+        return self.has_perm("user.email_active")
 
     def set_email_active(self, active=True):
         if active:

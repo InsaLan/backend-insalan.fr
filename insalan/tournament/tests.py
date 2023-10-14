@@ -916,7 +916,7 @@ class TournamentFullDerefEndpoint(TestCase):
             reverse("tournament/details-full", args=[tourneyobj_one.id]), format="json"
         )
         self.assertEqual(request.status_code, 200)
-        print(request.data)
+        # print(request.data)
         self.assertEqual(
             request.data,
             {
@@ -1318,9 +1318,7 @@ class TournamentTeamEndpoints(TestCase):
             password="ThisIsPassword",
         )
 
-        valid_email_user.user_permissions.add(
-            Permission.objects.get(codename="email_active")
-        )
+        valid_email_user.set_email_active()
 
         # Player.objects.create(team=team_one, user=user_one)
         # Player.objects.create(team=team_one, user=another_player)
@@ -1377,26 +1375,25 @@ class TournamentTeamEndpoints(TestCase):
 
         trnm = event.get_tournaments()[0]
 
-        request = self.client.put(
-            f"/v1/tournament/team/{team.id}/",
+        request = self.client.post(
+            f"/v1/tournament/player/",
             {
-                "managers": [user.id],
+                "team": team.id,
             },
             format="json",
         )
+        self.assertEquals(request.status_code, 201)
 
-        self.assertEquals(request.status_code, 200)
+        Player.objects.filter(user=user.id).delete()
 
-        request = self.client.put(
-            f"/v1/tournament/team/{team.id}/",
+        request = self.client.post(
+            f"/v1/tournament/manager/",
             {
-                "managers": [],
-                "players": [user.id],
+                "team": team.id,
             },
             format="json",
         )
-
-        self.assertEquals(request.status_code, 200)
+        self.assertEquals(request.status_code, 201)
 
     def test_cant_join_a_team_with_no_valid_email(self):
         """Try to join an existing team with no valid email"""
@@ -1407,23 +1404,20 @@ class TournamentTeamEndpoints(TestCase):
 
         trnm = event.get_tournaments()[0]
 
-        request = self.client.put(
-            f"/v1/tournament/team/{team.id}/",
+        request = self.client.post(
+            f"/v1/tournament/player/",
             {
-                "managers": [user.id],
+                "team": team.id,
             },
             format="json",
         )
-
         self.assertEquals(request.status_code, 403)
 
-        request = self.client.put(
-            f"/v1/tournament/team/{team.id}/",
+        request = self.client.post(
+            f"/v1/tournament/manager/",
             {
-                "managers": [],
-                "players": [user.id],
+                "team": user.id,
             },
             format="json",
         )
-
         self.assertEquals(request.status_code, 403)
