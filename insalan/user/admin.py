@@ -8,6 +8,9 @@ class CustomUserAdmin(UserAdmin):
         ("Image", {
             'fields': ('image',),
         }),
+        ("Email options", {
+            'fields': ('email_active',),
+        })
     )
 
 admin.site.register(User, CustomUserAdmin)
