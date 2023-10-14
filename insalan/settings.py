@@ -189,7 +189,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://api." + getenv("WEBSITE_HOST", "localhost")
 
 ]
-
+CSRF_COOKIE_DOMAIN = '.' + getenv("WEBSITE_HOST", "localhost")
 # MAILER SETTINGS
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
