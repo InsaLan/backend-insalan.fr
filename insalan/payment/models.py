@@ -60,6 +60,12 @@ class Transaction(models.Model):
     last_modification_date = models.DateTimeField(
         verbose_name=_("Date de dernière modification")
     )
+    intent_id = models.IntegerField(
+        blank=False,
+        null=True,
+        editable=False,
+        verbose_name=_("Identifiant de paiement"),
+    )
     amount = models.DecimalField(
         null=False,
         default=0.00,
@@ -77,12 +83,12 @@ class Transaction(models.Model):
         fields["last_modification_date"] = fields["creation_date"]
         fields["payer"] = data["payer"]
         transaction = Transaction.objects.create(**fields)
-        data["products"].sort()
+        data["products"].sort(key=lambda x: int(x.id))
         for pid, grouper in itertools.groupby(data["products"]):
             count = len(list(grouper))
             proc = ProductCount.objects.create(
                 transaction=transaction,
-                product=Product.objects.get(id=pid),
+                product=pid,
                 count=count,
             )
             proc.save()
@@ -95,6 +101,10 @@ class Transaction(models.Model):
         for proc in ProductCount.objects.filter(transaction=self):
             self.amount += proc.product.price * proc.count
         self.save()
+
+    def touch(self):
+        """Update the last modification date of the transaction"""
+        self.last_modification_date = timezone.make_aware(datetime.now())
 
     def validate_transaction(self):
         """set payment_statut to validated"""

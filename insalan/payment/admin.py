@@ -29,6 +29,7 @@ class TransactionAdmin(admin.ModelAdmin):
         "payer",
         "payment_status",
         "creation_date",
+        "intent_id",
         "last_modification_date",
         "amount",
     )
@@ -38,6 +39,7 @@ class TransactionAdmin(admin.ModelAdmin):
         "products",
         "payment_status",
         "creation_date",
+        "intent_id",
         "last_modification_date",
         "amount",
     ]

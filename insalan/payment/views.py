@@ -63,10 +63,33 @@ class CreateProduct(generics.CreateAPIView):
 class BackView(generics.ListAPIView):
     pass
 
+class ReturnView(APIView):
+    """View for the return"""
+    def get(self, request, **kwargs):
+        trans_id = request.query_params.get("id")
+        checkout_id = request.query_params.get("checkoutIntentId")
+        code = request.query_params.get("code")
 
-class ReturnView(generics.ListAPIView):
-    pass
+        if None in [trans_id, checkout_id, code]:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        transaction_obj = Transaction.objects.filter(payment_status=TransactionStatus.PENDING, id=trans_id, intent_id=checkout_id)
+        if len(transaction_obj) == 0:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        transaction_obj = transaction_obj[0]
+
+        if code != "success":
+            transaction_obj.payment_status = TransactionStatus.FAILED
+            transaction_obj.touch()
+            transaction_obj.save()
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        transaction_obj.payment_status = TransactionStatus.SUCCEEDED
+        transaction_obj.touch()
+        transaction_obj.save()
+
+        return Response(transaction_obj)
 
 class ErrorView(generics.ListAPIView):
     pass
@@ -119,57 +142,11 @@ class PayView(generics.CreateAPIView):
                 headers=headers,
             )  # initiate a helloasso intent
             logger.debug(checkout_init.text)
-            redirect_url = checkout_init.json()["redirectUrl"]
+            checkout_json = checkout_init.json()
+            redirect_url = checkout_json["redirectUrl"]
+            intent_id = checkout_json["id"]
+            transaction_obj.intent_id = intent_id
+            transaction_obj.save()
             logger.debug(intent_body)
             return HttpResponseRedirect(redirect_to=redirect_url)
         return JsonResponse({"problem": "oui"})
-        # return HttpResponseRedirect(checkout_init.redirectUrl)
-
-    """
-    # lets parse the request
-    user=request.user
-    for asked_product in user_request_body:
-        try:
-            product = Product.objects.get(pk=asked_product[id])
-            product_list.append(product)
-            if asked_product == user_request_body.pop():
-                name+=product.name
-            else :
-                name+=product.name + ", "
-            # need that all product implement a Product Model (with an id as pk, and a price)
-            amount += product.price
-        except (ObjectDoesNotExist, MultipleObjectsReturned):
-            pass # do something
-
-    transaction=Transaction(amount=amount, payer=user, products=product_list, date=date.today())
-    # need to put a list field of product in Transaction model
-
-    # lets init a checkout to helloasso
-    url = static_urls.get_checkout_url()
-    headers = {
-        'authorization': 'Bearer ' + tokens.get_token(),
-        'Content-Type': 'application/json',
-    }
-    request_status=False
-    while request_status!=True:
-        checkout_init=requests.post(url = url, headers=headers, data=json.dumps(body))
-        if checkout_init.status_code==200:
-            request_status=True
-        elif checkout_init.status_code==401:
-            tokens.refresh()
-        elif checkout_init.status_code==403:
-            pass # cry, problem concerning the perms of the token
-        elif checkout_init.status_code==400:
-            pass # the value are false
-        else:
-            pass
-    return HttpResponseRedirect(redirect_to=json.loads(checkout_init.text)['id'])
-@csrf_exempt
-class validate_payment(request, id):
-    Transaction.objects.get(id=id).payment_status=TransactionStatus.SUCCEDED
-
-class get_transactions(request):
-    transactions=TransactionSerializer(Transaction.objects.all(), many=True)
-    return JsonResponse(transactions.data)
-
-"""

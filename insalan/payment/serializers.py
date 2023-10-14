@@ -11,7 +11,7 @@ class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model=Transaction
         fields = "__all__"
-        read_only_fields = ['amount', 'payer', 'payment_status', 'creation_date', 'last_modification_date']
+        read_only_fields = ['amount', 'payer', 'payment_status', 'intent_id', 'creation_date', 'last_modification_date']
     
     def create(self, validated_data):
         """ Create a transaction with products based on the request"""
