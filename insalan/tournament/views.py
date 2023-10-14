@@ -192,7 +192,30 @@ class TeamList(generics.ListCreateAPIView):
 
     queryset = Team.objects.all().order_by("id")
     serializer_class = serializers.TeamSerializer
-    permission_classes = [permissions.IsAdminUser | ReadOnly]
+    permission_classes = [permissions.IsAuthenticated | ReadOnly]
+
+    def post(this, request, *args, **kwargs):
+        user = request.user
+        data = request.data
+
+        if user is None or "name" not in data:
+            raise PermissionDenied()
+
+        if not user.is_email_active():
+            raise PermissionDenied(
+                {
+                    "email": [
+                        _(
+                            "Veuillez activer votre courriel pour vous inscrire à un tournoi"
+                        )
+                    ]
+                }
+            )
+        mut = data._mutable
+        data._mutable = True
+        # data["players"] = [user.id]
+        data._mutable = mut
+        return super().post(request, *args, **kwargs)
 
 
 class TeamDetails(generics.RetrieveUpdateDestroyAPIView):

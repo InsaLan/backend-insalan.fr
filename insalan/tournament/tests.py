@@ -1337,12 +1337,11 @@ class TournamentTeamEndpoints(TestCase):
             {
                 "name": "Les emails valides",
                 "tournament": trnm.id,
-                "players": [user.id],
             },
             format="json",
         )
 
-        self.assertEquals(request.status_code, 200)
+        self.assertEquals(request.status_code, 201)
 
     def test_cant_create_a_team_with_no_valid_email(self):
         """Try to create a team with email not validated"""
@@ -1357,9 +1356,6 @@ class TournamentTeamEndpoints(TestCase):
             {
                 "name": "Flemme de valider",
                 "tournament": trnm.id,
-                "players": [
-                    user.id,
-                ],
             },
             format="json",
         )
