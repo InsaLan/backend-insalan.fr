@@ -198,7 +198,7 @@ class TeamList(generics.ListCreateAPIView):
         user = request.user
         data = request.data
 
-        if user is None or "name" not in data:
+        if user is None or not user.is_authenticated or "name" not in data:
             raise PermissionDenied()
 
         if not user.is_email_active():
@@ -245,7 +245,12 @@ class PlayerRegistrationList(generics.ListCreateAPIView):
         user = request.user
         data = request.data
 
-        if user is None or "team" not in data or "payment" in data:
+        if (
+            user is None
+            or not user.is_authenticated
+            or "team" not in data
+            or "payment" in data
+        ):
             raise PermissionDenied()
 
         if not user.is_email_active():

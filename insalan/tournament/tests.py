@@ -916,7 +916,6 @@ class TournamentFullDerefEndpoint(TestCase):
             reverse("tournament/details-full", args=[tourneyobj_one.id]), format="json"
         )
         self.assertEqual(request.status_code, 200)
-        # print(request.data)
         self.assertEqual(
             request.data,
             {

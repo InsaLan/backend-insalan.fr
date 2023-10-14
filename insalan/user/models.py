@@ -19,6 +19,7 @@ from django.utils.http import urlencode
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import FileExtensionValidator
 
+
 class UserManager(BaseUserManager):
     """
     Managers the User objects (kind of like a serializer but not quite that)
@@ -73,7 +74,7 @@ class User(AbstractUser, PermissionsMixin):
 
         verbose_name = _("Utilisateur⋅rice")
         verbose_name_plural = _("Utilisateur⋅ices")
-        permissions = [("email_active", "The user has activated their e-mail")]
+        permissions = [("email_active", _("L'utilisateur⋅ice a activé son courriel"))]
 
     def __init__(self, *args, **kwargs):
         AbstractUser.__init__(self, *args, **kwargs)
