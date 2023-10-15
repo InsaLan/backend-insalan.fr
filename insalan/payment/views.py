@@ -83,13 +83,24 @@ class ReturnView(APIView):
             transaction_obj.payment_status = TransactionStatus.FAILED
             transaction_obj.touch()
             transaction_obj.save()
+
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         transaction_obj.payment_status = TransactionStatus.SUCCEEDED
         transaction_obj.touch()
         transaction_obj.save()
 
-        return Response(transaction_obj)
+        # Execute hooks
+        for proccount in ProductCount.objects.filter(transaction=transaction_obj):
+            # Get callback class
+            cls = PaymentCallbackSystem.retrieve_handler(proccount.product.category)
+            if cls is None:
+                logger.warning("No handler found for payment of %s", proccount.product)
+                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            # Call callback class
+            cls.payment_success(transaction_obj, proccount.product, proccount.count)
+
+        return Response(status=status.HTTP_200_OK)
 
 class ErrorView(generics.ListAPIView):
     pass
@@ -148,5 +159,16 @@ class PayView(generics.CreateAPIView):
             transaction_obj.intent_id = intent_id
             transaction_obj.save()
             logger.debug(intent_body)
+
+            # Execute hooks
+            for proccount in ProductCount.objects.filter(transaction=transaction_obj):
+                # Get callback class
+                cls = PaymentCallbackSystem.retrieve_handler(proccount.product.category)
+                if cls is None:
+                    logger.warning("No handler found for payment of %s", proccount.product)
+                    return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                # Call callback class
+                cls.prepare_transaction(transaction_obj, proccount.product, proccount.count)
+
             return HttpResponseRedirect(redirect_to=redirect_url)
         return JsonResponse({"problem": "oui"})

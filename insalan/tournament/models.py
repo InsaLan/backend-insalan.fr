@@ -19,6 +19,7 @@ from django.core.validators import (
 )
 from django.utils.translation import gettext_lazy as _
 
+from insalan.tickets.models import Ticket
 from insalan.user.models import User
 
 
