@@ -18,6 +18,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.core.exceptions import ValidationError
 
 from insalan.user.serializers import (
     GroupSerializer,
@@ -79,19 +80,28 @@ class UserMe(APIView):
         if "new_password" in data and "password_validation" in data:
             # We need the old password to change...
             if "current_password" not in data:
-                raise BadRequest()
+                return Response(
+                    {"password": [_("Le mot de passe actuel doit être renseigné")]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             # ...and we need it to be correct
             if not user.check_password(data["current_password"]):
                 raise PermissionDenied()
 
             # We need password and its confirmation
             if data["new_password"] != data["password_validation"]:
-                raise BadRequest()
+                return Response(
+                    {"password": [_("Les mots de passe diffèrent")]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             # We need a strong-enough password
-            validation_errors = validate_password(data["new_password"], user=user)
-            if validation_errors is not None:
-                raise BadRequest(validation_errors)
+            try:
+                validate_password(data["new_password"], user=user)
+            except ValidationError as err:
+                return Response(
+                    {"user": err.messages}, status=status.HTTP_400_BAD_REQUEST
+                )
 
             # Everything good, we set the new password
             user.set_password(data["new_password"])

@@ -726,6 +726,35 @@ class UserEndToEndTestCase(TestCase):
         self.assertEqual(request.status_code, 200)
         self.assertEqual(User.objects.get(username="randomplayer").first_name, "Kevin")
 
+    def test_password_validation_error_are_caught(self):
+        """
+        Test that password validation errors does not crashes the server but sends a bad request instead
+        """
+        c = APIClient()
+
+        c.login(username="randomplayer", password="IUseAVerySecurePassword")
+
+        request = c.patch(
+            "/v1/user/me/",
+            data={
+                "current_password": "IUseAVerySecurePassword",
+                "new_password": "1234",
+                "password_validation": "1234",
+            },
+        )
+        self.assertEqual(request.status_code, 400)
+        self.assertEqual(
+            set(json.loads(request.content)["user"]),
+            {
+                "Ce mot de passe est trop court. Il doit contenir au minimum 8 caractères.",
+                "Ce mot de passe est trop courant.",
+                "Ce mot de passe est entièrement numérique.",
+            },
+        )
+        # self.assertTrue(
+        #     User.objects.get(username="randomplayer").check_password("AsDf!621$")
+        # )
+
     def test_can_edit_several_fields_at_once(self):
         """
         Test that we can edit our own fields individually
