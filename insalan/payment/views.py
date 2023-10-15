@@ -19,7 +19,6 @@ from rest_framework.authentication import SessionAuthentication
 
 import insalan.payment.serializers as serializers
 
-from .hooks import PaymentCallbackSystem
 from .models import Transaction, TransactionStatus, Product, ProductCount
 from .tokens import Tokens
 
@@ -91,14 +90,7 @@ class ReturnView(APIView):
         transaction_obj.save()
 
         # Execute hooks
-        for proccount in ProductCount.objects.filter(transaction=transaction_obj):
-            # Get callback class
-            cls = PaymentCallbackSystem.retrieve_handler(proccount.product.category)
-            if cls is None:
-                logger.warning("No handler found for payment of %s", proccount.product)
-                return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            # Call callback class
-            cls.payment_success(transaction_obj, proccount.product, proccount.count)
+        transaction_obj.run_success_hooks()
 
         return Response(status=status.HTTP_200_OK)
 
@@ -161,14 +153,7 @@ class PayView(generics.CreateAPIView):
             logger.debug(intent_body)
 
             # Execute hooks
-            for proccount in ProductCount.objects.filter(transaction=transaction_obj):
-                # Get callback class
-                cls = PaymentCallbackSystem.retrieve_handler(proccount.product.category)
-                if cls is None:
-                    logger.warning("No handler found for payment of %s", proccount.product)
-                    return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-                # Call callback class
-                cls.prepare_transaction(transaction_obj, proccount.product, proccount.count)
+            transaction_obj.run_prepare_hooks()
 
             return HttpResponseRedirect(redirect_to=redirect_url)
         return JsonResponse({"problem": "oui"})

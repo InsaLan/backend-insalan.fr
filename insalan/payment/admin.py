@@ -11,8 +11,8 @@ from .models import Product, Transaction
 class ProductAdmin(admin.ModelAdmin):
     """Admin handler for Products"""
 
-    list_display = ("price", "name", "desc", "category", "associated_tournament")
-    search_fields = ["price", "name"]
+    list_display = ("id", "price", "name", "desc", "category", "associated_tournament")
+    search_fields = ["id", "price", "name"]
 
 
 admin.site.register(Product, ProductAdmin)
