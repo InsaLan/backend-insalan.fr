@@ -174,6 +174,39 @@ class UserEndToEndTestCase(TestCase):
             ],
         )
 
+    def test_register_bot_account(self):
+            """
+            Test registering valid users
+            """
+
+            def send_bot_data(data, check_fields=[]):
+                """
+                Helper function that will request a register and check its output
+                """
+                request = self.client.post("/v1/user/register/", data, format="json")
+
+                self.assertEqual(request.status_code, 400)
+                self.assertRaises(serializers.ValidationError)
+
+            send_bot_data(
+                {
+                    "username": "newplayer",
+                    "password": "1111qwer!",
+                    "password_validation": "1111qwer!",
+                    "email": "email@example.com",
+                    "name": "je suis un bot"
+                },
+                [
+                    ("username", "newplayer"),
+                    ("first_name", ""),
+                    ("last_name", ""),
+                    ("is_staff", False),
+                    ("is_superuser", False),
+                    ("is_active", True),
+                    ("email", "email@example.com"),
+                ],
+            )
+
     def test_register_read_only_fields(self):
         """
         Test that the read-only register fields are indeed read-only
