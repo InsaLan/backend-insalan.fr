@@ -24,6 +24,14 @@ class TransactionStatus(models.TextChoices):
     PENDING = "PENDING", _("En attente")
 
 
+class ProductCategory(models.TextChoices):
+    """Different recognized categories of products"""
+
+    REGISTRATION_PLAYER = "PLAYER_REG", _("Inscription joueur⋅euse")
+    REGISTRATION_MANAGER = "MANAGER_REG", _("Inscription manager")
+    PIZZA = "PIZZA", _("Pizza")
+
+
 class Product(models.Model):
     """Object to represent in database anything sellable"""
 
@@ -32,6 +40,21 @@ class Product(models.Model):
     )
     name = models.CharField(max_length=50, verbose_name=_("intitulé"))
     desc = models.CharField(max_length=50, verbose_name=_("description"))
+    category = models.CharField(
+        max_length=20,
+        blank=False,
+        null=False,
+        verbose_name=_("Catégorie de produit"),
+        default=ProductCategory.PIZZA,
+        choices=ProductCategory.choices,
+    )
+    associated_tournament = models.ForeignKey(
+        Tournament,
+        on_delete=models.CASCADE,
+        verbose_name=_("Tournoi associé"),
+        null=True,
+        blank=True,
+    )
 
 
 class Transaction(models.Model):
@@ -152,6 +175,6 @@ class ProductCount(models.Model):
         verbose_name=_("Transaction"),
     )
     product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, editable=False, verbose_name=_("Produit")
+        Product, on_delete=models.SET_NULL, editable=False, verbose_name=_("Produit"), null=True
     )
     count = models.IntegerField(default=1, editable=True, verbose_name=_("Quantité"))
