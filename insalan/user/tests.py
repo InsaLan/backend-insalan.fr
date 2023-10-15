@@ -179,7 +179,7 @@ class UserEndToEndTestCase(TestCase):
             Test registering valid users
             """
 
-            def send_bot_data(data, check_fields=[]):
+            def send_bot_data(data):
                 """
                 Helper function that will request a register and check its output
                 """
@@ -195,17 +195,7 @@ class UserEndToEndTestCase(TestCase):
                     "password_validation": "1111qwer!",
                     "email": "email@example.com",
                     "name": "je suis un bot"
-                },
-                [
-                    ("username", "newplayer"),
-                    ("first_name", ""),
-                    ("last_name", ""),
-                    ("is_staff", False),
-                    ("is_superuser", False),
-                    ("is_active", True),
-                    ("email", "email@example.com"),
-                ],
-            )
+                })
 
     def test_register_read_only_fields(self):
         """
