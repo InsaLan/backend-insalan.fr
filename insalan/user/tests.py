@@ -85,6 +85,14 @@ class UserTestCase(TestCase):
         with self.assertRaises(User.DoesNotExist):
             User.objects.get(username="idontexist")
 
+    def test_emojis_in_status(self):
+        """
+        Test if the user can put emojis in their status
+        """
+        user: User = User.objects.get(username="anotherplayer")
+        user.status = "👾"
+        user.save()
+
 
 class UserEndToEndTestCase(TestCase):
     """

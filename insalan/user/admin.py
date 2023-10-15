@@ -5,7 +5,11 @@ from django.contrib.auth.models import Permission
 from .models import User
 
 class CustomUserAdmin(UserAdmin):
-    fieldsets = UserAdmin.fieldsets + (
+    fieldsets = (UserAdmin.fieldsets[0],) + (
+        ("Informations personnelles", {
+            'fields': ('first_name', 'last_name', 'email', 'display_name', 'pronouns','status'),
+        }),
+    ) + UserAdmin.fieldsets[2:] + (
         ("Image", {
             'fields': ('image',),
         }),

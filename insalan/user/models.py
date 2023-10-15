@@ -97,6 +97,9 @@ class User(AbstractUser, PermissionsMixin):
     )
     first_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=50, blank=True)
+    display_name = models.CharField(max_length=50, blank=True)
+    pronouns = models.CharField(max_length=20, blank=True, null=False, default="")
+    status = models.CharField(max_length=100, blank=True, null=False, default="")
     is_staff = models.BooleanField(
         verbose_name="Part of the insalan team", default=False
     )
