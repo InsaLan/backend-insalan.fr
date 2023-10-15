@@ -115,7 +115,6 @@ class UserEndToEndTestCase(TestCase):
         def send_invalid_data(data):
             request = self.client.post("/v1/user/register/", data, format="json")
             self.assertEqual(request.status_code, 400)
-
         send_invalid_data({})
         send_invalid_data({"username": "newuser"})
         send_invalid_data({"username": "newuser", "password": "1234"})
