@@ -123,6 +123,26 @@ class Transaction(models.Model):
         transaction.synchronize_amount()
         return transaction
 
+    def product_callback(self, key):
+        """Call a product callback on the list of product"""
+        from insalan.payment.hooks import PaymentCallbackSystem
+        for proccount in ProductCount.objects.filter(transaction=self):
+            # Get callback class
+            cls = PaymentCallbackSystem.retrieve_handler(proccount.product.category)
+            if cls is None:
+                logger.warning("No handler found for payment of %s", proccount.product)
+                raise RuntimeError(_("Pas de handler trouvé pour un paiement"))
+            # Call callback class
+            key(cls)(self, proccount.product, proccount.count)
+
+    def run_prepare_hooks(self):
+        """Run the preparation hook on all products"""
+        self.product_callback(lambda cls: cls.prepare_transaction)
+
+    def run_success_hooks(self):
+        """Run the success hooks on all products"""
+        self.product_callback(lambda cls: cls.payment_success)
+
     def synchronize_amount(self):
         """Recompute the amount from the product list"""
         self.amount = Decimal(0.00)
