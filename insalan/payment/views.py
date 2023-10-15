@@ -20,7 +20,7 @@ from rest_framework.authentication import SessionAuthentication
 import insalan.payment.serializers as serializers
 
 from .models import Transaction, TransactionStatus, Product, ProductCount
-from .tokens import Tokens
+from .tokens import Token
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +105,7 @@ class PayView(generics.CreateAPIView):
     serializer_class = serializers.TransactionSerializer
 
     def create(self, request):
-        token = Tokens()
+        token = Token()
         payer = request.user
         data = request.data.copy()
         data["payer"] = payer.id
