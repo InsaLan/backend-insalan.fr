@@ -539,23 +539,6 @@ class TeamTestCase(TestCase):
 
         self.assertEqual(PaymentStatus.PAY_LATER, play_reg.payment_status)
 
-    def test_get_full_null_tournament(self):
-        """Get a team with a null tournament"""
-        team = Team.objects.create(name="LaZone", tournament=None)
-
-        team.full_clean()
-
-        self.assertIsNone(team.get_tournament())
-
-    def test_team_null_tourney_repr(self):
-        """
-        Test that the representation of a Team when its tournament is null is as
-        expectde.
-        """
-        team = Team.objects.create(name="LaZone", tournament=None)
-
-        self.assertEqual(str(team), "LaZone (???)")
-
     def test_get_team_players(self):
         """Get the players of a Team"""
         team = Team.objects.get(name="LaLooze")
@@ -615,18 +598,6 @@ class TeamTestCase(TestCase):
 
         team.name = "C" * 42
         team.full_clean()
-
-    def test_tournament_deletion_set_null(self):
-        """Verify that a Team is deleted when its Tournament is"""
-        team = Team.objects.all()[0]
-        tourney = team.tournament
-
-        Team.objects.get(id=team.id)
-
-        # Delete and verify
-        tourney.delete()
-
-        self.assertIsInstance(Team.objects.get(id=team.id).tournament, NoneType)
 
 
 # Player Class Tests
@@ -839,8 +810,10 @@ class PlayerTestCase(TestCase):
     def test_player_team_deletion(self):
         """Verify the behaviour of a Player when their team gets deleted"""
         user_obj = User.objects.get(username="testplayer")
+        event = Event.objects.get(year=2023, month=8)
+        trnm = Tournament.objects.get(event=event)
         # Create a team and player
-        team_obj = Team.objects.create(name="La Team Test", tournament=None)
+        team_obj = Team.objects.create(name="La Team Test Player", tournament=trnm)
         play_obj = Player.objects.create(team=team_obj, user=user_obj)
 
         Player.objects.get(id=play_obj.id)
@@ -853,8 +826,10 @@ class PlayerTestCase(TestCase):
     def test_user_deletion(self):
         """Verify that a Player registration is deleted along with its user"""
         user_obj = User.objects.get(username="testplayer")
+        event = Event.objects.get(year=2023, month=8)
+        trnm = Tournament.objects.get(event=event)
         # Create a Player registration
-        team_obj = Team.objects.create(name="La Team Test", tournament=None)
+        team_obj = Team.objects.create(name="La Team Test User", tournament=trnm)
         play_obj = Player.objects.create(team=team_obj, user=user_obj)
 
         # Test
@@ -1232,8 +1207,13 @@ class ManagerTestCase(TestCase):
     def test_manager_team_deletion(self):
         """Verify the behaviour of a Manager when their team gets deleted"""
         user_obj = User.objects.get(username="testplayer")
+        event = Event.objects.create(
+            name="InsaLan Test", year=2023, month=8, description=""
+        )
+        game = Game.objects.create(name="Test Game")
+        trnm = Tournament.objects.create(game=game, event=event)
         # Create a team and player
-        team_obj = Team.objects.create(name="La Team Test", tournament=None)
+        team_obj = Team.objects.create(name="La Team Test", tournament=trnm)
         play_obj = Manager.objects.create(team=team_obj, user=user_obj)
 
         Manager.objects.get(id=play_obj.id)
@@ -1246,8 +1226,14 @@ class ManagerTestCase(TestCase):
     def test_user_deletion(self):
         """Verify that a Manager registration is deleted along with its user"""
         user_obj = User.objects.get(username="testplayer")
-        # Create a Manager registration
-        team_obj = Team.objects.create(name="La Team Test", tournament=None)
+        event = Event.objects.create(
+            name="InsaLan Test", year=2023, month=8, description=""
+        )
+        game = Game.objects.create(name="Test Game")
+        trnm = Tournament.objects.create(
+            game=game, event=event
+        )  # Create a Manager registration
+        team_obj = Team.objects.create(name="La Team Test", tournament=trnm)
         man_obj = Manager.objects.create(team=team_obj, user=user_obj)
 
         # Test

@@ -200,9 +200,9 @@ class Team(models.Model):
 
     tournament = models.ForeignKey(
         Tournament,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
+        null=False,
+        blank=False,
+        on_delete=models.CASCADE,
         verbose_name=_("Tournoi"),
     )
     name = models.CharField(
@@ -210,6 +210,9 @@ class Team(models.Model):
         validators=[MinLengthValidator(3)],
         null=False,
         verbose_name=_("Nom d'équipe"),
+    )
+    validated = models.BooleanField(
+        default=False, blank=True, verbose_name=_("Équipe validée")
     )
 
     class Meta:
@@ -322,6 +325,14 @@ class Player(models.Model):
         null=False,
         verbose_name=_("Statut du paiement"),
     )
+    ticket = models.ForeignKey(
+        Ticket,
+        on_delete=models.SET_NULL,
+        verbose_name=_("Ticket"),
+        null=True,
+        blank=True,
+        default=None,
+    )
 
     def __str__(self) -> str:
         """Format this player registration to a str"""
@@ -383,6 +394,14 @@ class Manager(models.Model):
         default=PaymentStatus.NOT_PAID,
         choices=PaymentStatus.choices,
         null=False,
+    )
+    ticket = models.ForeignKey(
+        Ticket,
+        on_delete=models.SET_NULL,
+        verbose_name=_("Ticket"),
+        null=True,
+        blank=True,
+        default=None,
     )
 
     class Meta:

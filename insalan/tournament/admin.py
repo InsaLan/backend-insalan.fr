@@ -43,7 +43,7 @@ admin.site.register(Tournament, TournamentAdmin)
 class TeamAdmin(admin.ModelAdmin):
     """Admin handler for Team"""
 
-    list_display = ("id", "name", "tournament")
+    list_display = ("id", "name", "tournament", "validated")
     search_fields = ["name", "tournament"]
 
 
@@ -53,7 +53,7 @@ admin.site.register(Team, TeamAdmin)
 class PlayerAdmin(admin.ModelAdmin):
     """Admin handler for Player Registrations"""
 
-    list_display = ("id", "user", "team", "payment_status")
+    list_display = ("id", "user", "team", "payment_status", "ticket")
     search_fields = ["user", "team", "payment_status"]
 
 
@@ -63,7 +63,7 @@ admin.site.register(Player, PlayerAdmin)
 class ManagerAdmin(admin.ModelAdmin):
     """Admin handler for Manager Registrations"""
 
-    list_display = ("id", "user", "team", "payment_status")
+    list_display = ("id", "user", "team", "payment_status", "ticket")
     search_fields = ["user", "team", "payment_status"]
 
 
