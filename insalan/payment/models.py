@@ -1,12 +1,17 @@
-from django.db import models
-from django.utils.translation import gettext_lazy as _
-from insalan.user.models import User
-from datetime import datetime
-import uuid
-from django.utils import timezone
 import logging
 import itertools
+
+import uuid
+
 from decimal import Decimal
+from datetime import datetime
+
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
+
+from insalan.tournament.models import Tournament
+from insalan.user.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +20,7 @@ class TransactionStatus(models.TextChoices):
     """Information about the current transaction status"""
 
     FAILED = "FAILED", _("échouée")
-    SUCCEDED = "SUCCEEDED", _("Réussie")
+    SUCCEEDED = "SUCCEEDED", _("Réussie")
     PENDING = "PENDING", _("En attente")
 
 
