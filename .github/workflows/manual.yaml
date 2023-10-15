@@ -18,7 +18,7 @@ jobs:
         shell: bash
         run: |
           echo "sha_short=$(git rev-parse --short "$GITHUB_SHA")" >> "$GITHUB_ENV"
-          echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> "$GITHUB_ENV"
+          echo "branch=$(echo $GITHUB_REF | sed 's/refs\/\(tags\|heads\)\///;s/\//_/g')" >> "$GITHUB_ENV"
 
       # Install mdbook
       - name: Install `mdbook`
