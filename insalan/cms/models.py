@@ -2,8 +2,7 @@ from djongo import models
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 import re
-import logging
-logger = logging.getLogger("cms")
+
 def constant_definition_validator(content: str):
     """
     validator to ensure that any used constant in content is defined
