@@ -1,12 +1,30 @@
 from djongo import models
 from django.utils.translation import gettext_lazy as _
-# Create your models here.
+from django.core.exceptions import ValidationError
+import re
+import logging
+logger = logging.getLogger("cms")
+def constant_definition_validator(content: str):
+    """
+    validator to ensure that any used constant in content is defined
+    """
+    regex = re.compile('\$\{(?P<name>[^\{\}]*)\}')
+    constant_list = set(re.findall(regex, content)) #get the constant names in the content
+    p_constants =  set(constant.name for constant in Constant.objects.all()) #retrieve every constant names
+    
+    excess_constants = constant_list - p_constants.intersection(constant_list) # Get the constants in the content but not defined 
+
+    if len(excess_constants) > 0:
+        raise ValidationError(
+                _(f"des constantes non définies sont utilisées: {', '.join(sorted(excess_constants))}"))
+
 class Content(models.Model):
     """
     markdown content to place on the website pages
     """
     name = models.CharField(max_length=100, verbose_name=_('Nom du contenu'))
-    content = models.TextField(verbose_name=_('Contenu'))
+    content = models.TextField(verbose_name=_('Contenu'), 
+                               validators=[constant_definition_validator])
 
     class Meta:
         verbose_name = _("Contenu")
