@@ -6,7 +6,7 @@ class ContentSerializer(serializers.ModelSerializer):
     """ Serializer for a content in the cms """
     class Meta:
         model = Content
-        fields = ["section", "content"]
+        fields = ["name", "content"]
 
 class ConstantSerializer(serializers.ModelSerializer):
     class Meta:
