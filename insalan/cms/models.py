@@ -15,7 +15,7 @@ def constant_definition_validator(content: str):
 
     if len(excess_constants) > 0:
         raise ValidationError(
-                _(f"des constantes non définies sont utilisées: {', '.join(sorted(excess_constants))}"))
+                _(f"Des constantes non définies sont utilisées: {', '.join(sorted(excess_constants))}"))
 
 class Content(models.Model):
     """

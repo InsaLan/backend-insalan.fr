@@ -22,4 +22,4 @@ class ContentTestCase(TestCase):
 
     def test_display_undefined_constant_list(self):
         Content.objects.create(name="content", content="je test ${inconnue} mais aussi une variable ${random}")
-        self.assertRaisesMessage(ValidationError, _("des constantes non définies sont utilisées: inconnue, random"))
+        self.assertRaisesMessage(ValidationError, _("Des constantes non définies sont utilisées: inconnue, random"))

@@ -13,7 +13,7 @@ class ContentFetch(generics.ListAPIView):
 
     serializer_class = serializers.ContentSerializer
     def get_queryset(self):
-        return Content.objects.filter(name=self.kwargs["section"])
+        return Content.objects.filter(name=self.kwargs["name"])
 
 class ConstantFetch(generics.ListAPIView):
     pagination_class = None
