@@ -159,24 +159,24 @@ class Tournament(models.Model):
     # These prices are used at the tournament creation to create associated
     # products
     player_price_online = models.DecimalField(
-        null=False, max_digits=5, decimal_places=2, verbose_name=_("prix joueur\
-                                                                   en ligne")
+        null=False, default=0.0, max_digits=5, decimal_places=2, 
+        verbose_name=_("prix joueur en ligne")
     ) # when paying on the website
 
     player_price_onsite = models.DecimalField(
-        null=False, max_digits=5, decimal_places=2, verbose_name=_("prix joueur\
-                                                                   sur place")
+        null=False, default=0.0, max_digits=5, decimal_places=2, 
+        verbose_name=_("prix joueur sur place")
     ) # when paying on site
 
     # Tournament manager slot prices 
     manager_price_online = models.DecimalField(
-        null=False, max_digits=5, decimal_places=2, verbose_name=_("prix manager\
-                                                                   en ligne")
+        null=False, default=0.0, max_digits=5, decimal_places=2, 
+        verbose_name=_("prix manager en ligne")
     ) # when paying on the website
 
     manager_price_onsite = models.DecimalField(
-        null=False, max_digits=5, decimal_places=2, verbose_name=_("prix manager\
-                                                                   sur place")
+        null=False, default=0.0, max_digits=5, decimal_places=2, 
+        verbose_name=_("prix manager sur place")
     ) # when paying on site
 
     class Meta:
@@ -185,7 +185,7 @@ class Tournament(models.Model):
         verbose_name = _("Tournoi")
         verbose_name_plural = _("Tournois")
     
-    def save(self):
+    def save(self, *args, **kwargs):
         """
         Override default save of Tournament.
         When a Tournament object is created, it creates 2 products, its associated

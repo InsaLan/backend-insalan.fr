@@ -445,6 +445,22 @@ class TournamentTestCase(TestCase):
         tourney.rules = "C" * 50001
         tourney.full_clean()
 
+    def test_product_creation(self):
+
+        event_one = Event.objects.create(
+            name="Insalan Test One", year=2023, month=2, description=""
+        )
+
+        game = Game.objects.create(name="Fortnite")
+
+        trnm_one = Tournament.objects.create(event=event_one, game=game, 
+                                             player_price_online=23.3,
+                                             manager_price_online=3)
+        self.assertEqual(trnm_one.player_price_online,23.3)
+        
+        self.assertEqual(trnm_one.manager_price_online,3)
+
+
 
 class TeamTestCase(TestCase):
     """
