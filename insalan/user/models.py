@@ -1,7 +1,6 @@
 """
 Module for the definition of models tied to users
 """
-
 from os import getenv
 from datetime import datetime
 

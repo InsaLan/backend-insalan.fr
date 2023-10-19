@@ -115,7 +115,6 @@ class UserEndToEndTestCase(TestCase):
         def send_invalid_data(data):
             request = self.client.post("/v1/user/register/", data, format="json")
             self.assertEqual(request.status_code, 400)
-
         send_invalid_data({})
         send_invalid_data({"username": "newuser"})
         send_invalid_data({"username": "newuser", "password": "1234"})
@@ -174,6 +173,29 @@ class UserEndToEndTestCase(TestCase):
                 ("email", "mario@mushroom.kingdom"),
             ],
         )
+
+    def test_register_bot_account(self):
+            """
+            Test registering valid users
+            """
+
+            def send_bot_data(data):
+                """
+                Helper function that will request a register and check its output
+                """
+                request = self.client.post("/v1/user/register/", data, format="json")
+
+                self.assertEqual(request.status_code, 400)
+                self.assertRaises(serializers.ValidationError)
+
+            send_bot_data(
+                {
+                    "username": "newplayer",
+                    "password": "1111qwer!",
+                    "password_validation": "1111qwer!",
+                    "email": "email@example.com",
+                    "name": "je suis un bot"
+                })
 
     def test_register_read_only_fields(self):
         """
