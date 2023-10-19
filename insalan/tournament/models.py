@@ -6,8 +6,6 @@ Module that contains the declaration of structures tied to tournaments
 # "Too few public methods"
 # pylint: disable=R0903
 
-import os.path
-
 from typing import List, Optional
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -21,7 +19,6 @@ from django.utils.translation import gettext_lazy as _
 
 from insalan.tickets.models import Ticket
 from insalan.user.models import User
-
 
 class Event(models.Model):
     """
@@ -140,6 +137,8 @@ class Tournament(models.Model):
         validators=[MinLengthValidator(3)],
         max_length=40,
     )
+    is_announced = models.BooleanField(verbose_name=_("Annoncé"),
+                                        default=False)
     rules = models.TextField(
         verbose_name=_("Règlement du tournoi"),
         max_length=50000,
@@ -156,13 +155,62 @@ class Tournament(models.Model):
             FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg"])
         ],
     )
+    # Tournament player slot prices 
+    # These prices are used at the tournament creation to create associated
+    # products
+    player_price_online = models.DecimalField(
+        null=False, max_digits=5, decimal_places=2, verbose_name=_("prix joueur\
+                                                                   en ligne")
+    ) # when paying on the website
+
+    player_price_onsite = models.DecimalField(
+        null=False, max_digits=5, decimal_places=2, verbose_name=_("prix joueur\
+                                                                   sur place")
+    ) # when paying on site
+
+    # Tournament manager slot prices 
+    manager_price_online = models.DecimalField(
+        null=False, max_digits=5, decimal_places=2, verbose_name=_("prix manager\
+                                                                   en ligne")
+    ) # when paying on the website
+
+    manager_price_onsite = models.DecimalField(
+        null=False, max_digits=5, decimal_places=2, verbose_name=_("prix manager\
+                                                                   sur place")
+    ) # when paying on site
 
     class Meta:
         """Meta options"""
 
         verbose_name = _("Tournoi")
         verbose_name_plural = _("Tournois")
+    
+    def save(self):
+        """
+        Override default save of Tournament.
+        When a Tournament object is created, it creates 2 products, its associated
+        products to allow players and managers to pay the entry fee
+        """
+        
+        from insalan.payment.models import Product, ProductCategory
+        super().save() # Get the self accessible to the products
+        Product.objects.create(
+                price=self.player_price_online,
+                name=_(f"Place {self.name} Joueur en ligne"),
+                desc=_(f"Inscription au tournoi {self.name} joueur"),
+                category = ProductCategory.REGISTRATION_PLAYER,
+                associated_tournament = self
+            )
 
+        Product.objects.create(
+                price=self.manager_price_online,
+                name=_(f"Place {self.name} manager en ligne"),
+                desc=_(f"Inscription au tournoi {self.name} manager"),
+                category = ProductCategory.REGISTRATION_MANAGER,
+                associated_tournament = self
+            )
+
+     
     def __str__(self) -> str:
         """Format this Tournament to a str"""
         return f"{self.name} (@ {self.event})"
