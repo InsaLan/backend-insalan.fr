@@ -4,7 +4,7 @@ from .models import Ticket
 
 
 class TicketAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "status", "token")
+    list_display = ("id", "user", "status", "tournament", "token")
     search_fields = ["user"]
 
 
