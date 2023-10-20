@@ -1,8 +1,12 @@
 on:
+  # Creating a release requires a tag
   push:
+    tags:
+      "manuel*"
     paths:
       - 'docs/manuel/**'
       - '.github/workflows/manual.yaml'
+
 jobs:
   build-manual:
     runs-on: ubuntu-22.04
@@ -26,12 +30,14 @@ jobs:
 
       # Build the book
       - name: Build the book
-        run: mdbook build
+        run: |
+          mdbook build
+          tar zcvf manuel.tar.gz book
         working-directory: ${{ env.book-dir }}
 
-      # Package artifact
-      - name: Package artifact
-        uses: actions/upload-artifact@v3
+      # Create a release
+      - name: Create a release
+        uses: softprops/action-gh-release@v1
         with:
-          name: manuel-backend-${{ env.branch }}-${{ env.sha_short }}
-          path: ${{ env.book-dir }}/book
+          files: ${{ env.book-dir }}/manuel.tar.gz
+
