@@ -294,7 +294,7 @@ class Tournament(models.Model):
         self.manager_online_product.save()
 
         if need_save:
-            super().save(*args, **kwargs)
+            super().save()
 
     def __str__(self) -> str:
         """Format this Tournament to a str"""
