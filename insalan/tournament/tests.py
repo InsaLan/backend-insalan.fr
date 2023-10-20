@@ -1,5 +1,6 @@
 """Tournament Module Tests"""
 
+from decimal import Decimal
 from io import BytesIO
 from types import NoneType
 
@@ -346,6 +347,44 @@ class TournamentTestCase(TestCase):
         self.assertTrue(team_one in teams)
         self.assertTrue(team_two in teams)
         self.assertFalse(team_three in teams)
+
+    def test_default_cashprizes(self):
+        """Test that the default for cashprizes is an empty list"""
+        tourney = Tournament.objects.all()[0]
+        self.assertEqual([], tourney.cashprizes)
+
+    def test_get_set_cashprizes(self):
+        """Verify that getting and setting cashprizes is possible"""
+        tourney = Tournament.objects.all()[0]
+
+        # One price
+        tourney.cashprizes = [Decimal(28)]
+        tourney.save()
+        self.assertEqual(1, len(tourney.cashprizes))
+        self.assertEqual(Decimal(28), tourney.cashprizes[0])
+
+        # Many prices
+        tourney.cashprizes = [Decimal(18), Decimal(22), Decimal(89)]
+        tourney.save()
+        self.assertEqual(3, len(tourney.cashprizes))
+        self.assertEqual(Decimal(18), tourney.cashprizes[0])
+        self.assertEqual(Decimal(22), tourney.cashprizes[1])
+        self.assertEqual(Decimal(89), tourney.cashprizes[2])
+
+        # Back to zero
+        tourney.cashprizes = []
+        tourney.save()
+        self.assertEqual(0, len(tourney.cashprizes))
+
+    def test_cashprizes_cannot_be_strictly_negative(self):
+        """Test that a cashprize cannot be strictly negative"""
+        tourney = Tournament.objects.all()[0]
+
+        tourney.cashprizes = [Decimal(278), Decimal(-1), Decimal(0)]
+        self.assertRaises(ValidationError, tourney.full_clean)
+
+        tourney.cashprizes = [Decimal(278), Decimal(0), Decimal(0)]
+        tourney.full_clean()
 
     def test_name_too_short(self):
         """Verify that a tournament name cannot be too short"""

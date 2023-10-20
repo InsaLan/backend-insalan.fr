@@ -16,9 +16,11 @@ from django.core.validators import (
     MinLengthValidator,
 )
 from django.utils.translation import gettext_lazy as _
+from django.contrib.postgres.fields import ArrayField
 
 from insalan.tickets.models import Ticket
 from insalan.user.models import User
+
 
 class Event(models.Model):
     """
@@ -137,8 +139,7 @@ class Tournament(models.Model):
         validators=[MinLengthValidator(3)],
         max_length=40,
     )
-    is_announced = models.BooleanField(verbose_name=_("Annoncé"),
-                                        default=False)
+    is_announced = models.BooleanField(verbose_name=_("Annoncé"), default=False)
     rules = models.TextField(
         verbose_name=_("Règlement du tournoi"),
         max_length=50000,
@@ -155,62 +156,86 @@ class Tournament(models.Model):
             FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg"])
         ],
     )
-    # Tournament player slot prices 
+    # Tournament player slot prices
     # These prices are used at the tournament creation to create associated
     # products
     player_price_online = models.DecimalField(
-        null=False, default=0.0, max_digits=5, decimal_places=2, 
-        verbose_name=_("prix joueur en ligne")
-    ) # when paying on the website
+        null=False,
+        default=0.0,
+        max_digits=5,
+        decimal_places=2,
+        verbose_name=_("prix joueur en ligne"),
+    )  # when paying on the website
 
     player_price_onsite = models.DecimalField(
-        null=False, default=0.0, max_digits=5, decimal_places=2, 
-        verbose_name=_("prix joueur sur place")
-    ) # when paying on site
+        null=False,
+        default=0.0,
+        max_digits=5,
+        decimal_places=2,
+        verbose_name=_("prix joueur sur place"),
+    )  # when paying on site
 
-    # Tournament manager slot prices 
+    # Tournament manager slot prices
     manager_price_online = models.DecimalField(
-        null=False, default=0.0, max_digits=5, decimal_places=2, 
-        verbose_name=_("prix manager en ligne")
-    ) # when paying on the website
+        null=False,
+        default=0.0,
+        max_digits=5,
+        decimal_places=2,
+        verbose_name=_("prix manager en ligne"),
+    )  # when paying on the website
 
     manager_price_onsite = models.DecimalField(
-        null=False, default=0.0, max_digits=5, decimal_places=2, 
-        verbose_name=_("prix manager sur place")
-    ) # when paying on site
+        null=False,
+        default=0.0,
+        max_digits=5,
+        decimal_places=2,
+        verbose_name=_("prix manager sur place"),
+    )  # when paying on site
+    cashprizes = ArrayField(
+        models.DecimalField(
+            null=False,
+            default=0.0,
+            decimal_places=2,
+            max_digits=6,
+            validators=[MinValueValidator(0)],
+        ),
+        default=list,
+        blank=True,
+        verbose_name=_("Cashprizes"),
+    )
 
     class Meta:
         """Meta options"""
 
         verbose_name = _("Tournoi")
         verbose_name_plural = _("Tournois")
-    
+
     def save(self, *args, **kwargs):
         """
         Override default save of Tournament.
         When a Tournament object is created, it creates 2 products, its associated
         products to allow players and managers to pay the entry fee
         """
-        
+
         from insalan.payment.models import Product, ProductCategory
-        super().save() # Get the self accessible to the products
+
+        super().save()  # Get the self accessible to the products
         Product.objects.create(
-                price=self.player_price_online,
-                name=_(f"Place {self.name} Joueur en ligne"),
-                desc=_(f"Inscription au tournoi {self.name} joueur"),
-                category = ProductCategory.REGISTRATION_PLAYER,
-                associated_tournament = self
-            )
+            price=self.player_price_online,
+            name=_(f"Place {self.name} Joueur en ligne"),
+            desc=_(f"Inscription au tournoi {self.name} joueur"),
+            category=ProductCategory.REGISTRATION_PLAYER,
+            associated_tournament=self,
+        )
 
         Product.objects.create(
-                price=self.manager_price_online,
-                name=_(f"Place {self.name} manager en ligne"),
-                desc=_(f"Inscription au tournoi {self.name} manager"),
-                category = ProductCategory.REGISTRATION_MANAGER,
-                associated_tournament = self
-            )
+            price=self.manager_price_online,
+            name=_(f"Place {self.name} manager en ligne"),
+            desc=_(f"Inscription au tournoi {self.name} manager"),
+            category=ProductCategory.REGISTRATION_MANAGER,
+            associated_tournament=self,
+        )
 
-     
     def __str__(self) -> str:
         """Format this Tournament to a str"""
         return f"{self.name} (@ {self.event})"
