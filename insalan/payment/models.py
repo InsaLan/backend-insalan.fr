@@ -9,6 +9,7 @@ from datetime import datetime
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from rest_framework.serializers import ValidationError
 
 from insalan.tournament.models import Tournament
 from insalan.user.models import User
@@ -55,6 +56,19 @@ class Product(models.Model):
         null=True,
         blank=True,
     )
+    available_from = models.DateTimeField(
+        blank=True,
+        null=False,
+        default=timezone.now,
+        verbose_name=_("Disponible à partir de"),
+    )
+    available_until = models.DateTimeField(
+        null=False, verbose_name=_("Disponible jusqu'à")
+    )
+
+    def can_be_bought_now(self) -> bool:
+        """Returns whether or not the product can be bought now"""
+        return self.available_from <= timezone.now() <= self.available_until
 
 
 class Transaction(models.Model):
@@ -113,6 +127,11 @@ class Transaction(models.Model):
         transaction = Transaction.objects.create(**fields)
         data["products"].sort(key=lambda x: int(x.id))
         for pid, grouper in itertools.groupby(data["products"]):
+            # Validate that the products can be bought
+            if not pid.can_be_bought_now():
+                raise ValidationError({"error": f"Product {pid.id} cannot be bought right now"})
+            if pid.associated_tournament and not pid.associated_tournament.is_announced:
+                raise ValidationError({"error": f"Tournament {pid.associated_tournament.id} not announced"})
             count = len(list(grouper))
             proc = ProductCount.objects.create(
                 transaction=transaction,
@@ -126,6 +145,7 @@ class Transaction(models.Model):
     def product_callback(self, key):
         """Call a product callback on the list of product"""
         from insalan.payment.hooks import PaymentCallbackSystem
+
         for proccount in ProductCount.objects.filter(transaction=self):
             # Get callback class
             cls = PaymentCallbackSystem.retrieve_handler(proccount.product.category)
@@ -195,6 +215,10 @@ class ProductCount(models.Model):
         verbose_name=_("Transaction"),
     )
     product = models.ForeignKey(
-        Product, on_delete=models.SET_NULL, editable=False, verbose_name=_("Produit"), null=True
+        Product,
+        on_delete=models.SET_NULL,
+        editable=False,
+        verbose_name=_("Produit"),
+        null=True,
     )
     count = models.IntegerField(default=1, editable=True, verbose_name=_("Quantité"))

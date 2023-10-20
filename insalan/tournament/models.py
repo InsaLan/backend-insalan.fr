@@ -6,6 +6,7 @@ Module that contains the declaration of structures tied to tournaments
 # "Too few public methods"
 # pylint: disable=R0903
 
+from datetime import datetime, timedelta
 from typing import List, Optional
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -15,6 +16,7 @@ from django.core.validators import (
     MinValueValidator,
     MinLengthValidator,
 )
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
 
@@ -125,6 +127,11 @@ class Game(models.Model):
         return self.short_name
 
 
+def in_thirty_days():
+    """Return now + 30 days"""
+    return timezone.now() + timedelta(days=30)
+
+
 class Tournament(models.Model):
     """
     A Tournament happening during an event that Teams of players register for.
@@ -146,6 +153,18 @@ class Tournament(models.Model):
         null=False,
         blank=True,
         default="",
+    )
+    registration_open = models.DateTimeField(
+        verbose_name=_("Ouverture des inscriptions"),
+        default=timezone.now,
+        blank=True,
+        null=False,
+    )
+    registration_close = models.DateTimeField(
+        verbose_name=_("Fermeture des inscriptions"),
+        blank=True,
+        default=in_thirty_days,
+        null=False,
     )
     logo: models.FileField = models.FileField(
         verbose_name=_("Logo"),
@@ -203,6 +222,22 @@ class Tournament(models.Model):
         blank=True,
         verbose_name=_("Cashprizes"),
     )
+    manager_online_product = models.ForeignKey(
+        "payment.Product",
+        related_name="manager_product_reference",
+        null=True,
+        blank=True,
+        verbose_name=_("Produit manager"),
+        on_delete=models.SET_NULL,
+    )
+    player_online_product = models.ForeignKey(
+        "payment.Product",
+        related_name="player_product_reference",
+        null=True,
+        blank=True,
+        verbose_name=_("Produit joueur"),
+        on_delete=models.SET_NULL,
+    )
 
     class Meta:
         """Meta options"""
@@ -219,22 +254,47 @@ class Tournament(models.Model):
 
         from insalan.payment.models import Product, ProductCategory
 
-        super().save()  # Get the self accessible to the products
-        Product.objects.create(
-            price=self.player_price_online,
-            name=_(f"Place {self.name} Joueur en ligne"),
-            desc=_(f"Inscription au tournoi {self.name} joueur"),
-            category=ProductCategory.REGISTRATION_PLAYER,
-            associated_tournament=self,
-        )
+        super().save(*args, **kwargs)  # Get the self accessible to the products
 
-        Product.objects.create(
-            price=self.manager_price_online,
-            name=_(f"Place {self.name} manager en ligne"),
-            desc=_(f"Inscription au tournoi {self.name} manager"),
-            category=ProductCategory.REGISTRATION_MANAGER,
-            associated_tournament=self,
-        )
+        need_save = False
+        update_fields = kwargs.get("update_fields", [])
+
+        if self.player_online_product is None:
+            prod = Product.objects.create(
+                price=self.player_price_online,
+                name=_(f"Place {self.name} Joueur en ligne"),
+                desc=_(f"Inscription au tournoi {self.name} joueur"),
+                category=ProductCategory.REGISTRATION_PLAYER,
+                associated_tournament=self,
+                available_from=self.registration_open,
+                available_until=self.registration_close,
+            )
+            self.player_online_product = prod
+            need_save = True
+
+        self.player_online_product.available_from = self.registration_open
+        self.player_online_product.available_until = self.registration_close
+        self.player_online_product.save()
+
+        if self.manager_online_product is None:
+            prod = Product.objects.create(
+                price=self.manager_price_online,
+                name=_(f"Place {self.name} manager en ligne"),
+                desc=_(f"Inscription au tournoi {self.name} manager"),
+                category=ProductCategory.REGISTRATION_MANAGER,
+                associated_tournament=self,
+                available_from=self.registration_open,
+                available_until=self.registration_close,
+            )
+            self.manager_online_product = prod
+            need_save = True
+
+        self.manager_online_product.available_from = self.registration_open
+        self.manager_online_product.available_until = self.registration_close
+        self.manager_online_product.save()
+
+        if need_save:
+            super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         """Format this Tournament to a str"""
