@@ -33,7 +33,7 @@ admin.site.register(Game, GameAdmin)
 class TournamentAdmin(admin.ModelAdmin):
     """Admin handler for Tournaments"""
 
-    list_display = ("id", "name", "event", "game")
+    list_display = ("id", "name", "event", "game", "is_announced")
     search_fields = ["name", "event", "game"]
 
 
