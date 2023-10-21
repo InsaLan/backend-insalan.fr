@@ -14,11 +14,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.views.generic.base import RedirectView
 from django.urls import include, path
-
 from rest_framework import routers
 
-
+from os import getenv
 from insalan.langate import views as langate_views
 
 router = routers.DefaultRouter()
@@ -33,6 +33,7 @@ urlpatterns = [
     path("v1/langate/authenticate", langate_views.LangateUserView.as_view()),
     path("v1/content/", include("insalan.cms.urls")),
     #path("v1/api-auth/", include("rest_framework.urls", namespace="rest_framework")),
+    path("v1/admin/login/", RedirectView.as_view(url=f"{getenv('HTTP_PROTOCOL')}://{getenv('WEBSITE_HOST')}/register")),
     path("v1/admin/", admin.site.urls),
 ]
 
