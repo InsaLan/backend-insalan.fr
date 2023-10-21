@@ -34,7 +34,7 @@ urlpatterns = [
     path("v1/admin/", admin.site.urls)
 
 ]
-if not int(getenv("DEV")):
+if not int(getenv("DEV", "1")):
     urlpatterns.insert(1,
         path("v1/admin/login/", RedirectView.as_view(url=f"{getenv('HTTP_PROTOCOL')}://{getenv('WEBSITE_HOST')}/register")))
 
