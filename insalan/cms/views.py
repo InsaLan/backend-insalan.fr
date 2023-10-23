@@ -1,11 +1,13 @@
 from rest_framework import generics
 from .models import Constant, Content
 import insalan.cms.serializers as serializers
-# Create your views here.
-class ConstantList(generics.ListAPIView):
+
+
+class ContentList(generics.ListAPIView):
     pagination_class = None
-    queryset = Constant.objects.all()
-    serializer_class = serializers.ConstantSerializer
+    queryset = Content.objects.all()
+    serializer_class = serializers.ContentSerializer
+
 
 class ContentFetch(generics.ListAPIView):
     """ Get a content associated to a section """
@@ -14,6 +16,13 @@ class ContentFetch(generics.ListAPIView):
     serializer_class = serializers.ContentSerializer
     def get_queryset(self):
         return Content.objects.filter(name=self.kwargs["name"])
+
+
+class ConstantList(generics.ListAPIView):
+    pagination_class = None
+    queryset = Constant.objects.all()
+    serializer_class = serializers.ConstantSerializer
+
 
 class ConstantFetch(generics.ListAPIView):
     pagination_class = None
