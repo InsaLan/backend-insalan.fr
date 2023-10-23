@@ -8,6 +8,7 @@ Module that contains the declaration of structures tied to tournaments
 
 from datetime import datetime, timedelta
 from typing import List, Optional
+from math import ceil
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import (
@@ -400,6 +401,17 @@ class Team(models.Model):
         Retrieve the user identifiers of all managers
         """
         return self.get_managers().values_list("user_id", flat=True)
+
+    def refresh_validation(self):
+        """Refreshes the validation state of a tournament"""
+        # Condition 1: ceil((n+1)/2) players have paid/will pay
+        players = self.get_players()
+
+        threshold = ceil((len(players)+1)/2)
+
+        paid_seats = len(players.exclude(payment_status=PaymentStatus.NOT_PAID))
+
+        self.is_valid = paid_seats >= threshold
 
 
 class PaymentStatus(models.TextChoices):
