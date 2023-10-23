@@ -53,27 +53,22 @@ class PartnerListViewsTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             response.json(),
-            {
-                "count": 2,
-                "next": None,
-                "previous": None,
-                "results": [
-                    {
-                        "id": prtn_one.id,
-                        "name": "Partner 1",
-                        "url": "https://partner1.com",
-                        "logo": None,
-                        "partner_type": "PA",
-                    },
-                    {
-                        "id": prtn_two.id,
-                        "name": "Partner 2",
-                        "url": "https://partner2.com",
-                        "logo": None,
-                        "partner_type": "SP",
-                    },
-                ],
-            },
+            [
+                {
+                    "id": prtn_one.id,
+                    "name": "Partner 1",
+                    "url": "https://partner1.com",
+                    "logo": None,
+                    "partner_type": "PA",
+                },
+                {
+                    "id": prtn_two.id,
+                    "name": "Partner 2",
+                    "url": "https://partner2.com",
+                    "logo": None,
+                    "partner_type": "SP",
+                },
+            ],
         )
 
     def test_post(self) -> None:
