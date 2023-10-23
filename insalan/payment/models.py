@@ -1,10 +1,12 @@
 import logging
 import itertools
 
+import requests
 import uuid
 
 from decimal import Decimal
 from datetime import datetime
+from os import getenv
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -13,6 +15,8 @@ from rest_framework.serializers import ValidationError
 
 from insalan.tournament.models import Tournament
 from insalan.user.models import User
+
+from .tokens import Token
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +27,7 @@ class TransactionStatus(models.TextChoices):
     FAILED = "FAILED", _("échouée")
     SUCCEEDED = "SUCCEEDED", _("Réussie")
     PENDING = "PENDING", _("En attente")
+    REFUNDED = "REFUNDED", _("Remboursé")
 
 
 class ProductCategory(models.TextChoices):
@@ -172,6 +177,45 @@ class Transaction(models.Model):
     def run_success_hooks(self):
         """Run the success hooks on all products"""
         self.product_callback(lambda cls: cls.payment_success)
+
+    def run_refunded_hooks(self):
+        """Run the refund hooks on all products"""
+        self.product_callback(lambda cls: cls.payment_refunded)
+
+    def refund(self, requester) -> tuple[bool, str]:
+        """Refund this transaction"""
+        if self.payment_status == TransactionStatus.REFUNDED:
+            return (False, "")
+
+        helloasso_url = getenv("HELLOASS_ENDPOINT")
+        token = Token()
+        body_refund = {"comment": f"Refunded by {requester}"}
+        headers_refund = {
+            "authorization": "Bearer " + token.get_token(),
+            "Content-Type": "application/json",
+        }
+
+        refund_init = requests.post(
+            f"{helloasso_url}/v5/payment/{self.intent_id}/refund",
+            data=body_refund,
+            headers=headers_refund,
+            timeout=1,
+        )
+
+        if refund_init.status_code != 200:
+            return (
+                False,
+                _("Erreur de remboursement: code %s obtenu via l'API")
+                % refund_init.status_code,
+            )
+
+        self.payment_status = TransactionStatus.REFUNDED
+
+        self.run_refunded_hooks()
+        self.touch()
+        self.save()
+
+        return (False, "")
 
     def synchronize_amount(self):
         """Recompute the amount from the product list"""

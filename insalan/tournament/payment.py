@@ -1,5 +1,7 @@
 """Handling of the payment of a registration (player and manager)"""
 
+import logging
+
 from insalan.payment.models import ProductCategory
 from insalan.payment.hooks import PaymentHooks, PaymentCallbackSystem
 
@@ -7,6 +9,9 @@ from django.utils.translation import gettext_lazy as _
 
 from insalan.tickets.models import Ticket
 from insalan.tournament.models import Player, Manager, PaymentStatus
+
+
+logger = logging.getLogger("insalan.tournament.hooks")
 
 
 class PaymentHandler(PaymentHooks):
@@ -95,13 +100,46 @@ class PaymentHandler(PaymentHooks):
         # Whatever happens, just delete the registration
         reg.delete()
 
+    @staticmethod
+    def payment_refunded(transaction, product, _count):
+        """Handle a refund of a registration"""
+
+        # Find a registration that was ongoing for the user
+        assoc_tourney = product.associated_tournament
+        if assoc_tourney is None:
+            raise RuntimeError(_("Tournoi associé à un produit acheté nul!"))
+
+        reg_list = Player.objects.filter(
+            user=transaction.payer, team__tournament=product.associated_tournament
+        )
+        if len(reg_list) == 0:
+            reg_list = Manager.objects.filter(
+                user=transaction.payer, team__tournament=product.associated_tournament
+            )
+        if len(reg_list) == 0:
+            logger.warn(
+                _("Aucune inscription à détruire trouvée pour le refund de %s")
+                % transaction.id
+            )
+            return
+
+        reg = reg_list[0]
+        team = reg.team
+        ticket = reg.ticket
+        reg.delete()
+
+        team.refresh_validation()
+
+        if ticket is not None:
+            ticket.status = Ticket.Status.CANCELLED
+            ticket.save()
+
+
 def payment_handler_register():
     """Register the callbacks"""
     PaymentCallbackSystem.register_handler(
-        ProductCategory.REGISTRATION_PLAYER, PaymentHandler,
-        overwrite = True
+        ProductCategory.REGISTRATION_PLAYER, PaymentHandler, overwrite=True
     )
     PaymentCallbackSystem.register_handler(
-        ProductCategory.REGISTRATION_MANAGER, PaymentHandler,
-        overwrite = True
+        ProductCategory.REGISTRATION_MANAGER, PaymentHandler, overwrite=True
     )

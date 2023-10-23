@@ -143,6 +143,7 @@ class PayView(generics.CreateAPIView):
                 f"{HELLOASSO_URL}/v5/organizations/insalan-test/checkout-intents",
                 data=json.dumps(intent_body),
                 headers=headers,
+                timeout=1
             )  # initiate a helloasso intent
             logger.debug(checkout_init.text)
             checkout_json = checkout_init.json()

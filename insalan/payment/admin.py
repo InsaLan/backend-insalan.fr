@@ -3,7 +3,9 @@
 # pylint: disable=R0903
 
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
+
+from django.utils.translation import gettext_lazy as _
 
 from .models import Product, Transaction
 
@@ -16,6 +18,16 @@ class ProductAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Product, ProductAdmin)
+
+
+@admin.action(description=_("Rembourser la transaction"))
+def reimburse_transactions(modeladmin, request, queryset):
+    """Reimburse all selected actions"""
+    for transaction in queryset:
+        (is_err, msg) = transaction.refund(request.user.username)
+        if is_err:
+            modeladmin.message_user(request, _("Erreur: %s") % msg, messages.ERROR)
+            break
 
 
 class TransactionAdmin(admin.ModelAdmin):
@@ -43,6 +55,8 @@ class TransactionAdmin(admin.ModelAdmin):
         "last_modification_date",
         "amount",
     ]
+
+    actions = [reimburse_transactions]
 
     def has_add_permission(self, request):
         """Remove the ability to add a transaction from the backoffice """

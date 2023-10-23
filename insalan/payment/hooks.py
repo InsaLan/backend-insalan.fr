@@ -102,5 +102,15 @@ class PaymentHooks:
         and that `.payment_status` on the transaction object is set to `FAILED`.
         """
 
+    @staticmethod
+    def payment_refunded(_transaction, _product, _count):
+        """
+        Payment Refund Handler
+
+        This method handles the process of cleaning up after a refund of a
+        transaction. By this point, you can safely assume that the payment has
+        been refunded on the side of helloasso.
+        """
+
 
 # vim: set tw=80:
