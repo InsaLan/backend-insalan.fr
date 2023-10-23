@@ -10,6 +10,7 @@ class ReadOnly(permissions.BasePermission):
 
 
 class PartnerList(generics.ListCreateAPIView):
+    paginator = None
     queryset = Partner.objects.all().order_by("id")
     serializer_class = PartnerSerializer
     permission_classes = [permissions.IsAdminUser | ReadOnly]
