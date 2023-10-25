@@ -33,13 +33,13 @@ SECRET_KEY = getenv(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = int(getenv("DEV", 0)) == 1
 
+PROTOCOL = getenv("HTTP_PROTOCOL", "http")
+
 OUTSIDE_PORT = getenv("NGINX_PORT", "80")
-if OUTSIDE_PORT == "80":
+if (OUTSIDE_PORT == "80" and PROTOCOL == "http") or (OUTSIDE_PORT == "443" and PROTOCOL == "https"):
     OUTSIDE_PORT = "" # Don't specify it
 else:
     OUTSIDE_PORT = f":{OUTSIDE_PORT}"
-
-PROTOCOL = getenv("HTTP_PROTOCOL", "http")
 
 # LOGGING Setup
 LOGGING = {
