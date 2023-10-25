@@ -56,7 +56,7 @@ class TournamentSerializer(serializers.ModelSerializer):
         model = Tournament
         read_only_fields = ("id","manager_price_onsite", "manager_price_onsite", 
                             "player_price_online", "player_price_onsite")
-        fields = ["id", "event", "game", "name", "teams", "logo"]
+        fields = "__all__"
 
 
 class TeamSerializer(serializers.ModelSerializer):
