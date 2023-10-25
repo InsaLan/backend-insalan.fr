@@ -81,6 +81,11 @@ class EventDetailsSomeDeref(APIView):
         for tourney in event_serialized["tournaments"]:
             del tourney["event"]
 
+        event_serialized["tournaments"] = [
+            data if data["is_announced"] else {"id": data["id"]}
+            for data in event_serialized["tournaments"]
+        ]
+
         return Response(event_serialized, status=status.HTTP_200_OK)
 
 
@@ -144,7 +149,7 @@ class TournamentDetailsFull(APIView):
         if len(tourneys) > 1:
             return Response("", status=status.HTTP_400_BAD_REQUEST)
         tourney = tourneys[0]
-        #if the tournament hasn't been yet announced, we don't want to return details of it
+        # if the tournament hasn't been yet announced, we don't want to return details of it
         if not tourney.is_announced:
             return Response({"id": primary_key}, status=status.HTTP_200_OK)
         tourney_serialized = serializers.TournamentSerializer(

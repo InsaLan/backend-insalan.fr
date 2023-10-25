@@ -9,6 +9,7 @@ from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, TransactionTestCase
+from django.utils import timezone
 from django.urls import reverse
 
 from insalan.tournament.models import (
@@ -485,20 +486,18 @@ class TournamentTestCase(TestCase):
         tourney.full_clean()
 
     def test_product_creation(self):
-
         event_one = Event.objects.create(
             name="Insalan Test One", year=2023, month=2, description=""
         )
 
         game = Game.objects.create(name="Fortnite")
 
-        trnm_one = Tournament.objects.create(event=event_one, game=game, 
-                                             player_price_online=23.3,
-                                             manager_price_online=3)
-        self.assertEqual(trnm_one.player_price_online,23.3)
-        
-        self.assertEqual(trnm_one.manager_price_online,3)
+        trnm_one = Tournament.objects.create(
+            event=event_one, game=game, player_price_online=23.3, manager_price_online=3
+        )
+        self.assertEqual(trnm_one.player_price_online, 23.3)
 
+        self.assertEqual(trnm_one.manager_price_online, 3)
 
 
 class TeamTestCase(TestCase):
@@ -932,11 +931,14 @@ class TournamentFullDerefEndpoint(TestCase):
             description="This is a test",
             year=2021,
             month=12,
-            ongoing=False
+            ongoing=False,
         )
         tourneyobj_one = Tournament.objects.create(
-            event=evobj, name="Test Tournament", rules="have fun!", game=game_obj,
-            is_announced=True
+            event=evobj,
+            name="Test Tournament",
+            rules="have fun!",
+            game=game_obj,
+            is_announced=True,
         )
         team_one = Team.objects.create(name="Team One", tournament=tourneyobj_one)
         Player.objects.create(user=uobj_one, team=team_one)
@@ -947,37 +949,52 @@ class TournamentFullDerefEndpoint(TestCase):
             reverse("tournament/details-full", args=[tourneyobj_one.id]), format="json"
         )
         self.assertEqual(request.status_code, 200)
-        self.assertEqual(
-            request.data,
-            {
-                "id": tourneyobj_one.id,
-                "event": {
-                    "id": evobj.id,
-                    "name": "Test Event",
-                    "description": "This is a test",
-                    "year": 2021,
-                    "month": 12,
-                    "ongoing": False,
-                    "logo": None,
-                },
-                "game": {"id": game_obj.id, "name": "Test Game", "short_name": "TFG"},
-                "name": "Test Tournament",
-                "teams": [
-                    {
-                        "id": team_one.id,
-                        "name": "Team One",
-                        "players": [
-                            "test_user_one",
-                            "test_user_two",
-                        ],
-                        "managers": [
-                            "test_user_three",
-                        ],
-                    }
-                ],
+        model = {
+            "id": tourneyobj_one.id,
+            "event": {
+                "id": evobj.id,
+                "name": "Test Event",
+                "description": "This is a test",
+                "year": 2021,
+                "month": 12,
+                "ongoing": False,
                 "logo": None,
             },
-        )
+            "game": {"id": game_obj.id, "name": "Test Game", "short_name": "TFG"},
+            "name": "Test Tournament",
+            "rules": "have fun!",
+            "is_announced": True,
+            # I don't know what's happenin with timezones here
+            "registration_open": timezone.make_aware(
+                timezone.make_naive(tourneyobj_one.registration_open)
+            ).isoformat(),
+            "registration_close": timezone.make_aware(
+                timezone.make_naive(tourneyobj_one.registration_close)
+            ).isoformat(),
+            "player_price_online": "0.00",
+            "player_price_onsite": "0.00",
+            "manager_price_online": "0.00",
+            "manager_price_onsite": "0.00",
+            "cashprizes": [],
+            "player_online_product": tourneyobj_one.player_online_product.id,
+            "manager_online_product": tourneyobj_one.manager_online_product.id,
+            "teams": [
+                {
+                    "id": team_one.id,
+                    "name": "Team One",
+                    "players": [
+                        "test_user_one",
+                        "test_user_two",
+                    ],
+                    "managers": [
+                        "test_user_three",
+                    ],
+                }
+            ],
+            "logo": None,
+        }
+
+        self.assertEqual(request.data, model)
 
     def test_not_announced(self):
         """Test a simple example"""
@@ -998,11 +1015,14 @@ class TournamentFullDerefEndpoint(TestCase):
             description="This is a test",
             year=2021,
             month=12,
-            ongoing=False
+            ongoing=False,
         )
         tourneyobj_one = Tournament.objects.create(
-            event=evobj, name="Test Tournament", rules="have fun!", game=game_obj,
-            is_announced=False
+            event=evobj,
+            name="Test Tournament",
+            rules="have fun!",
+            game=game_obj,
+            is_announced=False,
         )
         team_one = Team.objects.create(name="Team One", tournament=tourneyobj_one)
         Player.objects.create(user=uobj_one, team=team_one)
@@ -1017,8 +1037,9 @@ class TournamentFullDerefEndpoint(TestCase):
             request.data,
             {
                 "id": tourneyobj_one.id,
-            }     
+            },
         )
+
 
 class EventDerefAndGroupingEndpoints(TestCase):
     """Test endpoints for dereferencing/fetching grouped events"""
@@ -1076,12 +1097,16 @@ class EventDerefAndGroupingEndpoints(TestCase):
 
         self.assertEqual(request.status_code, 404)
 
-    def test_deref(self):
+    def test_deref_not_announced(self):
         """Test a simple example of a dereference"""
         evobj = Event.objects.create(name="Test", year=2023, month=3, ongoing=True)
         gobj = Game.objects.create(name="Test Game", short_name="TG")
         tourney = Tournament.objects.create(
-            name="Test Tournament", game=gobj, event=evobj, rules="have fun!"
+            name="Test Tournament",
+            game=gobj,
+            event=evobj,
+            rules="have fun!",
+            is_announced=False,
         )
 
         request = self.client.get(
@@ -1090,27 +1115,74 @@ class EventDerefAndGroupingEndpoints(TestCase):
 
         self.assertEqual(request.status_code, 200)
 
-        self.assertEqual(
-            request.data,
-            {
-                "id": evobj.id,
-                "name": "Test",
-                "description": "",
-                "year": 2023,
-                "month": 3,
-                "ongoing": True,
-                "logo": None,
-                "tournaments": [
-                    {
-                        "id": tourney.id,
-                        "name": "Test Tournament",
-                        "game": gobj.id,
-                        "teams": [],
-                        "logo": None,
-                    }
-                ],
-            },
+        model = {
+            "id": evobj.id,
+            "name": "Test",
+            "description": "",
+            "year": 2023,
+            "month": 3,
+            "ongoing": True,
+            "tournaments": [
+                {
+                    "id": tourney.id,
+                }
+            ],
+            "logo": None,
+        }
+        self.assertEqual(request.data, model)
+
+    def test_deref(self):
+        """Test a simple example of a dereference"""
+        evobj = Event.objects.create(name="Test", year=2023, month=3, ongoing=True)
+        gobj = Game.objects.create(name="Test Game", short_name="TG")
+        tourney = Tournament.objects.create(
+            name="Test Tournament",
+            game=gobj,
+            event=evobj,
+            rules="have fun!",
+            is_announced=True,
         )
+
+        request = self.client.get(
+            f"/v1/tournament/event/{evobj.id}/tournaments", format="json"
+        )
+
+        self.assertEqual(request.status_code, 200)
+
+        model = {
+            "id": evobj.id,
+            "name": "Test",
+            "description": "",
+            "year": 2023,
+            "month": 3,
+            "ongoing": True,
+            "tournaments": [
+                {
+                    "id": tourney.id,
+                    "teams": [],
+                    "name": "Test Tournament",
+                    "is_announced": True,
+                    "rules": "have fun!",
+                    "registration_open": timezone.make_aware(
+                        timezone.make_naive(tourney.registration_open)
+                    ).isoformat(),
+                    "registration_close": timezone.make_aware(
+                        timezone.make_naive(tourney.registration_close)
+                    ).isoformat(),
+                    "logo": None,
+                    "player_price_online": "0.00",
+                    "player_price_onsite": "0.00",
+                    "manager_price_online": "0.00",
+                    "manager_price_onsite": "0.00",
+                    "cashprizes": [],
+                    "game": gobj.id,
+                    "manager_online_product": tourney.manager_online_product.id,
+                    "player_online_product": tourney.player_online_product.id,
+                }
+            ],
+            "logo": None,
+        }
+        self.assertEqual(request.data, model)
 
 
 # Manager Class Tests
