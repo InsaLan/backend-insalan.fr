@@ -58,6 +58,41 @@ class CreateProduct(generics.CreateAPIView):
     permission_classes = [permissions.IsAdminUser]
 
 
+class Notifications(APIView):
+    """
+    Notifications view
+    """
+    def post(self, request):
+        data = request.data
+        if not data.get("metadata") or not data["metadata"].get("uuid"):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        uuid = data["metadata"]["uuid"]
+        trans_obj = Transaction.objects.get(id=uuid)
+        if trans_obj is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        ntype = data["eventType"]
+        data = data["data"]
+
+        logger.warn("NTYPE: %s", ntype)
+        logger.warn("DATA: %s", data)
+
+        if ntype == "Order":
+            # Check that the order is still unfinished
+            pass
+        elif ntype == "Payment":
+            # Check how the payments are going, this should signal a completed
+            # or cancelled/refunded payment
+            pass
+        elif ntype == "Form":
+            # Those notifications are mostly useless, it's about changes to the
+            # org
+            pass
+
+        return Response(status=status.HTTP_200_OK)
+
+
 class BackView(generics.ListAPIView):
     pass
 
@@ -135,6 +170,9 @@ class PayView(generics.CreateAPIView):
                     "lastName": payer.last_name,
                     "email": payer.email,
                 },
+                "metadata": {
+                    "uuid": str(transaction_obj.id),
+                }
             }
             headers = {
                 "authorization": "Bearer " + token.get_token(),

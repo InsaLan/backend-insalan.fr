@@ -77,6 +77,32 @@ class Product(models.Model):
         return self.available_from <= timezone.now() <= self.available_until
 
 
+class Payment(models.Model):
+    """
+    A single installment of a payment made through HelloAsso
+    """
+
+    class Meta:
+        """Meta information"""
+
+        verbose_name = _("Paiement")
+        verbose_name_plural = _("Paiements")
+
+    id = models.IntegerField(
+        primary_key=True, editable=False, verbose_name=_("Identifiant du paiement")
+    )
+    transaction = models.ForeignKey(
+        "Transaction", on_delete=models.CASCADE, verbose_name=_("Transaction")
+    )
+    amount = models.DecimalField(
+        blank=False,
+        null=False,
+        decimal_places=2,
+        max_digits=6,
+        verbose_name=_("Montant"),
+    )
+
+
 class Transaction(models.Model):
     """
     A transaction is a record from helloasso intent.
