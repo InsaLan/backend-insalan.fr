@@ -111,7 +111,7 @@ class PayView(generics.CreateAPIView):
     serializer_class = serializers.TransactionSerializer
 
     def create(self, request):
-        token = Token()
+        token = Token.get_instance()
         payer = request.user
         data = request.data.copy()
         data["payer"] = payer.id

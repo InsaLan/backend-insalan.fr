@@ -190,7 +190,7 @@ class Transaction(models.Model):
             return (False, "")
 
         helloasso_url = getenv("HELLOASSO_ENDPOINT")
-        token = Token()
+        token = Token.get_instance()
         body_refund = {"comment": f"Refunded by {requester}"}
         headers_refund = {
             "authorization": "Bearer " + token.get_token(),
