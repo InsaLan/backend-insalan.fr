@@ -170,16 +170,12 @@ class UserMailer:
                 "pour votre compte. Si vous êtes à l'origine de cette demande,"
                 "vous pouvez cliquer sur le lien suivant: "
             )
-            + "http://api."
+            + "http://"
             + getenv("WEBSITE_HOST", "localhost")
-            + reverse("reset-password")
-            + "?"
-            + urlencode(
-                {
-                    "user": user,
-                    "token": token,
-                }
-            ),
+            + "/reset-password/"
+            + user
+            + "/"
+            + token,
             None,  # Django falls back to default of settings.py
             [user_object.email],
             fail_silently=False,

@@ -503,7 +503,7 @@ class UserEndToEndTestCase(TestCase):
 
         match = re.search(
             # "https?://[^ ]*/password-reset/ask[^ ]*",
-            ".*https?://[^ ]*/\?user=(?P<username>[^ &]*)&token=(?P<token>[^ /]*)",
+            ".*https?://[^ ]*/(?P<username>[^ &]*)/(?P<token>[^ /]*)",
             mail.outbox[0].body,
         )
 
@@ -550,7 +550,7 @@ class UserEndToEndTestCase(TestCase):
 
         match = re.search(
             # "https?://[^ ]*/password-reset/ask[^ ]*",
-            ".*https?://[^ ]*/\?user=(?P<username>[^ &]*)&token=(?P<token>[^ /]*)",
+            ".*https?://[^ ]*/(?P<username>[^ &]*)/(?P<token>[^ /]*)",
             mail.outbox[0].body,
         )
 
@@ -592,7 +592,7 @@ class UserEndToEndTestCase(TestCase):
         self.client.post("/v1/user/password-reset/ask/", data, format="json")
 
         match = re.search(
-            ".*https?://[^ ]*/\?user=(?P<username>[^ &]*)&token=(?P<token>[^ /]*)",
+            ".*https?://[^ ]*/(?P<username>[^ &]*)/(?P<token>[^ /]*)",
             mail.outbox[0].body,
         )
 
