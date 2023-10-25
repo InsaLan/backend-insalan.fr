@@ -136,15 +136,17 @@ class Transaction(models.Model):
             if not pid.can_be_bought_now():
                 raise ValidationError(
                     {
-                        "error": _("Le produit %(id)s est actuellement indisponible")
-                        % {"id": pid.id}
+                        "error": _(
+                            "Le produit %(id)s est actuellement indisponible"
+                        ).format(id=pid.id)
                     }
                 )
             if pid.associated_tournament and not pid.associated_tournament.is_announced:
                 raise ValidationError(
                     {
-                        "error": _("Le tournoi %(id)s est actuellement indisponible")
-                        % {"id": pid.associated_tournament.id}
+                        "error": _(
+                            "Le tournoi %(id)s est actuellement indisponible"
+                        ).format(id=pid.associated_tournament.id)
                     }
                 )
             count = len(list(grouper))
@@ -205,8 +207,9 @@ class Transaction(models.Model):
         if refund_init.status_code != 200:
             return (
                 False,
-                _("Erreur de remboursement: code %s obtenu via l'API")
-                % refund_init.status_code,
+                _("Erreur de remboursement: code %s obtenu via l'API").format(
+                    refund_init.status_code
+                ),
             )
 
         self.payment_status = TransactionStatus.REFUNDED

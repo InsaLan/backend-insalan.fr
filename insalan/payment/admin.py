@@ -26,14 +26,15 @@ def reimburse_transactions(modeladmin, request, queryset):
     for transaction in queryset:
         (is_err, msg) = transaction.refund(request.user.username)
         if is_err:
-            modeladmin.message_user(request, _("Erreur: %s") % msg, messages.ERROR)
+            modeladmin.message_user(request, _("Erreur: %s").format(msg), messages.ERROR)
             break
 
 
 class TransactionAdmin(admin.ModelAdmin):
     """
     Admin handler for Transactions
-    In the backoffice, Transactions can only be seen, they cannot be add, removed or changed this way
+    In the backoffice, Transactions can only be seen, they cannot be add,
+    removed or changed this way
     """
 
     list_display = (
