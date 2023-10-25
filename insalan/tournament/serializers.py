@@ -133,6 +133,12 @@ class PlayerSerializer(serializers.ModelSerializer):
 class PlayerIdSerializer(serializers.Serializer):
     """Serializer to verify a list of player IDs"""
 
+    class Meta:
+        """Meta options for the serializer"""
+
+        model = Manager
+        fields = ["id"]
+
     def to_representation(self, instance):
         """Turn a Django object into a serialized representation"""
         return instance.id
@@ -150,6 +156,12 @@ class ManagerSerializer(serializers.ModelSerializer):
 
 class ManagerIdSerializer(serializers.ModelSerializer):
     """Serializer to verify a list of manager IDs"""
+
+    class Meta:
+        """Meta options for the serializer"""
+
+        model = Manager
+        fields = ["id"]
 
     def to_representation(self, instance):
         """Turn a Django object into a serialized representation"""

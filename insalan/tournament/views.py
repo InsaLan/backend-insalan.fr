@@ -12,6 +12,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.serializers import PrimaryKeyRelatedField
+from rest_framework.schemas.openapi import AutoSchema
 from rest_framework.views import APIView
 
 from insalan.user.models import User
@@ -44,6 +45,8 @@ class OngoingEventList(generics.ListAPIView):
     queryset = Event.objects.filter(ongoing=True).order_by("id")
     serializer_class = serializers.EventSerializer
     permission_classes = [permissions.AllowAny]
+    schema = AutoSchema(operation_id_base="OngoingEvents")
+
 
 
 class EventDetails(generics.RetrieveUpdateDestroyAPIView):
@@ -89,6 +92,7 @@ class EventByYear(generics.ListAPIView):
 
     pagination_class = None
     serializer_class = serializers.EventSerializer
+    schema = AutoSchema(operation_id_base="EventByYear")
 
     def get_queryset(self):
         """Return the queryset"""
@@ -276,6 +280,7 @@ class PlayerRegistrationListId(generics.ListAPIView):
 
     pagination_class = None
     serializer_class = serializers.PlayerIdSerializer
+    schema = AutoSchema(operation_id_base="PlayerById")
 
     def get_queryset(self):
         """Obtain the queryset fot this view"""
@@ -287,6 +292,7 @@ class PlayerRegistrationListName(generics.ListAPIView):
 
     pagination_class = None
     serializer_class = serializers.PlayerIdSerializer
+    schema = AutoSchema(operation_id_base="PlayerByName")
 
     def get_queryset(self):
         """Obtain the queryset fot this view"""
@@ -342,6 +348,7 @@ class ManagerRegistrationListId(generics.ListAPIView):
 
     pagination_class = None
     serializer_class = serializers.ManagerIdSerializer
+    schema = AutoSchema(operation_id_base="ManagerById")
 
     def get_queryset(self):
         """Obtain the queryset fot this view"""
@@ -353,6 +360,7 @@ class ManagerRegistrationListName(generics.ListAPIView):
 
     pagination_class = None
     serializer_class = serializers.ManagerIdSerializer
+    schema = AutoSchema(operation_id_base="ManagerByName")
 
     def get_queryset(self):
         """Obtain the queryset fot this view"""
