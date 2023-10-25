@@ -62,6 +62,7 @@ class Notifications(APIView):
     """
     Notifications view
     """
+
     def post(self, request):
         data = request.data
         if not data.get("metadata") or not data["metadata"].get("uuid"):
@@ -92,15 +93,9 @@ class Notifications(APIView):
 
         return Response(status=status.HTTP_200_OK)
 
-
-class BackView(generics.ListAPIView):
-    pass
-
-
-class ReturnView(APIView):
-    """View for the return"""
-
-    def get(self, request, **kwargs):
+        # This is voluntarily unreachable code!!!
+        # It was moved from a removed view pending reverse engineering of the
+        # API
         trans_id = request.query_params.get("id")
         checkout_id = request.query_params.get("checkoutIntentId")
         code = request.query_params.get("code")
@@ -131,10 +126,6 @@ class ReturnView(APIView):
         transaction_obj.run_success_hooks()
 
         return Response(status=status.HTTP_200_OK)
-
-
-class ErrorView(generics.ListAPIView):
-    pass
 
 
 class PayView(generics.CreateAPIView):
@@ -172,7 +163,7 @@ class PayView(generics.CreateAPIView):
                 },
                 "metadata": {
                     "uuid": str(transaction_obj.id),
-                }
+                },
             }
             headers = {
                 "authorization": "Bearer " + token.get_token(),
