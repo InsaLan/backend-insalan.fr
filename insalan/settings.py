@@ -57,10 +57,11 @@ LOGGING = {
 }
 
 # Allow itself and the frontend
+WEBSITE_HOST = getenv("WEBSITE_HOST", "localhost")
 ALLOWED_HOSTS = [
-    "api." + getenv("WEBSITE_HOST", "localhost"),
-    getenv("WEBSITE_HOST", "localhost"),
-    "dev." + getenv("WEBSITE_HOST", "localhost"),
+    "api." + WEBSITE_HOST,
+    WEBSITE_HOST,
+    "dev." + WEBSITE_HOST,
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -226,6 +227,17 @@ EMAIL_HOST = getenv("MAIL_HOST", "localhost")
 EMAIL_HOST_PASSWORD = getenv("MAIL_PASS", "")
 EMAIL_HOST_USER = getenv("MAIL_FROM", "insalan@localhost")
 DEFAULT_FROM_EMAIL = getenv("MAIL_FROM", "email@localhost")
-EMAIL_PORT = int(getenv("MAIL_PORT", 465))
+EMAIL_PORT = int(getenv("MAIL_PORT", "465"))
 EMAIL_USE_SSL = getenv("MAIL_SSL", "true").lower() in ["true", "1", "t", "y", "yes"]
 EMAIL_SUBJECT_PREFIX = "[InsaLan] "
+
+# Payment variables
+HA_URL = f"https://{format(getenv('HELLOASSO_HOSTNAME', 'api.helloasso-sandbox.com'))}"
+HA_ORG_SLUG = getenv("HELLOASSO_ORGANIZATION_SLUG", "insalan-test")
+# View URLs
+HA_RETURN_URL = getenv("HELLOASSO_RETURN_URL", f"https://api.{WEBSITE_HOST}/v1/payment/return/")
+HA_ERROR_URL = getenv("HELLOASSO_ERROR_URL", f"https://api.{WEBSITE_HOST}/v1/payment/error/")
+HA_BACK_URL = getenv("HELLOASSO_BACK_URL", f"https://api.{WEBSITE_HOST}/v1/payment/back/")
+# OAuth Credentials
+HA_OAUTH_CLIENT_SECRET = getenv("HELLOASSO_CLIENT_SECRET")
+HA_OAUTH_CLIENT_ID = getenv("HELLOASSO_CLIENT_ID")

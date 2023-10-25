@@ -1,17 +1,18 @@
-import logging
-import itertools
-
-import requests
-import uuid
-
+"""Payment Models"""
 from decimal import Decimal
 from datetime import datetime
-from os import getenv
+import itertools
+import logging
+import uuid
+
+import requests
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from rest_framework.serializers import ValidationError
+
+import insalan.settings as app_settings
 
 from insalan.tournament.models import Tournament
 from insalan.user.models import User
@@ -189,7 +190,6 @@ class Transaction(models.Model):
         if self.payment_status == TransactionStatus.REFUNDED:
             return (False, "")
 
-        helloasso_url = getenv("HELLOASSO_ENDPOINT")
         token = Token.get_instance()
         body_refund = {"comment": f"Refunded by {requester}"}
         headers_refund = {
@@ -198,7 +198,7 @@ class Transaction(models.Model):
         }
 
         refund_init = requests.post(
-            f"{helloasso_url}/v5/payment/{self.intent_id}/refund",
+            f"{app_settings.HA_URL}/v5/payment/{self.intent_id}/refund",
             data=body_refund,
             headers=headers_refund,
             timeout=1,

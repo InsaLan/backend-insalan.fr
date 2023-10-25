@@ -3,9 +3,6 @@
 import json
 import logging
 
-from datetime import date
-from os import getenv
-
 import requests
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
@@ -18,9 +15,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
 
+import insalan.settings as app_settings
 import insalan.payment.serializers as serializers
 
-from .models import Transaction, TransactionStatus, Product, ProductCount
+from .models import Transaction, TransactionStatus, Product
 from .tokens import Token
 
 logger = logging.getLogger(__name__)
@@ -115,7 +113,6 @@ class PayView(generics.CreateAPIView):
         payer = request.user
         data = request.data.copy()
         data["payer"] = payer.id
-        logger.debug(f"data in view = {data}")  # contient des données
         transaction = serializers.TransactionSerializer(data=data)
         transaction.is_valid()
         logger.debug(transaction.validated_data)
@@ -125,14 +122,13 @@ class PayView(generics.CreateAPIView):
             helloasso_amount = int(
                 transaction_obj.amount * 100
             )  # helloasso reads prices in cents
-            HELLOASSO_URL = getenv("HELLOASSO_ENDPOINT")
             intent_body = {
                 "totalAmount": helloasso_amount,
                 "initialAmount": helloasso_amount,
                 "itemName": str(transaction_obj.id),
-                "backUrl": f"{getenv('HELLOASSO_BACK_URL')}",
-                "errorUrl": f"{getenv('HELLOASSO_ERROR_URL')}",
-                "returnUrl": f"{getenv('HELLOASSO_RETURN_URL')}",
+                "backUrl": app_settings.HA_BACK_URL,
+                "errorUrl": app_settings.HA_ERROR_URL,
+                "returnUrl": app_settings.HA_RETURN_URL,
                 "containsDonation": False,
                 "payer": {
                     "firstName": payer.first_name,
@@ -146,7 +142,7 @@ class PayView(generics.CreateAPIView):
             }
 
             checkout_init = requests.post(
-                f"{HELLOASSO_URL}/v5/organizations/insalan-test/checkout-intents",
+                f"{app_settings.HA_URL}/v5/organizations/{app_settings.HA_ORG_SLUG}/checkout-intents",
                 data=json.dumps(intent_body),
                 headers=headers,
                 timeout=1,

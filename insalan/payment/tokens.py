@@ -2,11 +2,11 @@
 import logging
 import time
 
-from os import getenv
-
 import requests
 
 from django.utils.translation import gettext_lazy as _
+
+import insalan.settings as app_settings
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,6 @@ class Token:
         """Initialize the Token retrieval instance"""
         if Token.instance is None:
             Token.instance = self
-        logger.debug(getenv("HELLOASSO_ENDPOINT"))
 
         self.expiration_date = None
         self.bearer_token = None
@@ -47,13 +46,13 @@ class Token:
         Obtain a token, either from the original secret, or from the previous
         refresh token
         """
-        c_secret = secret if secret is not None else getenv("HELLOASSO_CLIENT_SECRET")
+        c_secret = secret if secret is not None else app_settings.HA_OAUTH_CLIENT_SECRET
         try:
             request = requests.post(
-                url=f"{getenv('HELLOASSO_ENDPOINT')}/oauth2/token",
+                url=f"{app_settings.HA_URL}/oauth2/token",
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
                 data={
-                    "client_id": getenv("CLIENT_ID"),
+                    "client_id": app_settings.HA_OAUTH_CLIENT_ID,
                     "client_secret": c_secret,
                     "grant_type": "refresh_token",
                 },
