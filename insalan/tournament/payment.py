@@ -41,7 +41,9 @@ class PaymentHandler(PaymentHooks):
             raise RuntimeError(_("Plusieurs inscription manager à un même tournoi"))
         if len(reg) == 0:
             raise RuntimeError(
-                _(f"Pas d'inscription à valider au paiement pour {user}")
+                _("Pas d'inscription à valider au paiement pour %(user}s").format(
+                    user=user.username
+                )
             )
         return (reg[0], True)
 

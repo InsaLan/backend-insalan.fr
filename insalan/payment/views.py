@@ -11,6 +11,7 @@ import requests
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import render
+from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
@@ -62,8 +63,10 @@ class CreateProduct(generics.CreateAPIView):
 class BackView(generics.ListAPIView):
     pass
 
+
 class ReturnView(APIView):
     """View for the return"""
+
     def get(self, request, **kwargs):
         trans_id = request.query_params.get("id")
         checkout_id = request.query_params.get("checkoutIntentId")
@@ -72,7 +75,9 @@ class ReturnView(APIView):
         if None in [trans_id, checkout_id, code]:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        transaction_obj = Transaction.objects.filter(payment_status=TransactionStatus.PENDING, id=trans_id, intent_id=checkout_id)
+        transaction_obj = Transaction.objects.filter(
+            payment_status=TransactionStatus.PENDING, id=trans_id, intent_id=checkout_id
+        )
         if len(transaction_obj) == 0:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
@@ -93,6 +98,7 @@ class ReturnView(APIView):
         transaction_obj.run_success_hooks()
 
         return Response(status=status.HTTP_200_OK)
+
 
 class ErrorView(generics.ListAPIView):
     pass
@@ -124,9 +130,9 @@ class PayView(generics.CreateAPIView):
                 "totalAmount": helloasso_amount,
                 "initialAmount": helloasso_amount,
                 "itemName": str(transaction_obj.id),
-                "backUrl": f"{getenv('HELLOASSO_BACK_URL')}?id={transaction_obj.id}",
-                "errorUrl": f"{getenv('HELLOASSO_ERROR_URL')}?id={transaction_obj.id}",
-                "returnUrl": f"{getenv('HELLOASSO_RETURN_URL')}?id={transaction_obj.id}",
+                "backUrl": f"{getenv('HELLOASSO_BACK_URL')}",
+                "errorUrl": f"{getenv('HELLOASSO_ERROR_URL')}",
+                "returnUrl": f"{getenv('HELLOASSO_RETURN_URL')}",
                 "containsDonation": False,
                 "payer": {
                     "firstName": payer.first_name,
@@ -143,7 +149,7 @@ class PayView(generics.CreateAPIView):
                 f"{HELLOASSO_URL}/v5/organizations/insalan-test/checkout-intents",
                 data=json.dumps(intent_body),
                 headers=headers,
-                timeout=1
+                timeout=1,
             )  # initiate a helloasso intent
             logger.debug(checkout_init.text)
             checkout_json = checkout_init.json()
@@ -157,4 +163,7 @@ class PayView(generics.CreateAPIView):
             transaction_obj.run_prepare_hooks()
 
             return HttpResponseRedirect(redirect_to=redirect_url)
-        return JsonResponse({"problem": "oui"})
+        return JsonResponse(
+            {"err": _("Données de transaction invalides")},
+            status=status.HTTP_400_BAD_REQUEST,
+        )

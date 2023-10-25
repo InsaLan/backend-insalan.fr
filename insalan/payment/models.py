@@ -189,7 +189,7 @@ class Transaction(models.Model):
         if self.payment_status == TransactionStatus.REFUNDED:
             return (False, "")
 
-        helloasso_url = getenv("HELLOASS_ENDPOINT")
+        helloasso_url = getenv("HELLOASSO_ENDPOINT")
         token = Token()
         body_refund = {"comment": f"Refunded by {requester}"}
         headers_refund = {
