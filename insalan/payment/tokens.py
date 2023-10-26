@@ -47,6 +47,11 @@ class Token:
         refresh token
         """
         c_secret = secret if secret is not None else app_settings.HA_OAUTH_CLIENT_SECRET
+        grant_type = (
+            "client_credentials"
+            if c_secret == app_settings.HA_OAUTH_CLIENT_SECRET
+            else "refresh_token"
+        )
         try:
             request = requests.post(
                 url=f"{app_settings.HA_URL}/oauth2/token",
@@ -54,9 +59,9 @@ class Token:
                 data={
                     "client_id": app_settings.HA_OAUTH_CLIENT_ID,
                     "client_secret": c_secret,
-                    "grant_type": "refresh_token",
+                    "grant_type": grant_type,
                 },
-                timeout = 1,
+                timeout=1,
             )
         except requests.exceptions.RequestException as err:
             logger.error("Unable to obtain token: %s", err)
