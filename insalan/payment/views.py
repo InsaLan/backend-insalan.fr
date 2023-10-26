@@ -144,6 +144,20 @@ class PayView(generics.CreateAPIView):
         logger.debug(transaction.validated_data)
         if transaction.is_valid(raise_exception=True):
             transaction_obj = transaction.save()
+
+            # Execute hooks
+            go_ahead = transaction_obj.run_prepare_hooks()
+            if not go_ahead:
+                transaction_obj.fail_transaction()
+                logger.error(
+                    "Failed pre-condition on payment %s. Deleting.", transaction_obj.id
+                )
+                transaction_obj.delete()
+                return JsonResponse(
+                    {"err": _("Préconditions de paiement non remplies")},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             # helloasso intent
             helloasso_amount = int(
                 transaction_obj.amount * 100
@@ -184,10 +198,12 @@ class PayView(generics.CreateAPIView):
             transaction_obj.save()
             logger.debug(intent_body)
 
-            # Execute hooks
-            transaction_obj.run_prepare_hooks()
+            logger.info("Redirectory payment to %s", redirect_url)
 
-            return HttpResponseRedirect(redirect_to=redirect_url)
+            return JsonResponse(
+                {"success": True, "redirect_url": redirect_url},
+                status=status.HTTP_200_OK,
+            )
         return JsonResponse(
             {"err": _("Données de transaction invalides")},
             status=status.HTTP_400_BAD_REQUEST,

@@ -45,12 +45,13 @@ class PaymentCallbackSystem:
 
         if cls.__HOOKS.get(prodcat):
             if overwrite:
-                cls.__logger.warning("Overwriting handler for product category %s", prodcat)
+                cls.__logger.warning(
+                    "Overwriting handler for product category %s", prodcat
+                )
             else:
                 raise ValueError(_(f"Descripteur déjà défini pour {prodcat}"))
 
         cls.__HOOKS[prodcat] = handler
-
 
     @classmethod
     def retrieve_handler(cls, prodcat):
@@ -60,6 +61,7 @@ class PaymentCallbackSystem:
         If a handler is not registered, returns None
         """
         return cls.__HOOKS.get(prodcat)
+
 
 # Base class/interface
 class PaymentHooks:
@@ -71,7 +73,7 @@ class PaymentHooks:
     """
 
     @staticmethod
-    def prepare_transaction(_transaction, _product, _count):
+    def prepare_transaction(_transaction, _product, _count) -> bool:
         """
         Prepare things that may have to be created prior to payment
 

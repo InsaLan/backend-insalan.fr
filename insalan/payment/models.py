@@ -204,9 +204,22 @@ class Transaction(models.Model):
             # Call callback class
             key(cls)(self, proccount.product, proccount.count)
 
-    def run_prepare_hooks(self):
+    def run_prepare_hooks(self) -> bool:
         """Run the preparation hook on all products"""
-        self.product_callback(lambda cls: cls.prepare_transaction)
+        from insalan.payment.hooks import PaymentCallbackSystem
+
+        for proccount in ProductCount.objects.filter(transaction=self):
+            # Get callback class
+            cls = PaymentCallbackSystem.retrieve_handler(proccount.product.category)
+            if cls is None:
+                logger.warning("No handler found for payment of %s", proccount.product)
+                raise RuntimeError(_("Pas de handler trouvé pour un paiement"))
+            # Call callback class
+            res = cls.prepare_transaction(self, proccount.product, proccount.count)
+            if not res:
+                return False
+
+        return True
 
     def run_success_hooks(self):
         """Run the success hooks on all products"""
@@ -216,7 +229,11 @@ class Transaction(models.Model):
         """Run the refund hooks on all products"""
         self.product_callback(lambda cls: cls.payment_refunded)
 
-    def refund(self, requester) -> tuple[bool, str]:
+    def run_failure_hooks(self):
+        """Run the failure hooks on all products"""
+        self.product_callback(lambda cls: cls.payment_failure)
+
+    def refund_transaction(self, requester) -> tuple[bool, str]:
         """Refund this transaction"""
         if self.payment_status == TransactionStatus.REFUNDED:
             return (False, "")
