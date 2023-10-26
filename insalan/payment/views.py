@@ -65,13 +65,17 @@ class Notifications(APIView):
     """
 
     def post(self, request):
+        """Notification POST"""
+
         data = request.data
         if not data.get("metadata") or not data["metadata"].get("uuid"):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         uuid = data["metadata"]["uuid"]
-        trans_obj = Transaction.objects.get(id=uuid)
-        if trans_obj is None:
+        try:
+            trans_obj = Transaction.objects.get(id=uuid)
+        except Transaction.DoesNotExist:
+            logger.error("Unable to find transaction %s", uuid)
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         ntype = data["eventType"]
