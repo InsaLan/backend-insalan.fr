@@ -156,7 +156,6 @@ class Transaction(models.Model):
     @staticmethod
     def new(**data):
         """create a new transaction based on products id list and a payer"""
-        logger.debug(f"in the constructor {data}")
         fields = {}
         fields["creation_date"] = timezone.make_aware(datetime.now())
         fields["last_modification_date"] = fields["creation_date"]
@@ -168,17 +167,15 @@ class Transaction(models.Model):
             if not pid.can_be_bought_now():
                 raise ValidationError(
                     {
-                        "error": _(
-                            "Le produit %(id)s est actuellement indisponible"
-                        ).format(id=pid.id)
+                        "error": _("Le produit %(id)s est actuellement indisponible")
+                        % {"id": pid.id}
                     }
                 )
             if pid.associated_tournament and not pid.associated_tournament.is_announced:
                 raise ValidationError(
                     {
-                        "error": _(
-                            "Le tournoi %(id)s est actuellement indisponible"
-                        ).format(id=pid.associated_tournament.id)
+                        "error": _("Le tournoi %(id)s est actuellement indisponible")
+                        % {"id": pid.associated_tournament.id}
                     }
                 )
             count = len(list(grouper))
