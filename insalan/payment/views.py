@@ -1,5 +1,6 @@
 """Views for the Payment module"""
 
+from decimal import Decimal
 import json
 import logging
 
@@ -18,7 +19,7 @@ from rest_framework.authentication import SessionAuthentication
 import insalan.settings as app_settings
 import insalan.payment.serializers as serializers
 
-from .models import Transaction, TransactionStatus, Product
+from .models import Transaction, TransactionStatus, Product, Payment
 from .tokens import Token
 
 logger = logging.getLogger(__name__)
@@ -76,54 +77,85 @@ class Notifications(APIView):
         ntype = data["eventType"]
         data = data["data"]
 
-        logger.warn("NTYPE: %s", ntype)
-        logger.warn("DATA: %s", data)
+        # logger.debug("NTYPE: %s", ntype)
+        # logger.debug("DATA: %s", data)
 
         if ntype == "Order":
-            # Check that the order is still unfinished
-            pass
-        elif ntype == "Payment":
-            # Check how the payments are going, this should signal a completed
-            # or cancelled/refunded payment
-            pass
+            # From "Order", get the payments
+            order_id = data["id"]
+            logger.info("Tied transaction %s to order ID %s", trans_obj.id, order_id)
+            trans_obj.order_id = order_id
+            trans_obj.touch()
+            trans_obj.save()
+
+            for pay_data in data.get("payments", []):
+                pid = pay_data["id"]
+                amount = Decimal(pay_data["amount"]) / 100
+                Payment.objects.create(id=pid, amount=amount, transaction=trans_obj)
+                logger.info(
+                    "Created payment %d tied to transaction %s", pid, trans_obj.id
+                )
+
         elif ntype == "Form":
             # Those notifications are mostly useless, it's about changes to the
             # org
             pass
+        elif ntype == "Payment":
+            # Because we are in single payment, this is our signal to validate
+            pay_id = data["id"]
+            # The payment could be "None" if we haven't received "Order" yet
+            pay_objs = list(Payment.objects.filter(id=pay_id)) + [None]
+            pay_obj = pay_objs[0]
+            if pay_obj is not None and pay_obj.transaction != trans_obj:
+                logger.error(
+                    "Mismatch! Payment %d is known to belong to transaction %s but HA metadata says %s",
+                    pay_id,
+                    trans_obj.id,
+                    pay_obj.transaction.id,
+                )
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            if pay_obj is not None and trans_obj.order_id != int(data["order"]["id"]):
+                logger.error(
+                    "Mismatch! Payment %d is known to belong to transaction %s but HA data says %s",
+                    pay_id,
+                    trans_obj.order_id,
+                    data["order"]["id"],
+                )
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            if pay_obj is None:
+                logger.warning(
+                    "Validating transaction %s based on payment %d to be generated later",
+                    trans_obj.id,
+                    pay_id,
+                )
 
-        return Response(status=status.HTTP_200_OK)
+            # Check the state
+            if data["state"] == "Authorized":
+                # Ok we should be good now
+                trans_obj.payment_status = TransactionStatus.SUCCEEDED
+                trans_obj.touch()
+                trans_obj.save()
 
-        # This is voluntarily unreachable code!!!
-        # It was moved from a removed view pending reverse engineering of the
-        # API
-        trans_id = request.query_params.get("id")
-        checkout_id = request.query_params.get("checkoutIntentId")
-        code = request.query_params.get("code")
+                logger.info("Transaction %s succeeded", trans_obj.id)
 
-        if None in [trans_id, checkout_id, code]:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+                # Execute hooks
+                trans_obj.run_success_hooks()
 
-        transaction_obj = Transaction.objects.filter(
-            payment_status=TransactionStatus.PENDING, id=trans_id, intent_id=checkout_id
-        )
-        if len(transaction_obj) == 0:
-            return Response(status=status.HTTP_403_FORBIDDEN)
+            elif data["state"] in ["Refused", "Unknown"]:
+                # This code should show that a payment failed
+                trans_obj.payment_status = TransactionStatus.FAILED
+                trans_obj.touch()
+                trans_obj.save()
 
-        transaction_obj = transaction_obj[0]
+                logger.info("Transaction %s failed", trans_obj.id)
 
-        if code != "success":
-            transaction_obj.payment_status = TransactionStatus.FAILED
-            transaction_obj.touch()
-            transaction_obj.save()
+                # Execute hooks
+                trans_obj.run_failure_hooks()
 
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        transaction_obj.payment_status = TransactionStatus.SUCCEEDED
-        transaction_obj.touch()
-        transaction_obj.save()
-
-        # Execute hooks
-        transaction_obj.run_success_hooks()
+            else:
+                logger.warning(
+                    "Payment %d shows status %s unknown", pay_id, data["state"]
+                )
 
         return Response(status=status.HTTP_200_OK)
 

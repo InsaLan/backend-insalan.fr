@@ -235,34 +235,52 @@ class Transaction(models.Model):
 
     def refund_transaction(self, requester) -> tuple[bool, str]:
         """Refund this transaction"""
-        if self.payment_status == TransactionStatus.REFUNDED:
-            return (False, "")
+        if self.payment_status != TransactionStatus.SUCCEEDED:
+            return (True, _("Transaction %(id)s en état invalide") % {"id": self.id})
 
         token = Token.get_instance()
-        body_refund = {"comment": f"Refunded by {requester}"}
+        body_refund = {
+            "comment": f"Refunded by {requester}",
+            "sendRefundEmail": True,
+            "cancelOrder": True,
+        }
         headers_refund = {
             "authorization": "Bearer " + token.get_token(),
             "Content-Type": "application/json",
         }
 
-        refund_init = requests.post(
-            f"{app_settings.HA_URL}/v5/payment/{self.intent_id}/refund",
-            data=body_refund,
-            headers=headers_refund,
-            timeout=1,
-        )
-
-        if refund_init.status_code != 200:
-            return (
-                False,
-                _("Erreur de remboursement: code %s obtenu via l'API").format(
-                    refund_init.status_code
-                ),
+        refunded_amount = Decimal("0.0")
+        for pay_obj in Payment.objects.filter(transaction=self):
+            refund_init = requests.post(
+                f"{app_settings.HA_URL}/v5/payments/{pay_obj.id}/refund/",
+                data=body_refund,
+                headers=headers_refund,
+                timeout=1,
             )
 
-        self.payment_status = TransactionStatus.REFUNDED
+            if refund_init.status_code != 200:
+                return (
+                    True,
+                    _("Erreur de remboursement: code %(code)s obtenu via l'API")
+                    % {
+                        "code": refund_init.status_code,
+                    },
+                )
+            refunded_amount += pay_obj.amount
+            pay_obj.delete()
 
-        self.run_refunded_hooks()
+        if refunded_amount == self.amount:
+            logger.info("Transaction %s refunded for %s€", self.id, refunded_amount)
+            self.payment_status = TransactionStatus.REFUNDED
+            self.run_refunded_hooks()
+        else:
+            logger.warn(
+                "Only refunded %s€/%s€ of transaction %s",
+                refunded_amount,
+                self.amount,
+                self.id,
+            )
+
         self.touch()
         self.save()
 
