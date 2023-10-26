@@ -85,7 +85,7 @@ class TransactionAdmin(admin.ModelAdmin):
         "amount",
     ]
 
-    actions = [reimburse_transactions]
+    # actions = [reimburse_transactions]
 
     def has_add_permission(self, _request):
         """Remove the ability to add a transaction from the backoffice"""

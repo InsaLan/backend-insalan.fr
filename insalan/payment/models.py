@@ -233,53 +233,65 @@ class Transaction(models.Model):
         """Run the failure hooks on all products"""
         self.product_callback(lambda cls: cls.payment_failure)
 
-    def refund_transaction(self, requester) -> tuple[bool, str]:
-        """Refund this transaction"""
+    def refund_transaction(self, _requester="") -> tuple[bool, str]:
+        """
+        Refund this transaction
+
+        Refund a succeeded transaction, deleting all associated payments and
+        running associated hooks.
+        """
         if self.payment_status != TransactionStatus.SUCCEEDED:
+            if self.payment_status != TransactionStatus.REFUNDED:
+                logger.warning("Attempt to refund %s in invalid state", self.id)
             return (True, _("Transaction %(id)s en état invalide") % {"id": self.id})
 
-        token = Token.get_instance()
-        body_refund = {
-            "comment": f"Refunded by {requester}",
-            "sendRefundEmail": True,
-            "cancelOrder": True,
-        }
-        headers_refund = {
-            "authorization": "Bearer " + token.get_token(),
-            "Content-Type": "application/json",
-        }
+        # A lot of the code here is legacy from when this method initiated the
+        # refund, instead of changing the model to reflect it
 
-        refunded_amount = Decimal("0.0")
-        for pay_obj in Payment.objects.filter(transaction=self):
-            refund_init = requests.post(
-                f"{app_settings.HA_URL}/v5/payments/{pay_obj.id}/refund/",
-                data=body_refund,
-                headers=headers_refund,
-                timeout=1,
-            )
+        # token = Token.get_instance()
+        # body_refund = {
+        # "comment": f"Refunded by {requester}",
+        # "sendRefundEmail": True,
+        # "cancelOrder": True,
+        # }
+        # headers_refund = {
+        # "authorization": "Bearer " + token.get_token(),
+        # "Content-Type": "application/json",
+        # }
 
-            if refund_init.status_code != 200:
-                return (
-                    True,
-                    _("Erreur de remboursement: code %(code)s obtenu via l'API")
-                    % {
-                        "code": refund_init.status_code,
-                    },
-                )
-            refunded_amount += pay_obj.amount
-            pay_obj.delete()
+        # refunded_amount = Decimal("0.0")
+        # for pay_obj in Payment.objects.filter(transaction=self):
+        # # This bit is legacy, from when this was an action
+        # refund_init = requests.post(
+        # f"{app_settings.HA_URL}/v5/payments/{pay_obj.id}/refund/",
+        # data=body_refund,
+        # headers=headers_refund,
+        # timeout=1,
+        # )
 
-        if refunded_amount == self.amount:
-            logger.info("Transaction %s refunded for %s€", self.id, refunded_amount)
-            self.payment_status = TransactionStatus.REFUNDED
-            self.run_refunded_hooks()
-        else:
-            logger.warn(
-                "Only refunded %s€/%s€ of transaction %s",
-                refunded_amount,
-                self.amount,
-                self.id,
-            )
+        # if refund_init.status_code != 200:
+        # return (
+        # True,
+        # _("Erreur de remboursement: code %(code)s obtenu via l'API")
+        # % {
+        # "code": refund_init.status_code,
+        # },
+        # )
+        # refunded_amount += pay_obj.amount
+        # pay_obj.delete()
+
+        # if refunded_amount == self.amount:
+        Payment.objects.filter(transaction=self).delete()
+        logger.info("Transaction %s refunded for %s€", self.id, self.amount)
+        self.payment_status = TransactionStatus.REFUNDED
+        self.run_refunded_hooks()
+        # else:
+        # logger.warn(
+        # "Only refunded %s€/%s€ of transaction %s",
+        # refunded_amount,
+        # self.amount,
+        # self.id,
+        # )
 
         self.touch()
         self.save()
@@ -299,16 +311,29 @@ class Transaction(models.Model):
 
     def validate_transaction(self):
         """set payment_statut to validated"""
+        if self.payment_status != TransactionStatus.PENDING:
+            if self.payment_status != TransactionStatus.SUCCEEDED:
+                logger.warning("Attempted to validate %s in invalid state", self.id)
+            return
 
         self.payment_status = TransactionStatus.SUCCEDED
         self.last_modification_date = timezone.make_aware(datetime.now())
         self.save()
+        logger.info("Transaction %s succeeded", self.id)
+        self.run_success_hooks()
 
     def fail_transaction(self):
         """set payment_statut to failed and update last_modification_date"""
+        if self.payment_status != TransactionStatus.PENDING:
+            if self.payment_status != TransactionStatus.FAILED:
+                logger.warning("Attempted to fail %s in invalid state", self.id)
+            return
+
         self.payment_status = TransactionStatus.FAILED
         self.last_modification_date = timezone.make_aware(datetime.now())
         self.save()
+        logger.info("Transaction %s failed", self.id)
+        self.run_failure_hooks()
 
     def get_products(self):
         return self.products

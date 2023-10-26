@@ -136,29 +136,19 @@ class Notifications(APIView):
             # Check the state
             if data["state"] == "Authorized":
                 # Ok we should be good now
-                trans_obj.payment_status = TransactionStatus.SUCCEEDED
-                trans_obj.touch()
-                trans_obj.save()
-
-                logger.info("Transaction %s succeeded", trans_obj.id)
-
-                # Execute hooks
-                trans_obj.run_success_hooks()
+                trans_obj.validate_transaction()
 
             elif data["state"] in ["Refused", "Unknown"]:
                 # This code should show that a payment failed
-                trans_obj.payment_status = TransactionStatus.FAILED
-                trans_obj.touch()
-                trans_obj.save()
+                trans_obj.fail_transaction()
 
-                logger.info("Transaction %s failed", trans_obj.id)
-
-                # Execute hooks
-                trans_obj.run_failure_hooks()
+            elif data["state"] in ["Refunded"]:
+                # Refund
+                trans_obj.refund_transaction()
 
             else:
                 logger.warning(
-                    "Payment %d shows status %s unknown", pay_id, data["state"]
+                    "Payment %d shows status %s unknown or already assigned", pay_id, data["state"]
                 )
 
         return Response(status=status.HTTP_200_OK)
