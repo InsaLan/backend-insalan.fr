@@ -138,7 +138,12 @@ class Transaction(models.Model):
         blank=False,
         null=True,
         editable=False,
-        verbose_name=_("Identifiant de paiement"),
+        verbose_name=_("Identifiant du formulaire de paiement"),
+    )
+    order_id = models.IntegerField(
+        null=True,
+        editable=False,
+        verbose_name=_("Identifiant de commande"),
     )
     amount = models.DecimalField(
         null=False,

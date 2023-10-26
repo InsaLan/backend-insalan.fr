@@ -69,6 +69,7 @@ class TransactionAdmin(admin.ModelAdmin):
         "payment_status",
         "creation_date",
         "intent_id",
+        "order_id",
         "last_modification_date",
         "amount",
     )
@@ -79,6 +80,7 @@ class TransactionAdmin(admin.ModelAdmin):
         "payment_status",
         "creation_date",
         "intent_id",
+        "order_id",
         "last_modification_date",
         "amount",
     ]
