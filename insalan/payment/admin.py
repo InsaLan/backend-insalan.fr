@@ -1,3 +1,4 @@
+"""Payment Admin Panel Code"""
 # Disable lints:
 # "Too few public methods"
 # pylint: disable=R0903
@@ -7,7 +8,7 @@ from django.contrib import admin, messages
 
 from django.utils.translation import gettext_lazy as _
 
-from .models import Product, Transaction
+from .models import Product, Transaction, Payment
 
 
 class ProductAdmin(admin.ModelAdmin):
@@ -24,10 +25,35 @@ admin.site.register(Product, ProductAdmin)
 def reimburse_transactions(modeladmin, request, queryset):
     """Reimburse all selected actions"""
     for transaction in queryset:
-        (is_err, msg) = transaction.refund(request.user.username)
+        (is_err, msg) = transaction.refund_transaction(request.user.username)
         if is_err:
-            modeladmin.message_user(request, _("Erreur: %s").format(msg), messages.ERROR)
+            modeladmin.message_user(
+                request, _("Erreur: %(msg)s") % {"msg": msg}, messages.ERROR
+            )
             break
+
+
+class PaymentAdmin(admin.ModelAdmin):
+    """
+    Admin handler for payments"
+    """
+
+    list_display = ("id", "amount", "transaction")
+
+    def has_add_permission(self, _request):
+        """Remove the ability to add a payment from the backoffice"""
+        return False
+
+    def has_change_permission(self, _request, _obj=None):
+        """Remove the ability to edit a payment from the backoffice"""
+        return False
+
+    def has_delete_permission(self, _request, _obj=None):
+        """Remove the ability to edit a payment from the backoffice"""
+        return False
+
+
+admin.site.register(Payment, PaymentAdmin)
 
 
 class TransactionAdmin(admin.ModelAdmin):
@@ -59,16 +85,17 @@ class TransactionAdmin(admin.ModelAdmin):
 
     actions = [reimburse_transactions]
 
-    def has_add_permission(self, request):
-        """Remove the ability to add a transaction from the backoffice """
-        return False
-    
-    def has_change_permission(self, request, obj=None):
-        """ Remove the ability to edit a transaction from the backoffice """
+    def has_add_permission(self, _request):
+        """Remove the ability to add a transaction from the backoffice"""
         return False
 
-    def has_delete_permission(self, request, obj=None):
-        """ Remove the ability to edit a transaction from the backoffice """
+    def has_change_permission(self, _request, _obj=None):
+        """Remove the ability to edit a transaction from the backoffice"""
         return False
+
+    def has_delete_permission(self, _request, _obj=None):
+        """Remove the ability to edit a transaction from the backoffice"""
+        return False
+
 
 admin.site.register(Transaction, TransactionAdmin)
