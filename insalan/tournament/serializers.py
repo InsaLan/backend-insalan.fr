@@ -30,7 +30,7 @@ class EventSerializer(serializers.ModelSerializer):
             "month",
             "ongoing",
             "tournaments",
-            "logo"
+            "logo",
         ]
 
 
@@ -54,8 +54,13 @@ class TournamentSerializer(serializers.ModelSerializer):
         """Meta options of the serializer"""
 
         model = Tournament
-        read_only_fields = ("id","manager_price_onsite", "manager_price_onsite", 
-                            "player_price_online", "player_price_onsite")
+        read_only_fields = (
+            "id",
+            "manager_price_online",
+            "manager_price_onsite",
+            "player_price_online",
+            "player_price_onsite",
+        )
         fields = "__all__"
 
 
