@@ -345,8 +345,8 @@ class ProductCount(models.Model):
     class Meta:
         """Meta information"""
 
-        verbose_name = _("Nombre d'un produit")
-        verbose_name_plural = _("Nombres d'un produit")
+        verbose_name = _("Quantité d'un produit")
+        verbose_name_plural = _("Quantités de produits")
         constraints = [
             models.UniqueConstraint(
                 fields=["transaction", "product"], name="product_count_m2m_through"

@@ -71,7 +71,9 @@ class Token:
             self.bearer_token = None
             self.refresh_token = None
             # Propagate errors
-            raise RuntimeError(_("Unable to refresh HelloAsso token")) from err
+            raise RuntimeError(
+                _("Impossible de rafraîchir le jeton HelloAsso")
+            ) from err
 
         self.assign_token_data(request.json())
 

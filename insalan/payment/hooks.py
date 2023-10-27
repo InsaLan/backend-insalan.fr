@@ -50,7 +50,6 @@ class PaymentCallbackSystem:
                 )
             else:
                 raise ValueError(_(f"Descripteur déjà défini pour {prodcat}"))
-
         cls.__HOOKS[prodcat] = handler
 
     @classmethod
