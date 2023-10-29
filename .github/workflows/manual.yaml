@@ -2,7 +2,7 @@ on:
   # Creating a release requires a tag
   push:
     tags:
-      "manuel*"
+      "*"
     paths:
       - 'docs/manuel/**'
       - '.github/workflows/manual.yaml'
@@ -32,7 +32,8 @@ jobs:
       - name: Build the book
         run: |
           mdbook build
-          tar zcvf manuel.tar.gz book
+          mv book manuel-backend-${{ env.sha_short }}
+          tar zcvf manuel.tar.gz manuel-backend-${{ env.sha_short }}
         working-directory: ${{ env.book-dir }}
 
       # Create a release
