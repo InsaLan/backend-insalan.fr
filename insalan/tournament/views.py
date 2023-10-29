@@ -220,6 +220,8 @@ class TournamentMe(APIView):
             tourney["teams"] = [ 
                 teams for teams in assoc_player_teams_obj if teams["id"] in tourney["teams"] 
             ]
+            # Dereferencing ongoign field from events
+            tourney["event_ongoing"] = Event.objects.get(id=tourney["event"]).ongoing
         # retrieve associated tourneys as Manager
         assoc_manager = Manager.objects.filter(user=user)
         assoc_manager_obj = serializers.ManagerSerializer(assoc_manager, many=True).data
@@ -238,6 +240,8 @@ class TournamentMe(APIView):
             tourney["teams"] = [ 
                 teams for teams in assoc_manager_teams_obj if teams["id"] in tourney["teams"] 
             ]
+            # Dereferencing events
+            tourney["event_ongoing"] = Event.objects.get(id=tourney["event"]).ongoing
         return Response({ "player": assoc_player_tourneys_obj, 
                           "manager": assoc_manager_tourneys_obj }, 
                         status=status.HTTP_200_OK)
