@@ -12,15 +12,14 @@ from rest_framework import generics, permissions, status
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework.response import Response
-from rest_framework.serializers import PrimaryKeyRelatedField
 from rest_framework.views import APIView
 from django.http import QueryDict
 
 from insalan.user.models import User
 import insalan.tournament.serializers as serializers
+from rest_framework.authentication import SessionAuthentication
 
 from .models import Player, Manager, Event, Tournament, Game, Team, PaymentStatus
-
 
 class ReadOnly(BasePermission):
     """Read-Only permissions"""
@@ -187,6 +186,61 @@ class TournamentDetailsFull(APIView):
             tourney_serialized["teams"] = teams_serialized
 
         return Response(tourney_serialized, status=status.HTTP_200_OK)
+
+
+class TournamentMe(APIView):
+    """ 
+    Details on tournament of a logged user
+    This endpoint does many requests to the database and should be used wisely
+    """
+    authentication_classes =  [SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated & ReadOnly]
+
+    def get(self, request):
+        user: User = request.user
+
+        if user is None:
+            raise PermissionDenied()
+
+        # retrieve associated tourneys as Player
+        assoc_player = Player.objects.filter(user=user)
+        assoc_player_obj = serializers.PlayerSerializer(assoc_player, many=True).data
+        assoc_player_teams = [ 
+            Team.objects.get(id=player["team"]) for player in assoc_player_obj
+        ]
+        assoc_player_teams_obj = serializers.TeamSerializer(assoc_player_teams,
+                                                            many=True).data
+        assoc_player_tourneys = [
+                Tournament.objects.get(id=team["tournament"]) for team in assoc_player_teams_obj 
+        ]
+        assoc_player_tourneys_obj = serializers.TournamentSerializer(
+                assoc_player_tourneys, many=True).data
+        # Dereferencing teams from tourneys
+        for tourney in assoc_player_tourneys_obj:
+            tourney["teams"] = [ 
+                teams for teams in assoc_player_teams_obj if teams["id"] in tourney["teams"] 
+            ]
+        # retrieve associated tourneys as Manager
+        assoc_manager = Manager.objects.filter(user=user)
+        assoc_manager_obj = serializers.ManagerSerializer(assoc_manager, many=True).data
+        assoc_manager_teams = [ 
+            Team.objects.get(id=manager["team"]) for manager in assoc_manager_obj
+            ]
+        assoc_manager_teams_obj  = serializers.TeamSerializer(
+                assoc_manager_teams, many=True).data
+        assoc_manager_tourneys = [ 
+            Tournament.objects.get(id=team["tournament"]) for team in assoc_manager_teams_obj 
+        ]
+        assoc_manager_tourneys_obj = serializers.TournamentSerializer(
+                assoc_manager_tourneys, many=True).data
+        # Dereferencing teams from tourneys
+        for tourney in assoc_manager_tourneys_obj:
+            tourney["teams"] = [ 
+                teams for teams in assoc_manager_teams_obj if teams["id"] in tourney["teams"] 
+            ]
+        return Response({ "player": assoc_player_tourneys_obj, 
+                          "manager": assoc_manager_tourneys_obj }, 
+                        status=status.HTTP_200_OK)
 
 
 # Teams
