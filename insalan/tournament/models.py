@@ -348,6 +348,13 @@ class Team(models.Model):
     validated = models.BooleanField(
         default=False, blank=True, verbose_name=_("Équipe validée")
     )
+    password = models.CharField(
+        max_length=20,
+        validators=[MinLengthValidator(8)],
+        null=False,
+        verbose_name=_("Mot de passe de l'équipe"),
+        default='',
+    )
 
     class Meta:
         """Meta Options"""
@@ -401,6 +408,10 @@ class Team(models.Model):
         Retrieve the user identifiers of all managers
         """
         return self.get_managers().values_list("user_id", flat=True)
+    
+    def get_password(self) -> str:
+        """Return team password"""
+        return self.password
 
     def refresh_validation(self):
         """Refreshes the validation state of a tournament"""
@@ -478,6 +489,13 @@ class Player(models.Model):
         blank=True,
         default=None,
     )
+    pseudo = models.CharField(
+        max_length=42,
+        validators=[MinLengthValidator(1)],
+        null=False,
+        verbose_name=_("Pseudo"),
+        default='',
+    )
 
     def __str__(self) -> str:
         """Format this player registration to a str"""
@@ -490,6 +508,10 @@ class Player(models.Model):
     def get_team(self):
         """Return the Team object of the current team"""
         return self.team
+
+    def get_pseudo(self) -> str:
+        """Return the pseudo of the player"""
+        return self.pseudo
 
     def clean(self):
         """
@@ -548,6 +570,13 @@ class Manager(models.Model):
         blank=True,
         default=None,
     )
+    pseudo = models.CharField(
+        max_length=42,
+        validators=[MinLengthValidator(1)],
+        null=False,
+        verbose_name=_("Pseudo"),
+        default='',
+    )
 
     class Meta:
         """Meta Options"""
@@ -571,6 +600,10 @@ class Manager(models.Model):
     def get_team(self):
         """Return the Team object of the current team"""
         return self.team
+    
+    def get_pseudo(self) -> str:
+        """Return the pseudo of the player"""
+        return self.pseudo
 
 
 # vim: set cc=80 tw=80:
