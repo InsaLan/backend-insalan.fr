@@ -4,7 +4,7 @@
 # "Too few public methods"
 # pylint: disable=R0903
 
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, BadRequest
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 from rest_framework import generics, permissions, status
@@ -217,10 +217,10 @@ class TeamList(generics.ListCreateAPIView):
                     ]
                 }
             )
-        mut = data._mutable
-        data._mutable = True
+        #mut = data._mutable
+        #data._mutable = True
         # data["players"] = [user.id]
-        data._mutable = mut
+        #data._mutable = mut
         return super().post(request, *args, **kwargs)
 
 
@@ -247,17 +247,24 @@ class PlayerRegistrationList(generics.ListCreateAPIView):
     serializer_class = serializers.PlayerSerializer
     queryset = Player.objects.all().order_by("id")
 
-    def post(this, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         user = request.user
         data = request.data
 
         if (
             user is None
             or not user.is_authenticated
-            or "team" not in data
-            or "payment" in data
         ):
             raise PermissionDenied()
+
+        if (
+            "team" not in data
+            or "payment" in data
+            or "password" not in data
+            or "pseudo" not in data
+        ) :
+            raise BadRequest()
+
 
         if not user.is_email_active():
             raise PermissionDenied(
@@ -269,11 +276,18 @@ class PlayerRegistrationList(generics.ListCreateAPIView):
                     ]
                 }
             )
-        mut = data._mutable
-        data._mutable = True
+        
+        if data["password"] != Team.objects.get(pk=data["team"]).get_password() :
+            return Response(
+                { "password": _("Mot de passe invalide.")},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        #mut = data._mutable
+        #data._mutable = True
         data["user"] = user.id
         data["payment"] = PaymentStatus.NOT_PAID
-        data._mutable = mut
+        #data._mutable = mut
         return super().post(request, *args, **kwargs)
 
 
@@ -322,8 +336,16 @@ class ManagerRegistrationList(generics.ListCreateAPIView):
         user = request.user
         data = request.data
 
-        if user is None or "team" not in data or "payment" in data:
+        if user is None or not user.is_authenticated :
             raise PermissionDenied()
+
+        if (
+            "team" not in data 
+            or "payment" in data
+            or "pseudo" not in data
+            or "password" not in data
+        ) :
+            raise BadRequest()
 
         if not user.is_email_active():
             raise PermissionDenied(
@@ -335,11 +357,18 @@ class ManagerRegistrationList(generics.ListCreateAPIView):
                     ]
                 }
             )
-        mut = data._mutable
-        data._mutable = True
+
+        if data["password"] != Team.objects.get(pk=data["team"]).get_password() :
+            return Response(
+                { "password": _("Mot de passe invalide.")},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        #mut = data._mutable
+        #data._mutable = True
         data["user"] = user.id
         data["payment"] = PaymentStatus.NOT_PAID
-        data._mutable = mut
+        #data._mutable = mut
         return super().post(request, *args, **kwargs)
 
 
