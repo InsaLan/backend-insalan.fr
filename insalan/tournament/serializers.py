@@ -63,6 +63,15 @@ class TournamentSerializer(serializers.ModelSerializer):
         )
         fields = "__all__"
 
+    def to_representation(self, instance):
+        """Remove all fields except id and is_announced when is_announced is False"""
+        ret = super().to_representation(instance)
+        if ret["is_announced"]:
+            return ret
+        else:
+            return {"id": ret["id"], "is_announced": False}
+
+
 
 class TeamSerializer(serializers.ModelSerializer):
     """Serializer class for Teams"""

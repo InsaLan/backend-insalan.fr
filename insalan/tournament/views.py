@@ -150,8 +150,8 @@ class TournamentDetailsFull(APIView):
             return Response("", status=status.HTTP_400_BAD_REQUEST)
         tourney = tourneys[0]
         # if the tournament hasn't been yet announced, we don't want to return details of it
-        if not tourney.is_announced:
-            return Response({"id": primary_key}, status=status.HTTP_200_OK)
+        # if not tourney.is_announced:
+            # return Response({"id": primary_key}, status=status.HTTP_200_OK)
         tourney_serialized = serializers.TournamentSerializer(
             tourney, context={"request": request}
         ).data
@@ -200,7 +200,7 @@ class TeamList(generics.ListCreateAPIView):
     serializer_class = serializers.TeamSerializer
     permission_classes = [permissions.IsAuthenticated | ReadOnly]
 
-    def post(this, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         user = request.user
         data = request.data
 
@@ -332,7 +332,7 @@ class ManagerRegistrationList(generics.ListCreateAPIView):
     serializer_class = serializers.ManagerSerializer
     queryset = Manager.objects.all().order_by("id")
 
-    def post(this, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         user = request.user
         data = request.data
 
