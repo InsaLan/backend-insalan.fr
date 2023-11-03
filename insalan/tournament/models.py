@@ -239,6 +239,12 @@ class Tournament(models.Model):
         verbose_name=_("Produit joueur"),
         on_delete=models.SET_NULL,
     )
+    maxTeam = models.IntegerField(
+        default=0,
+        null=False,
+        verbose_name=_("Nombre maximal d'équipe"),
+        validators=[MinValueValidator(0)],
+    )
 
     class Meta:
         """Meta options"""
@@ -324,6 +330,10 @@ class Tournament(models.Model):
     def get_rules(self) -> str:
         """Return the raw tournament rules"""
         return self.rules
+    
+    def get_maxTeam(self) -> int:
+        """Return the max number of teams"""
+        return self.maxTeam
 
 
 class Team(models.Model):
