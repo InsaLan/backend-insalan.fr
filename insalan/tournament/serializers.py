@@ -6,7 +6,7 @@
 
 from rest_framework import serializers
 
-from .models import Event, Tournament, Game, Team, Player, Manager
+from .models import Event, Tournament, Game, Team, Player, Manager, unique_registration
 from insalan.user.models import User
 from django.utils.translation import gettext_lazy as _
 
@@ -72,12 +72,11 @@ class TournamentSerializer(serializers.ModelSerializer):
             return {"id": ret["id"], "is_announced": False}
 
 
-
 class TeamSerializer(serializers.ModelSerializer):
     """Serializer class for Teams"""
 
-    players = serializers.ListField(required=False, source="get_players_id")
-    managers = serializers.ListField(required=False, source="get_managers_id")
+    players = serializers.ListField(required=False, source="get_players_id", validators=[unique_registration])
+    managers = serializers.ListField(required=False, source="get_managers_id", validators=[unique_registration])
     password = serializers.CharField(write_only=True)
     players_pseudos = serializers.ListField(required=False, write_only=True)
     managers_pseudos = serializers.ListField(required=False, write_only=True)

@@ -21,6 +21,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
 from rest_framework import serializers
+from typing import Union, List
 
 from insalan.tickets.models import Ticket
 from insalan.user.models import User
@@ -460,22 +461,34 @@ def player_manager_user_unique_validator(user: User):
             _("Utilisateur⋅rice déjà inscrit⋅e dans ce tournois (rôles distincts)")
         )
 
-def unique_registration(user: User):
+def unique_registration(users: Union[User, List[User]]):
     """Validate a unique registration per event"""
-    for a in Player.objects.filter(user=user):
-        print(a)
-    #print(Player.objects.filter(user=user).team)
-    e_regs = [
-        obj.team.tournament.event
-        for obj in Player.objects.filter(user=user)
-    ] + [
-        obj.team.tournament.event
-        for obj in Manager.objects.filter(user=user)
-    ]
-    if (len(e_regs) != len(set(e_regs))):
-        raise serializers.ValidationError(
-            _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
-        )
+    if hasattr(users, "__len__"):
+        for user in users:
+            e_regs = [
+                obj.team.tournament.event
+                for obj in Player.objects.filter(user=user)
+            ] + [
+                obj.team.tournament.event
+                for obj in Manager.objects.filter(user=user)
+            ]
+            if (len(e_regs) != len(set(e_regs))):
+                raise serializers.ValidationError(
+                    _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
+                )
+    else :
+        user = users
+        e_regs = [
+            obj.team.tournament.event
+            for obj in Player.objects.filter(user=user)
+        ] + [
+            obj.team.tournament.event
+            for obj in Manager.objects.filter(user=user)
+        ]
+        if (len(e_regs) != len(set(e_regs))):
+            raise serializers.ValidationError(
+                _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
+            )
 
 
 class Player(models.Model):

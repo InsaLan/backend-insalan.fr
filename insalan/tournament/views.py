@@ -181,7 +181,7 @@ class TournamentDetailsFull(APIView):
                 Player.objects.get(id=pid).pseudo for pid in team_preser["players"]
             ]
             team_preser["managers"] = [
-                Player.objects.get(id=pid).pseudo for pid in team_preser["managers"]
+                Manager.objects.get(id=pid).pseudo for pid in team_preser["managers"]
             ]
 
             teams_serialized.append(team_preser)
@@ -204,7 +204,7 @@ class TeamList(generics.ListCreateAPIView):
         user = request.user
         data = request.data
 
-        if user is None or not user.is_authenticated or "name" not in data:
+        if user is None or not user.is_authenticated or "name" not in data or "password" not in data:
             raise PermissionDenied()
 
         if not user.is_email_active():
