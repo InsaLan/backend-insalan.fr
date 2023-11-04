@@ -8,7 +8,7 @@ from rest_framework import serializers
 
 from .models import Event, Tournament, Game, Team, Player, Manager
 from insalan.user.models import User
-
+from django.utils.translation import gettext_lazy as _
 
 class EventSerializer(serializers.ModelSerializer):
     # pylint: disable=R0903
@@ -78,13 +78,16 @@ class TeamSerializer(serializers.ModelSerializer):
 
     players = serializers.ListField(required=False, source="get_players_id")
     managers = serializers.ListField(required=False, source="get_managers_id")
+    password = serializers.CharField(write_only=True)
+    players_pseudos = serializers.ListField(required=False, write_only=True)
+    managers_pseudos = serializers.ListField(required=False, write_only=True)
 
     class Meta:
         """Meta options of the team serializer"""
 
         model = Team
         read_only_fields = ("id",)
-        fields = ["id", "tournament", "name", "players", "managers"]
+        fields = "__all__"
 
     def create(self, validated_data):
         """Create a Team from input data"""
@@ -92,16 +95,21 @@ class TeamSerializer(serializers.ModelSerializer):
         # Catch the players and managers keywords
         players = validated_data.pop("get_players_id", [])
         managers = validated_data.pop("get_managers_id", [])
+        players_pseudos = validated_data.pop("players_pseudos", [])
+        managers_pseudos = validated_data.pop("managers_pseudos", [])
+
+        if len(players_pseudos) != len(players) or len(managers_pseudos) != len(managers):
+            raise serializers.ValidationError(_("Il manque des pseudos de joueurs et/ou managers"))
 
         team_obj = Team.objects.create(**validated_data)
 
-        for player in players:
+        for player, pseudo in zip(players,players_pseudos):
             user_obj = User.objects.get(id=player)
-            Player.objects.create(user=user_obj, team=team_obj)
+            Player.objects.create(user=user_obj, team=team_obj, pseudo=pseudo)
 
-        for manager in managers:
+        for manager, pseudo in zip(managers, managers_pseudos):
             user_obj = User.objects.get(id=manager)
-            Manager.objects.create(user=user_obj, team=team_obj)
+            Manager.objects.create(user=user_obj, team=team_obj, pseudo=pseudo)
 
         return team_obj
 
