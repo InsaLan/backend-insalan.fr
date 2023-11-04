@@ -176,12 +176,12 @@ class TournamentDetailsFull(APIView):
             ).data
             del team_preser["tournament"]
 
-            # Dereference players/managers to users (username)
+            # Dereference players/managers to pseudo
             team_preser["players"] = [
-                User.objects.get(id=pid).username for pid in team_preser["players"]
+                Player.objects.get(id=pid).pseudo for pid in team_preser["players"]
             ]
             team_preser["managers"] = [
-                User.objects.get(id=pid).username for pid in team_preser["managers"]
+                Player.objects.get(id=pid).pseudo for pid in team_preser["managers"]
             ]
 
             teams_serialized.append(team_preser)

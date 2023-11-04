@@ -20,6 +20,7 @@ from django.core.validators import (
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
+from rest_framework import serializers
 
 from insalan.tickets.models import Ticket
 from insalan.user.models import User
@@ -405,7 +406,7 @@ class Team(models.Model):
         """
         Retrieve the user identifiers of all players
         """
-        return self.get_players().values_list("user_id", flat=True)
+        return self.get_players().values_list("id", flat=True)
 
     def get_managers(self) -> List["Manager"]:
         """
@@ -417,7 +418,7 @@ class Team(models.Model):
         """
         Retrieve the user identifiers of all managers
         """
-        return self.get_managers().values_list("user_id", flat=True)
+        return self.get_managers().values_list("id", flat=True)
     
     def get_password(self) -> str:
         """Return team password"""
@@ -459,6 +460,23 @@ def player_manager_user_unique_validator(user: User):
             _("Utilisateur⋅rice déjà inscrit⋅e dans ce tournois (rôles distincts)")
         )
 
+def unique_registration(user: User):
+    """Validate a unique registration per event"""
+    for a in Player.objects.filter(user=user):
+        print(a)
+    #print(Player.objects.filter(user=user).team)
+    e_regs = [
+        obj.team.tournament.event
+        for obj in Player.objects.filter(user=user)
+    ] + [
+        obj.team.tournament.event
+        for obj in Manager.objects.filter(user=user)
+    ]
+    if (len(e_regs) != len(set(e_regs))):
+        raise serializers.ValidationError(
+            _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
+        )
+
 
 class Player(models.Model):
     """
@@ -476,7 +494,7 @@ class Player(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name=_("Utilisateur⋅ice"),
-        validators=[player_manager_user_unique_validator],
+        validators=[player_manager_user_unique_validator,unique_registration],
     )
     team = models.ForeignKey(
         "tournament.Team",
@@ -559,10 +577,12 @@ class Manager(models.Model):
         User,
         verbose_name=_("Utilisateur⋅ice"),
         on_delete=models.CASCADE,
-        validators=[player_manager_user_unique_validator],
+        validators=[player_manager_user_unique_validator,unique_registration],
     )
     team = models.ForeignKey(
-        "tournament.Team", verbose_name=_("Équipe"), on_delete=models.CASCADE
+        "tournament.Team",
+        verbose_name=_("Équipe"),
+        on_delete=models.CASCADE
     )
     payment_status = models.CharField(
         verbose_name=_("Statut du paiement"),
@@ -615,5 +635,30 @@ class Manager(models.Model):
         """Return the pseudo of the player"""
         return self.pseudo
 
+    def clean(self):
+        """
+        Assert that the user associated with the provided manager does not already
+        exist in any team of any tournament of the event
+        """
+        event = self.get_team().get_tournament().get_event()
+
+        if (
+            len(
+                [
+                    player.user
+                    for players in [
+                        team.get_players()
+                        for teams in [
+                            trnm.get_teams() for trnm in event.get_tournaments()
+                        ]
+                        for team in teams
+                    ]
+                    for player in players
+                    if player.user == self.user
+                ]
+            )
+            > 1
+        ):
+            raise ValidationError(_("Manageur⋅euse déjà inscrit⋅e pour cet évènement"))
 
 # vim: set cc=80 tw=80:
