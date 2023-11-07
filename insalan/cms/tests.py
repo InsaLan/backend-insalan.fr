@@ -16,6 +16,7 @@ class ContentTestCase(TestCase):
         )
 
     def test_content_with_unknow_constants(self):
+        """ test that a ValidationError is raised in case of unknown constant used in a content """
         Constant.objects.create(name="a", value="je suis la valeur a")
         Content.objects.create(
             name="content", content="je suis ${a} mais aussi une variable ${random}"
@@ -23,6 +24,8 @@ class ContentTestCase(TestCase):
         self.assertRaises(ValidationError)
 
     def test_display_undefined_constant_list(self):
+        """ Test that a ValidationError raised by the usage of unknown constants give the correct list of undefined constants
+        """
         Content.objects.create(
             name="content",
             content="je test ${inconnue} mais aussi une variable ${random}",
@@ -33,13 +36,15 @@ class ContentTestCase(TestCase):
         )
 
     def test_create_two_contents_with_same_name(self) -> None:
+        """ Test that the name unicity of a content is checked """
         with self.assertRaises(IntegrityError):
-            Content.objects.create(name="content", content="content")
-            Content.objects.create(name="content", content="content")
+            Content.objects.create(name="content", content="content1")
+            Content.objects.create(name="content", content="content2")
 
 
 class ConstantTestCase(TestCase):
     def test_create_two_constants_with_same_name(self) -> None:
+        """ Test that the name unicity of a constant is checke """
         with self.assertRaises(IntegrityError):
             Constant.objects.create(name="const", value="1")
             Constant.objects.create(name="const", value="2")
