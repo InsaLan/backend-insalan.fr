@@ -36,4 +36,4 @@ class ConstantTestCase(TestCase):
     def test_create_two_constants_with_same_name(self) -> None:
         with self.assertRaises(IntegrityError):
             Constant.objects.create(name="const", value="1")
-            Constant.objects.create(name="const", value="1")
+            Constant.objects.create(name="const", value="2")
