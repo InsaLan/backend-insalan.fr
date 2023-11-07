@@ -23,7 +23,7 @@ def constant_definition_validator(content: str):
     if len(excess_constants) > 0:
         raise ValidationError(
             _(
-                f"Des constantes non définies sont utilisées: {', '.join(sorted(excess_constants))}"
+                "Des constantes non définies sont utilisées: {}".format(', '.join(sorted(excess_constants)))
             )
         )
 
