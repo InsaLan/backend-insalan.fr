@@ -10,10 +10,12 @@ class ContentList(generics.ListAPIView):
 
 
 class ContentFetch(generics.ListAPIView):
-    """ Get a content associated to a section """
+    """Get a content associated to a section"""
+
     pagination_class = None
 
     serializer_class = serializers.ContentSerializer
+
     def get_queryset(self):
         return Content.objects.filter(name=self.kwargs["name"])
 
@@ -27,5 +29,6 @@ class ConstantList(generics.ListAPIView):
 class ConstantFetch(generics.ListAPIView):
     pagination_class = None
     serializer_class = serializers.ConstantSerializer
+
     def get_queryset(self):
         return Constant.objects.filter(name=self.kwargs["name"])
