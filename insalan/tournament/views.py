@@ -7,6 +7,7 @@
 from django.core.exceptions import PermissionDenied, BadRequest
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
+from django.contrib.auth.hashers import check_password
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import BasePermission, SAFE_METHODS
@@ -79,12 +80,8 @@ class EventDetailsSomeDeref(APIView):
         ]
 
         for tourney in event_serialized["tournaments"]:
-            del tourney["event"]
-
-        event_serialized["tournaments"] = [
-            data if data["is_announced"] else {"id": data["id"]}
-            for data in event_serialized["tournaments"]
-        ]
+            if tourney["is_announced"] :
+                del tourney["event"]
 
         return Response(event_serialized, status=status.HTTP_200_OK)
 
@@ -181,7 +178,7 @@ class TournamentDetailsFull(APIView):
                 Player.objects.get(id=pid).pseudo for pid in team_preser["players"]
             ]
             team_preser["managers"] = [
-                Manager.objects.get(id=pid).pseudo for pid in team_preser["managers"]
+                Manager.objects.get(id=pid).as_user().username for pid in team_preser["managers"]
             ]
 
             teams_serialized.append(team_preser)
@@ -277,7 +274,7 @@ class PlayerRegistrationList(generics.ListCreateAPIView):
                 }
             )
         
-        if data["password"] != Team.objects.get(pk=data["team"]).get_password() :
+        if check_password(data["password"], Team.objects.get(pk=data["team"]).get_password()):
             return Response(
                 { "password": _("Mot de passe invalide.")},
                 status=status.HTTP_400_BAD_REQUEST
@@ -342,7 +339,6 @@ class ManagerRegistrationList(generics.ListCreateAPIView):
         if (
             "team" not in data 
             or "payment" in data
-            or "pseudo" not in data
             or "password" not in data
         ) :
             raise BadRequest()
@@ -358,7 +354,7 @@ class ManagerRegistrationList(generics.ListCreateAPIView):
                 }
             )
 
-        if data["password"] != Team.objects.get(pk=data["team"]).get_password() :
+        if check_password(data["password"], Team.objects.get(pk=data["team"]).get_password()):
             return Response(
                 { "password": _("Mot de passe invalide.")},
                 status=status.HTTP_400_BAD_REQUEST

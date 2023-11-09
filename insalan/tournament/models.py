@@ -355,17 +355,19 @@ class Team(models.Model):
         max_length=42,
         validators=[MinLengthValidator(3)],
         null=False,
+        blank=False,
         verbose_name=_("Nom d'équipe"),
     )
     validated = models.BooleanField(
-        default=False, blank=True, verbose_name=_("Équipe validée")
+        default=False,
+        blank=True,
+        verbose_name=_("Équipe validée")
     )
     password = models.CharField(
-        max_length=20,
-        validators=[MinLengthValidator(8)],
+        max_length=100,
         null=False,
+        blank=False,
         verbose_name=_("Mot de passe de l'équipe"),
-        default='',
     )
 
     class Meta:
@@ -463,28 +465,12 @@ def player_manager_user_unique_validator(user: User):
 
 def unique_registration(users: Union[User, List[User]]):
     """Validate a unique registration per event"""
-    if hasattr(users, "__len__"):
+    if type(users) == list:
         for user in users:
-            e_regs = [
-                obj.team.tournament.event
-                for obj in Player.objects.filter(user=user)
-            ] + [
-                obj.team.tournament.event
-                for obj in Manager.objects.filter(user=user)
-            ]
-            if (len(e_regs) != len(set(e_regs))):
-                raise serializers.ValidationError(
-                    _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
-                )
-    else :
-        user = users
-        e_regs = [
-            obj.team.tournament.event
-            for obj in Player.objects.filter(user=user)
-        ] + [
-            obj.team.tournament.event
-            for obj in Manager.objects.filter(user=user)
-        ]
+            unique_registration(user)
+    else:
+        e_regs = [obj.team.tournament.event for obj in Player.objects.filter(user=users)] + \
+                 [obj.team.tournament.event for obj in Manager.objects.filter(user=users)]
         if (len(e_regs) != len(set(e_regs))):
             raise serializers.ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
@@ -534,8 +520,8 @@ class Player(models.Model):
         max_length=42,
         validators=[MinLengthValidator(1)],
         null=False,
-        verbose_name=_("Pseudo"),
-        default='',
+        blank=False,
+        verbose_name=_("Pseudo en jeu"),
     )
 
     def __str__(self) -> str:
@@ -613,13 +599,6 @@ class Manager(models.Model):
         blank=True,
         default=None,
     )
-    pseudo = models.CharField(
-        max_length=42,
-        validators=[MinLengthValidator(1)],
-        null=False,
-        verbose_name=_("Pseudo"),
-        default='',
-    )
 
     class Meta:
         """Meta Options"""
@@ -643,10 +622,6 @@ class Manager(models.Model):
     def get_team(self):
         """Return the Team object of the current team"""
         return self.team
-    
-    def get_pseudo(self) -> str:
-        """Return the pseudo of the player"""
-        return self.pseudo
 
     def clean(self):
         """
