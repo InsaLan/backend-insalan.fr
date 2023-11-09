@@ -469,12 +469,11 @@ def unique_registration(users: Union[User, List[User]]):
         for user in users:
             unique_registration(user)
     else:
-        e_regs = [obj.team.tournament.event for obj in Player.objects.filter(user=users)] + \
-                 [obj.team.tournament.event for obj in Manager.objects.filter(user=users)]
-        if (len(e_regs) != len(set(e_regs))):
-            raise serializers.ValidationError(
-                _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
-            )
+        e_regs = Event.objects.filter(tournament__team__player__user=users).union(Event.objects.filter(tournament__team__manager__user=users))
+        if len(e_regs) > 0:
+            return False
+        else:
+            return True
 
 
 class Player(models.Model):
@@ -493,7 +492,7 @@ class Player(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name=_("Utilisateur⋅ice"),
-        validators=[player_manager_user_unique_validator,unique_registration],
+        #validators=[player_manager_user_unique_validator,unique_registration],
     )
     team = models.ForeignKey(
         "tournament.Team",
@@ -545,26 +544,32 @@ class Player(models.Model):
         Assert that the user associated with the provided player does not already
         exist in any team of any tournament of the event
         """
-        event = self.get_team().get_tournament().get_event()
-
-        if (
-            len(
-                [
-                    player.user
-                    for players in [
-                        team.get_players()
-                        for teams in [
-                            trnm.get_teams() for trnm in event.get_tournaments()
-                        ]
-                        for team in teams
-                    ]
-                    for player in players
-                    if player.user == self.user
-                ]
+        if not unique_registration(self.user):
+            raise ValidationError(
+                _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
-            > 1
-        ):
-            raise ValidationError(_("Joueur⋅euse déjà inscrit⋅e pour cet évènement"))
+
+        # event = self.get_team().get_tournament().get_event()
+        # raise ValidationError("test2")
+
+        # if (
+        #     len(
+        #         [
+        #             player.user
+        #             for players in [
+        #                 team.get_players()
+        #                 for teams in [
+        #                     trnm.get_teams() for trnm in event.get_tournaments()
+        #                 ]
+        #                 for team in teams
+        #             ]
+        #             for player in players
+        #             if player.user == self.user
+        #         ]
+        #     )
+        #     > 0
+        # ):
+        #     raise ValidationError(_("Joueur⋅euse déjà inscrit⋅e pour cet évènement"))
 
 
 class Manager(models.Model):

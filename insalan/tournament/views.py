@@ -274,7 +274,7 @@ class PlayerRegistrationList(generics.ListCreateAPIView):
                 }
             )
         
-        if check_password(data["password"], Team.objects.get(pk=data["team"]).get_password()):
+        if not check_password(data["password"], Team.objects.get(pk=data["team"]).get_password()):
             return Response(
                 { "password": _("Mot de passe invalide.")},
                 status=status.HTTP_400_BAD_REQUEST
@@ -354,7 +354,7 @@ class ManagerRegistrationList(generics.ListCreateAPIView):
                 }
             )
 
-        if check_password(data["password"], Team.objects.get(pk=data["team"]).get_password()):
+        if not check_password(data["password"], Team.objects.get(pk=data["team"]).get_password()):
             return Response(
                 { "password": _("Mot de passe invalide.")},
                 status=status.HTTP_400_BAD_REQUEST

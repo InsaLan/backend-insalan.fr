@@ -76,7 +76,7 @@ class TournamentSerializer(serializers.ModelSerializer):
 class TeamSerializer(serializers.ModelSerializer):
     """Serializer class for Teams"""
 
-    players = serializers.ListField(required=False, source="get_players_id", validators=[unique_registration])
+    players = serializers.ListField(required=False, source="get_players_id")
     managers = serializers.ListField(required=False, source="get_managers_id", validators=[unique_registration])
     password = serializers.CharField(write_only=True)
     players_pseudos = serializers.ListField(required=False, write_only=True)
@@ -100,25 +100,15 @@ class TeamSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(_("Il manque des pseudos de joueurs"))
 
         validated_data["password"] = make_password(validated_data["password"])
-        try:
-            team_obj = Team.objects.create(**validated_data)
-        except:
-            raise serializers.ValidationError(_("Erreur à la création de l'équipe"))
+        team_obj = Team.objects.create(**validated_data)
 
         for player, pseudo in zip(players,players_pseudos):
             user_obj = User.objects.get(id=player)
-            try:
-                Player.objects.create(user=user_obj, team=team_obj, pseudo=pseudo)
-            except:
-                raise serializers.ValidationError(_("Erreur à l'inscription du joueur"))
-            
+            Player.objects.create(user=user_obj, team=team_obj, pseudo=pseudo)
 
-        for manager, pseudo in zip(managers, managers_pseudos):
+        for manager in managers:
             user_obj = User.objects.get(id=manager)
-            try:
-                Manager.objects.create(user=user_obj, team=team_obj, pseudo=pseudo)
-            except:
-                raise serializers.ValidationError(_("Erreur à l'inscription du manager"))
+            Manager.objects.create(user=user_obj, team=team_obj)
 
         return team_obj
 
@@ -168,6 +158,13 @@ class PlayerSerializer(serializers.ModelSerializer):
 
         model = Player
         fields = "__all__"
+
+    def validate_user(self, user):
+        if not unique_registration(user):
+            raise serializers.ValidationError(
+                _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
+            )
+        return user
 
 
 class PlayerIdSerializer(serializers.Serializer):
