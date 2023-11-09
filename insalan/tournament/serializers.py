@@ -9,6 +9,7 @@ from rest_framework import serializers
 from .models import Event, Tournament, Game, Team, Player, Manager, unique_registration
 from insalan.user.models import User
 from django.utils.translation import gettext_lazy as _
+from django.contrib.auth.hashers import make_password
 
 class EventSerializer(serializers.ModelSerializer):
     # pylint: disable=R0903
@@ -79,7 +80,6 @@ class TeamSerializer(serializers.ModelSerializer):
     managers = serializers.ListField(required=False, source="get_managers_id", validators=[unique_registration])
     password = serializers.CharField(write_only=True)
     players_pseudos = serializers.ListField(required=False, write_only=True)
-    managers_pseudos = serializers.ListField(required=False, write_only=True)
 
     class Meta:
         """Meta options of the team serializer"""
@@ -95,20 +95,30 @@ class TeamSerializer(serializers.ModelSerializer):
         players = validated_data.pop("get_players_id", [])
         managers = validated_data.pop("get_managers_id", [])
         players_pseudos = validated_data.pop("players_pseudos", [])
-        managers_pseudos = validated_data.pop("managers_pseudos", [])
 
-        if len(players_pseudos) != len(players) or len(managers_pseudos) != len(managers):
-            raise serializers.ValidationError(_("Il manque des pseudos de joueurs et/ou managers"))
+        if len(players_pseudos) != len(players):
+            raise serializers.ValidationError(_("Il manque des pseudos de joueurs"))
 
-        team_obj = Team.objects.create(**validated_data)
+        validated_data["password"] = make_password(validated_data["password"])
+        try:
+            team_obj = Team.objects.create(**validated_data)
+        except:
+            raise serializers.ValidationError(_("Erreur à la création de l'équipe"))
 
         for player, pseudo in zip(players,players_pseudos):
             user_obj = User.objects.get(id=player)
-            Player.objects.create(user=user_obj, team=team_obj, pseudo=pseudo)
+            try:
+                Player.objects.create(user=user_obj, team=team_obj, pseudo=pseudo)
+            except:
+                raise serializers.ValidationError(_("Erreur à l'inscription du joueur"))
+            
 
         for manager, pseudo in zip(managers, managers_pseudos):
             user_obj = User.objects.get(id=manager)
-            Manager.objects.create(user=user_obj, team=team_obj, pseudo=pseudo)
+            try:
+                Manager.objects.create(user=user_obj, team=team_obj, pseudo=pseudo)
+            except:
+                raise serializers.ValidationError(_("Erreur à l'inscription du manager"))
 
         return team_obj
 
@@ -117,7 +127,12 @@ class TeamSerializer(serializers.ModelSerializer):
 
         # Catch the players and managers keywords
         if "get_players_id" in validated_data:
+            players_pseudos = validated_data.pop("players_pseudos", [])
             players = set(validated_data.pop("get_players_id", []))
+
+            if len(players_pseudos) != len(players):
+                raise serializers.ValidationError(_("Il manque des pseudos de joueurs"))
+
             existing = set(instance.get_players_id())
             removed = existing - players
             for uid in removed:
@@ -135,6 +150,9 @@ class TeamSerializer(serializers.ModelSerializer):
             new = managers - existing
             for uid in new:
                 Manager.objects.create(user_id=uid, team=instance)
+
+        if "password" in validated_data:
+            validated_data["password"] = make_password(validated_data["password"])
 
         # Update all other fields
         super().update(instance, validated_data)
