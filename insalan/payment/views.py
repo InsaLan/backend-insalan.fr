@@ -148,7 +148,9 @@ class Notifications(APIView):
 
             else:
                 logger.warning(
-                    "Payment %d shows status %s unknown or already assigned", pay_id, data["state"]
+                    "Payment %d shows status %s unknown or already assigned",
+                    pay_id,
+                    data["state"],
                 )
 
         return Response(status=status.HTTP_200_OK)
@@ -161,6 +163,12 @@ class PayView(generics.CreateAPIView):
     serializer_class = serializers.TransactionSerializer
 
     def create(self, request):
+        """Process a payment request"""
+        if not app_settings.DEBUG:
+            return JsonResponse(
+                {"err": _("API inaccessible en production")},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         token = Token.get_instance()
         payer = request.user
         data = request.data.copy()
