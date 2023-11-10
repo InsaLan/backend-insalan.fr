@@ -147,9 +147,9 @@ class UserMailer:
         send_mail(
             _("Confirmez votre courriel"),
             _("Confirmez votre adresse de courriel en cliquant sur ")
-            + "http://api."
+            + "http://"
             + getenv("WEBSITE_HOST", "localhost")
-            + reverse("confirm-email", kwargs={"user": user, "token": token}),
+            + reverse("verification", kwargs={"user": user, "token": token}),
             None,  # Django falls back to default of settings.py
             [user_object.email],
             fail_silently=False,
