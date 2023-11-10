@@ -489,7 +489,6 @@ class Player(models.Model):
         User,
         on_delete=models.CASCADE,
         verbose_name=_("Utilisateur⋅ice"),
-        #validators=[player_manager_user_unique_validator,unique_event_registration],
     )
     team = models.ForeignKey(
         "tournament.Team",
@@ -548,28 +547,6 @@ class Player(models.Model):
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
 
-        # event = self.get_team().get_tournament().get_event()
-        # raise ValidationError("test2")
-
-        # if (
-        #     len(
-        #         [
-        #             player.user
-        #             for players in [
-        #                 team.get_players()
-        #                 for teams in [
-        #                     trnm.get_teams() for trnm in event.get_tournaments()
-        #                 ]
-        #                 for team in teams
-        #             ]
-        #             for player in players
-        #             if player.user == self.user
-        #         ]
-        #     )
-        #     > 0
-        # ):
-        #     raise ValidationError(_("Joueur⋅euse déjà inscrit⋅e pour cet évènement"))
-
 
 class Manager(models.Model):
     """
@@ -580,7 +557,6 @@ class Manager(models.Model):
         User,
         verbose_name=_("Utilisateur⋅ice"),
         on_delete=models.CASCADE,
-        #validators=[player_manager_user_unique_validator,unique_event_registration],
     )
     team = models.ForeignKey(
         "tournament.Team",
@@ -638,26 +614,5 @@ class Manager(models.Model):
             raise ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
-
-        # event = self.get_team().get_tournament().get_event()
-
-        # if (
-        #     len(
-        #         [
-        #             player.user
-        #             for players in [
-        #                 team.get_players()
-        #                 for teams in [
-        #                     trnm.get_teams() for trnm in event.get_tournaments()
-        #                 ]
-        #                 for team in teams
-        #             ]
-        #             for player in players
-        #             if player.user == self.user
-        #         ]
-        #     )
-        #     > 1
-        # ):
-        #     raise ValidationError(_("Manageur⋅euse déjà inscrit⋅e pour cet évènement"))
 
 # vim: set cc=80 tw=80:

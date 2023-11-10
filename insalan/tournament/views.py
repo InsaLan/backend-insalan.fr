@@ -146,9 +146,7 @@ class TournamentDetailsFull(APIView):
         if len(tourneys) > 1:
             return Response("", status=status.HTTP_400_BAD_REQUEST)
         tourney = tourneys[0]
-        # if the tournament hasn't been yet announced, we don't want to return details of it
-        # if not tourney.is_announced:
-            # return Response({"id": primary_key}, status=status.HTTP_200_OK)
+        
         tourney_serialized = serializers.TournamentSerializer(
             tourney, context={"request": request}
         ).data
@@ -214,10 +212,7 @@ class TeamList(generics.ListCreateAPIView):
                     ]
                 }
             )
-        #mut = data._mutable
-        #data._mutable = True
-        # data["players"] = [user.id]
-        #data._mutable = mut
+
         return super().post(request, *args, **kwargs)
 
 
@@ -280,11 +275,9 @@ class PlayerRegistrationList(generics.ListCreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        #mut = data._mutable
-        #data._mutable = True
         data["user"] = user.id
         data["payment"] = PaymentStatus.NOT_PAID
-        #data._mutable = mut
+
         return super().post(request, *args, **kwargs)
 
 
@@ -360,11 +353,9 @@ class ManagerRegistrationList(generics.ListCreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        #mut = data._mutable
-        #data._mutable = True
         data["user"] = user.id
         data["payment"] = PaymentStatus.NOT_PAID
-        #data._mutable = mut
+
         return super().post(request, *args, **kwargs)
 
 
