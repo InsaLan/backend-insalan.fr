@@ -6,7 +6,7 @@
 
 from rest_framework import serializers
 
-from .models import Event, Tournament, Game, Team, Player, Manager, unique_registration
+from .models import Event, Tournament, Game, Team, Player, Manager, unique_event_registration
 from insalan.user.models import User
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.hashers import make_password
@@ -77,8 +77,7 @@ class TeamSerializer(serializers.ModelSerializer):
     """Serializer class for Teams"""
 
     players = serializers.ListField(required=False, source="get_players_id")
-    managers = serializers.ListField(required=False, source="get_managers_id", validators=[unique_registration])
-    password = serializers.CharField(write_only=True)
+    managers = serializers.ListField(required=False, source="get_managers_id")
     players_pseudos = serializers.ListField(required=False, write_only=True)
 
     class Meta:
@@ -87,6 +86,21 @@ class TeamSerializer(serializers.ModelSerializer):
         model = Team
         read_only_fields = ("id",)
         fields = "__all__"
+        extra_kwargs = {"password" : {"write_only": True}}
+
+    def validate(self, data):
+        for user in data["get_players_id"] + data["get_managers_id"]:
+            event = Event.objects.get(tournament=data["tournament"])
+            if not unique_event_registration(user,event):
+                raise serializers.ValidationError(
+                _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
+            )
+        
+        if len(data["players_pseudos"]) != len(data["get_players_id"]):
+            raise serializers.ValidationError(_("Il manque des pseudos de joueur⋅euses"))
+
+        return data
+            
 
     def create(self, validated_data):
         """Create a Team from input data"""
@@ -96,11 +110,8 @@ class TeamSerializer(serializers.ModelSerializer):
         managers = validated_data.pop("get_managers_id", [])
         players_pseudos = validated_data.pop("players_pseudos", [])
 
-        if len(players_pseudos) != len(players):
-            raise serializers.ValidationError(_("Il manque des pseudos de joueurs"))
-
         validated_data["password"] = make_password(validated_data["password"])
-        team_obj = Team.objects.create(**validated_data)
+        team_obj = Team(**validated_data)
 
         for player, pseudo in zip(players,players_pseudos):
             user_obj = User.objects.get(id=player)
@@ -109,6 +120,8 @@ class TeamSerializer(serializers.ModelSerializer):
         for manager in managers:
             user_obj = User.objects.get(id=manager)
             Manager.objects.create(user=user_obj, team=team_obj)
+
+        team_obj.save()
 
         return team_obj
 
@@ -119,9 +132,6 @@ class TeamSerializer(serializers.ModelSerializer):
         if "get_players_id" in validated_data:
             players_pseudos = validated_data.pop("players_pseudos", [])
             players = set(validated_data.pop("get_players_id", []))
-
-            if len(players_pseudos) != len(players):
-                raise serializers.ValidationError(_("Il manque des pseudos de joueurs"))
 
             existing = set(instance.get_players_id())
             removed = existing - players
@@ -159,12 +169,14 @@ class PlayerSerializer(serializers.ModelSerializer):
         model = Player
         fields = "__all__"
 
-    def validate_user(self, user):
-        if not unique_registration(user):
+    def validate(self, data):
+        event = Event.objects.get(tournament__team=data["team"])
+        raise serializers.ValidationError(data["user"])
+        if not unique_event_registration(data["user"],event):
             raise serializers.ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
-        return user
+        return data
 
 
 class PlayerIdSerializer(serializers.Serializer):
@@ -183,6 +195,14 @@ class ManagerSerializer(serializers.ModelSerializer):
 
         model = Manager
         fields = "__all__"
+    
+    def validate(self, data):
+        event = Event.objects.get(tournament__team=data["team"])
+        if not unique_event_registration(data["user"],event):
+            raise serializers.ValidationError(
+                _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
+            )
+        return data
 
 
 class ManagerIdSerializer(serializers.ModelSerializer):
