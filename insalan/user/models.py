@@ -158,6 +158,7 @@ class UserMailer:
             None,  # Django falls back to default of settings.py
             [user_object.email],
             fail_silently=False,
+            html_message="<h1>Je suis un test de HTML</h1>",
         )
 
     @staticmethod
