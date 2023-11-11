@@ -543,10 +543,11 @@ class TeamTestCase(TestCase):
         trnm_one = Tournament.objects.create(event=event_one, game=game)
         trnm_two = Tournament.objects.create(event=event_one, game=game)
 
-        team_lalooze: Team = Team.objects.create(name="LaLooze", tournament=trnm_one, password=make_password("laloozepwd"))
+        team_lalooze: Team = Team.objects.create(
+        name="LaLooze", tournament=trnm_one, password=make_password("laloozepwd"))
 
         team_lapouasse: Team = Team.objects.create(
-            name="LaPouasse", tournament=trnm_two, password=make_password("lapouassepwd")
+        name="LaPouasse", tournament=trnm_two, password=make_password("lapouassepwd")
         )
 
         Player.objects.create(user=robert, team=team_lalooze)
@@ -830,11 +831,11 @@ class PlayerTestCase(TestCase):
         user = User.objects.get(username="randomplayer")
 
         # Register them once
-        Player.objects.create(user=user, team=team)
+        Player.objects.create(user=user, team=team, pseudo="pseudo")
 
         # Try and register them in the same team
-        player = Player.objects.create(user=user, team=team_two, pseudo="playerrandom")
-        player.full_clean()
+        player = Player.objects.create(user=user, team=team_two, pseudo="pseudo")
+        self.assertRaises(ValidationError, player.full_clean())
 
     def test_get_player_team_not_none(self):
         """Check that a player gives a non null team"""
@@ -869,7 +870,7 @@ class PlayerTestCase(TestCase):
         trnm = Tournament.objects.get(event=event)
         # Create a team and player
         team_obj = Team.objects.create(name="La Team Test Player", tournament=trnm)
-        play_obj = Player.objects.create(team=team_obj, user=user_obj)
+        play_obj = Player.objects.create(team=team_obj, user=user_obj, pseudo="pseudo")
 
         Player.objects.get(id=play_obj.id)
 
@@ -885,7 +886,7 @@ class PlayerTestCase(TestCase):
         trnm = Tournament.objects.get(event=event)
         # Create a Player registration
         team_obj = Team.objects.create(name="La Team Test User", tournament=trnm)
-        play_obj = Player.objects.create(team=team_obj, user=user_obj)
+        play_obj = Player.objects.create(team=team_obj, user=user_obj, pseudo="pseudo")
 
         # Test
         Player.objects.get(id=play_obj.id)
@@ -999,7 +1000,7 @@ class TournamentFullDerefEndpoint(TestCase):
         self.assertEqual(request.data, model)
 
     def test_not_announced(self):
-        """Test a simple example"""
+        """Test if a tournament hasn't been yet announced"""
         uobj_one = User.objects.create(
             username="test_user_one", email="one@example.com"
         )
@@ -1039,7 +1040,7 @@ class TournamentFullDerefEndpoint(TestCase):
             request.data,
             {
                 "id": tourneyobj_one.id,
-                "is_announced": False
+                "is_announced": False,
             },
         )
 
@@ -1180,6 +1181,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
                     "manager_price_online": "0.00",
                     "manager_price_onsite": "0.00",
                     "cashprizes": [],
+                    "max_team": 0,
                     "game": gobj.id,
                     "manager_online_product": tourney.manager_online_product.id,
                     "player_online_product": tourney.player_online_product.id,
@@ -1325,8 +1327,9 @@ class ManagerTestCase(TestCase):
             last_name="Nya",
         )
 
-        Manager.objects.create(user=fella, team=team_one).full_clean()
-        Manager.objects.create(user=fella, team=team_two).full_clean()
+        man2 = Manager.objects.create(user=fella, team=team_two)
+
+        self.assertRaises(ValidationError, man2.full_clean())
 
     def test_one_manager_many_teams_same_event_diff_tournament_diff_team(self):
         """Test the collision of duplicate managers"""
@@ -1349,7 +1352,10 @@ class ManagerTestCase(TestCase):
         )
 
         Manager.objects.create(user=fella, team=team_one).full_clean()
-        Manager.objects.create(user=fella, team=team_two).full_clean()
+        man2 = Manager.objects.create(user=fella, team=team_two)
+
+        self.assertRaises(ValidationError, man2.full_clean())
+
 
     def test_one_manager_many_teams_diff_event_diff_tournament_diff_team(self):
         """Test the collision of duplicate managers"""
@@ -1375,7 +1381,8 @@ class ManagerTestCase(TestCase):
         )
 
         Manager.objects.create(user=fella, team=team_one).full_clean()
-        Manager.objects.create(user=fella, team=team_two).full_clean()
+        man2 = Manager.objects.create(user=fella, team=team_two)
+        self.assertRaises(ValidationError, man2.full_clean())
 
     def test_manager_team_deletion(self):
         """Verify the behaviour of a Manager when their team gets deleted"""
@@ -1495,7 +1502,7 @@ class TournamentTeamEndpoints(TestCase):
             {
                 "name": "Les emails valides",
                 "tournament": trnm.id,
-                "password": "strongpwd"
+                "password":"Password123!"
             },
             format="json",
         )
@@ -1515,7 +1522,7 @@ class TournamentTeamEndpoints(TestCase):
             {
                 "name": "Flemme de valider",
                 "tournament": trnm.id,
-                "password": "strongpwd"
+                "password":"Password123!"
             },
             format="json",
         )
@@ -1527,16 +1534,13 @@ class TournamentTeamEndpoints(TestCase):
         user: User = User.objects.get(username="validemail")
         self.client.force_login(user=user)
         team: Team = Team.objects.get(name="La Team Test")
-        event: Event = Event.objects.get(name="InsaLan Test")
-
-        trnm = event.get_tournaments()[0]
 
         request = self.client.post(
-            f"/v1/tournament/player/",
+            "/v1/tournament/player/",
             {
                 "team": team.id,
-                "password": "password",
-                "pseudo": "pseudo"
+                "password": "Password123!",
+                "pseudo":"pseudo",
             },
             format="json",
         )
@@ -1545,10 +1549,10 @@ class TournamentTeamEndpoints(TestCase):
         Player.objects.filter(user=user.id).delete()
 
         request = self.client.post(
-            f"/v1/tournament/manager/",
+            "/v1/tournament/manager/",
             {
                 "team": team.id,
-                "password": "password"
+                "password":"Password123!",
             },
             format="json",
         )
@@ -1559,26 +1563,23 @@ class TournamentTeamEndpoints(TestCase):
         user: User = User.objects.get(username="invalidemail")
         self.client.force_login(user=user)
         team: Team = Team.objects.get(name="La Team Test")
-        event: Event = Event.objects.get(name="InsaLan Test")
-
-        trnm = event.get_tournaments()[0]
 
         request = self.client.post(
-            f"/v1/tournament/player/",
+            "/v1/tournament/player/",
             {
                 "team": team.id,
-                "password": "password",
-                "pseudo": "pseudo"
+                "password": "Password123!",
+                "pseudo":"pseudo",
             },
             format="json",
         )
         self.assertEquals(request.status_code, 403)
 
         request = self.client.post(
-            f"/v1/tournament/manager/",
+            "/v1/tournament/manager/",
             {
                 "team": user.id,
-                "password": "password"
+                "password":"Password123!",
             },
             format="json",
         )
