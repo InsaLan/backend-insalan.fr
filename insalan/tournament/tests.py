@@ -6,6 +6,7 @@ from types import NoneType
 
 from django.db.utils import IntegrityError
 from django.contrib.auth.models import Permission
+from django.contrib.auth.hashers import make_password, check_password
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, TransactionTestCase
@@ -272,19 +273,19 @@ class TournamentTestCase(TestCase):
 
         Player.objects.create(
             user=user_one,
-            team=Team.objects.create(name="Team One", tournament=tourney_one),
+            team=Team.objects.create(name="Team One", tournament=tourney_one, password=make_password("teamonepwd")),
         )
         Manager.objects.create(
             user=user_one,
-            team=Team.objects.create(name="Team Two", tournament=tourney_two),
+            team=Team.objects.create(name="Team Two", tournament=tourney_two, password=make_password("teamtwopwd")),
         )
 
         # This should not work (Player and Manager in tourney 1 in different teams)
         user_two = User.objects.create_user(
             username="user_test_two", email="user_test_two@example.com"
         )
-        team_three = Team.objects.create(name="Team Three", tournament=tourney_one)
-        team_four = Team.objects.create(name="Team Four", tournament=tourney_one)
+        team_three = Team.objects.create(name="Team Three", tournament=tourney_one, password=make_password("teamthreepwd"))
+        team_four = Team.objects.create(name="Team Four", tournament=tourney_one, password=make_password("teamfourpwd"))
 
         Player.objects.create(user=user_two, team=team_three)
         man_obj = Manager.objects.create(user=user_two, team=team_four)
@@ -299,7 +300,7 @@ class TournamentTestCase(TestCase):
         self.assertRaises(ValidationError, play_obj.full_clean)
 
         # This should not work (Player and Manager in tourney 1 in the same team)
-        team_five = Team.objects.create(name="Team Five", tournament=tourney_one)
+        team_five = Team.objects.create(name="Team Five", tournament=tourney_one, password=make_password("teamfivepwd"))
 
         user_four = User.objects.create_user(
             username="user_test_four", email="user_test_four@example.com"
@@ -339,9 +340,9 @@ class TournamentTestCase(TestCase):
         """Get the teams for a tournament"""
         tourney = Tournament.objects.all()[0]
         tourney_two = Tournament.objects.all()[1]
-        team_one = Team.objects.create(name="Ohlala", tournament=tourney)
-        team_two = Team.objects.create(name="OhWow", tournament=tourney)
-        team_three = Team.objects.create(name="LeChiengue", tournament=tourney_two)
+        team_one = Team.objects.create(name="Ohlala", tournament=tourney, password=make_password("ohlalapwd"))
+        team_two = Team.objects.create(name="OhWow", tournament=tourney, password=make_password("ohwowpwd"))
+        team_three = Team.objects.create(name="LeChiengue", tournament=tourney_two, password=make_password("lechienguepwd"))
 
         teams = tourney.get_teams()
         self.assertEqual(2, len(teams))
@@ -542,10 +543,10 @@ class TeamTestCase(TestCase):
         trnm_one = Tournament.objects.create(event=event_one, game=game)
         trnm_two = Tournament.objects.create(event=event_one, game=game)
 
-        team_lalooze: Team = Team.objects.create(name="LaLooze", tournament=trnm_one)
+        team_lalooze: Team = Team.objects.create(name="LaLooze", tournament=trnm_one, password=make_password("laloozepwd"))
 
         team_lapouasse: Team = Team.objects.create(
-            name="LaPouasse", tournament=trnm_two
+            name="LaPouasse", tournament=trnm_two, password=make_password("lapouassepwd")
         )
 
         Player.objects.create(user=robert, team=team_lalooze)
@@ -632,7 +633,7 @@ class TeamTestCase(TestCase):
 
         # Attempt to register another one
         self.assertRaises(
-            IntegrityError, Team.objects.create, name="LaLooze", tournament=tourney
+            IntegrityError, Team.objects.create, name="LaLooze", tournament=tourney, password=make_password("laloozepwd")
         )
 
     def test_team_name_too_short(self):
@@ -667,7 +668,7 @@ class PlayerTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game")
         trnm = Tournament.objects.create(game=game, event=event)
-        team_one: Team = Team.objects.create(name="La Team Test", tournament=trnm)
+        team_one: Team = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("password"))
 
         # Second edition
         event_two = Event.objects.create(
@@ -675,7 +676,7 @@ class PlayerTestCase(TestCase):
         )
         trnm_two = Tournament.objects.create(game=game, event=event_two)
         team_two: Team = Team.objects.create(
-            name="La Team Test Passée", tournament=trnm_two
+            name="La Team Test Passée", tournament=trnm_two, password=make_password("password2")
         )
 
         # Now the users
@@ -701,9 +702,9 @@ class PlayerTestCase(TestCase):
         )
 
         # Now, registrations
-        Player.objects.create(team=team_one, user=user_one)
-        Player.objects.create(team=team_one, user=another_player)
-        Player.objects.create(team=team_two, user=another_player)
+        Player.objects.create(team=team_one, user=user_one, pseudo="playerOne")
+        Player.objects.create(team=team_one, user=another_player, pseudo="PlayerTwo")
+        Player.objects.create(team=team_two, user=another_player, pseudo="RandomKiller")
 
     def test_get_one_player_of_user(self):
         """Check the conversion between user and player"""
@@ -746,7 +747,7 @@ class PlayerTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game")
         trnm = Tournament.objects.create(game=game, event=event)
-        team = Team.objects.create(name="La Team Test", tournament=trnm)
+        team = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
 
         user = User.objects.get(username="randomplayer")
 
@@ -762,7 +763,7 @@ class PlayerTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game")
         trnm = Tournament.objects.create(game=game, event=event)
-        team = Team.objects.create(name="La Team Test", tournament=trnm)
+        team = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
 
         user = User.objects.get(username="randomplayer")
 
@@ -780,8 +781,8 @@ class PlayerTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game")
         trnm = Tournament.objects.create(game=game, event=event)
-        team = Team.objects.create(name="La Team Test", tournament=trnm)
-        team_two = Team.objects.create(name="La Team Test 2", tournament=trnm)
+        team = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
+        team_two = Team.objects.create(name="La Team Test 2", tournament=trnm, password=make_password("lateamtest2pwd"))
 
         user = User.objects.get(username="randomplayer")
 
@@ -800,8 +801,8 @@ class PlayerTestCase(TestCase):
         game = Game.objects.create(name="Test Game")
         trnm = Tournament.objects.create(game=game, event=event)
         trnm_two = Tournament.objects.create(game=game, event=event)
-        team = Team.objects.create(name="La Team Test", tournament=trnm)
-        team_two = Team.objects.create(name="La Team Test 2", tournament=trnm_two)
+        team = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
+        team_two = Team.objects.create(name="La Team Test 2", tournament=trnm_two, password=make_password("lateamtest2pwd"))
 
         user = User.objects.get(username="randomplayer")
 
@@ -832,7 +833,7 @@ class PlayerTestCase(TestCase):
         Player.objects.create(user=user, team=team)
 
         # Try and register them in the same team
-        player = Player.objects.create(user=user, team=team_two)
+        player = Player.objects.create(user=user, team=team_two, pseudo="playerrandom")
         player.full_clean()
 
     def test_get_player_team_not_none(self):
@@ -941,8 +942,8 @@ class TournamentFullDerefEndpoint(TestCase):
             is_announced=True,
         )
         team_one = Team.objects.create(name="Team One", tournament=tourneyobj_one)
-        Player.objects.create(user=uobj_one, team=team_one)
-        Player.objects.create(user=uobj_two, team=team_one)
+        Player.objects.create(user=uobj_one, team=team_one, pseudo="playerone")
+        Player.objects.create(user=uobj_two, team=team_one, pseudo="playertwo")
         Manager.objects.create(user=uobj_three, team=team_one)
 
         request = self.client.get(
@@ -964,6 +965,7 @@ class TournamentFullDerefEndpoint(TestCase):
             "name": "Test Tournament",
             "rules": "have fun!",
             "is_announced": True,
+            "maxTeam": tourneyobj_one.maxTeam,
             # I don't know what's happenin with timezones here
             "registration_open": timezone.make_aware(
                 timezone.make_naive(tourneyobj_one.registration_open)
@@ -983,17 +985,17 @@ class TournamentFullDerefEndpoint(TestCase):
                     "id": team_one.id,
                     "name": "Team One",
                     "players": [
-                        "test_user_one",
-                        "test_user_two",
+                        {"user": "test_user_one", "pseudo": "playerone"},
+                        {"user": "test_user_two", "pseudo": "playertwo"},
                     ],
                     "managers": [
                         "test_user_three",
                     ],
+                    "validated": team_one.validated,
                 }
             ],
             "logo": None,
         }
-
         self.assertEqual(request.data, model)
 
     def test_not_announced(self):
@@ -1024,7 +1026,7 @@ class TournamentFullDerefEndpoint(TestCase):
             game=game_obj,
             is_announced=False,
         )
-        team_one = Team.objects.create(name="Team One", tournament=tourneyobj_one)
+        team_one = Team.objects.create(name="Team One", tournament=tourneyobj_one, password=make_password("strongpwd"))
         Player.objects.create(user=uobj_one, team=team_one)
         Player.objects.create(user=uobj_two, team=team_one)
         Manager.objects.create(user=uobj_three, team=team_one)
@@ -1037,6 +1039,7 @@ class TournamentFullDerefEndpoint(TestCase):
             request.data,
             {
                 "id": tourneyobj_one.id,
+                "is_announced": False
             },
         )
 
@@ -1125,6 +1128,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
             "tournaments": [
                 {
                     "id": tourney.id,
+                    "is_announced": False,
                 }
             ],
             "logo": None,
@@ -1162,6 +1166,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
                     "teams": [],
                     "name": "Test Tournament",
                     "is_announced": True,
+                    "maxTeam": tourney.maxTeam,
                     "rules": "have fun!",
                     "registration_open": timezone.make_aware(
                         timezone.make_naive(tourney.registration_open)
@@ -1198,7 +1203,7 @@ class ManagerTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game")
         trnm = Tournament.objects.create(game=game, event=event)
-        team_one = Team.objects.create(name="La Team Test", tournament=trnm)
+        team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
 
         user_one = User.objects.create_user(
             username="testplayer",
@@ -1286,7 +1291,7 @@ class ManagerTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game")
         trnm = Tournament.objects.create(game=game, event=event)
-        team_one = Team.objects.create(name="La Team Test", tournament=trnm)
+        team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
 
         fella = User.objects.create_user(
             username="fella",
@@ -1309,8 +1314,8 @@ class ManagerTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game")
         trnm = Tournament.objects.create(game=game, event=event)
-        team_one = Team.objects.create(name="La Team Test", tournament=trnm)
-        team_two = Team.objects.create(name="La Team Test 2", tournament=trnm)
+        team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
+        team_two = Team.objects.create(name="La Team Test 2", tournament=trnm, password=make_password("lateamtest2pwd"))
 
         fella = User.objects.create_user(
             username="fella",
@@ -1332,8 +1337,8 @@ class ManagerTestCase(TestCase):
         game = Game.objects.create(name="Test Game")
         trnm = Tournament.objects.create(game=game, event=event)
         trnm_two = Tournament.objects.create(game=game, event=event)
-        team_one = Team.objects.create(name="La Team Test", tournament=trnm)
-        team_two = Team.objects.create(name="La Team Test 2", tournament=trnm_two)
+        team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
+        team_two = Team.objects.create(name="La Team Test 2", tournament=trnm_two, password=make_password("lateamtest2pwd"))
 
         fella = User.objects.create_user(
             username="fella",
@@ -1448,7 +1453,7 @@ class TournamentTeamEndpoints(TestCase):
         )
         game = Game.objects.create(name="Test Game")
         trnm = Tournament.objects.create(game=game, event=event)
-        team_one = Team.objects.create(name="La Team Test", tournament=trnm)
+        team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("password"))
 
         # user_one = User.objects.create_user(
         #     username="testplayer",
@@ -1490,6 +1495,7 @@ class TournamentTeamEndpoints(TestCase):
             {
                 "name": "Les emails valides",
                 "tournament": trnm.id,
+                "password": "strongpwd"
             },
             format="json",
         )
@@ -1509,6 +1515,7 @@ class TournamentTeamEndpoints(TestCase):
             {
                 "name": "Flemme de valider",
                 "tournament": trnm.id,
+                "password": "strongpwd"
             },
             format="json",
         )
@@ -1528,6 +1535,8 @@ class TournamentTeamEndpoints(TestCase):
             f"/v1/tournament/player/",
             {
                 "team": team.id,
+                "password": "password",
+                "pseudo": "pseudo"
             },
             format="json",
         )
@@ -1539,6 +1548,7 @@ class TournamentTeamEndpoints(TestCase):
             f"/v1/tournament/manager/",
             {
                 "team": team.id,
+                "password": "password"
             },
             format="json",
         )
@@ -1547,7 +1557,7 @@ class TournamentTeamEndpoints(TestCase):
     def test_cant_join_a_team_with_no_valid_email(self):
         """Try to join an existing team with no valid email"""
         user: User = User.objects.get(username="invalidemail")
-        self.client.force_login(user=User.objects.get(username="invalidemail"))
+        self.client.force_login(user=user)
         team: Team = Team.objects.get(name="La Team Test")
         event: Event = Event.objects.get(name="InsaLan Test")
 
@@ -1557,6 +1567,8 @@ class TournamentTeamEndpoints(TestCase):
             f"/v1/tournament/player/",
             {
                 "team": team.id,
+                "password": "password",
+                "pseudo": "pseudo"
             },
             format="json",
         )
@@ -1566,6 +1578,7 @@ class TournamentTeamEndpoints(TestCase):
             f"/v1/tournament/manager/",
             {
                 "team": user.id,
+                "password": "password"
             },
             format="json",
         )

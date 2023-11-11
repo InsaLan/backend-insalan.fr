@@ -171,7 +171,6 @@ class PlayerSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         event = Event.objects.get(tournament__team=data["team"])
-        raise serializers.ValidationError(data["user"])
         if not unique_event_registration(data["user"],event):
             raise serializers.ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")

@@ -14,6 +14,7 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.serializers import PrimaryKeyRelatedField
 from rest_framework.views import APIView
+from django.http import QueryDict
 
 from insalan.user.models import User
 import insalan.tournament.serializers as serializers
@@ -174,7 +175,7 @@ class TournamentDetailsFull(APIView):
 
                 # Dereference players/managers to pseudo
                 team_preser["players"] = [
-                    Player.objects.get(id=pid).pseudo for pid in team_preser["players"]
+                    {"user": Player.objects.get(id=pid).as_user().username, "pseudo": Player.objects.get(id=pid).pseudo} for pid in team_preser["players"]
                 ]
                 team_preser["managers"] = [
                     Manager.objects.get(id=pid).as_user().username for pid in team_preser["managers"]
@@ -279,8 +280,10 @@ class PlayerRegistrationList(generics.ListCreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # make the data dict mutable in the case of immutable QueryDict form django test client
+        if type(data) == QueryDict:
+            data._mutable = True
         data["user"] = user.id
-        data["payment"] = PaymentStatus.NOT_PAID
 
         return super().post(request, *args, **kwargs)
 
@@ -357,8 +360,10 @@ class ManagerRegistrationList(generics.ListCreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # make the data dict mutable in the case of immutable QueryDict form django test client
+        if type(data) == QueryDict:
+            data._mutable = True
         data["user"] = user.id
-        data["payment"] = PaymentStatus.NOT_PAID
 
         return super().post(request, *args, **kwargs)
 
