@@ -835,7 +835,7 @@ class PlayerTestCase(TestCase):
 
         # Try and register them in the same team
         player = Player.objects.create(user=user, team=team_two, pseudo="pseudo")
-        self.assertRaises(ValidationError, player.full_clean())
+        self.assertRaises(ValidationError, player.full_clean)
 
     def test_get_player_team_not_none(self):
         """Check that a player gives a non null team"""
@@ -1181,7 +1181,6 @@ class EventDerefAndGroupingEndpoints(TestCase):
                     "manager_price_online": "0.00",
                     "manager_price_onsite": "0.00",
                     "cashprizes": [],
-                    "max_team": 0,
                     "game": gobj.id,
                     "manager_online_product": tourney.manager_online_product.id,
                     "player_online_product": tourney.player_online_product.id,
@@ -1329,7 +1328,7 @@ class ManagerTestCase(TestCase):
 
         man2 = Manager.objects.create(user=fella, team=team_two)
 
-        self.assertRaises(ValidationError, man2.full_clean())
+        self.assertRaises(ValidationError, man2.full_clean)
 
     def test_one_manager_many_teams_same_event_diff_tournament_diff_team(self):
         """Test the collision of duplicate managers"""
@@ -1354,7 +1353,7 @@ class ManagerTestCase(TestCase):
         Manager.objects.create(user=fella, team=team_one).full_clean()
         man2 = Manager.objects.create(user=fella, team=team_two)
 
-        self.assertRaises(ValidationError, man2.full_clean())
+        self.assertRaises(ValidationError, man2.full_clean)
 
 
     def test_one_manager_many_teams_diff_event_diff_tournament_diff_team(self):
@@ -1382,7 +1381,7 @@ class ManagerTestCase(TestCase):
 
         Manager.objects.create(user=fella, team=team_one).full_clean()
         man2 = Manager.objects.create(user=fella, team=team_two)
-        self.assertRaises(ValidationError, man2.full_clean())
+        self.assertRaises(ValidationError, man2.full_clean)
 
     def test_manager_team_deletion(self):
         """Verify the behaviour of a Manager when their team gets deleted"""
@@ -1502,7 +1501,7 @@ class TournamentTeamEndpoints(TestCase):
             {
                 "name": "Les emails valides",
                 "tournament": trnm.id,
-                "password":"Password123!"
+                "password": "password",
             },
             format="json",
         )
@@ -1539,7 +1538,7 @@ class TournamentTeamEndpoints(TestCase):
             "/v1/tournament/player/",
             {
                 "team": team.id,
-                "password": "Password123!",
+                "password": "password",
                 "pseudo":"pseudo",
             },
             format="json",
@@ -1552,7 +1551,7 @@ class TournamentTeamEndpoints(TestCase):
             "/v1/tournament/manager/",
             {
                 "team": team.id,
-                "password":"Password123!",
+                "password":"password",
             },
             format="json",
         )
