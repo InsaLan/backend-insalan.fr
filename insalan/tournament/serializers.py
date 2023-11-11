@@ -89,14 +89,14 @@ class TeamSerializer(serializers.ModelSerializer):
         extra_kwargs = {"password" : {"write_only": True}}
 
     def validate(self, data):
-        for user in data["get_players_id"] + data["get_managers_id"]:
+        for user in data.pop("get_players_id", []) + data.pop("get_managers_id", []):
             event = Event.objects.get(tournament=data["tournament"])
             if not unique_event_registration(user,event):
                 raise serializers.ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
         
-        if len(data["players_pseudos"]) != len(data["get_players_id"]):
+        if len(data.pop("players_pseudos", [])) != len(data.pop("get_players_id", [])):
             raise serializers.ValidationError(_("Il manque des pseudos de joueur⋅euses"))
 
         return data

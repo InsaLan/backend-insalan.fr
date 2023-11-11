@@ -146,43 +146,44 @@ class TournamentDetailsFull(APIView):
         if len(tourneys) > 1:
             return Response("", status=status.HTTP_400_BAD_REQUEST)
         tourney = tourneys[0]
-        
+
         tourney_serialized = serializers.TournamentSerializer(
             tourney, context={"request": request}
         ).data
 
-        # Dereference the event
-        event = tourney.event
-        tourney_serialized["event"] = serializers.EventSerializer(
-            event, context={"request": request}
-        ).data
-        del tourney_serialized["event"]["tournaments"]
-
-        # Dereference the game
-        tourney_serialized["game"] = serializers.GameSerializer(
-            tourney.game, context={"request": request}
-        ).data
-
-        # Dereference the teams
-        teams_serialized = []
-        for team in tourney_serialized["teams"]:
-            team_preser = serializers.TeamSerializer(
-                Team.objects.get(id=team), context={"request": request}
+        if tourney_serialized["is_announced"]:
+            # Dereference the event
+            event = tourney.event
+            tourney_serialized["event"] = serializers.EventSerializer(
+                event, context={"request": request}
             ).data
-            del team_preser["tournament"]
+            del tourney_serialized["event"]["tournaments"]
 
-            # Dereference players/managers to pseudo
-            team_preser["players"] = [
-                Player.objects.get(id=pid).pseudo for pid in team_preser["players"]
-            ]
-            team_preser["managers"] = [
-                Manager.objects.get(id=pid).as_user().username for pid in team_preser["managers"]
-            ]
+            # Dereference the game
+            tourney_serialized["game"] = serializers.GameSerializer(
+                tourney.game, context={"request": request}
+            ).data
 
-            teams_serialized.append(team_preser)
+            # Dereference the teams
+            teams_serialized = []
+            for team in tourney_serialized["teams"]:
+                team_preser = serializers.TeamSerializer(
+                    Team.objects.get(id=team), context={"request": request}
+                ).data
+                del team_preser["tournament"]
 
-        tourney_serialized["teams"].clear()
-        tourney_serialized["teams"] = teams_serialized
+                # Dereference players/managers to pseudo
+                team_preser["players"] = [
+                    Player.objects.get(id=pid).pseudo for pid in team_preser["players"]
+                ]
+                team_preser["managers"] = [
+                    Manager.objects.get(id=pid).as_user().username for pid in team_preser["managers"]
+                ]
+
+                teams_serialized.append(team_preser)
+
+            tourney_serialized["teams"].clear()
+            tourney_serialized["teams"] = teams_serialized
 
         return Response(tourney_serialized, status=status.HTTP_200_OK)
 
@@ -199,8 +200,11 @@ class TeamList(generics.ListCreateAPIView):
         user = request.user
         data = request.data
 
-        if user is None or not user.is_authenticated or "name" not in data or "password" not in data:
+        if user is None or not user.is_authenticated:
             raise PermissionDenied()
+
+        if "name" not in data or "password" not in data or "tournament" not in data:
+            raise BadRequest()
 
         if not user.is_email_active():
             raise PermissionDenied(
