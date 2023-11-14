@@ -147,9 +147,13 @@ class UserMailer:
         send_mail(
             _("Confirmez votre courriel"),
             _("Confirmez votre adresse de courriel en cliquant sur ")
-            + "http://"
+            + getenv("HTTP_PROTOCOL", "https")
+            + "://"
             + getenv("WEBSITE_HOST", "localhost")
-            + reverse("verification", kwargs={"user": user, "token": token}),
+            + "/verification/"
+            + user
+            + "/"
+            + token,
             None,  # Django falls back to default of settings.py
             [user_object.email],
             fail_silently=False,
@@ -170,7 +174,8 @@ class UserMailer:
                 "pour votre compte. Si vous êtes à l'origine de cette demande,"
                 "vous pouvez cliquer sur le lien suivant: "
             )
-            + "http://"
+            + getenv("HTTP_PROTOCOL", "https")
+            + "://"
             + getenv("WEBSITE_HOST", "localhost")
             + "/reset-password/"
             + user
