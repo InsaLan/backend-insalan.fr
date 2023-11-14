@@ -1302,7 +1302,9 @@ class ManagerTestCase(TestCase):
             last_name="Nya",
         )
 
-        Manager.objects.create(user=fella, team=team_one).full_clean()
+        manager = Manager(user=fella, team=team_one)
+        manager.full_clean()
+        manager.save()
         self.assertRaises(
             IntegrityError, Manager.objects.create, user=fella, team=team_one
         )
@@ -1350,14 +1352,17 @@ class ManagerTestCase(TestCase):
             last_name="Nya",
         )
 
-        Manager.objects.create(user=fella, team=team_one).full_clean()
+        man = Manager(user=fella, team=team_one)
+        man.full_clean()
+        man.save()
         man2 = Manager.objects.create(user=fella, team=team_two)
 
         self.assertRaises(ValidationError, man2.full_clean)
 
 
     def test_one_manager_many_teams_diff_event_diff_tournament_diff_team(self):
-        """Test the collision of duplicate managers"""
+        """Test the non collision of duplicate managers in different teams
+        of different tournament of different event"""
         # Basic setup for a one-tournamnent game event
         event = Event.objects.create(
             name="InsaLan Test", year=2023, month=8, description=""
@@ -1379,9 +1384,11 @@ class ManagerTestCase(TestCase):
             last_name="Nya",
         )
 
-        Manager.objects.create(user=fella, team=team_one).full_clean()
-        man2 = Manager.objects.create(user=fella, team=team_two)
-        self.assertRaises(ValidationError, man2.full_clean)
+        man = Manager(user=fella, team=team_one)
+        man.full_clean()
+        man.save()
+        man2 = Manager(user=fella, team=team_two)
+        man2.full_clean()
 
     def test_manager_team_deletion(self):
         """Verify the behaviour of a Manager when their team gets deleted"""
