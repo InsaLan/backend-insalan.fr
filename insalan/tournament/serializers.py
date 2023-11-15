@@ -89,14 +89,14 @@ class TeamSerializer(serializers.ModelSerializer):
         extra_kwargs = {"password" : {"write_only": True}}
 
     def validate(self, data):
-        for user in data.pop("get_players_id", []) + data.pop("get_managers_id", []):
+        for user in data.get("get_players_id", []) + data.get("get_managers_id", []):
             event = Event.objects.get(tournament=data["tournament"])
             if not unique_event_registration(user,event):
                 raise serializers.ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
         
-        if len(data.pop("players_pseudos", [])) != len(data.pop("get_players_id", [])):
+        if len(data.get("players_pseudos", [])) != len(data.get("get_players_id", [])):
             raise serializers.ValidationError(_("Il manque des pseudos de joueur⋅euses"))
 
         return data
@@ -111,7 +111,7 @@ class TeamSerializer(serializers.ModelSerializer):
         players_pseudos = validated_data.pop("players_pseudos", [])
 
         validated_data["password"] = make_password(validated_data["password"])
-        team_obj = Team(**validated_data)
+        team_obj = Team.objects.create(**validated_data)
 
         for player, pseudo in zip(players,players_pseudos):
             user_obj = User.objects.get(id=player)
@@ -120,8 +120,6 @@ class TeamSerializer(serializers.ModelSerializer):
         for manager in managers:
             user_obj = User.objects.get(id=manager)
             Manager.objects.create(user=user_obj, team=team_obj)
-
-        team_obj.save()
 
         return team_obj
 
