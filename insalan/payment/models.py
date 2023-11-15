@@ -165,6 +165,7 @@ class Transaction(models.Model):
         for pid, grouper in itertools.groupby(data["products"]):
             # Validate that the products can be bought
             if not pid.can_be_bought_now():
+                transaction.delete()
                 raise ValidationError(
                     {
                         "error": _("Le produit %(id)s est actuellement indisponible")
@@ -172,6 +173,7 @@ class Transaction(models.Model):
                     }
                 )
             if pid.associated_tournament and not pid.associated_tournament.is_announced:
+                transaction.delete()
                 raise ValidationError(
                     {
                         "error": _("Le tournoi %(id)s est actuellement indisponible")
