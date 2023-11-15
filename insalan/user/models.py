@@ -4,6 +4,7 @@ Module for the definition of models tied to users
 from os import getenv
 from datetime import datetime
 
+import insalan.settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser, PermissionsMixin, Permission
 from django.contrib.auth.tokens import (
@@ -147,9 +148,9 @@ class UserMailer:
         send_mail(
             _("Confirmez votre courriel"),
             _("Confirmez votre adresse de courriel en cliquant sur ")
-            + getenv("HTTP_PROTOCOL", "https")
+            + insalan.settings.PROTOCOL
             + "://"
-            + getenv("WEBSITE_HOST", "localhost")
+            + insalan.settings.WEBSITE_HOST
             + "/verification/"
             + user
             + "/"
@@ -174,9 +175,9 @@ class UserMailer:
                 "pour votre compte. Si vous êtes à l'origine de cette demande,"
                 "vous pouvez cliquer sur le lien suivant: "
             )
-            + getenv("HTTP_PROTOCOL", "https")
+            + insalan.settings.PROTOCOL
             + "://"
-            + getenv("WEBSITE_HOST", "localhost")
+            + insalan.settings.WEBSITE_HOST
             + "/reset-password/"
             + user
             + "/"
