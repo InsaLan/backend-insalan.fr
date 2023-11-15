@@ -112,7 +112,7 @@ class Notifications(APIView):
             pay_obj = pay_objs[0]
             if pay_obj is not None and pay_obj.transaction != trans_obj:
                 logger.error(
-                    "Mismatch! Payment %d is known to belong to transaction %s but HA metadata says %s",
+                    "Mismatch! Payment %s is known to belong to transaction %s but HA metadata says %s",
                     pay_id,
                     trans_obj.id,
                     pay_obj.transaction.id,
@@ -120,7 +120,7 @@ class Notifications(APIView):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
             if pay_obj is not None and trans_obj.order_id != int(data["order"]["id"]):
                 logger.error(
-                    "Mismatch! Payment %d is known to belong to transaction %s but HA data says %s",
+                    "Mismatch! Payment %s is known to belong to transaction %s but HA data says %s",
                     pay_id,
                     trans_obj.order_id,
                     data["order"]["id"],
@@ -128,7 +128,7 @@ class Notifications(APIView):
                 return Response(status=status.HTTP_400_BAD_REQUEST)
             if pay_obj is None:
                 logger.warning(
-                    "Validating transaction %s based on payment %d to be generated later",
+                    "Validating transaction %s based on payment %s to be generated later",
                     trans_obj.id,
                     pay_id,
                 )
@@ -148,9 +148,7 @@ class Notifications(APIView):
 
             else:
                 logger.warning(
-                    "Payment %d shows status %s unknown or already assigned",
-                    pay_id,
-                    data["state"],
+                    "Payment %s shows status %s unknown or already assigned", pay_id, data["state"]
                 )
 
         return Response(status=status.HTTP_200_OK)

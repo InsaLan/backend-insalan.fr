@@ -313,7 +313,7 @@ class Transaction(models.Model):
                 logger.warning("Attempted to validate %s in invalid state", self.id)
             return
 
-        self.payment_status = TransactionStatus.SUCCEDED
+        self.payment_status = TransactionStatus.SUCCEEDED
         self.last_modification_date = timezone.make_aware(datetime.now())
         self.save()
         logger.info("Transaction %s succeeded", self.id)
