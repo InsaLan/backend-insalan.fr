@@ -75,6 +75,10 @@ class Token:
                 _("Impossible de rafraîchir le jeton HelloAsso")
             ) from err
 
+        result = request.json()
+        if "error" in result:
+            raise RuntimeError(_("Impossible de rafraichir le jeton HelloAsso: %s") % result["error_description"])
+
         self.assign_token_data(request.json())
 
     def assign_token_data(self, data):
