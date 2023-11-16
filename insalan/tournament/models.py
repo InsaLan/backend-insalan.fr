@@ -332,7 +332,7 @@ class Tournament(models.Model):
     def get_rules(self) -> str:
         """Return the raw tournament rules"""
         return self.rules
-    
+
     def get_maxTeam(self) -> int:
         """Return the max number of teams"""
         return self.maxTeam
@@ -423,7 +423,7 @@ class Team(models.Model):
         Retrieve the user identifiers of all managers
         """
         return self.get_managers().values_list("id", flat=True)
-    
+
     def get_password(self) -> str:
         """Return team password"""
         return self.password

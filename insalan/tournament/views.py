@@ -273,7 +273,7 @@ class PlayerRegistrationList(generics.ListCreateAPIView):
                     ]
                 }
             )
-        
+
         if not check_password(data["password"], Team.objects.get(pk=data["team"]).get_password()):
             return Response(
                 { "password": _("Mot de passe invalide.")},
@@ -337,7 +337,7 @@ class ManagerRegistrationList(generics.ListCreateAPIView):
             raise PermissionDenied()
 
         if (
-            "team" not in data 
+            "team" not in data
             or "payment" in data
             or "password" not in data
         ) :

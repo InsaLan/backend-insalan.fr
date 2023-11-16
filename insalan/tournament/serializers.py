@@ -95,12 +95,12 @@ class TeamSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
-        
+
         if len(data.get("players_pseudos", [])) != len(data.get("get_players_id", [])):
             raise serializers.ValidationError(_("Il manque des pseudos de joueur⋅euses"))
 
         return data
-            
+
 
     def create(self, validated_data):
         """Create a Team from input data"""
@@ -192,7 +192,7 @@ class ManagerSerializer(serializers.ModelSerializer):
 
         model = Manager
         fields = "__all__"
-    
+
     def validate(self, data):
         event = Event.objects.get(tournament__team=data["team"])
         if not unique_event_registration(data["user"],event):
