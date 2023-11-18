@@ -1168,6 +1168,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
                 {
                     "id": tourney.id,
                     "teams": [],
+                    "validated_teams": 0,
                     "name": "Test Tournament",
                     "is_announced": True,
                     "maxTeam": tourney.maxTeam,
@@ -1470,7 +1471,7 @@ class TournamentTeamEndpoints(TestCase):
             name="InsaLan Test", year=2023, month=3, description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(game=game, event=event)
+        trnm = Tournament.objects.create(game=game, event=event, maxTeam=16)
         team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("password"))
 
         # user_one = User.objects.create_user(
