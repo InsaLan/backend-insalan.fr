@@ -116,6 +116,12 @@ class Game(models.Model):
         null=False,
         blank=False,
     )
+    players_per_team = models.IntegerField(
+        verbose_name=_("Number of players per team"),
+        null=False,
+        validators=[MinValueValidator(1)],
+        default=1
+    )
 
     def __str__(self) -> str:
         """Format this Game to a str"""
@@ -128,6 +134,10 @@ class Game(models.Model):
     def get_short_name(self) -> str:
         """Return the short name of the game"""
         return self.short_name
+
+    def get_players_per_team(self) -> int:
+        """Return the number of players per team"""
+        return self.players_per_team
 
 
 def in_thirty_days():
@@ -247,6 +257,13 @@ class Tournament(models.Model):
         verbose_name=_("Nombre maximal d'équipe"),
         validators=[MinValueValidator(0)],
     )
+    description = models.CharField(
+        null=False,
+        blank=True,
+        default='',
+        verbose_name=_("Description du tournoi"),
+        max_length=300,
+    )
 
     class Meta:
         """Meta options"""
@@ -336,6 +353,14 @@ class Tournament(models.Model):
     def get_maxTeam(self) -> int:
         """Return the max number of teams"""
         return self.maxTeam
+
+    def get_validated_teams(self) -> int:
+        """Return the number of validated teams"""
+        return len(Team.objects.filter(tournament=self,validated=True))
+
+    def get_casters(self) -> List["Caster"]:
+        """Return the list of casters for this tournament"""
+        return Caster.objects.filter(tournament=self)
 
 
 class Team(models.Model):
@@ -527,7 +552,7 @@ class Player(models.Model):
         """Return the current player as a User object"""
         return self.user
 
-    def get_team(self):
+    def get_team(self) -> Team:
         """Return the Team object of the current team"""
         return self.team
 
@@ -546,6 +571,10 @@ class Player(models.Model):
             raise ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
+
+    def save(self,*args,**kwargs):
+        self.team.refresh_validation()
+        super().save(*args,**kwargs)
 
 
 class Manager(models.Model):
@@ -614,5 +643,33 @@ class Manager(models.Model):
             raise ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
+
+class Caster(models.Model):
+    
+    name = models.CharField(
+        max_length=42,
+        null=False,
+        blank=False,
+        verbose_name=_("Nom du casteur")
+    )
+    image = models.FileField(
+        verbose_name=_("Photo de profil"),
+        blank=True,
+        null=True,
+        upload_to="profile-pictures",
+        validators=[
+            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg"])
+        ],
+    )
+    tournament = models.ForeignKey(
+        Tournament,
+        verbose_name=_("Tournoi"),
+        on_delete=models.CASCADE
+    )
+    url = models.URLField(
+        verbose_name=_("Lien twitch ou autre"),
+        blank=True,
+        null=True,
+    )
 
 # vim: set cc=80 tw=80:
