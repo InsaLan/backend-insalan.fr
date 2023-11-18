@@ -7,7 +7,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext as _
 
-from .models import Event, Tournament, Game, Team, Player, Manager
+from .models import Event, Tournament, Game, Team, Player, Manager, Caster
 
 
 class EventAdmin(admin.ModelAdmin):
@@ -68,3 +68,11 @@ class ManagerAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Manager, ManagerAdmin)
+
+class CasterAdmin(admin.ModelAdmin):
+    """Admin handler for tournament Casters"""
+
+    list_display = ("id", "name", "tournament")
+    search_fields = ["name", "tournament"]
+
+admin.site.register(Caster, CasterAdmin)

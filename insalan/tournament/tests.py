@@ -962,7 +962,7 @@ class TournamentFullDerefEndpoint(TestCase):
                 "ongoing": False,
                 "logo": None,
             },
-            "game": {"id": game_obj.id, "name": "Test Game", "short_name": "TFG"},
+            "game": {"id": game_obj.id, "name": "Test Game", "short_name": "TFG", "players_per_team": 1},
             "name": "Test Tournament",
             "rules": "have fun!",
             "is_announced": True,
@@ -996,6 +996,9 @@ class TournamentFullDerefEndpoint(TestCase):
                 }
             ],
             "logo": None,
+            "validated_teams": 0,
+            "description": "",
+            "casters": [],
         }
         self.assertEqual(request.data, model)
 
@@ -1184,6 +1187,8 @@ class EventDerefAndGroupingEndpoints(TestCase):
                     "game": gobj.id,
                     "manager_online_product": tourney.manager_online_product.id,
                     "player_online_product": tourney.player_online_product.id,
+                    "description": "",
+                    "casters": [],
                 }
             ],
             "logo": None,

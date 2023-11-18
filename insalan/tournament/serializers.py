@@ -6,10 +6,19 @@
 
 from rest_framework import serializers
 
-from .models import Event, Tournament, Game, Team, Player, Manager, unique_event_registration
+from .models import Event, Tournament, Game, Team, Player, Manager, unique_event_registration, Caster
 from insalan.user.models import User
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.hashers import make_password
+
+class CasterSerializer(serializers.ModelSerializer):
+    """Serializer for a tournament Caster"""
+
+    class Meta:
+        """Meta options for the serializer"""
+
+        model = Caster
+        exclude = ["tournament"]
 
 class EventSerializer(serializers.ModelSerializer):
     # pylint: disable=R0903
@@ -43,13 +52,15 @@ class GameSerializer(serializers.ModelSerializer):
 
         model = Game
         read_only_fields = ("id",)
-        fields = ["id", "name", "short_name"]
+        fields = "__all__"
 
 
 class TournamentSerializer(serializers.ModelSerializer):
     """Serializer class for Tournaments"""
 
     teams = serializers.ListField(required=False, read_only=True, source="get_teams_id")
+    validated_teams = serializers.IntegerField(read_only=True, source="get_validated_teams")
+    casters = CasterSerializer(many=True, source="get_casters")
 
     class Meta:
         """Meta options of the serializer"""

@@ -278,6 +278,16 @@ class TeamList(generics.ListCreateAPIView):
                 }
             )
 
+        trnm = Tournament.objects.get(pk=data["tournament"])
+        if trnm.get_validated_teams() >= trnm.get_maxTeam():
+            raise PermissionDenied(
+                {
+                    "registration": [
+                        _("Les inscriptions sont complètes")
+                    ]
+                }
+            )
+
         return super().post(request, *args, **kwargs)
 
 
