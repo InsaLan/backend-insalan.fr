@@ -33,6 +33,7 @@ SECRET_KEY = getenv(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = int(getenv("DEV", 0)) == 1
 
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 PROTOCOL = getenv("HTTP_PROTOCOL", "http")
 
 OUTSIDE_PORT = getenv("NGINX_PORT", "80")
