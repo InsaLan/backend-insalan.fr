@@ -202,51 +202,51 @@ class TournamentMe(APIView):
         if user is None:
             raise PermissionDenied()
 
-        # retrieve inscription as Player
-        player_inscriptions = Player.objects.filter(user=user)
+        # retrieve registration as Player
+        players = Player.objects.filter(user=user)
         # serialize it
-        player_inscriptions = serializers.PlayerSerializer(
-            player_inscriptions, context={"request": request}, many=True
+        players = serializers.PlayerSerializer(
+            players, context={"request": request}, many=True
         ).data
-        for inscription in player_inscriptions:
+        for player in players:
             # dereference team
-            inscription["team"] = serializers.TeamSerializer(
-                Team.objects.get(id=inscription["team"]), context={"request": request}
+            player["team"] = serializers.TeamSerializer(
+                Team.objects.get(id=player["team"]), context={"request": request}
             ).data
             # dereference tournament
-            inscription["team"]["tournament"] = serializers.TournamentSerializer(
-                Tournament.objects.get(id=inscription["team"]["tournament"]),
+            player["team"]["tournament"] = serializers.TournamentSerializer(
+                Tournament.objects.get(id=player["team"]["tournament"]),
                 context={"request": request},
             ).data
             # dereference event
-            inscription["team"]["tournament"]["event"] = serializers.EventSerializer(
-                Event.objects.get(id=inscription["team"]["tournament"]["event"]),
+            player["team"]["tournament"]["event"] = serializers.EventSerializer(
+                Event.objects.get(id=player["team"]["tournament"]["event"]),
                 context={"request": request},
             ).data
         
-        # retrieve inscription as Manager
-        manager_inscriptions = Manager.objects.filter(user=user)
+        # retrieve registration as Manager
+        managers = Manager.objects.filter(user=user)
         # serialize it
-        manager_inscriptions = serializers.ManagerSerializer(
-            manager_inscriptions, context={"request": request}, many=True
+        managers = serializers.ManagerSerializer(
+            managers, context={"request": request}, many=True
         ).data
-        for inscription in manager_inscriptions:
+        for manager in managers:
             # dereference team
-            inscription["team"] = serializers.TeamSerializer(
-                Team.objects.get(id=inscription["team"]), context={"request": request}
+            manager["team"] = serializers.TeamSerializer(
+                Team.objects.get(id=manager["team"]), context={"request": request}
             ).data
             # dereference tournament
-            inscription["team"]["tournament"] = serializers.TournamentSerializer(
-                Tournament.objects.get(id=inscription["team"]["tournament"]),
+            manager["team"]["tournament"] = serializers.TournamentSerializer(
+                Tournament.objects.get(id=manager["team"]["tournament"]),
                 context={"request": request},
             ).data
             # dereference event
-            inscription["team"]["tournament"]["event"] = serializers.EventSerializer(
-                Event.objects.get(id=inscription["team"]["tournament"]["event"]),
+            manager["team"]["tournament"]["event"] = serializers.EventSerializer(
+                Event.objects.get(id=manager["team"]["tournament"]["event"]),
                 context={"request": request},
             ).data
 
-        return Response({"player": player_inscriptions, "manager": manager_inscriptions}, status=status.HTTP_200_OK)
+        return Response({"player": players, "manager": managers}, status=status.HTTP_200_OK)
 
 
 # Teams
