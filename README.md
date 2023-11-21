@@ -1,3 +1,8 @@
+# Contributing
+
+Please read carefully[the CONTRIBUTING.md file](CONTRIBUTING.md) before any
+contribution.
+
 # How to
 First, enter in the python venv: `source env/bin/activate`
 
