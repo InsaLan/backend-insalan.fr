@@ -1590,3 +1590,66 @@ class TournamentTeamEndpoints(TestCase):
             format="json",
         )
         self.assertEquals(request.status_code, 403)
+
+
+class TournamentMeTests(TestCase):
+    def setUp(self):
+        self.usrobj = User.objects.create_user(
+            username="randomplayer",
+            email="randomplayer@example.com",
+            password="IUseAVerySecurePassword",
+            first_name="Random",
+            last_name="Player",
+            is_active=True,
+        )
+        self.evobj = Event.objects.create(
+            name="Test Event",
+            description="This is a test",
+            year=2021,
+            month=12,
+            ongoing=False,
+        )
+        self.game_obj = Game.objects.create(name="Test Game", short_name="TFG")
+        self.tourneyobj_one = Tournament.objects.create(
+            event=self.evobj,
+            name="Test Tournament",
+            rules="have fun!",
+            game=self.game_obj,
+            is_announced=True,
+        )
+        self.team_one = Team.objects.create(name="Team One", tournament=self.tourneyobj_one, password=make_password("password"))
+        self.plobjt = Player.objects.create(
+            user_id=self.usrobj.id,
+            team=self.team_one, 
+            pseudo="pseudo"
+        )
+
+        self.team_two = Team.objects.create(name="Team Two", tournament=self.tourneyobj_one, password=make_password("password"))
+        self.managojt = Manager.objects.create(
+            user_id=self.usrobj.id,
+            team=self.team_two
+        )
+
+    def test_get_tournament_me(self):
+        self.client.login(username="randomplayer", password="IUseAVerySecurePassword")
+        response = self.client.get(reverse("tournament/me"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['player'][0]['pseudo'], self.plobjt.pseudo)
+        self.assertEqual(response.data['player'][0]['team']['name'], self.team_one.name)
+        self.assertEqual(response.data['player'][0]['team']['tournament']['name'], self.tourneyobj_one.name)
+        self.assertEqual(response.data['player'][0]['team']['tournament']['event']['name'], self.evobj.name)
+
+    def test_get_tournament_me_manager(self):
+        self.client.login(username="randomplayer", password="IUseAVerySecurePassword")
+        response = self.client.get(reverse("tournament/me"))
+
+        self.assertEqual(response.data['manager'][0]['id'], self.managojt.id)
+        self.assertEqual(response.data['manager'][0]['team']['name'], self.team_two.name)
+        self.assertEqual(response.data['manager'][0]['team']['tournament']['name'], self.tourneyobj_one.name)
+        self.assertEqual(response.data['manager'][0]['team']['tournament']['event']['name'], self.evobj.name)
+
+    def test_get_tournament_me_unauthenticated(self):
+        response = self.client.get(reverse("tournament/me"))
+
+        self.assertEqual(response.status_code, 403)

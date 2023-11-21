@@ -26,6 +26,7 @@ urlpatterns = [
         views.TournamentDetailsFull.as_view(),
         name="tournament/details-full",
     ),
+    path("me/", views.TournamentMe.as_view(), name="tournament/me"),
     path("team/", views.TeamList.as_view(), name="team/list"),
     path("team/<int:pk>/", views.TeamDetails.as_view(), name="team/details"),
     path("player/", views.PlayerRegistrationList.as_view(), name="player/list"),

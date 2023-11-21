@@ -12,15 +12,14 @@ from rest_framework import generics, permissions, status
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework.response import Response
-from rest_framework.serializers import PrimaryKeyRelatedField
 from rest_framework.views import APIView
 from django.http import QueryDict
 
 from insalan.user.models import User
 import insalan.tournament.serializers as serializers
+from rest_framework.authentication import SessionAuthentication
 
 from .models import Player, Manager, Event, Tournament, Game, Team, PaymentStatus
-
 
 class ReadOnly(BasePermission):
     """Read-Only permissions"""
@@ -187,6 +186,67 @@ class TournamentDetailsFull(APIView):
             tourney_serialized["teams"] = teams_serialized
 
         return Response(tourney_serialized, status=status.HTTP_200_OK)
+
+
+class TournamentMe(APIView):
+    """ 
+    Details on tournament of a logged user
+    This endpoint does many requests to the database and should be used wisely
+    """
+    authentication_classes =  [SessionAuthentication]
+    permission_classes = [permissions.IsAuthenticated & ReadOnly]
+
+    def get(self, request):
+        user: User = request.user
+
+        if user is None:
+            raise PermissionDenied()
+
+        # retrieve registration as Player
+        players = Player.objects.filter(user=user)
+        # serialize it
+        players = serializers.PlayerSerializer(
+            players, context={"request": request}, many=True
+        ).data
+        for player in players:
+            # dereference team
+            player["team"] = serializers.TeamSerializer(
+                Team.objects.get(id=player["team"]), context={"request": request}
+            ).data
+            # dereference tournament
+            player["team"]["tournament"] = serializers.TournamentSerializer(
+                Tournament.objects.get(id=player["team"]["tournament"]),
+                context={"request": request},
+            ).data
+            # dereference event
+            player["team"]["tournament"]["event"] = serializers.EventSerializer(
+                Event.objects.get(id=player["team"]["tournament"]["event"]),
+                context={"request": request},
+            ).data
+        
+        # retrieve registration as Manager
+        managers = Manager.objects.filter(user=user)
+        # serialize it
+        managers = serializers.ManagerSerializer(
+            managers, context={"request": request}, many=True
+        ).data
+        for manager in managers:
+            # dereference team
+            manager["team"] = serializers.TeamSerializer(
+                Team.objects.get(id=manager["team"]), context={"request": request}
+            ).data
+            # dereference tournament
+            manager["team"]["tournament"] = serializers.TournamentSerializer(
+                Tournament.objects.get(id=manager["team"]["tournament"]),
+                context={"request": request},
+            ).data
+            # dereference event
+            manager["team"]["tournament"]["event"] = serializers.EventSerializer(
+                Event.objects.get(id=manager["team"]["tournament"]["event"]),
+                context={"request": request},
+            ).data
+
+        return Response({"player": players, "manager": managers}, status=status.HTTP_200_OK)
 
 
 # Teams
