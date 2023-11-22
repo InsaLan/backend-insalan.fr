@@ -14,6 +14,12 @@ class CustomUserAdmin(UserAdmin):
             'fields': ('image',),
         }),
     )
+    # add email to the add user form
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        ("Email", {
+            'fields': ('email',),
+        }),
+    )
 
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Permission)
