@@ -36,6 +36,7 @@ class ProductCategory(models.TextChoices):
 
     REGISTRATION_PLAYER = "PLAYER_REG", _("Inscription joueur⋅euse")
     REGISTRATION_MANAGER = "MANAGER_REG", _("Inscription manager")
+    REGISTRATION_SUBSTITUTE = "SUBSTITUTE_REG", _("Inscription remplaçant⋅e")
     PIZZA = "PIZZA", _("Pizza")
 
 

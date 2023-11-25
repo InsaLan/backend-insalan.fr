@@ -9,7 +9,7 @@ from django.utils.translation import gettext_lazy as _
 
 from insalan.payment.models import ProductCategory
 from insalan.tickets.models import Ticket
-from insalan.tournament.models import Player, Manager, PaymentStatus
+from insalan.tournament.models import Player, Manager, Substitute, PaymentStatus
 
 
 logger = logging.getLogger("insalan.tournament.hooks")
@@ -23,7 +23,7 @@ class PaymentHandler(PaymentHooks):
         """
         Fetch a registration for a user and product.
 
-        Returns a tuple (reg, is_manager), which is pretty explicit. Raises
+        Returns a tuple (reg, is_manager, is_substitute), which is pretty explicit. Raises
         RuntimeError otherwise.
         """
         # Is there even a tournament?
@@ -32,6 +32,7 @@ class PaymentHandler(PaymentHooks):
             raise RuntimeError(_("Aucun tournoi associé"))
 
         is_manager = product.category == ProductCategory.REGISTRATION_MANAGER
+        is_substitute = product.category == ProductCategory.REGISTRATION_SUBSTITUTE
         # Find a registration on that user within the tournament
 
         if is_manager:
@@ -48,8 +49,20 @@ class PaymentHandler(PaymentHooks):
                         user=user.username
                     )
                 )
-            return (reg[0], True)
-
+            return (reg[0], True, False)
+        if is_substitute:
+            reg = Substitute.objects.filter(
+                team__tournament=tourney,
+                user=user,
+                payment_status=PaymentStatus.NOT_PAID,
+            )
+            if len(reg) > 1:
+                raise RuntimeError(
+                    _("Plusieurs inscription remplaçant à un même tournoi")
+                )
+            if len(reg) == 0:
+                raise RuntimeError(_("Aucune inscription remplaçant trouvée"))
+            return (reg[0], False, True)
         else:
             reg = Player.objects.filter(
                 team__tournament=tourney,
@@ -62,7 +75,7 @@ class PaymentHandler(PaymentHooks):
                 )
             if len(reg) == 0:
                 raise RuntimeError(_("Aucune inscription joueur⋅euse trouvée"))
-            return (reg[0], False)
+            return (reg[0], False, False)
 
     @staticmethod
     def prepare_transaction(transaction, product, _count) -> bool:
@@ -70,7 +83,7 @@ class PaymentHandler(PaymentHooks):
 
         user_obj = transaction.payer
         try:
-            (reg, _) = PaymentHandler.fetch_registration(product, user_obj)
+            (reg, _, _) = PaymentHandler.fetch_registration(product, user_obj)
         except RuntimeError:
             # Not gonna work out
             return False
@@ -81,10 +94,12 @@ class PaymentHandler(PaymentHooks):
         """Handle success of the registration"""
 
         user_obj = transaction.payer
-        (reg, is_manager) = PaymentHandler.fetch_registration(product, user_obj)
+        (reg, is_manager, is_substitute) = PaymentHandler.fetch_registration(product, user_obj)
 
         if is_manager:
             PaymentHandler.handle_player_reg(reg)
+        elif is_substitute:
+            PaymentHandler.handle_manager_reg(reg)
         else:
             PaymentHandler.handle_manager_reg(reg)
 
@@ -113,11 +128,23 @@ class PaymentHandler(PaymentHooks):
         reg.save()
 
     @staticmethod
+    def handle_substitute_reg(reg: Substitute):
+        """
+        Handle validation of a Substitute registration
+        """
+        reg.payment_status = PaymentStatus.PAID
+        tick = Ticket.objects.create(user=reg.user, tournament=reg.team.tournament)
+        tick.save()
+
+        reg.ticket = tick
+        reg.save()
+
+    @staticmethod
     def payment_failure(transaction, product, _count):
         """Handle the failure of a registration"""
 
         user_obj = transaction.payer
-        (reg, _is_manager) = PaymentHandler.fetch_registration(product, user_obj)
+        (reg, _is_manager, is_substitute) = PaymentHandler.fetch_registration(product, user_obj)
 
         # Whatever happens, just delete the registration
         reg.delete()
@@ -132,14 +159,18 @@ class PaymentHandler(PaymentHooks):
             raise RuntimeError(_("Tournoi associé à un produit acheté nul!"))
 
         is_manager = product.category == ProductCategory.REGISTRATION_MANAGER
+        is_substitute = product.category == ProductCategory.REGISTRATION_SUBSTITUTE
         if is_manager:
             reg_list = Manager.objects.filter(
                 user=transaction.payer, team__tournament=assoc_tourney
             )
-
+        elif is_substitute:
+            reg_list = Substitute.objects.filter(
+                user=transaction.payer, team__tournament=assoc_tourney
+            )
         else:
             reg_list = Player.objects.filter(
-                user=transaction.payer, team__tournament=product.associated_tournament
+                user=transaction.payer, team__tournament=assoc_tourney
             )
 
         if len(reg_list) == 0:
@@ -169,4 +200,7 @@ def payment_handler_register():
     )
     PaymentCallbackSystem.register_handler(
         ProductCategory.REGISTRATION_MANAGER, PaymentHandler, overwrite=True
+    )
+    PaymentCallbackSystem.register_handler(
+        ProductCategory.REGISTRATION_SUBSTITUTE, PaymentHandler, overwrite=True
     )

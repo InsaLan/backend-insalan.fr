@@ -24,7 +24,7 @@ from django.utils.decorators import method_decorator
 
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
 
-from .models import Event, Tournament, Game, Team, Player, Manager, Caster
+from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster
 
 
 class EventAdmin(admin.ModelAdmin):
@@ -304,3 +304,12 @@ class CasterAdmin(admin.ModelAdmin):
     search_fields = ["name", "tournament"]
 
 admin.site.register(Caster, CasterAdmin)
+
+class SubstituteAdmin(admin.ModelAdmin):
+    """Admin handler for Substitute Registrations"""
+
+    list_display = ("id", "user", "team", "payment_status", "ticket", "pseudo")
+    search_fields = ["user", "team", "payment_status", "pseudo"]
+
+
+admin.site.register(Substitute, SubstituteAdmin)

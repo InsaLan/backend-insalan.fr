@@ -55,4 +55,18 @@ urlpatterns = [
         views.ManagerRegistrationListName.as_view(),
         name="manager/listFromUsername",
     ),
+    path("substitute/", views.SubstituteRegistrationList.as_view(), name="substitute/list"),
+    path(
+        "substitute/<int:pk>/", views.SubstituteRegistration.as_view(), name="substitute/details"
+    ),
+    path(
+        "substitute/fromUserId/<int:user_id>/",
+        views.SubstituteRegistrationListId.as_view(),
+        name="substitute/listFromUserId",
+    ),
+    path(
+        "substitute/fromUsername/<str:username>/",
+        views.SubstituteRegistrationListName.as_view(),
+        name="substitute/listFromUsername",
+    ),
 ]

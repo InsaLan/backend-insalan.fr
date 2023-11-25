@@ -17,6 +17,7 @@ from insalan.tournament.models import (
     PaymentStatus,
     Player,
     Manager,
+    Substitute,
     Team,
     Tournament,
     Event,
@@ -320,6 +321,71 @@ class TournamentTestCase(TestCase):
             Player.objects.create(user=user_five, team=team_five).full_clean,
         )
 
+    def test_substitute_player_duplication(self):
+        """Verify that a user cannot be a substitute and a player on the same tournament"""
+        event = Event.objects.create(name="Test", year=2023, month=2, description="")
+        game_obj = Game.objects.create(name="Game 1", short_name="G1")
+        tourney_one = Tournament.objects.create(
+            name="Tourney 1", game=game_obj, event=event
+        )
+        tourney_two = Tournament.objects.create(
+            name="Tourney 2", game=game_obj, event=event
+        )
+
+        # This should work (Player in tourney 1, Substitute in Tourney 2)
+        user_one = User.objects.create_user(
+            username="user_test_one", email="user_test_one@example.com"
+        )
+
+        Player.objects.create(
+            user=user_one,
+            team=Team.objects.create(name="Team One", tournament=tourney_one, password=make_password("teamonepwd")),
+        )
+        Substitute.objects.create(
+            user=user_one,
+            team=Team.objects.create(name="Team Two", tournament=tourney_two, password=make_password("teamtwopwd")),
+        )
+
+        # This should not work (Player and Manager in tourney 1 in different teams)
+        user_two = User.objects.create_user(
+            username="user_test_two", email="user_test_two@example.com"
+        )
+        team_three = Team.objects.create(name="Team Three", tournament=tourney_one, password=make_password("teamthreepwd"))
+        team_four = Team.objects.create(name="Team Four", tournament=tourney_one, password=make_password("teamfourpwd"))
+
+        Player.objects.create(user=user_two, team=team_three)
+        man_obj = Substitute.objects.create(user=user_two, team=team_four)
+        self.assertRaises(ValidationError, man_obj.full_clean)
+
+        user_three = User.objects.create_user(
+            username="user_test_three", email="user_test_three@example.com"
+        )
+
+        Substitute.objects.create(user=user_three, team=team_three)
+        play_obj = Player.objects.create(user=user_three, team=team_four)
+        self.assertRaises(ValidationError, play_obj.full_clean)
+
+        # This should not work (Player and Substitute in tourney 1 in the same team)
+        team_five = Team.objects.create(name="Team Five", tournament=tourney_one, password=make_password("teamfivepwd"))
+
+        user_four = User.objects.create_user(
+            username="user_test_four", email="user_test_four@example.com"
+        )
+        Player.objects.create(user=user_four, team=team_five)
+        self.assertRaises(
+            ValidationError,
+            Substitute.objects.create(user=user_four, team=team_five).full_clean,
+        )
+
+        user_five = User.objects.create_user(
+            username="user_test_five", email="user_test_five@example.com"
+        )
+        Substitute.objects.create(user=user_five, team=team_five)
+        self.assertRaises(
+            ValidationError,
+            Player.objects.create(user=user_five, team=team_five).full_clean,
+        )
+
     def test_get_event(self):
         """Get the event for a tournament"""
         event = Event.objects.get(year=2023, month=3)
@@ -494,11 +560,13 @@ class TournamentTestCase(TestCase):
         game = Game.objects.create(name="Fortnite")
 
         trnm_one = Tournament.objects.create(
-            event=event_one, game=game, player_price_online=23.3, manager_price_online=3
+            event=event_one, game=game, player_price_online=23.3, manager_price_online=3, substitute_price_online=3
         )
         self.assertEqual(trnm_one.player_price_online, 23.3)
 
         self.assertEqual(trnm_one.manager_price_online, 3)
+
+        self.assertEqual(trnm_one.substitute_price_online, 3)
 
 
 class TeamTestCase(TestCase):
@@ -534,11 +602,22 @@ class TeamTestCase(TestCase):
             last_name="Levain",
         )
 
+        jeanmich: User = User.objects.create_user(
+            username="jeanmich",
+            email="jeanmicheldu46@zzz.com",
+            password="password",
+            first_name="Jean-Michel",
+            last_name="Dupont",
+        )
+
         event_one = Event.objects.create(
             name="Insalan Test One", year=2023, month=2, description=""
         )
 
-        game = Game.objects.create(name="Fortnite")
+        game = Game.objects.create(
+            name="Fortnite",
+            substitute_players_per_team=1,
+        )
 
         trnm_one = Tournament.objects.create(event=event_one, game=game)
         trnm_two = Tournament.objects.create(event=event_one, game=game)
@@ -555,6 +634,8 @@ class TeamTestCase(TestCase):
         Player.objects.create(user=gege, team=team_lapouasse)
         Manager.objects.create(user=didier, team=team_lapouasse)
 
+        Substitute.objects.create(user=jeanmich, team=team_lalooze)
+
     def test_team_get_full(self):
         """Get the fields of a Team"""
         team = Team.objects.get(name="LaLooze")
@@ -564,6 +645,7 @@ class TeamTestCase(TestCase):
         self.assertIsInstance(team.get_tournament(), Tournament)
         self.assertEqual(2, len(team.get_players()))
         self.assertEqual(0, len(team.get_managers()))
+        self.assertEqual(1, len(team.get_substitutes()))
 
         team = Team.objects.get(name="LaPouasse")
         self.assertIsNotNone(team)
@@ -572,6 +654,7 @@ class TeamTestCase(TestCase):
         self.assertIsInstance(team.get_tournament(), Tournament)
         self.assertEqual(1, len(team.get_players()))
         self.assertEqual(1, len(team.get_managers()))
+        self.assertEqual(0, len(team.get_substitutes()))
 
     def test_payment_status_default(self):
         """Verify what the default status of payment on a new player is"""
@@ -925,6 +1008,9 @@ class TournamentFullDerefEndpoint(TestCase):
         uobj_three = User.objects.create(
             username="test_user_three", email="three@example.com"
         )
+        uobj_four = User.objects.create(
+            username="test_user_four", email="four@example.com"
+        )
 
         game_obj = Game.objects.create(name="Test Game", short_name="TFG")
 
@@ -946,6 +1032,7 @@ class TournamentFullDerefEndpoint(TestCase):
         Player.objects.create(user=uobj_one, team=team_one, pseudo="playerone")
         Player.objects.create(user=uobj_two, team=team_one, pseudo="playertwo")
         Manager.objects.create(user=uobj_three, team=team_one)
+        Substitute.objects.create(user=uobj_four, team=team_one, pseudo="substitute")
 
         request = self.client.get(
             reverse("tournament/details-full", args=[tourneyobj_one.id]), format="json"
@@ -978,9 +1065,12 @@ class TournamentFullDerefEndpoint(TestCase):
             "player_price_onsite": "0.00",
             "manager_price_online": "0.00",
             "manager_price_onsite": "0.00",
+            "substitute_price_online": "0.00",
+            "substitute_price_onsite": "0.00",
             "cashprizes": [],
             "player_online_product": tourneyobj_one.player_online_product.id,
             "manager_online_product": tourneyobj_one.manager_online_product.id,
+            "substitute_online_product": tourneyobj_one.substitute_online_product.id,
             "teams": [
                 {
                     "id": team_one.id,
@@ -992,6 +1082,9 @@ class TournamentFullDerefEndpoint(TestCase):
                     "managers": [
                         "test_user_three",
                     ],
+                    "substitutes": [
+                        {"user": "test_user_four", "pseudo": "substitute"},
+                    ],
                     "validated": team_one.validated,
                 }
             ],
@@ -1000,6 +1093,8 @@ class TournamentFullDerefEndpoint(TestCase):
             "description": "",
             "casters": [],
         }
+
+        self.assertEqual(request.data["teams"], model["teams"])
         self.assertEqual(request.data, model)
 
     def test_not_announced(self):
@@ -1034,6 +1129,7 @@ class TournamentFullDerefEndpoint(TestCase):
         Player.objects.create(user=uobj_one, team=team_one)
         Player.objects.create(user=uobj_two, team=team_one)
         Manager.objects.create(user=uobj_three, team=team_one)
+        Substitute.objects.create(user=uobj_three, team=team_one)
 
         request = self.client.get(
             reverse("tournament/details-full", args=[tourneyobj_one.id]), format="json"
@@ -1184,9 +1280,12 @@ class EventDerefAndGroupingEndpoints(TestCase):
                     "player_price_onsite": "0.00",
                     "manager_price_online": "0.00",
                     "manager_price_onsite": "0.00",
+                    "substitute_price_online": "0.00",
+                    "substitute_price_onsite": "0.00",
                     "cashprizes": [],
                     "game": gobj.id,
                     "manager_online_product": tourney.manager_online_product.id,
+                    "substitute_online_product": tourney.substitute_online_product.id,
                     "player_online_product": tourney.player_online_product.id,
                     "description": "",
                     "casters": [],
@@ -1458,6 +1557,287 @@ class ManagerTestCase(TestCase):
         self.assertEqual(PaymentStatus.PAY_LATER, man_reg.payment_status)
 
 
+# Substitute Class Tests
+class SubstituteTestCase(TestCase):
+    """Substitute Unit Test Class"""
+
+    def setUp(self):
+        """Setup method for Substitute Unit Tests"""
+
+        # Basic setup for a one-tournamnent game event
+        event = Event.objects.create(
+            name="InsaLan Test", year=2023, month=3, description=""
+        )
+        game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
+        trnm = Tournament.objects.create(game=game, event=event)
+        team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
+
+        user_one = User.objects.create_user(
+            username="testplayer",
+            email="player.user.test@insalan.fr",
+            password="^ThisIsAnAdminPassword42$",
+            first_name="Iam",
+            last_name="Staff",
+        )
+
+        random_player: User = User.objects.create_user(
+            username="randomplayer",
+            email="randomplayer@gmail.com",
+            password="IUseAVerySecurePassword",
+            first_name="Random",
+            last_name="Player",
+        )
+
+        another_player = User.objects.create_user(
+            username="anotherplayer",
+            password="ThisIsPassword",
+        )
+
+        Player.objects.create(team=team_one, user=user_one)
+        Player.objects.create(team=team_one, user=another_player)
+        Substitute.objects.create(team=team_one, user=random_player, pseudo="pseudo")
+
+    def test_get_user_of_substitute(self):
+        """Check the conversion between user and substitute"""
+        user = User.objects.get(username="randomplayer")
+
+        substitutes = Substitute.objects.filter(user=user)
+        self.assertEqual(1, len(substitutes))
+
+        found_user = substitutes[0].as_user()
+        self.assertEqual(found_user, user)
+
+        self.assertEquals(found_user.get_username(), "randomplayer")
+        self.assertEquals(found_user.get_short_name(), "Random")
+        self.assertEquals(found_user.get_full_name(), "Random Player")
+        self.assertEquals(found_user.get_user_permissions(), set())
+        self.assertTrue(found_user.has_usable_password())
+        self.assertTrue(found_user.check_password("IUseAVerySecurePassword"))
+        self.assertTrue(found_user.is_active)
+        self.assertFalse(found_user.is_staff)
+
+    def test_get_substitute_team_not_none(self):
+        """Check that a substitute gives a non null team"""
+        user = User.objects.get(username="randomplayer")
+
+        substitutes = Substitute.objects.filter(user=user)
+        self.assertEqual(1, len(substitutes))
+        substitute = substitutes[0]
+
+        team = substitute.get_team()
+        self.assertIsNotNone(team)
+
+    def test_not_substitutes(self):
+        """Check that a non-substitute cannot become substitutes"""
+        user = User.objects.get(username="testplayer")
+
+        substitutes = Substitute.objects.filter(user=user)
+        self.assertEqual(0, len(substitutes))
+
+    def test_get_player_team_correct(self):
+        """Check that a substitutes gives the correct team"""
+        user = User.objects.get(username="randomplayer")
+        event = Event.objects.get(year=2023, month=3)
+        trnm = Tournament.objects.get(event=event)
+
+        substitutes = Substitute.objects.filter(user=user)
+        self.assertEqual(1, len(substitutes))
+        substitute = substitutes[0]
+
+        team = substitute.get_team()
+        self.assertIsNotNone(team)
+
+        self.assertEquals(team.get_name(), "La Team Test")
+        self.assertEquals(team.get_tournament(), trnm)
+
+    def test_one_substitute_many_teams_same_event_same_tournament_same_team(self):
+        """Test the collision of duplicate substitutes"""
+        # Basic setup for a one-tournamnent game event
+        event = Event.objects.create(
+            name="InsaLan Test", year=2023, month=8, description=""
+        )
+        game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
+        trnm = Tournament.objects.create(
+            game=game, 
+            event=event,
+            is_announced=True,
+        )
+        team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
+
+        fella = User.objects.create_user(
+            username="fella",
+            email="fella@example.net",
+            password="IUseAVerySecurePassword",
+            first_name="Hewwo",
+            last_name="Nya",
+        )
+
+        substitute = Substitute(user=fella, team=team_one, pseudo="pseudo")
+        substitute.full_clean()
+        substitute.save()
+        self.assertRaises(
+            IntegrityError, Substitute.objects.create, user=fella, team=team_one
+        )
+
+    def test_one_substitute_many_teams_same_event_same_tournament_diff_team(self):
+        """Test the collision of duplicate substitutes"""
+        # Basic setup for a one-tournamnent game event
+        event = Event.objects.create(
+            name="InsaLan Test", year=2023, month=8, description=""
+        )
+        game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
+        trnm = Tournament.objects.create(game=game, event=event)
+        team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
+        team_two = Team.objects.create(name="La Team Test 2", tournament=trnm, password=make_password("lateamtest2pwd"))
+
+        fella = User.objects.create_user(
+            username="fella",
+            email="fella@example.net",
+            password="IUseAVerySecurePassword",
+            first_name="Hewwo",
+            last_name="Nya",
+        )
+
+        man2 = Substitute.objects.create(user=fella, team=team_two)
+
+        self.assertRaises(ValidationError, man2.full_clean)
+
+    def test_one_substitute_many_teams_same_event_diff_tournament_diff_team(self):
+        """Test the collision of duplicate substitutes"""
+        # Basic setup for a one-tournamnent game event
+        event = Event.objects.create(
+            name="InsaLan Test", year=2023, month=8, description=""
+        )
+        game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
+        trnm = Tournament.objects.create(
+            game=game, 
+            event=event,
+            is_announced=True,
+        )
+        trnm_two = Tournament.objects.create(
+            game=game, 
+            event=event,
+            is_announced=True,
+        )
+        team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
+        team_two = Team.objects.create(name="La Team Test 2", tournament=trnm_two, password=make_password("lateamtest2pwd"))
+
+        fella = User.objects.create_user(
+            username="fella",
+            email="fella@example.net",
+            password="IUseAVerySecurePassword",
+            first_name="Hewwo",
+            last_name="Nya",
+        )
+
+        man = Substitute(user=fella, team=team_one, pseudo="pseudo")
+        man.full_clean()
+        man.save()
+        man2 = Substitute.objects.create(user=fella, team=team_two, pseudo="pseudo2")
+
+        self.assertRaises(ValidationError, man2.full_clean)
+
+
+    def test_one_substitute_many_teams_diff_event_diff_tournament_diff_team(self):
+        """Test the non collision of duplicate substitutes in different teams
+        of different tournament of different event"""
+        # Basic setup for a one-tournamnent game event
+        event = Event.objects.create(
+            name="InsaLan Test", year=2023, month=8, description=""
+        )
+        event_two = Event.objects.create(
+            name="InsaLan Test", year=2023, month=2, description=""
+        )
+        game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
+        trnm = Tournament.objects.create(
+            game=game, 
+            event=event,
+            is_announced=True,
+        )
+        trnm_two = Tournament.objects.create(
+            game=game, 
+            event=event_two,
+            is_announced=True,
+        )
+        team_one = Team.objects.create(name="La Team Test", tournament=trnm)
+        team_two = Team.objects.create(name="La Team Test 2", tournament=trnm_two)
+
+        fella = User.objects.create_user(
+            username="fella",
+            email="fella@example.net",
+            password="IUseAVerySecurePassword",
+            first_name="Hewwo",
+            last_name="Nya",
+        )
+
+        man = Substitute(user=fella, team=team_one, pseudo="pseudo")
+        man.full_clean()
+        man.save()
+        man2 = Substitute(user=fella, team=team_two, pseudo="pseudo2")
+        man2.full_clean()
+
+    def test_substitute_team_deletion(self):
+        """Verify the behaviour of a substitute when their team gets deleted"""
+        user_obj = User.objects.get(username="testplayer")
+        event = Event.objects.create(
+            name="InsaLan Test", year=2023, month=8, description=""
+        )
+        game = Game.objects.create(name="Test Game")
+        trnm = Tournament.objects.create(game=game, event=event)
+        # Create a team and player
+        team_obj = Team.objects.create(name="La Team Test", tournament=trnm)
+        play_obj = Substitute.objects.create(team=team_obj, user=user_obj)
+
+        Substitute.objects.get(id=play_obj.id)
+
+        # Delete and verify
+        team_obj.delete()
+
+        self.assertRaises(Substitute.DoesNotExist, Substitute.objects.get, id=play_obj.id)
+
+    def test_user_deletion(self):
+        """Verify that a substitute registration is deleted along with its user"""
+        user_obj = User.objects.get(username="testplayer")
+        event = Event.objects.create(
+            name="InsaLan Test", year=2023, month=8, description=""
+        )
+        game = Game.objects.create(name="Test Game")
+        trnm = Tournament.objects.create(
+            game=game, event=event
+        )  # Create a substitute registration
+        team_obj = Team.objects.create(name="La Team Test", tournament=trnm)
+        man_obj = Substitute.objects.create(team=team_obj, user=user_obj)
+
+        # Test
+        Substitute.objects.get(id=man_obj.id)
+
+        user_obj.delete()
+
+        self.assertRaises(Substitute.DoesNotExist, Substitute.objects.get, id=man_obj.id)
+
+    def test_payment_status_default(self):
+        """Verify what the default status of payment on a new substitute is"""
+        robert = User.objects.all()[0]
+        team = Team.objects.all()[0]
+
+        man_reg = Substitute.objects.create(user=robert, team=team)
+
+        self.assertEqual(PaymentStatus.NOT_PAID, man_reg.payment_status)
+
+    def test_payment_status_set(self):
+        """Verify that we can set a status for a Substitute at any point"""
+        robert = User.objects.all()[0]
+        team = Team.objects.all()[0]
+
+        man_reg = Substitute.objects.create(user=robert, team=team)
+
+        self.assertEqual(PaymentStatus.NOT_PAID, man_reg.payment_status)
+
+        man_reg.payment_status = PaymentStatus.PAY_LATER
+
+        self.assertEqual(PaymentStatus.PAY_LATER, man_reg.payment_status)
+
+
 class TournamentTeamEndpoints(TestCase):
     """Tournament Registration Endpoint Test Class"""
 
@@ -1470,8 +1850,13 @@ class TournamentTeamEndpoints(TestCase):
         event = Event.objects.create(
             name="InsaLan Test", year=2023, month=3, description=""
         )
-        game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(game=game, event=event, maxTeam=16)
+        game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
+        trnm = Tournament.objects.create(
+            game=game, 
+            event=event, 
+            maxTeam=16,
+            is_announced=True
+        )
         team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("password"))
 
         # user_one = User.objects.create_user(
@@ -1570,6 +1955,20 @@ class TournamentTeamEndpoints(TestCase):
         )
         self.assertEquals(request.status_code, 201)
 
+        Manager.objects.filter(user=user.id).delete()
+
+        request = self.client.post(
+            "/v1/tournament/substitute/",
+            {
+                "team": team.id,
+                "password": "password",
+                "pseudo":"pseudo",
+            },
+            format="json",
+        )
+        self.assertEquals(request.status_code, 201)
+
+
     def test_cant_join_a_team_with_no_valid_email(self):
         """Try to join an existing team with no valid email"""
         user: User = User.objects.get(username="invalidemail")
@@ -1592,6 +1991,17 @@ class TournamentTeamEndpoints(TestCase):
             {
                 "team": user.id,
                 "password":"Password123!",
+            },
+            format="json",
+        )
+        self.assertEquals(request.status_code, 403)
+
+        request = self.client.post(
+            "/v1/tournament/substitute/",
+            {
+                "team": team.id,
+                "password": "Password123!",
+                "pseudo":"pseudo",
             },
             format="json",
         )
@@ -1635,6 +2045,11 @@ class TournamentMeTests(TestCase):
             user_id=self.usrobj.id,
             team=self.team_two
         )
+        self.subobj = Substitute.objects.create(
+            user_id=self.usrobj.id,
+            team=self.team_two, 
+            pseudo="pseudo"
+        )
 
     def test_get_tournament_me(self):
         self.client.login(username="randomplayer", password="IUseAVerySecurePassword")
@@ -1654,6 +2069,15 @@ class TournamentMeTests(TestCase):
         self.assertEqual(response.data['manager'][0]['team']['name'], self.team_two.name)
         self.assertEqual(response.data['manager'][0]['team']['tournament']['name'], self.tourneyobj_one.name)
         self.assertEqual(response.data['manager'][0]['team']['tournament']['event']['name'], self.evobj.name)
+
+    def test_get_tournament_me_substitute(self):
+        self.client.login(username="randomplayer", password="IUseAVerySecurePassword")
+        response = self.client.get(reverse("tournament/me"))
+
+        self.assertEqual(response.data['substitute'][0]['pseudo'], self.subobj.pseudo)
+        self.assertEqual(response.data['substitute'][0]['team']['name'], self.team_two.name)
+        self.assertEqual(response.data['substitute'][0]['team']['tournament']['name'], self.tourneyobj_one.name)
+        self.assertEqual(response.data['substitute'][0]['team']['tournament']['event']['name'], self.evobj.name)
 
     def test_get_tournament_me_unauthenticated(self):
         response = self.client.get(reverse("tournament/me"))

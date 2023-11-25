@@ -6,7 +6,7 @@
 
 from rest_framework import serializers
 
-from .models import Event, Tournament, Game, Team, Player, Manager, unique_event_registration, Caster
+from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, unique_event_registration, max_players_per_team_reached, Caster
 from insalan.user.models import User
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.hashers import make_password
@@ -72,6 +72,8 @@ class TournamentSerializer(serializers.ModelSerializer):
             "manager_price_onsite",
             "player_price_online",
             "player_price_onsite",
+            "substitute_price_online",
+            "substitute_price_onsite",
         )
         fields = "__all__"
 
@@ -89,6 +91,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
     players = serializers.ListField(required=False, source="get_players_id")
     managers = serializers.ListField(required=False, source="get_managers_id")
+    substitutes = serializers.ListField(required=False, source="get_substitutes_id")
     players_pseudos = serializers.ListField(required=False, write_only=True)
 
     class Meta:
@@ -119,6 +122,7 @@ class TeamSerializer(serializers.ModelSerializer):
         # Catch the players and managers keywords
         players = validated_data.pop("get_players_id", [])
         managers = validated_data.pop("get_managers_id", [])
+        substitute = validated_data.pop("get_substitutes_id", [])
         players_pseudos = validated_data.pop("players_pseudos", [])
 
         validated_data["password"] = make_password(validated_data["password"])
@@ -131,6 +135,10 @@ class TeamSerializer(serializers.ModelSerializer):
         for manager in managers:
             user_obj = User.objects.get(id=manager)
             Manager.objects.create(user=user_obj, team=team_obj)
+
+        for sub in substitute:
+            user_obj = User.objects.get(id=sub)
+            Substitute.objects.create(user=user_obj, team=team_obj)
 
         return team_obj
 
@@ -160,6 +168,16 @@ class TeamSerializer(serializers.ModelSerializer):
             for uid in new:
                 Manager.objects.create(user_id=uid, team=instance)
 
+        if "get_substitutes_id" in validated_data:
+            substitutes = set(validated_data.pop("get_substitutes_id", []))
+            existing = set(instance.get_substitutes_id())
+            removed = existing - substitutes
+            for uid in removed:
+                Substitute.objects.get(user_id=uid).delete()
+            new = substitutes - existing
+            for uid in new:
+                Substitute.objects.create(user_id=uid, team=instance)
+
         if "password" in validated_data:
             validated_data["password"] = make_password(validated_data["password"])
 
@@ -183,6 +201,11 @@ class PlayerSerializer(serializers.ModelSerializer):
         if not unique_event_registration(data["user"],event):
             raise serializers.ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
+            )
+        team = Team.objects.get(id=data["team"].id)
+        if max_players_per_team_reached(team):
+            raise serializers.ValidationError(
+                _("Équipe déjà remplie")
             )
         return data
 
@@ -215,6 +238,30 @@ class ManagerSerializer(serializers.ModelSerializer):
 
 class ManagerIdSerializer(serializers.ModelSerializer):
     """Serializer to verify a list of manager IDs"""
+
+    def to_representation(self, instance):
+        """Turn a Django object into a serialized representation"""
+        return instance.id
+
+class SubstituteSerializer(serializers.ModelSerializer):
+    """Serializer for a Substitute Registration"""
+
+    class Meta:
+        """Meta options for the serializer"""
+
+        model = Substitute
+        fields = "__all__"
+
+    def validate(self, data):
+        event = Event.objects.get(tournament__team=data["team"])
+        if not unique_event_registration_validator(data["user"],event):
+            raise serializers.ValidationError(
+                _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
+            )
+        return data
+
+class SubstituteIdSerializer(serializers.ModelSerializer):
+    """Serializer to verify a list of Substitute IDs"""
 
     def to_representation(self, instance):
         """Turn a Django object into a serialized representation"""
