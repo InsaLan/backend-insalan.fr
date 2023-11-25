@@ -26,6 +26,65 @@ from typing import Union, List
 from insalan.tickets.models import Ticket
 from insalan.user.models import User
 
+class ClosedTeamRegistrationValidator:
+    """Validate that team registration for a tournament are not full"""
+    requires_context = True
+    message = _("Les inscriptions sont complètes")
+
+    def __init__(self, tournament, serializer=None):
+        if not isinstance(tournament, Tournament):
+            tournament = Tournament.objects.get(pk=tournament)  
+        if tournament.get_validated_teams() == tournament.get_maxTeam():
+            if serializer != None:
+                raise serializers.ValidationError(self.message)
+            else:
+                raise ValidationError(self.message)
+
+class MaxPlayersPerTeamReachedValidator:
+    """Validate the number of players in a team"""
+    requires_context = True
+    message = _("L'équipe est complète")
+    
+    def __init__(self, team, serializer=None):
+        if not isinstance(team, Team):
+            team = Team.objects.get(pk=team)
+        if len(team.get_players()) >= team.get_tournament().get_game().get_players_per_team():
+            if serializer != None:
+                raise serializer.ValidationError(self.message)
+            else:
+                raise ValidationError(self.message)
+            
+class MaxSubstitutePerTeamReachedValidator:
+    """Validate the number of players in a team"""
+    requires_context = True
+    message = _("L'équipe est complète")
+    
+    def __init__(self, team, serializer=None):
+        if not isinstance(team, Team):
+            team = Team.objects.get(pk=team)
+        if len(team.get_substitutes()) >= team.get_tournament().get_game().get_substitute_players_per_team():
+            if serializer != None:
+                raise serializer.ValidationError(self.message)
+            else:
+                raise ValidationError(self.message)
+
+
+class TournamentAnnouncedValidator:
+    """Validate that the tournament is announced for team to register"""
+    requires_context = True
+    message = _("Tournoi inconnu")
+
+    def __init__(self, tournament, serializer=None):
+        if not isinstance(tournament, Tournament):
+            tournament = Tournament.objects.get(pk=tournament)
+
+        if not tournament.is_announced:
+            if serializer != None:
+                raise serializers.ValidationError(self.message)
+            else:
+                raise ValidationError(self.message)
+
+        
 
 class Event(models.Model):
     """
@@ -122,6 +181,12 @@ class Game(models.Model):
         validators=[MinValueValidator(1)],
         default=1
     )
+    substitute_players_per_team = models.IntegerField(
+        verbose_name=_("Number of substitute players per team"),
+        null=False,
+        validators=[MinValueValidator(0)],
+        default=0
+    )
 
     def __str__(self) -> str:
         """Format this Game to a str"""
@@ -139,6 +204,9 @@ class Game(models.Model):
         """Return the number of players per team"""
         return self.players_per_team
 
+    def get_substitute_players_per_team(self) -> int:
+        """Return the number of substitute players per team"""
+        return self.substitute_players_per_team
 
 def in_thirty_days():
     """Return now + 30 days"""
@@ -223,6 +291,21 @@ class Tournament(models.Model):
         decimal_places=2,
         verbose_name=_("prix manager sur place"),
     )  # when paying on site
+        # Tournament manager slot prices
+    substitute_price_online = models.DecimalField(
+        null=False,
+        default=0.0,
+        max_digits=5,
+        decimal_places=2,
+        verbose_name=_("prix manager en ligne"),
+    )  # when paying on the website
+    substitute_price_onsite = models.DecimalField(
+        null=False,
+        default=0.0,
+        max_digits=5,
+        decimal_places=2,
+        verbose_name=_("prix manager sur place"),
+    )  # when paying on site
     cashprizes = ArrayField(
         models.DecimalField(
             null=False,
@@ -241,6 +324,14 @@ class Tournament(models.Model):
         null=True,
         blank=True,
         verbose_name=_("Produit manager"),
+        on_delete=models.SET_NULL,
+    )
+    substitute_online_product = models.ForeignKey(
+        "payment.Product",
+        related_name="substitute_product_reference",
+        null=True,
+        blank=True,
+        verbose_name=_("Produit substitute"),
         on_delete=models.SET_NULL,
     )
     player_online_product = models.ForeignKey(
@@ -318,6 +409,23 @@ class Tournament(models.Model):
         self.manager_online_product.available_from = self.registration_open
         self.manager_online_product.available_until = self.registration_close
         self.manager_online_product.save()
+
+        if self.substitute_online_product is None:
+            prod = Product.objects.create(
+                price=self.substitute_price_online,
+                name=_(f"Place {self.name} remplaçant en ligne"),
+                desc=_(f"Inscription au tournoi {self.name} remplaçant"),
+                category=ProductCategory.REGISTRATION_SUBSTITUTE,
+                associated_tournament=self,
+                available_from=self.registration_open,
+                available_until=self.registration_close,
+            )
+            self.substitute_online_product = prod
+            need_save = True
+        
+        self.substitute_online_product.available_from = self.registration_open
+        self.substitute_online_product.available_until = self.registration_close
+        self.substitute_online_product.save()
 
         if need_save:
             super().save()
@@ -448,6 +556,18 @@ class Team(models.Model):
         Retrieve the user identifiers of all managers
         """
         return self.get_managers().values_list("id", flat=True)
+    
+    def get_substitutes(self) -> List["Substitute"]:
+        """
+        Retrieve all the substitutes in the database for that team
+        """
+        return Substitute.objects.filter(team=self)
+    
+    def get_substitutes_id(self) -> List[int]:
+        """
+        Retrieve the user identifiers of all substitutes
+        """
+        return self.get_substitutes().values_list("id", flat=True)
 
     def get_password(self) -> str:
         """Return team password"""
@@ -458,7 +578,9 @@ class Team(models.Model):
         # Condition 1: ceil((n+1)/2) players have paid/will pay
         players = self.get_players()
 
-        threshold = ceil((len(players)+1)/2)
+        game = self.get_tournament().get_game()
+
+        threshold = ceil((game.get_players_per_team()+1)/2)
 
         paid_seats = len(players.exclude(payment_status=PaymentStatus.NOT_PAID))
 
@@ -471,31 +593,6 @@ class PaymentStatus(models.TextChoices):
     NOT_PAID = "NOTPAID", _("Pas payé")
     PAID = "PAID", _("Payé")
     PAY_LATER = "LATER", _("Payera sur place")
-
-
-def player_manager_user_unique_validator(user: User):
-    """
-    Validate that a user cannot be a player and manager of the same
-    tournament
-    """
-    p_regs = {
-        (obj.user, obj.team.tournament) for obj in Player.objects.filter(user=user)
-    }
-    m_regs = {
-        (obj.user, obj.team.tournament) for obj in Manager.objects.filter(user=user)
-    }
-    if len(m_regs.intersection(p_regs)) > 0:
-        raise ValidationError(
-            _("Utilisateur⋅rice déjà inscrit⋅e dans ce tournois (rôles distincts)")
-        )
-
-def unique_event_registration(user: User, event: Event):
-    """Validate a unique registration per event"""
-    e_regs = Player.objects.filter(team__tournament__event=event,user=user).values("id").union(Manager.objects.filter(team__tournament__event=event, user=user))
-    if len(e_regs) > 0:
-        return False
-    else:
-        return True
 
 
 class Player(models.Model):
@@ -571,6 +668,10 @@ class Player(models.Model):
             raise ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
+        if max_players_per_team_reached(self.team):
+            raise ValidationError(
+                _("Équipe déjà remplie")
+            )
 
     def save(self,*args,**kwargs):
         self.team.refresh_validation()
@@ -643,6 +744,90 @@ class Manager(models.Model):
             raise ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
+        # if not tournament_announced(self.team.get_tournament()):
+        #     raise ValidationError(
+        #         _("Tournoi non annoncé")
+        #     )
+        
+class Substitute(models.Model):
+    """
+    A Substitute is someone that can replace a player in a team.
+    """
+
+    user = models.ForeignKey(
+        User,
+        verbose_name=_("Utilisateur⋅ice"),
+        on_delete=models.CASCADE,
+    )
+    team = models.ForeignKey(
+        "tournament.Team",
+        verbose_name=_("Équipe"),
+        on_delete=models.CASCADE,
+        validators = [MaxSubstitutePerTeamReachedValidator]
+    )
+    payment_status = models.CharField(
+        verbose_name=_("Statut du paiement"),
+        max_length=10,
+        blank=True,
+        default=PaymentStatus.NOT_PAID,
+        choices=PaymentStatus.choices,
+        null=False,
+    )
+    ticket = models.ForeignKey(
+        Ticket,
+        on_delete=models.SET_NULL,
+        verbose_name=_("Ticket"),
+        null=True,
+        blank=True,
+        default=None,
+    )
+    pseudo = models.CharField(
+        max_length=42,
+        validators=[MinLengthValidator(1)],
+        null=False,
+        blank=False,
+        verbose_name=_("Pseudo en jeu"),
+    )
+
+
+    class Meta:
+        """Meta Options"""
+
+        verbose_name = _("Inscription d'un⋅e remplaçant⋅e")
+        verbose_name_plural = _("Inscriptions de remplaçant⋅es")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "team"], name="not_twice_same_substitute"
+            )
+        ]
+
+    def __str__(self) -> str:
+        """Format this substitute registration as a str"""
+        return f"(Substitute) {self.user.username} for {self.team}"
+
+    def as_user(self) -> User:
+        """Return the current player as a User object"""
+        return self.user
+
+    def get_team(self):
+        """Return the Team object of the current team"""
+        return self.team
+    
+    def get_pseudo(self) -> str:
+        """Return the pseudo of the player"""
+        return self.pseudo
+
+    def clean(self):
+        """
+        Assert that the user associated with the provided substitute does not already
+        exist in any team of any tournament of the event
+        """
+        user = self.user
+        event = self.get_team().get_tournament().get_event()
+        if not unique_event_registration_validator(user,event):
+            raise ValidationError(
+                _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
+            )
 
 class Caster(models.Model):
     
@@ -673,3 +858,34 @@ class Caster(models.Model):
     )
 
 # vim: set cc=80 tw=80:
+
+def player_manager_user_unique_validator(user: User):
+    """
+    Validate that a user cannot be a player and manager of the same
+    tournament
+    """
+    p_regs = {
+        (obj.user, obj.team.tournament) for obj in Player.objects.filter(user=user)
+    }
+    m_regs = {
+        (obj.user, obj.team.tournament) for obj in Manager.objects.filter(user=user)
+    }
+    if len(m_regs.intersection(p_regs)) > 0:
+        raise ValidationError(
+            _("Utilisateur⋅rice déjà inscrit⋅e dans ce tournois (rôles distincts)")
+        )
+
+def unique_event_registration(user: User, event: Event):
+    """Validate a unique registration per event"""
+    e_regs = Player.objects.filter(team__tournament__event=event,user=user).values("id").union(Manager.objects.filter(team__tournament__event=event, user=user))
+    if len(e_regs) > 0:
+        return False
+    else:
+        return True
+    
+def max_players_per_team_reached(team: Team):
+    """Validate the number of players in a team"""
+    if len(team.get_players()) >= team.get_tournament().get_game().get_players_per_team() + team.get_tournament().get_game().get_substitute_players_per_team():
+        return True
+    else:
+        return False
