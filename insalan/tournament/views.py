@@ -286,11 +286,9 @@ class TeamList(generics.ListCreateAPIView):
         user = request.user
         data = request.data
 
+
         if user is None or not user.is_authenticated:
             raise PermissionDenied()
-
-        if "name" not in data or "password" not in data or "tournament" not in data:
-            raise BadRequest()
 
         if not user.is_email_active():
             raise PermissionDenied(
@@ -299,16 +297,6 @@ class TeamList(generics.ListCreateAPIView):
                         _(
                             "Veuillez activer votre courriel pour vous inscrire à un tournoi"
                         )
-                    ]
-                }
-            )
-
-        trnm = Tournament.objects.get(pk=data["tournament"])
-        if trnm.get_validated_teams() >= trnm.get_maxTeam():
-            raise PermissionDenied(
-                {
-                    "registration": [
-                        _("Les inscriptions sont complètes")
                     ]
                 }
             )
@@ -351,12 +339,12 @@ class PlayerRegistrationList(generics.ListCreateAPIView):
 
         if (
             "team" not in data
-            or "payment" in data
+            or "payment_status" in data
+            or "ticket" in data
             or "password" not in data
             or "pseudo" not in data
         ) :
             raise BadRequest()
-
 
         if not user.is_email_active():
             raise PermissionDenied(
@@ -433,7 +421,8 @@ class ManagerRegistrationList(generics.ListCreateAPIView):
 
         if (
             "team" not in data
-            or "payment" in data
+            or "payment_status" in data
+            or "ticket" in data
             or "password" not in data
         ) :
             raise BadRequest()
@@ -511,7 +500,8 @@ class SubstituteRegistrationList(generics.ListCreateAPIView):
 
         if (
             "team" not in data
-            or "payment" in data
+            or "payment_status" in data
+            or "ticket" in data
             or "password" not in data
             or "pseudo" not in data
         ) :

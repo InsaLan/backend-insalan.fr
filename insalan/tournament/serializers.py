@@ -6,7 +6,7 @@
 
 from rest_framework import serializers
 
-from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, unique_event_registration, max_players_per_team_reached, Caster
+from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, unique_event_registration_validator, tournament_announced, max_players_per_team_reached, tournament_registration_full, max_substitue_per_team_reached
 from insalan.user.models import User
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.hashers import make_password
@@ -103,9 +103,17 @@ class TeamSerializer(serializers.ModelSerializer):
         extra_kwargs = {"password" : {"write_only": True}}
 
     def validate(self, data):
+        if not tournament_announced(data["tournament"]):
+            raise serializers.ValidationError(
+                _("Ce tournoi n'est pas encore annoncé")
+            )
+        if tournament_registration_full(data["tournament"]):
+            raise serializers.ValidationError(
+                _("Ce tournoi est complet")
+            )
         for user in data.get("get_players_id", []) + data.get("get_managers_id", []):
             event = Event.objects.get(tournament=data["tournament"])
-            if not unique_event_registration(user,event):
+            if not unique_event_registration_validator(user,event):
                 raise serializers.ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
@@ -198,15 +206,20 @@ class PlayerSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         event = Event.objects.get(tournament__team=data["team"])
-        if not unique_event_registration(data["user"],event):
+        if not unique_event_registration_validator(data["user"],event):
             raise serializers.ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
-        team = Team.objects.get(id=data["team"].id)
-        if max_players_per_team_reached(team):
+        del data["password"]
+        if max_players_per_team_reached(data["team"]):
             raise serializers.ValidationError(
-                _("Équipe déjà remplie")
+                _("Nombre maximum de joueur⋅euses par équipe atteint")
             )
+        if not tournament_announced(data["team"].tournament):
+            raise serializers.ValidationError(
+                _("Ce tournoi n'est pas encore annoncé")
+            )
+
         return data
 
 
@@ -229,10 +242,16 @@ class ManagerSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         event = Event.objects.get(tournament__team=data["team"])
-        if not unique_event_registration(data["user"],event):
+        if not unique_event_registration_validator(data["user"],event):
             raise serializers.ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
+        del data["password"]
+        if not tournament_announced(data["team"].tournament):
+            raise serializers.ValidationError(
+                _("Ce tournoi n'est pas encore annoncé")
+            )
+        
         return data
 
 
@@ -258,6 +277,16 @@ class SubstituteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
+        del data["password"]
+        if not tournament_announced(data["team"].tournament):
+            raise serializers.ValidationError(
+                _("Ce tournoi n'est pas encore annoncé")
+            )
+        if max_substitue_per_team_reached(data["team"]):
+            raise serializers.ValidationError(
+                _("Nombre maximum de remplaçant⋅e⋅s par équipe atteint")
+            )
+
         return data
 
 class SubstituteIdSerializer(serializers.ModelSerializer):
