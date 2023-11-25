@@ -619,8 +619,18 @@ class TeamTestCase(TestCase):
             substitute_players_per_team=1,
         )
 
-        trnm_one = Tournament.objects.create(event=event_one, game=game)
-        trnm_two = Tournament.objects.create(event=event_one, game=game)
+        trnm_one = Tournament.objects.create(
+            event=event_one, 
+            game=game,
+            is_announced=True,
+            maxTeam = 10
+        )
+        trnm_two = Tournament.objects.create(
+            event=event_one, 
+            game=game,
+            is_announced=True,
+            maxTeam = 10
+        )
 
         team_lalooze: Team = Team.objects.create(
         name="LaLooze", tournament=trnm_one, password=make_password("laloozepwd"))
@@ -1402,7 +1412,11 @@ class ManagerTestCase(TestCase):
             name="InsaLan Test", year=2023, month=8, description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(game=game, event=event)
+        trnm = Tournament.objects.create(
+            game=game, 
+            event=event,
+            is_announced=True,
+        )
         team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
 
         fella = User.objects.create_user(
@@ -1450,8 +1464,16 @@ class ManagerTestCase(TestCase):
             name="InsaLan Test", year=2023, month=8, description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(game=game, event=event)
-        trnm_two = Tournament.objects.create(game=game, event=event)
+        trnm = Tournament.objects.create(
+            game=game, 
+            event=event,
+            is_announced=True,
+        )
+        trnm_two = Tournament.objects.create(
+            game=game, 
+            event=event,
+            is_announced=True,
+        )
         team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
         team_two = Team.objects.create(name="La Team Test 2", tournament=trnm_two, password=make_password("lateamtest2pwd"))
 
@@ -1482,8 +1504,16 @@ class ManagerTestCase(TestCase):
             name="InsaLan Test", year=2023, month=2, description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(game=game, event=event)
-        trnm_two = Tournament.objects.create(game=game, event=event_two)
+        trnm = Tournament.objects.create(
+            game=game, 
+            event=event,
+            is_announced=True,
+        )
+        trnm_two = Tournament.objects.create(
+            game=game, 
+            event=event_two,
+            is_announced=True,
+        )
         team_one = Team.objects.create(name="La Team Test", tournament=trnm)
         team_two = Team.objects.create(name="La Team Test 2", tournament=trnm_two)
 
