@@ -92,6 +92,7 @@ class UserTestCase(TestCase):
         user: User = User.objects.get(username="anotherplayer")
         user.status = "👾"
         user.save()
+        self.assertEqual(User.objects.get(username="anotherplayer").status, "👾")
 
 
 class UserEndToEndTestCase(TestCase):
@@ -170,11 +171,17 @@ class UserEndToEndTestCase(TestCase):
                 "email": "mario@mushroom.kingdom",
                 "first_name": "Mario",
                 "last_name": "Bros",
+                "display_name" : "MARIO",
+                "pronouns" : "he/him",
+                "status" : "YAHOO!🍄",
             },
             [
                 ("username", "PeachLover3003"),
                 ("first_name", "Mario"),
                 ("last_name", "Bros"),
+                ("display_name", "MARIO"),
+                ("pronouns", "he/him"),
+                ("status", "YAHOO!🍄"),
                 ("is_staff", False),
                 ("is_superuser", False),
                 ("is_active", True),
@@ -755,6 +762,34 @@ class UserEndToEndTestCase(TestCase):
         )
         self.assertEqual(request.status_code, 200)
         self.assertEqual(User.objects.get(username="randomplayer").first_name, "Kevin")
+
+        request = c.patch(
+            "/v1/user/me/",
+            data={
+                "display_name": "Bornibus",
+            },
+        )
+        self.assertEqual(request.status_code, 200)
+        self.assertEqual(User.objects.get(username="randomplayer").display_name, "Bornibus")
+
+        request = c.patch(
+            "/v1/user/me/",
+            data={
+                "pronouns": "he/him",
+            },
+        )
+        self.assertEqual(request.status_code, 200)
+        self.assertEqual(User.objects.get(username="randomplayer").pronouns, "he/him")
+
+        request = c.patch(
+            "/v1/user/me/",
+            data={
+                "status": "Je suis un fournisseur de la base de donnée épicerie",
+            },
+        )
+        self.assertEqual(request.status_code, 200)
+        self.assertEqual(User.objects.get(username="randomplayer").status, "Je suis un fournisseur de la base de donnée épicerie")
+
 
     def test_password_validation_error_are_caught(self):
         """

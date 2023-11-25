@@ -36,6 +36,9 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     )
     first_name = serializers.CharField(max_length=50, required=False, allow_blank=True)
     last_name = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    display_name = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    pronouns = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    status = serializers.CharField(max_length=100, required=False, allow_blank=True)
     password_validation = serializers.CharField(write_only=True, required=True)
     image = serializers.FileField(
         required=False,
@@ -61,6 +64,9 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             "password",
             "name",
             "password_validation",
+            "display_name",
+            "pronouns",
+            "status",
         ]
 
         read_only_fields = ("is_superuser", "is_active", "is_staff")

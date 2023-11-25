@@ -126,6 +126,15 @@ class UserMe(APIView):
         if "last_name" in data:
             user.last_name = data["last_name"]
 
+        if "display_name" in data:
+            user.display_name = data["display_name"]
+        
+        if "pronouns" in data:
+            user.pronouns = data["pronouns"]
+        
+        if "status" in data:
+            user.status = data["status"]
+
         user.save()
         return resp
 
