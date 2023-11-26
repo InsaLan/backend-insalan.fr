@@ -517,15 +517,20 @@ class Team(models.Model):
     def refresh_validation(self):
         """Refreshes the validation state of a tournament"""
         # Condition 1: ceil((n+1)/2) players have paid/will pay
-        players = self.get_players()
+        if self.validated:
+            return
+        else:
+            if self.tournament.get_validated_teams() < self.tournament.get_maxTeam():
+                players = self.get_players()
 
-        game = self.get_tournament().get_game()
+                game = self.get_tournament().get_game()
 
-        threshold = ceil((game.get_players_per_team()+1)/2)
+                threshold = ceil((game.get_players_per_team()+1)/2)
 
-        paid_seats = len(players.exclude(payment_status=PaymentStatus.NOT_PAID))
+                paid_seats = len(players.exclude(payment_status=PaymentStatus.NOT_PAID))
 
-        self.is_valid = paid_seats >= threshold
+                self.validated = paid_seats >= threshold
+                self.save()
 
     def clean(self):
         """
@@ -632,8 +637,8 @@ class Player(models.Model):
             )
 
     def save(self,*args,**kwargs):
-        self.team.refresh_validation()
         super().save(*args,**kwargs)
+        self.team.refresh_validation()
 
 
 class Manager(models.Model):
