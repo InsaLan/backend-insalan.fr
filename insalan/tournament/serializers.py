@@ -197,6 +197,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
 class PlayerSerializer(serializers.ModelSerializer):
     """Serializer for a Player Registration"""
+    password = serializers.CharField(write_only=True)
 
     class Meta:
         """Meta options for the serializer"""
@@ -233,6 +234,7 @@ class PlayerIdSerializer(serializers.Serializer):
 
 class ManagerSerializer(serializers.ModelSerializer):
     """Serializer for a Manager Registration"""
+    password = serializers.CharField(write_only=True)
 
     class Meta:
         """Meta options for the serializer"""
@@ -264,6 +266,7 @@ class ManagerIdSerializer(serializers.ModelSerializer):
 
 class SubstituteSerializer(serializers.ModelSerializer):
     """Serializer for a Substitute Registration"""
+    password = serializers.CharField(write_only=True)
 
     class Meta:
         """Meta options for the serializer"""
