@@ -6,6 +6,7 @@ from django.core import mail
 from rest_framework import serializers
 from insalan.user.models import User
 from django.utils.translation import gettext_lazy as _
+from django.contrib.auth.models import Permission
 import json
 import re
 
@@ -107,7 +108,7 @@ class UserEndToEndTestCase(TestCase):
         Create a player to test getters
         """
         self.client = APIClient()
-        User.objects.create_user(
+        user = User.objects.create_user(
             username="randomplayer",
             email="randomplayer@example.com",
             password="IUseAVerySecurePassword",
@@ -115,6 +116,8 @@ class UserEndToEndTestCase(TestCase):
             last_name="Player",
             is_active=True,
         )
+        user.user_permissions.add(Permission.objects.get(codename="email_active"))
+        
 
     def test_register_invalid_data(self):
         """
@@ -414,9 +417,9 @@ class UserEndToEndTestCase(TestCase):
             }
         )
 
-    def test_login_account(self):
+    def test_login_email_not_confirmed_account(self):
         """
-        Test that when everything is ok, an user is able to login
+        Test trying to login to an account which email is not already activated
         """
         User.objects.create_user(
             username="newplayer",
@@ -424,6 +427,31 @@ class UserEndToEndTestCase(TestCase):
             password="1111qwer!",
             is_active=True,
         )
+
+        def send_valid_data(data):
+            request = self.client.post("/v1/user/login/", data, format="json")
+
+            self.assertEqual(request.status_code, 403)
+
+        send_valid_data(
+            {
+                "username": "newplayer",
+                "password": "1111qwer!",
+            }
+        )
+
+    def test_login_account(self):
+        """
+        Test that when everything is ok, an user is able to login
+        """
+        user = User.objects.create_user(
+            username="newplayer",
+            email="test@test.com",
+            password="1111qwer!",
+            is_active=True,
+        )
+        user.user_permissions.add(Permission.objects.get(codename="email_active"))
+
 
         def send_valid_data(data):
             request = self.client.post("/v1/user/login/", data, format="json")

@@ -145,6 +145,10 @@ class UserMailer:
         """
         Send an e-mail confirmation token to the user registring.
         """
+        # remove email confirmation permission
+        user_object.user_permissions.remove(
+            Permission.objects.get(codename="email_active")
+        )
         token = EmailConfirmationTokenGenerator().make_token(user_object)
         user = user_object.username
         # TODO Give a frontend page instead of direct API link

@@ -344,6 +344,11 @@ class UserLogin(APIView):
                     {"user": [_("Nom d'utilisateur·rice ou mot de passe incorrect")]},
                     status=status.HTTP_404_NOT_FOUND,
                 )
+            if not user.user_permissions.filter(codename="email_active").exists():
+                return Response(
+                    {"user": [_("Veuillez confirmer votre adresse de courriel")]},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
             login(request, user)
             return Response(status=status.HTTP_200_OK)
         return Response(
