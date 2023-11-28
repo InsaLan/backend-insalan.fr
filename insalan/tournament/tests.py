@@ -796,9 +796,9 @@ class PlayerTestCase(TestCase):
         )
 
         # Now, registrations
-        Player.objects.create(team=team_one, user=user_one, pseudo="playerOne")
-        Player.objects.create(team=team_one, user=another_player, pseudo="PlayerTwo")
-        Player.objects.create(team=team_two, user=another_player, pseudo="RandomKiller")
+        Player.objects.create(team=team_one, user=user_one, name_in_game="playerOne")
+        Player.objects.create(team=team_one, user=another_player, name_in_game="PlayerTwo")
+        Player.objects.create(team=team_two, user=another_player, name_in_game="RandomKiller")
 
     def test_get_one_player_of_user(self):
         """Check the conversion between user and player"""
@@ -924,10 +924,10 @@ class PlayerTestCase(TestCase):
         user = User.objects.get(username="randomplayer")
 
         # Register them once
-        Player.objects.create(user=user, team=team, pseudo="pseudo")
+        Player.objects.create(user=user, team=team, name_in_game="pseudo")
 
         # Try and register them in the same team
-        player = Player.objects.create(user=user, team=team_two, pseudo="pseudo")
+        player = Player.objects.create(user=user, team=team_two, name_in_game="pseudo")
         self.assertRaises(ValidationError, player.full_clean)
 
     def test_get_player_team_not_none(self):
@@ -963,7 +963,7 @@ class PlayerTestCase(TestCase):
         trnm = Tournament.objects.get(event=event)
         # Create a team and player
         team_obj = Team.objects.create(name="La Team Test Player", tournament=trnm)
-        play_obj = Player.objects.create(team=team_obj, user=user_obj, pseudo="pseudo")
+        play_obj = Player.objects.create(team=team_obj, user=user_obj, name_in_game="pseudo")
 
         Player.objects.get(id=play_obj.id)
 
@@ -979,7 +979,7 @@ class PlayerTestCase(TestCase):
         trnm = Tournament.objects.get(event=event)
         # Create a Player registration
         team_obj = Team.objects.create(name="La Team Test User", tournament=trnm)
-        play_obj = Player.objects.create(team=team_obj, user=user_obj, pseudo="pseudo")
+        play_obj = Player.objects.create(team=team_obj, user=user_obj, name_in_game="pseudo")
 
         # Test
         Player.objects.get(id=play_obj.id)
@@ -1039,10 +1039,10 @@ class TournamentFullDerefEndpoint(TestCase):
             is_announced=True,
         )
         team_one = Team.objects.create(name="Team One", tournament=tourneyobj_one)
-        Player.objects.create(user=uobj_one, team=team_one, pseudo="playerone")
-        Player.objects.create(user=uobj_two, team=team_one, pseudo="playertwo")
+        Player.objects.create(user=uobj_one, team=team_one, name_in_game="playerone")
+        Player.objects.create(user=uobj_two, team=team_one, name_in_game="playertwo")
         Manager.objects.create(user=uobj_three, team=team_one)
-        Substitute.objects.create(user=uobj_four, team=team_one, pseudo="substitute")
+        Substitute.objects.create(user=uobj_four, team=team_one, name_in_game="substitute")
 
         request = self.client.get(
             reverse("tournament/details-full", args=[tourneyobj_one.id]), format="json"
@@ -1092,14 +1092,14 @@ class TournamentFullDerefEndpoint(TestCase):
                     "id": team_one.id,
                     "name": "Team One",
                     "players": [
-                        {"user": "test_user_one", "pseudo": "playerone"},
-                        {"user": "test_user_two", "pseudo": "playertwo"},
+                        {"user": "test_user_one", "name_in_game": "playerone"},
+                        {"user": "test_user_two", "name_in_game": "playertwo"},
                     ],
                     "managers": [
                         "test_user_three",
                     ],
                     "substitutes": [
-                        {"user": "test_user_four", "pseudo": "substitute"},
+                        {"user": "test_user_four", "name_in_game": "substitute"},
                     ],
                     "validated": team_one.validated,
                 }
@@ -1631,7 +1631,7 @@ class SubstituteTestCase(TestCase):
 
         Player.objects.create(team=team_one, user=user_one)
         Player.objects.create(team=team_one, user=another_player)
-        Substitute.objects.create(team=team_one, user=random_player, pseudo="pseudo")
+        Substitute.objects.create(team=team_one, user=random_player, name_in_game="pseudo")
 
     def test_get_user_of_substitute(self):
         """Check the conversion between user and substitute"""
@@ -1708,7 +1708,7 @@ class SubstituteTestCase(TestCase):
             last_name="Nya",
         )
 
-        substitute = Substitute(user=fella, team=team_one, pseudo="pseudo")
+        substitute = Substitute(user=fella, team=team_one, name_in_game="pseudo")
         substitute.full_clean()
         substitute.save()
         self.assertRaises(
@@ -1766,10 +1766,10 @@ class SubstituteTestCase(TestCase):
             last_name="Nya",
         )
 
-        man = Substitute(user=fella, team=team_one, pseudo="pseudo")
+        man = Substitute(user=fella, team=team_one, name_in_game="pseudo")
         man.full_clean()
         man.save()
-        man2 = Substitute.objects.create(user=fella, team=team_two, pseudo="pseudo2")
+        man2 = Substitute.objects.create(user=fella, team=team_two, name_in_game="pseudo2")
 
         self.assertRaises(ValidationError, man2.full_clean)
 
@@ -1806,10 +1806,10 @@ class SubstituteTestCase(TestCase):
             last_name="Nya",
         )
 
-        man = Substitute(user=fella, team=team_one, pseudo="pseudo")
+        man = Substitute(user=fella, team=team_one, name_in_game="pseudo")
         man.full_clean()
         man.save()
-        man2 = Substitute(user=fella, team=team_two, pseudo="pseudo2")
+        man2 = Substitute(user=fella, team=team_two, name_in_game="pseudo2")
         man2.full_clean()
 
     def test_substitute_team_deletion(self):
@@ -1973,7 +1973,7 @@ class TournamentTeamEndpoints(TestCase):
             {
                 "team": team.id,
                 "password": "password",
-                "pseudo":"pseudo",
+                "name_in_game":"pseudo",
             },
             format="json",
         )
@@ -1998,7 +1998,7 @@ class TournamentTeamEndpoints(TestCase):
             {
                 "team": team.id,
                 "password": "password",
-                "pseudo":"pseudo",
+                "name_in_game":"pseudo",
             },
             format="json",
         )
@@ -2016,7 +2016,7 @@ class TournamentTeamEndpoints(TestCase):
             {
                 "team": team.id,
                 "password": "Password123!",
-                "pseudo":"pseudo",
+                "name_in_game":"pseudo",
             },
             format="json",
         )
@@ -2037,7 +2037,7 @@ class TournamentTeamEndpoints(TestCase):
             {
                 "team": team.id,
                 "password": "Password123!",
-                "pseudo":"pseudo",
+                "name_in_game":"pseudo",
             },
             format="json",
         )
@@ -2073,7 +2073,7 @@ class TournamentMeTests(TestCase):
         self.plobjt = Player.objects.create(
             user_id=self.usrobj.id,
             team=self.team_one, 
-            pseudo="pseudo"
+            name_in_game="pseudo"
         )
 
         self.team_two = Team.objects.create(name="Team Two", tournament=self.tourneyobj_one, password=make_password("password"))
@@ -2084,7 +2084,7 @@ class TournamentMeTests(TestCase):
         self.subobj = Substitute.objects.create(
             user_id=self.usrobj.id,
             team=self.team_two, 
-            pseudo="pseudo"
+            name_in_game="pseudo"
         )
 
     def test_get_tournament_me(self):
@@ -2092,7 +2092,7 @@ class TournamentMeTests(TestCase):
         response = self.client.get(reverse("tournament/me"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['player'][0]['pseudo'], self.plobjt.pseudo)
+        self.assertEqual(response.data['player'][0]['name_in_game'], self.plobjt.name_in_game)
         self.assertEqual(response.data['player'][0]['team']['name'], self.team_one.name)
         self.assertEqual(response.data['player'][0]['team']['tournament']['name'], self.tourneyobj_one.name)
         self.assertEqual(response.data['player'][0]['team']['tournament']['event']['name'], self.evobj.name)
@@ -2110,7 +2110,7 @@ class TournamentMeTests(TestCase):
         self.client.login(username="randomplayer", password="IUseAVerySecurePassword")
         response = self.client.get(reverse("tournament/me"))
 
-        self.assertEqual(response.data['substitute'][0]['pseudo'], self.subobj.pseudo)
+        self.assertEqual(response.data['substitute'][0]['name_in_game'], self.subobj.name_in_game)
         self.assertEqual(response.data['substitute'][0]['team']['name'], self.team_two.name)
         self.assertEqual(response.data['substitute'][0]['team']['tournament']['name'], self.tourneyobj_one.name)
         self.assertEqual(response.data['substitute'][0]['team']['tournament']['event']['name'], self.evobj.name)

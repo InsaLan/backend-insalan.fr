@@ -172,15 +172,15 @@ class TournamentDetailsFull(APIView):
                 ).data
                 del team_preser["tournament"]
 
-                # Dereference players/managers to pseudo
+                # Dereference players/managers to name_in_game
                 team_preser["players"] = [
-                    {"user": Player.objects.get(id=pid).as_user().username, "pseudo": Player.objects.get(id=pid).pseudo} for pid in team_preser["players"]
+                    {"user": Player.objects.get(id=pid).as_user().username, "name_in_game": Player.objects.get(id=pid).name_in_game} for pid in team_preser["players"]
                 ]
                 team_preser["managers"] = [
                     Manager.objects.get(id=pid).as_user().username for pid in team_preser["managers"]
                 ]
                 team_preser["substitutes"] = [
-                    {"user": Substitute.objects.get(id=pid).as_user().username, "pseudo": Substitute.objects.get(id=pid).pseudo} for pid in team_preser["substitutes"]
+                    {"user": Substitute.objects.get(id=pid).as_user().username, "name_in_game": Substitute.objects.get(id=pid).name_in_game} for pid in team_preser["substitutes"]
                 ]
 
                 teams_serialized.append(team_preser)
@@ -342,7 +342,7 @@ class PlayerRegistrationList(generics.ListCreateAPIView):
             or "payment_status" in data
             or "ticket" in data
             or "password" not in data
-            or "pseudo" not in data
+            or "name_in_game" not in data
         ) :
             raise BadRequest()
 
@@ -503,7 +503,7 @@ class SubstituteRegistrationList(generics.ListCreateAPIView):
             or "payment_status" in data
             or "ticket" in data
             or "password" not in data
-            or "pseudo" not in data
+            or "name_in_game" not in data
         ) :
             raise BadRequest()
 

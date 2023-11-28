@@ -592,7 +592,7 @@ class Player(models.Model):
         blank=True,
         default=None,
     )
-    pseudo = models.CharField(
+    name_in_game = models.CharField(
         max_length=42,
         validators=[MinLengthValidator(1)],
         null=False,
@@ -612,9 +612,9 @@ class Player(models.Model):
         """Return the Team object of the current team"""
         return self.team
 
-    def get_pseudo(self) -> str:
-        """Return the pseudo of the player"""
-        return self.pseudo
+    def get_name_in_game(self) -> str:
+        """Return the name_in_game of the player"""
+        return self.name_in_game
 
     def clean(self):
         """
@@ -744,7 +744,7 @@ class Substitute(models.Model):
         blank=True,
         default=None,
     )
-    pseudo = models.CharField(
+    name_in_game = models.CharField(
         max_length=42,
         validators=[MinLengthValidator(1)],
         null=False,
@@ -776,9 +776,9 @@ class Substitute(models.Model):
         """Return the Team object of the current team"""
         return self.team
     
-    def get_pseudo(self) -> str:
-        """Return the pseudo of the player"""
-        return self.pseudo
+    def get_name_in_game(self) -> str:
+        """Return the name_in_game of the player"""
+        return self.name_in_game
 
     def clean(self):
         """

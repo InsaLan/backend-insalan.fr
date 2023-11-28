@@ -281,8 +281,8 @@ admin.site.register(Team, TeamAdmin)
 class PlayerAdmin(admin.ModelAdmin):
     """Admin handler for Player Registrations"""
 
-    list_display = ("id", "user", "pseudo", "team", "payment_status", "ticket")
-    search_fields = ["user", "team", "payment_status", "pseudo"]
+    list_display = ("id", "user", "name_in_game", "team", "payment_status", "ticket")
+    search_fields = ["user", "team", "payment_status", "name_in_game"]
 
 
 admin.site.register(Player, PlayerAdmin)
@@ -308,8 +308,8 @@ admin.site.register(Caster, CasterAdmin)
 class SubstituteAdmin(admin.ModelAdmin):
     """Admin handler for Substitute Registrations"""
 
-    list_display = ("id", "user", "team", "payment_status", "ticket", "pseudo")
-    search_fields = ["user", "team", "payment_status", "pseudo"]
+    list_display = ("id", "user", "team", "payment_status", "ticket", "name_in_game")
+    search_fields = ["user", "team", "payment_status", "name_in_game"]
 
 
 admin.site.register(Substitute, SubstituteAdmin)

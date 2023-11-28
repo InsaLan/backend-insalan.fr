@@ -92,7 +92,7 @@ class TeamSerializer(serializers.ModelSerializer):
     players = serializers.ListField(required=False, source="get_players_id")
     managers = serializers.ListField(required=False, source="get_managers_id")
     substitutes = serializers.ListField(required=False, source="get_substitutes_id")
-    players_pseudos = serializers.ListField(required=False, write_only=True)
+    players_name_in_games = serializers.ListField(required=False, write_only=True)
 
     class Meta:
         """Meta options of the team serializer"""
@@ -118,8 +118,8 @@ class TeamSerializer(serializers.ModelSerializer):
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
 
-        if len(data.get("players_pseudos", [])) != len(data.get("get_players_id", [])):
-            raise serializers.ValidationError(_("Il manque des pseudos de joueur⋅euses"))
+        if len(data.get("players_name_in_games", [])) != len(data.get("get_players_id", [])):
+            raise serializers.ValidationError(_("Il manque des name_in_games de joueur⋅euses"))
 
         return data
 
@@ -131,14 +131,14 @@ class TeamSerializer(serializers.ModelSerializer):
         players = validated_data.pop("get_players_id", [])
         managers = validated_data.pop("get_managers_id", [])
         substitute = validated_data.pop("get_substitutes_id", [])
-        players_pseudos = validated_data.pop("players_pseudos", [])
+        players_name_in_games = validated_data.pop("players_name_in_games", [])
 
         validated_data["password"] = make_password(validated_data["password"])
         team_obj = Team.objects.create(**validated_data)
 
-        for player, pseudo in zip(players,players_pseudos):
+        for player, name_in_game in zip(players,players_name_in_games):
             user_obj = User.objects.get(id=player)
-            Player.objects.create(user=user_obj, team=team_obj, pseudo=pseudo)
+            Player.objects.create(user=user_obj, team=team_obj, name_in_game=name_in_game)
 
         for manager in managers:
             user_obj = User.objects.get(id=manager)
@@ -155,7 +155,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
         # Catch the players and managers keywords
         if "get_players_id" in validated_data:
-            players_pseudos = validated_data.pop("players_pseudos", [])
+            players_name_in_games = validated_data.pop("players_name_in_games", [])
             players = set(validated_data.pop("get_players_id", []))
 
             existing = set(instance.get_players_id())
