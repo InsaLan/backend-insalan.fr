@@ -238,14 +238,14 @@ class Tournament(models.Model):
         default=0.0,
         max_digits=5,
         decimal_places=2,
-        verbose_name=_("prix manager en ligne"),
+        verbose_name=_("prix Remplaçant en ligne"),
     )  # when paying on the website
     substitute_price_onsite = models.DecimalField(
         null=False,
         default=0.0,
         max_digits=5,
         decimal_places=2,
-        verbose_name=_("prix manager sur place"),
+        verbose_name=_("prix Remplaçant sur place"),
     )  # when paying on site
     cashprizes = ArrayField(
         models.DecimalField(
