@@ -64,7 +64,7 @@ class Event(models.Model):
         null=True,
         upload_to="event-icons",
         validators=[
-            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg"])
+            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp"])
         ],
     )
 
@@ -194,7 +194,7 @@ class Tournament(models.Model):
         null=True,
         upload_to="tournament-icons",
         validators=[
-            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg"])
+            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp"])
         ],
     )
     # Tournament player slot prices
@@ -815,7 +815,7 @@ class Caster(models.Model):
         null=True,
         upload_to="profile-pictures",
         validators=[
-            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg"])
+            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp"])
         ],
     )
     tournament = models.ForeignKey(
