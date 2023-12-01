@@ -6,11 +6,11 @@ from .models import User
 from django.contrib.admin import SimpleListFilter
 
 class EmailActivatedFilter(SimpleListFilter):
-    title = 'permissions' # or use _('country') for translated title
+    title = 'Validation du Courriel' # or use _('country') for translated title
     parameter_name = 'permissions'
 
     def lookups(self, request, model_admin):
-        return [(True, 'Validé'), (False, 'Non validé')]
+        return [(True, 'Courriel validé'), (False, 'Courriel non validé')]
 
     def queryset(self, request, queryset):
         if self.value():
