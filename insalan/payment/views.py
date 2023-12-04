@@ -162,11 +162,6 @@ class PayView(generics.CreateAPIView):
 
     def create(self, request):
         """Process a payment request"""
-        if not app_settings.DEBUG:
-            return JsonResponse(
-                {"err": _("API inaccessible en production")},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         token = Token.get_instance()
         payer = request.user
         data = request.data.copy()
@@ -220,7 +215,6 @@ class PayView(generics.CreateAPIView):
                 f"{app_settings.HA_URL}/v5/organizations/{app_settings.HA_ORG_SLUG}/checkout-intents",
                 data=json.dumps(intent_body),
                 headers=headers,
-                timeout=1,
             )  # initiate a helloasso intent
             logger.debug(checkout_init.text)
             checkout_json = checkout_init.json()
