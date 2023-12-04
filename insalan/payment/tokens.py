@@ -61,7 +61,6 @@ class Token:
                     "client_secret": c_secret,
                     "grant_type": grant_type,
                 },
-                timeout=1,
             )
         except requests.exceptions.RequestException as err:
             logger.error("Unable to obtain token: %s", err)

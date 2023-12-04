@@ -147,7 +147,7 @@ class PaymentHandler(PaymentHooks):
         (reg, _is_manager, is_substitute) = PaymentHandler.fetch_registration(product, user_obj)
 
         # Whatever happens, just delete the registration
-        reg.delete()
+        # reg.delete()
 
     @staticmethod
     def payment_refunded(transaction, product, _count):
