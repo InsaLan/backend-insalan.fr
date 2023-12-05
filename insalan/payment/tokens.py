@@ -46,12 +46,22 @@ class Token:
         Obtain a token, either from the original secret, or from the previous
         refresh token
         """
-        c_secret = secret if secret is not None else app_settings.HA_OAUTH_CLIENT_SECRET
-        grant_type = (
-            "client_credentials"
-            if c_secret == app_settings.HA_OAUTH_CLIENT_SECRET
-            else "refresh_token"
-        )
+        if secret is None:
+            c_secret = app_settings.HA_OAUTH_CLIENT_SECRET
+            grant_type = "client_credentials"
+            data = {
+                "client_id": app_settings.HA_OAUTH_CLIENT_ID,
+                "client_secret": c_secret,
+                "grant_type": grant_type,
+            }
+        else:
+            refresh_token = secret
+            grant_type = "refresh_token"
+            data = {
+                "client_id": app_settings.HA_OAUTH_CLIENT_ID,
+                "grant_type": grant_type,
+                "refresh_token": refresh_token,
+            }
         try:
             request = requests.post(
                 url=f"{app_settings.HA_URL}/oauth2/token",
