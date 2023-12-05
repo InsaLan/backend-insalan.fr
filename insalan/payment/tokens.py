@@ -66,11 +66,7 @@ class Token:
             request = requests.post(
                 url=f"{app_settings.HA_URL}/oauth2/token",
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
-                data={
-                    "client_id": app_settings.HA_OAUTH_CLIENT_ID,
-                    "client_secret": c_secret,
-                    "grant_type": grant_type,
-                },
+                data=data,
             )
         except requests.exceptions.RequestException as err:
             logger.error("Unable to obtain token: %s", err)
