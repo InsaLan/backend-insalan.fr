@@ -67,6 +67,7 @@ class Token:
                 url=f"{app_settings.HA_URL}/oauth2/token",
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
                 data=data,
+                timeout=45,
             )
         except requests.exceptions.RequestException as err:
             logger.error("Unable to obtain token: %s", err)
