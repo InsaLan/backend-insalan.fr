@@ -215,6 +215,7 @@ class PayView(generics.CreateAPIView):
                 f"{app_settings.HA_URL}/v5/organizations/{app_settings.HA_ORG_SLUG}/checkout-intents",
                 data=json.dumps(intent_body),
                 headers=headers,
+                timeout=45,
             )  # initiate a helloasso intent
             logger.debug(checkout_init.text)
             checkout_json = checkout_init.json()
