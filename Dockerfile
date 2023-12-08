@@ -1,9 +1,9 @@
-FROM alpine:latest
+FROM python:3.9-alpine
 
 EXPOSE 8000
 WORKDIR /app
 
-RUN apk add --no-cache python3 py3-pip postgresql15-dev gcc python3-dev musl-dev
+RUN apk add --no-cache postgresql15-dev gcc musl-dev
 
 COPY requirements.txt /app/
 
