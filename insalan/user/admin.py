@@ -4,6 +4,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Permission
 from .models import User
 from django.contrib.admin import SimpleListFilter
+from insalan.tournament.models import Player, Manager, Substitute
 
 class EmailActivatedFilter(SimpleListFilter):
     title = 'Validation du Courriel' # or use _('country') for translated title
@@ -40,10 +41,19 @@ class CustomUserAdmin(UserAdmin):
     )
 
     # order the fields in the admin panel by creation date
-    ordering = ('date_joined',)
+    ordering = ('-date_joined',)
+
+    # list of fields to display in the admin panel
+    list_display = ('id', 'username', 'email', 'is_staff', 'get_number_of_registration')
 
     # add custom sort filter by has email activated in permission
     list_filter = UserAdmin.list_filter + (EmailActivatedFilter,)
+
+    def get_number_of_registration(self, obj):
+        return Player.objects.filter(user=obj).count() + Manager.objects.filter(user=obj).count() + Substitute.objects.filter(user=obj).count()
+    get_number_of_registration.short_description = 'Number of registrations'
+    
+
 
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Permission)
