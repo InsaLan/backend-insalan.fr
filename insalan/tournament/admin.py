@@ -24,7 +24,7 @@ from django.utils.decorators import method_decorator
 
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
 
-from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster
+from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus
 
 
 class EventAdmin(admin.ModelAdmin):
@@ -46,13 +46,44 @@ class GameAdmin(admin.ModelAdmin):
 
 admin.site.register(Game, GameAdmin)
 
+class EventTournamentFilter(admin.SimpleListFilter):
+    title = 'Event' # or use _('country') for translated title
+    parameter_name = 'event'
+
+    def lookups(self, request, model_admin):
+        return [(event.id, event.name) for event in Event.objects.all()]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(event__id=self.value())
+        else:
+            return queryset
+        
+class GameTournamentFilter(admin.SimpleListFilter):
+    title = 'Game' # or use _('country') for translated title
+    parameter_name = 'game'
+
+    def lookups(self, request, model_admin):
+        return [(game.id, game.name) for game in Game.objects.all()]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(game__id=self.value())
+        else:
+            return queryset
 
 class TournamentAdmin(admin.ModelAdmin):
     """Admin handler for Tournaments"""
 
-    list_display = ("id", "name", "event", "game", "is_announced", "cashprizes")
+    list_display = ("id", "name", "event", "game", "is_announced", "cashprizes", "get_remplissage")
     search_fields = ["name", "event", "game"]
 
+    list_filter = (EventTournamentFilter,GameTournamentFilter)
+
+    def get_remplissage(self, obj):
+        return str(Team.objects.filter(tournament=obj, validated=True).count()) + " / " + str(obj.maxTeam)
+
+    get_remplissage.short_description = 'Remplissage'
 
 admin.site.register(Tournament, TournamentAdmin)
 
@@ -148,10 +179,36 @@ class TeamCreationForm(forms.ModelForm):
                 self.save_m2m()
         return user
 
+class TeamTournamentFilter(admin.SimpleListFilter):
+    title = 'Tournament' # or use _('country') for translated title
+    parameter_name = 'tournament'
+
+    def lookups(self, request, model_admin):
+        return [(tournament.id, tournament.name) for tournament in Tournament.objects.filter(event__ongoing=True)]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(tournament__id=self.value())
+        else:
+            return queryset
+
+class ValidatedFilter(admin.SimpleListFilter):
+    title = 'Validation' # or use _('country') for translated title
+    parameter_name = 'validated'
+
+    def lookups(self, request, model_admin):
+        return [(True, 'Validé'), (False, 'Non Validé')]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(validated=self.value())
+        else:
+            return queryset
+
 class TeamAdmin(admin.ModelAdmin):
     """Admin handler for Team"""
 
-    list_display = ("id", "name", "tournament", "validated")
+    list_display = ("id", "name", "tournament", "validated", "get_quota")
     search_fields = ["name", "tournament"]
     add_fieldsets = (
         (
@@ -165,6 +222,13 @@ class TeamAdmin(admin.ModelAdmin):
     form = TeamForm
     add_form = TeamCreationForm
     change_team_password_template = None
+
+    list_filter = (TeamTournamentFilter,ValidatedFilter)
+
+    def get_quota(self, obj):
+        return str(Player.objects.filter(team=obj).count()) + " / " + str(obj.tournament.game.players_per_team)
+
+    get_quota.short_description = 'Nombre de Joueurs'
 
     def get_form(self, request, obj=None, **kwargs):
         """
@@ -272,18 +336,60 @@ class TeamAdmin(admin.ModelAdmin):
             or "admin/auth/user/change_password.html",
             context,
         )
-        
-
 
 admin.site.register(Team, TeamAdmin)
 
+class EventFilter(admin.SimpleListFilter):
+    title = 'Event' # or use _('country') for translated title
+    parameter_name = 'event'
+
+    def lookups(self, request, model_admin):
+        return [(event.id, event.name) for event in Event.objects.all()]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(team__tournament__event__id=self.value())
+        else:
+            return queryset
+
+class OngoingTournamentFilter(admin.SimpleListFilter):
+    title = 'Tournament' # or use _('country') for translated title
+    parameter_name = 'tournament'
+
+    def lookups(self, request, model_admin):
+        return [(tournament.id, tournament.name) for tournament in Tournament.objects.filter(event__ongoing=True)]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(team__tournament__id=self.value())
+        else:
+            return queryset
+
+class PaymentStatusFilter(admin.SimpleListFilter):
+    title = 'Payment Status' # or use _('country') for translated title
+    parameter_name = 'payment_status'
+
+    def lookups(self, request, model_admin):
+        return [(payment_status[0], payment_status[1]) for payment_status in PaymentStatus.choices]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(payment_status=self.value())
+        else:
+            return queryset
 
 class PlayerAdmin(admin.ModelAdmin):
     """Admin handler for Player Registrations"""
 
-    list_display = ("id", "user", "name_in_game", "team", "payment_status", "ticket")
+    list_display = ("id", "user", "name_in_game", "team", "payment_status", "get_tournament")
     search_fields = ["user", "team", "payment_status", "name_in_game"]
 
+    list_filter = (EventFilter,OngoingTournamentFilter,PaymentStatusFilter)
+
+    def get_tournament(self, obj):
+        return obj.team.tournament.name
+    
+    get_tournament.short_description = 'Tournament'
 
 admin.site.register(Player, PlayerAdmin)
 
@@ -291,8 +397,15 @@ admin.site.register(Player, PlayerAdmin)
 class ManagerAdmin(admin.ModelAdmin):
     """Admin handler for Manager Registrations"""
 
-    list_display = ("id", "user", "team", "payment_status", "ticket")
+    list_display = ("id", "user", "team", "payment_status", "get_tournament")
     search_fields = ["user", "team", "payment_status"]
+
+    list_filter = (EventFilter,OngoingTournamentFilter,PaymentStatusFilter)
+
+    def get_tournament(self, obj):
+        return obj.team.tournament.name
+    
+    get_tournament.short_description = 'Tournament'
 
 
 admin.site.register(Manager, ManagerAdmin)
@@ -308,8 +421,15 @@ admin.site.register(Caster, CasterAdmin)
 class SubstituteAdmin(admin.ModelAdmin):
     """Admin handler for Substitute Registrations"""
 
-    list_display = ("id", "user", "team", "payment_status", "ticket", "name_in_game")
+    list_display = ("id", "user", "name_in_game", "team", "payment_status", "get_tournament")
     search_fields = ["user", "team", "payment_status", "name_in_game"]
+
+    list_filter = (EventFilter,PaymentStatusFilter)
+
+    def get_tournament(self, obj):
+        return obj.team.tournament.name
+    
+    get_tournament.short_description = 'Tournament'
 
 
 admin.site.register(Substitute, SubstituteAdmin)
