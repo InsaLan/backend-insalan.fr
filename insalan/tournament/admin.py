@@ -75,15 +75,15 @@ class GameTournamentFilter(admin.SimpleListFilter):
 class TournamentAdmin(admin.ModelAdmin):
     """Admin handler for Tournaments"""
 
-    list_display = ("id", "name", "event", "game", "is_announced", "cashprizes", "get_remplissage")
+    list_display = ("id", "name", "event", "game", "is_announced", "cashprizes", "get_occupancy")
     search_fields = ["name", "event", "game"]
 
     list_filter = (EventTournamentFilter,GameTournamentFilter)
 
-    def get_remplissage(self, obj):
+    def get_occupancy(self, obj):
         return str(Team.objects.filter(tournament=obj, validated=True).count()) + " / " + str(obj.maxTeam)
 
-    get_remplissage.short_description = 'Remplissage'
+    get_occupancy.short_description = 'Remplissage'
 
 admin.site.register(Tournament, TournamentAdmin)
 
