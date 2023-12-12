@@ -71,6 +71,7 @@ class Notifications(APIView):
         if not data.get("metadata") or not data["metadata"].get("uuid"):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        # Access to .metadata.uuid is verified
         uuid = data["metadata"]["uuid"]
         try:
             trans_obj = Transaction.objects.get(id=uuid)
@@ -78,23 +79,54 @@ class Notifications(APIView):
             logger.error("Unable to find transaction %s", uuid)
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        ntype = data["eventType"]
-        data = data["data"]
-
-        # logger.debug("NTYPE: %s", ntype)
-        # logger.debug("DATA: %s", data)
+        ntype = data.get("eventType")  # defaults to None
+        data = data.get("data", default={})
 
         if ntype == "Order":
             # From "Order", get the payments
-            order_id = data["id"]
+            # Check that the id is an integer
+            order_id = data.get("id")
+            if not isinstance(order_id, int):
+                logger.error(
+                    "Invalid ID for Order event, except integer, got %s", order_id
+                )
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
             logger.info("Tied transaction %s to order ID %s", trans_obj.id, order_id)
             trans_obj.order_id = order_id
             trans_obj.touch()
             trans_obj.save()
 
-            for pay_data in data.get("payments", []):
-                pid = pay_data["id"]
-                amount = Decimal(pay_data["amount"]) / 100
+            payments = data.get("payments")
+            if payments is None:
+                logger.warning(
+                    "No payment data found while trying to validate transaction %s. Is that right?",
+                    order_id,
+                )
+                return Response(status=status.HTTP_200_OK)
+
+            for pay_data in payments:
+                pid = pay_data.get("id")
+                if pid is None:
+                    logger.warning(
+                        "No identifier found on payment for transaction %s!!", order_id
+                    )
+                    continue
+                amount = pay_data.get("amount")
+                if amount is None:
+                    logger.warning(
+                        "No amount found on payment for transaction %s's payment %s!!",
+                        order_id,
+                        pid,
+                    )
+                    continue
+                if not isinstance(amount, int):
+                    logger.warning(
+                        "Amount for payment %s of transaction %s is not an integer. This may be fine, but beware.",
+                        pid,
+                        order_id,
+                    )
+                amount = Decimal(amount) / 100
                 Payment.objects.create(id=pid, amount=amount, transaction=trans_obj)
                 logger.info(
                     "Created payment %d tied to transaction %s", pid, trans_obj.id
@@ -106,7 +138,14 @@ class Notifications(APIView):
             pass
         elif ntype == "Payment":
             # Because we are in single payment, this is our signal to validate
-            pay_id = data["id"]
+            pay_id = data.get("id")
+            if pay_id is None:
+                logger.error("Payment ID is none for payment event!")
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            if not isinstance(pay_id, int):
+                logger.error('Payment ID "%s" is not an integer')
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
             # The payment could be "None" if we haven't received "Order" yet
             pay_objs = list(Payment.objects.filter(id=pay_id)) + [None]
             pay_obj = pay_objs[0]
@@ -118,12 +157,23 @@ class Notifications(APIView):
                     pay_obj.transaction.id,
                 )
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-            if pay_obj is not None and trans_obj.order_id != int(data["order"]["id"]):
+
+            order_id = data.get("order", default={}).get("id")
+            if order_id is None:
+                logger.error(
+                    "Payment %s has no order field or no order.id field", pay_id
+                )
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            if not isinstance(order_id, int):
+                logger.error("Payment %s has an order.id field that is not int", pay_id)
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
+            if pay_obj is not None and trans_obj.order_id != order_id:
                 logger.error(
                     "Mismatch! Payment %s is known to belong to transaction %s but HA data says %s",
                     pay_id,
                     trans_obj.order_id,
-                    data["order"]["id"],
+                    order_id,
                 )
                 return Response(status=status.HTTP_400_BAD_REQUEST)
             if pay_obj is None:
@@ -134,22 +184,29 @@ class Notifications(APIView):
                 )
 
             # Check the state
-            if data["state"] == "Authorized":
+            state = data.get("state")
+            if state == "Authorized":
                 # Ok we should be good now
                 trans_obj.validate_transaction()
 
-            elif data["state"] in ["Refused", "Unknown"]:
+            elif state in ["Refused", "Unknown"]:
                 # This code should show that a payment failed
                 trans_obj.fail_transaction()
 
-            elif data["state"] in ["Refunded"]:
+            elif state in ["Refunded"]:
                 # Refund
                 trans_obj.refund_transaction()
 
             else:
                 logger.warning(
-                    "Payment %s shows status %s unknown or already assigned", pay_id, data["state"]
+                    'Payment %s shows status "%s" unknown or already assigned',
+                    pay_id,
+                    state,
                 )
+
+        else:
+            logger.error("Unrecognized payment notification event type %s", ntype)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         return Response(status=status.HTTP_200_OK)
 
