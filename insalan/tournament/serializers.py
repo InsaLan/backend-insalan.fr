@@ -93,6 +93,7 @@ class TeamSerializer(serializers.ModelSerializer):
     managers = serializers.ListField(required=False, source="get_managers_id")
     substitutes = serializers.ListField(required=False, source="get_substitutes_id")
     players_name_in_games = serializers.ListField(required=False, write_only=True)
+    substitutes_name_in_games = serializers.ListField(required=False, write_only=True)
 
     class Meta:
         """Meta options of the team serializer"""
@@ -111,7 +112,7 @@ class TeamSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 _("Ce tournoi est complet")
             )
-        for user in data.get("get_players_id", []) + data.get("get_managers_id", []):
+        for user in data.get("get_players_id", []) + data.get("get_managers_id", []) + data.get("get_substitutes_id", []):
             event = Event.objects.get(tournament=data["tournament"])
             if not unique_event_registration_validator(user,event):
                 raise serializers.ValidationError(
@@ -120,6 +121,9 @@ class TeamSerializer(serializers.ModelSerializer):
 
         if len(data.get("players_name_in_games", [])) != len(data.get("get_players_id", [])):
             raise serializers.ValidationError(_("Il manque des name_in_games de joueur⋅euses"))
+        
+        if len(data.get("substitutes_name_in_games", [])) != len(data.get("get_substitutes_id", [])):
+            raise serializers.ValidationError(_("Il manque des name_in_games de remplaçant⋅e⋅s"))
 
         return data
 
@@ -130,8 +134,9 @@ class TeamSerializer(serializers.ModelSerializer):
         # Catch the players and managers keywords
         players = validated_data.pop("get_players_id", [])
         managers = validated_data.pop("get_managers_id", [])
-        substitute = validated_data.pop("get_substitutes_id", [])
+        substitutes = validated_data.pop("get_substitutes_id", [])
         players_name_in_games = validated_data.pop("players_name_in_games", [])
+        substitutes_name_in_games = validated_data.pop("substitutes_name_in_games", [])
 
         validated_data["password"] = make_password(validated_data["password"])
         team_obj = Team.objects.create(**validated_data)
@@ -144,9 +149,9 @@ class TeamSerializer(serializers.ModelSerializer):
             user_obj = User.objects.get(id=manager)
             Manager.objects.create(user=user_obj, team=team_obj)
 
-        for sub in substitute:
+        for sub, name_in_game in zip(substitutes,substitutes_name_in_games):
             user_obj = User.objects.get(id=sub)
-            Substitute.objects.create(user=user_obj, team=team_obj)
+            Substitute.objects.create(user=user_obj, team=team_obj, name_in_game=name_in_game)
 
         return team_obj
 

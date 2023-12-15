@@ -787,7 +787,7 @@ class Substitute(models.Model):
         """
         user = self.user
         event = self.get_team().get_tournament().get_event()
-        if not unique_event_registration_validator(user,event, player=self.id):
+        if not unique_event_registration_validator(user,event, substitute=self.id):
             raise ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
