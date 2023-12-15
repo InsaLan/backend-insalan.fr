@@ -1922,6 +1922,104 @@ class TournamentTeamEndpoints(TestCase):
         # Player.objects.create(team=team_one, user=another_player)
         # Manager.objects.create(team=team_one, user=random_player)
 
+    def test_can_create_a_team_with_player(self):
+        """Try to create a team with a player"""
+        user: User = User.objects.get(username="validemail")
+        self.client.force_login(user=user)
+
+        event = Event.objects.get(name="InsaLan Test")
+        trnm = event.get_tournaments()[0]
+
+        request = self.client.post(
+            "/v1/tournament/team/",
+            {
+                "name": "La Team Test 2",
+                "tournament": trnm.id,
+                "password": "Password123!",
+                "players": [
+                    user.id,
+                ],
+                "players_name_in_games": [
+                    "pseudo",
+                ]
+            },
+            format="json",
+        )
+
+        self.assertEquals(request.status_code, 201)
+                
+        team = Team.objects.get(name="La Team Test 2")
+        self.assertEquals(team.get_tournament(), trnm)
+
+        player = Player.objects.get(user=user)
+        self.assertEquals(player.as_user(), user)
+        self.assertEquals(player.get_team(), team)
+        self.assertEquals(player.get_name_in_game(), "pseudo")
+
+    def test_can_create_a_team_with_manager(self):
+        """Try to create a team with a manager"""
+        user: User = User.objects.get(username="validemail")
+        self.client.force_login(user=user)
+
+        event = Event.objects.get(name="InsaLan Test")
+        trnm = event.get_tournaments()[0]
+
+        request = self.client.post(
+            "/v1/tournament/team/",
+            {
+                "name": "La Team Test 2",
+                "tournament": trnm.id,
+                "password": "Password123!",
+                "managers": [
+                    user.id,
+                ],
+            },
+            format="json",
+        )
+
+        self.assertEquals(request.status_code, 201)
+                
+        team = Team.objects.get(name="La Team Test 2")
+        self.assertEquals(team.get_tournament(), trnm)
+
+        manager = Manager.objects.get(user=user)
+        self.assertEquals(manager.as_user(), user)
+        self.assertEquals(manager.get_team(), team)
+    
+    def test_can_create_a_team_with_substitute(self):
+        """Try to create a team with a substitute"""
+        user: User = User.objects.get(username="validemail")
+        self.client.force_login(user=user)
+
+        event = Event.objects.get(name="InsaLan Test")
+        trnm = event.get_tournaments()[0]
+
+        request = self.client.post(
+            "/v1/tournament/team/",
+            {
+                "name": "La Team Test 2",
+                "tournament": trnm.id,
+                "password": "Password123!",
+                "substitutes": [
+                    user.id,
+                ],
+                "substitutes_name_in_games": [
+                    "pseudo",
+                ]
+            },
+            format="json",
+        )
+
+        self.assertEquals(request.status_code, 201)
+                
+        team = Team.objects.get(name="La Team Test 2")
+        self.assertEquals(team.get_tournament(), trnm)
+
+        substitute = Substitute.objects.get(user=user)
+        self.assertEquals(substitute.as_user(), user)
+        self.assertEquals(substitute.get_team(), team)
+        self.assertEquals(substitute.get_name_in_game(), "pseudo")
+
     def test_can_create_a_team_with_valid_email(self):
         """Try to create a team with a valid email"""
         user: User = User.objects.get(username="validemail")
