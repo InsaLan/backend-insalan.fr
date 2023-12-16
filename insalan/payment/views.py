@@ -26,6 +26,9 @@ logger = logging.getLogger(__name__)
 
 
 class ProductList(generics.ListAPIView):
+    """
+    Get all products
+    """
     paginator = None
     serializer_class = serializers.ProductSerializer
     queryset = Product.objects.all()
@@ -33,6 +36,9 @@ class ProductList(generics.ListAPIView):
 
 
 class ProductDetails(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Get, update or delete a product
+    """
     paginator = None
     serializer_class = serializers.ProductSerializer
     queryset = Product.objects.all()
@@ -40,6 +46,9 @@ class ProductDetails(generics.RetrieveUpdateDestroyAPIView):
 
 
 class TransactionList(generics.ListAPIView):
+    """
+    Get all transactions
+    """
     paginator = None
     serializer_class = serializers.TransactionSerializer
     queryset = Transaction.objects.all().order_by("last_modification_date")
@@ -47,6 +56,9 @@ class TransactionList(generics.ListAPIView):
 
 
 class TransactionPerId(generics.RetrieveAPIView):
+    """
+    Get a transaction by its ID
+    """
     paginator = None
     serializer_class = serializers.TransactionSerializer
     queryset = Transaction.objects.all()
@@ -54,6 +66,9 @@ class TransactionPerId(generics.RetrieveAPIView):
 
 
 class CreateProduct(generics.CreateAPIView):
+    """
+    Create a product
+    """
     serializer_class = serializers.ProductSerializer
     queryset = Product.objects.all()
     permission_classes = [permissions.IsAdminUser]
@@ -155,6 +170,9 @@ class Notifications(APIView):
 
 
 class PayView(generics.CreateAPIView):
+    """
+    Pay view
+    """
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [SessionAuthentication]
     queryset = Transaction.objects.all()

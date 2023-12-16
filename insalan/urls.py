@@ -13,12 +13,13 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from os import getenv
+
 from django.contrib import admin
 from django.views.generic.base import RedirectView
 from django.urls import include, path
 from rest_framework import routers
 
-from os import getenv
 from insalan.langate import views as langate_views
 router = routers.DefaultRouter()
 # Wire up our API using automatic URL routing.
@@ -37,7 +38,9 @@ urlpatterns = [
 
 if not int(getenv("DEV", "1")):
     urlpatterns.insert(1,
-        path("v1/admin/login/", RedirectView.as_view(url=f"{getenv('HTTP_PROTOCOL')}://{getenv('WEBSITE_HOST')}/register")))
+        path("v1/admin/login/", RedirectView.as_view(
+            url=f"{getenv('HTTP_PROTOCOL')}://{getenv('WEBSITE_HOST')}/register"
+        )))
 
 # Set admin site url correctly for the admin panel
 admin.site.site_url = "/v1/"

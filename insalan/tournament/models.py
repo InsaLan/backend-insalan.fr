@@ -6,7 +6,7 @@ Module that contains the declaration of structures tied to tournaments
 # "Too few public methods"
 # pylint: disable=R0903
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import List, Optional
 from math import ceil
 from django.db import models
@@ -20,8 +20,6 @@ from django.core.validators import (
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
-from rest_framework import serializers
-from typing import Union, List
 
 from insalan.tickets.models import Ticket
 from insalan.user.models import User
@@ -310,12 +308,12 @@ class Tournament(models.Model):
         products to allow players and managers to pay the entry fee
         """
 
+        # pylint: disable=import-outside-toplevel
         from insalan.payment.models import Product, ProductCategory
 
         super().save(*args, **kwargs)  # Get the self accessible to the products
 
         need_save = False
-        update_fields = kwargs.get("update_fields", [])
 
         if self.player_online_product is None:
             prod = Product.objects.create(
@@ -363,7 +361,7 @@ class Tournament(models.Model):
             )
             self.substitute_online_product = prod
             need_save = True
-        
+
         self.substitute_online_product.available_from = self.registration_open
         self.substitute_online_product.available_until = self.registration_close
         self.substitute_online_product.save()
@@ -399,7 +397,7 @@ class Tournament(models.Model):
         """Return the raw tournament rules"""
         return self.rules
 
-    def get_maxTeam(self) -> int:
+    def get_max_team(self) -> int:
         """Return the max number of teams"""
         return self.maxTeam
 
@@ -497,13 +495,13 @@ class Team(models.Model):
         Retrieve the user identifiers of all managers
         """
         return self.get_managers().values_list("id", flat=True)
-    
+
     def get_substitutes(self) -> List["Substitute"]:
         """
         Retrieve all the substitutes in the database for that team
         """
         return Substitute.objects.filter(team=self)
-    
+
     def get_substitutes_id(self) -> List[int]:
         """
         Retrieve the user identifiers of all substitutes
@@ -519,18 +517,17 @@ class Team(models.Model):
         # Condition 1: ceil((n+1)/2) players have paid/will pay
         if self.validated:
             return
-        else:
-            if self.tournament.get_validated_teams() < self.tournament.get_maxTeam():
-                players = self.get_players()
+        if self.tournament.get_validated_teams() < self.tournament.get_max_team():
+            players = self.get_players()
 
-                game = self.get_tournament().get_game()
+            game = self.get_tournament().get_game()
 
-                threshold = ceil((game.get_players_per_team()+1)/2)
+            threshold = ceil((game.get_players_per_team()+1)/2)
 
-                paid_seats = len(players.filter(payment_status=PaymentStatus.PAID))
+            paid_seats = len(players.filter(payment_status=PaymentStatus.PAID))
 
-                self.validated = paid_seats >= threshold
-                self.save()
+            self.validated = paid_seats >= threshold
+            self.save()
 
     def clean(self):
         """
@@ -775,7 +772,7 @@ class Substitute(models.Model):
     def get_team(self):
         """Return the Team object of the current team"""
         return self.team
-    
+
     def get_name_in_game(self) -> str:
         """Return the name_in_game of the player"""
         return self.name_in_game
@@ -802,7 +799,9 @@ class Substitute(models.Model):
 
 
 class Caster(models.Model):
-    
+    """
+    A Caster is someone that can cast a tournament.
+    """
     name = models.CharField(
         max_length=42,
         null=False,
@@ -835,8 +834,7 @@ def unique_event_registration_validator(user: User, event: Event, player = None,
     e_regs = Player.objects.filter(team__tournament__event=event,user=user).exclude(id=player).values("id").union(Manager.objects.filter(team__tournament__event=event, user=user).exclude(id=manager).values("id")).union(Substitute.objects.filter(team__tournament__event=event, user=user).exclude(id=substitute).values("id"))
     if len(e_regs) > 0:
         return False
-    else:
-        return True
+    return True
 
 def player_manager_user_unique_validator(user: User):
     """
@@ -852,35 +850,31 @@ def player_manager_user_unique_validator(user: User):
     s_regs = {
         (obj.user, obj.team.tournament) for obj in Substitute.objects.filter(user=user)
     }
-    if len(m_regs.intersection(p_regs)) > 0:
+    if len(m_regs.intersection(p_regs)) > 0 or len(s_regs.intersection(p_regs)) > 0 or len(s_regs.intersection(m_regs)) > 0:
         raise ValidationError(
             _("Utilisateur⋅rice déjà inscrit⋅e dans ce tournois (rôles distincts)")
         )
-    
+
 def max_players_per_team_reached(team: Team, exclude=None):
     """Validate the number of players in a team"""
     if len(team.get_players().exclude(id=exclude)) >= team.get_tournament().get_game().get_players_per_team():
         return True
-    else:
-        return False
-    
+    return False
+
 def max_substitue_per_team_reached(team: Team, exclude=None):
     """Validate the number of sub in a team"""
     if len(team.get_substitutes().exclude(id=exclude)) >= team.get_tournament().get_game().get_substitute_players_per_team():
         return True
-    else:
-        return False
-    
+    return False
+
 def tournament_announced(tournament: Tournament):
     """Validate if a tournament is announced"""
     if tournament.is_announced:
         return True
-    else:
-        return False
+    return False
 
 def tournament_registration_full(tournament: Tournament, exclude=None):
     """Validate if a tournament is full"""
-    if tournament.get_validated_teams(exclude) >= tournament.get_maxTeam():
+    if tournament.get_validated_teams(exclude) >= tournament.get_max_team():
         return True
-    else:
-        return False
+    return False

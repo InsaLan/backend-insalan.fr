@@ -8,18 +8,19 @@ from django.core.exceptions import PermissionDenied, BadRequest
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.hashers import check_password
+from django.http import QueryDict
+
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.http import QueryDict
-
-from insalan.user.models import User
-import insalan.tournament.serializers as serializers
 from rest_framework.authentication import SessionAuthentication
 
-from .models import Player, Manager, Substitute, Event, Tournament, Game, Team, PaymentStatus
+from insalan.user.models import User
+from insalan.tournament import serializers
+
+from .models import Player, Manager, Substitute, Event, Tournament, Game, Team
 
 class ReadOnly(BasePermission):
     """Read-Only permissions"""
@@ -200,6 +201,9 @@ class TournamentMe(APIView):
     permission_classes = [permissions.IsAuthenticated & ReadOnly]
 
     def get(self, request):
+        """
+        GET handler
+        """
         user: User = request.user
 
         if user is None:
@@ -226,7 +230,7 @@ class TournamentMe(APIView):
                 Event.objects.get(id=player["team"]["tournament"]["event"]),
                 context={"request": request},
             ).data
-        
+
         # retrieve registration as Manager
         managers = Manager.objects.filter(user=user)
         # serialize it
@@ -284,8 +288,6 @@ class TeamList(generics.ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         user = request.user
-        data = request.data
-
 
         if user is None or not user.is_authenticated:
             raise PermissionDenied()
@@ -364,7 +366,7 @@ class PlayerRegistrationList(generics.ListCreateAPIView):
             )
 
         # make the data dict mutable in the case of immutable QueryDict form django test client
-        if type(data) == QueryDict:
+        if isinstance(data, QueryDict):
             data._mutable = True
         data["user"] = user.id
 
@@ -445,7 +447,7 @@ class ManagerRegistrationList(generics.ListCreateAPIView):
             )
 
         # make the data dict mutable in the case of immutable QueryDict form django test client
-        if type(data) == QueryDict:
+        if isinstance(data, QueryDict):
             data._mutable = True
         data["user"] = user.id
 
@@ -525,7 +527,7 @@ class SubstituteRegistrationList(generics.ListCreateAPIView):
             )
 
         # make the data dict mutable in the case of immutable QueryDict form django test client
-        if type(data) == QueryDict:
+        if isinstance(data, QueryDict):
             data._mutable = True
         data["user"] = user.id
 

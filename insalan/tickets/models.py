@@ -1,3 +1,6 @@
+"""
+Module for defining the Ticket model.
+"""
 import uuid
 
 from django.db import models
@@ -7,7 +10,14 @@ from insalan.user.models import User
 
 
 class Ticket(models.Model):
+    """
+    Model representing a ticket.
+    """
+
     class Status(models.TextChoices):
+        """
+        Enum for the ticket status.
+        """
         CANCELLED = "CA", _("Annulé")
         SCANNED = "SC", _("Scanné")
         VALID = "VA", _("Valide")

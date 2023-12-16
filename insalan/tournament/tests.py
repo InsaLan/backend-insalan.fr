@@ -553,6 +553,9 @@ class TournamentTestCase(TestCase):
         tourney.full_clean()
 
     def test_product_creation(self):
+        """
+        Verify that a product is created for a tournament
+        """
         event_one = Event.objects.create(
             name="Insalan Test One", year=2023, month=2, description=""
         )
@@ -620,13 +623,13 @@ class TeamTestCase(TestCase):
         )
 
         trnm_one = Tournament.objects.create(
-            event=event_one, 
+            event=event_one,
             game=game,
             is_announced=True,
             maxTeam = 10
         )
         trnm_two = Tournament.objects.create(
-            event=event_one, 
+            event=event_one,
             game=game,
             is_announced=True,
             maxTeam = 10
@@ -1413,7 +1416,7 @@ class ManagerTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game")
         trnm = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event,
             is_announced=True,
         )
@@ -1465,12 +1468,12 @@ class ManagerTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game")
         trnm = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event,
             is_announced=True,
         )
         trnm_two = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event,
             is_announced=True,
         )
@@ -1505,12 +1508,12 @@ class ManagerTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game")
         trnm = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event,
             is_announced=True,
         )
         trnm_two = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event_two,
             is_announced=True,
         )
@@ -1694,7 +1697,7 @@ class SubstituteTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
         trnm = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event,
             is_announced=True,
         )
@@ -1746,12 +1749,12 @@ class SubstituteTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
         trnm = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event,
             is_announced=True,
         )
         trnm_two = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event,
             is_announced=True,
         )
@@ -1786,12 +1789,12 @@ class SubstituteTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
         trnm = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event,
             is_announced=True,
         )
         trnm_two = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event_two,
             is_announced=True,
         )
@@ -1888,8 +1891,8 @@ class TournamentTeamEndpoints(TestCase):
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
         trnm = Tournament.objects.create(
-            game=game, 
-            event=event, 
+            game=game,
+            event=event,
             maxTeam=16,
             is_announced=True
         )
@@ -1947,7 +1950,7 @@ class TournamentTeamEndpoints(TestCase):
         )
 
         self.assertEqual(request.status_code, 201)
-                
+
         team = Team.objects.get(name="La Team Test 2")
         self.assertEqual(team.get_tournament(), trnm)
 
@@ -1978,14 +1981,14 @@ class TournamentTeamEndpoints(TestCase):
         )
 
         self.assertEqual(request.status_code, 201)
-                
+
         team = Team.objects.get(name="La Team Test 2")
         self.assertEqual(team.get_tournament(), trnm)
 
         manager = Manager.objects.get(user=user)
         self.assertEqual(manager.as_user(), user)
         self.assertEqual(manager.get_team(), team)
-    
+
     def test_can_create_a_team_with_substitute(self):
         """Try to create a team with a substitute"""
         user: User = User.objects.get(username="validemail")
@@ -2011,7 +2014,7 @@ class TournamentTeamEndpoints(TestCase):
         )
 
         self.assertEqual(request.status_code, 201)
-                
+
         team = Team.objects.get(name="La Team Test 2")
         self.assertEqual(team.get_tournament(), trnm)
 
@@ -2143,6 +2146,9 @@ class TournamentTeamEndpoints(TestCase):
 
 
 class TournamentMeTests(TestCase):
+    """
+    Test the tournament/me endpoint
+    """
     def setUp(self):
         self.usrobj = User.objects.create_user(
             username="randomplayer",
@@ -2170,7 +2176,7 @@ class TournamentMeTests(TestCase):
         self.team_one = Team.objects.create(name="Team One", tournament=self.tourneyobj_one, password=make_password("password"))
         self.plobjt = Player.objects.create(
             user_id=self.usrobj.id,
-            team=self.team_one, 
+            team=self.team_one,
             name_in_game="pseudo"
         )
 
@@ -2181,11 +2187,14 @@ class TournamentMeTests(TestCase):
         )
         self.subobj = Substitute.objects.create(
             user_id=self.usrobj.id,
-            team=self.team_two, 
+            team=self.team_two,
             name_in_game="pseudo"
         )
 
     def test_get_tournament_me(self):
+        """
+        Test the tournament/me endpoint
+        """
         self.client.login(username="randomplayer", password="IUseAVerySecurePassword")
         response = self.client.get(reverse("tournament/me"))
 
@@ -2196,6 +2205,9 @@ class TournamentMeTests(TestCase):
         self.assertEqual(response.data['player'][0]['team']['tournament']['event']['name'], self.evobj.name)
 
     def test_get_tournament_me_manager(self):
+        """
+        Test the tournament/me endpoint
+        """
         self.client.login(username="randomplayer", password="IUseAVerySecurePassword")
         response = self.client.get(reverse("tournament/me"))
 
@@ -2205,6 +2217,9 @@ class TournamentMeTests(TestCase):
         self.assertEqual(response.data['manager'][0]['team']['tournament']['event']['name'], self.evobj.name)
 
     def test_get_tournament_me_substitute(self):
+        """
+        Test the tournament/me endpoint
+        """
         self.client.login(username="randomplayer", password="IUseAVerySecurePassword")
         response = self.client.get(reverse("tournament/me"))
 
@@ -2214,6 +2229,9 @@ class TournamentMeTests(TestCase):
         self.assertEqual(response.data['substitute'][0]['team']['tournament']['event']['name'], self.evobj.name)
 
     def test_get_tournament_me_unauthenticated(self):
+        """
+        Test the tournament/me endpoint
+        """
         response = self.client.get(reverse("tournament/me"))
 
         self.assertEqual(response.status_code, 403)

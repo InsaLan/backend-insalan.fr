@@ -1,6 +1,10 @@
-from django.shortcuts import render
-from django.core import serializers
-from django.core.exceptions import BadRequest
+"""
+This module contains the views for the Langate app.
+
+LangateUserView is an API endpoint used by the langate to authenticate and verify a user's data.
+It handles retrieving and checking user data, and provides a response containing 
+all the necessary information for the langate to identify the user.
+"""
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import status
@@ -9,22 +13,22 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from insalan.tournament.models import Event, Tournament, Player, PaymentStatus, Manager
+from insalan.tournament.models import Event, Player, PaymentStatus, Manager
 from insalan.user.models import User
 
-from .models import LangateReply, SimplifiedUserData, TournamentRegistration
+from .models import LangateReply, TournamentRegistration
 from .serializers import ReplySerializer
 
 
 class LangateUserView(CreateAPIView):
-    authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAuthenticated]
-    serializer_class = ReplySerializer
     """
     API endpoint used by the langate to authenticate and verify a user's data
     """
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = ReplySerializer
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         """
         Function to handle retrieving and checking user data
 

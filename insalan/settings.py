@@ -14,7 +14,6 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 from os import getenv, path
 from pathlib import Path
 from sys import argv
-import djongo
 
 from django.utils.translation import gettext_lazy as _
 
@@ -31,7 +30,7 @@ SECRET_KEY = getenv(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = int(getenv("DEV", 0)) == 1
+DEBUG = int(getenv("DEV", "0")) == 1
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 PROTOCOL = getenv("HTTP_PROTOCOL", "http")
