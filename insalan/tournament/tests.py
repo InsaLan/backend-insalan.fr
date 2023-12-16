@@ -811,10 +811,10 @@ class PlayerTestCase(TestCase):
 
         self.assertEqual(player.as_user(), user)
 
-        self.assertEquals(user.get_username(), "testplayer")
-        self.assertEquals(user.get_short_name(), "Iam")
-        self.assertEquals(user.get_full_name(), "Iam Staff")
-        self.assertEquals(user.get_user_permissions(), set())
+        self.assertEqual(user.get_username(), "testplayer")
+        self.assertEqual(user.get_short_name(), "Iam")
+        self.assertEqual(user.get_full_name(), "Iam Staff")
+        self.assertEqual(user.get_user_permissions(), set())
         self.assertTrue(user.has_usable_password())
         self.assertTrue(user.check_password("^ThisIsAnAdminPassword42$"))
         self.assertTrue(user.is_active)
@@ -953,8 +953,8 @@ class PlayerTestCase(TestCase):
         team = player.get_team()
         self.assertIsNotNone(team)
 
-        self.assertEquals(team.get_name(), "La Team Test")
-        self.assertEquals(team.get_tournament(), trnm)
+        self.assertEqual(team.get_name(), "La Team Test")
+        self.assertEqual(team.get_tournament(), trnm)
 
     def test_player_team_deletion(self):
         """Verify the behaviour of a Player when their team gets deleted"""
@@ -1362,10 +1362,10 @@ class ManagerTestCase(TestCase):
         found_user = managers[0].as_user()
         self.assertEqual(found_user, user)
 
-        self.assertEquals(found_user.get_username(), "randomplayer")
-        self.assertEquals(found_user.get_short_name(), "Random")
-        self.assertEquals(found_user.get_full_name(), "Random Player")
-        self.assertEquals(found_user.get_user_permissions(), set())
+        self.assertEqual(found_user.get_username(), "randomplayer")
+        self.assertEqual(found_user.get_short_name(), "Random")
+        self.assertEqual(found_user.get_full_name(), "Random Player")
+        self.assertEqual(found_user.get_user_permissions(), set())
         self.assertTrue(found_user.has_usable_password())
         self.assertTrue(found_user.check_password("IUseAVerySecurePassword"))
         self.assertTrue(found_user.is_active)
@@ -1402,8 +1402,8 @@ class ManagerTestCase(TestCase):
         team = manager.get_team()
         self.assertIsNotNone(team)
 
-        self.assertEquals(team.get_name(), "La Team Test")
-        self.assertEquals(team.get_tournament(), trnm)
+        self.assertEqual(team.get_name(), "La Team Test")
+        self.assertEqual(team.get_tournament(), trnm)
 
     def test_one_manager_many_teams_same_event_same_tournament_same_team(self):
         """Test the collision of duplicate managers"""
@@ -1643,10 +1643,10 @@ class SubstituteTestCase(TestCase):
         found_user = substitutes[0].as_user()
         self.assertEqual(found_user, user)
 
-        self.assertEquals(found_user.get_username(), "randomplayer")
-        self.assertEquals(found_user.get_short_name(), "Random")
-        self.assertEquals(found_user.get_full_name(), "Random Player")
-        self.assertEquals(found_user.get_user_permissions(), set())
+        self.assertEqual(found_user.get_username(), "randomplayer")
+        self.assertEqual(found_user.get_short_name(), "Random")
+        self.assertEqual(found_user.get_full_name(), "Random Player")
+        self.assertEqual(found_user.get_user_permissions(), set())
         self.assertTrue(found_user.has_usable_password())
         self.assertTrue(found_user.check_password("IUseAVerySecurePassword"))
         self.assertTrue(found_user.is_active)
@@ -1683,8 +1683,8 @@ class SubstituteTestCase(TestCase):
         team = substitute.get_team()
         self.assertIsNotNone(team)
 
-        self.assertEquals(team.get_name(), "La Team Test")
-        self.assertEquals(team.get_tournament(), trnm)
+        self.assertEqual(team.get_name(), "La Team Test")
+        self.assertEqual(team.get_tournament(), trnm)
 
     def test_one_substitute_many_teams_same_event_same_tournament_same_team(self):
         """Test the collision of duplicate substitutes"""
@@ -1946,15 +1946,15 @@ class TournamentTeamEndpoints(TestCase):
             format="json",
         )
 
-        self.assertEquals(request.status_code, 201)
+        self.assertEqual(request.status_code, 201)
                 
         team = Team.objects.get(name="La Team Test 2")
-        self.assertEquals(team.get_tournament(), trnm)
+        self.assertEqual(team.get_tournament(), trnm)
 
         player = Player.objects.get(user=user)
-        self.assertEquals(player.as_user(), user)
-        self.assertEquals(player.get_team(), team)
-        self.assertEquals(player.get_name_in_game(), "pseudo")
+        self.assertEqual(player.as_user(), user)
+        self.assertEqual(player.get_team(), team)
+        self.assertEqual(player.get_name_in_game(), "pseudo")
 
     def test_can_create_a_team_with_manager(self):
         """Try to create a team with a manager"""
@@ -1977,14 +1977,14 @@ class TournamentTeamEndpoints(TestCase):
             format="json",
         )
 
-        self.assertEquals(request.status_code, 201)
+        self.assertEqual(request.status_code, 201)
                 
         team = Team.objects.get(name="La Team Test 2")
-        self.assertEquals(team.get_tournament(), trnm)
+        self.assertEqual(team.get_tournament(), trnm)
 
         manager = Manager.objects.get(user=user)
-        self.assertEquals(manager.as_user(), user)
-        self.assertEquals(manager.get_team(), team)
+        self.assertEqual(manager.as_user(), user)
+        self.assertEqual(manager.get_team(), team)
     
     def test_can_create_a_team_with_substitute(self):
         """Try to create a team with a substitute"""
@@ -2010,15 +2010,15 @@ class TournamentTeamEndpoints(TestCase):
             format="json",
         )
 
-        self.assertEquals(request.status_code, 201)
+        self.assertEqual(request.status_code, 201)
                 
         team = Team.objects.get(name="La Team Test 2")
-        self.assertEquals(team.get_tournament(), trnm)
+        self.assertEqual(team.get_tournament(), trnm)
 
         substitute = Substitute.objects.get(user=user)
-        self.assertEquals(substitute.as_user(), user)
-        self.assertEquals(substitute.get_team(), team)
-        self.assertEquals(substitute.get_name_in_game(), "pseudo")
+        self.assertEqual(substitute.as_user(), user)
+        self.assertEqual(substitute.get_team(), team)
+        self.assertEqual(substitute.get_name_in_game(), "pseudo")
 
     def test_can_create_a_team_with_valid_email(self):
         """Try to create a team with a valid email"""
@@ -2038,7 +2038,7 @@ class TournamentTeamEndpoints(TestCase):
             format="json",
         )
 
-        self.assertEquals(request.status_code, 201)
+        self.assertEqual(request.status_code, 201)
 
     def test_cant_create_a_team_with_no_valid_email(self):
         """Try to create a team with email not validated"""
@@ -2058,7 +2058,7 @@ class TournamentTeamEndpoints(TestCase):
             format="json",
         )
 
-        self.assertEquals(request.status_code, 403)
+        self.assertEqual(request.status_code, 403)
 
     def test_can_join_a_team_with_a_valid_email(self):
         """Try to join an existing team with a valid email"""
@@ -2075,7 +2075,7 @@ class TournamentTeamEndpoints(TestCase):
             },
             format="json",
         )
-        self.assertEquals(request.status_code, 201)
+        self.assertEqual(request.status_code, 201)
 
         Player.objects.filter(user=user.id).delete()
 
@@ -2087,7 +2087,7 @@ class TournamentTeamEndpoints(TestCase):
             },
             format="json",
         )
-        self.assertEquals(request.status_code, 201)
+        self.assertEqual(request.status_code, 201)
 
         Manager.objects.filter(user=user.id).delete()
 
@@ -2100,7 +2100,7 @@ class TournamentTeamEndpoints(TestCase):
             },
             format="json",
         )
-        self.assertEquals(request.status_code, 201)
+        self.assertEqual(request.status_code, 201)
 
 
     def test_cant_join_a_team_with_no_valid_email(self):
@@ -2118,7 +2118,7 @@ class TournamentTeamEndpoints(TestCase):
             },
             format="json",
         )
-        self.assertEquals(request.status_code, 403)
+        self.assertEqual(request.status_code, 403)
 
         request = self.client.post(
             "/v1/tournament/manager/",
@@ -2128,7 +2128,7 @@ class TournamentTeamEndpoints(TestCase):
             },
             format="json",
         )
-        self.assertEquals(request.status_code, 403)
+        self.assertEqual(request.status_code, 403)
 
         request = self.client.post(
             "/v1/tournament/substitute/",
@@ -2139,7 +2139,7 @@ class TournamentTeamEndpoints(TestCase):
             },
             format="json",
         )
-        self.assertEquals(request.status_code, 403)
+        self.assertEqual(request.status_code, 403)
 
 
 class TournamentMeTests(TestCase):

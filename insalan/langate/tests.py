@@ -29,9 +29,9 @@ class SerializationTests(TestCase):
         sud.name = "Test User"
 
         ser = SimplifiedUserDataSerializer(sud).data
-        self.assertEquals(ser["username"], "limefox")
-        self.assertEquals(ser["email"], "test@insalan.fr")
-        self.assertEquals(ser["name"], "Test User")
+        self.assertEqual(ser["username"], "limefox")
+        self.assertEqual(ser["email"], "test@insalan.fr")
+        self.assertEqual(ser["name"], "Test User")
 
     # There are no field size checks because the only direction for
     # conversion will be db -> json, and you can only do validation when
@@ -53,14 +53,14 @@ class SerializationTests(TestCase):
 
         ser = ReplySerializer(rep).data
 
-        self.assertEquals(ser["err"], LangateReply.RegistrationStatus.NOT_REGISTERED)
+        self.assertEqual(ser["err"], LangateReply.RegistrationStatus.NOT_REGISTERED)
 
         user_dc = ser["user"]
-        self.assertEquals(user_dc["username"], "limefox")
-        self.assertEquals(user_dc["email"], "test@example.com")
-        self.assertEquals(user_dc["name"], "One Two")
+        self.assertEqual(user_dc["username"], "limefox")
+        self.assertEqual(user_dc["email"], "test@example.com")
+        self.assertEqual(user_dc["name"], "One Two")
 
-        self.assertEquals(len(ser["tournaments"]), 0)
+        self.assertEqual(len(ser["tournaments"]), 0)
 
 
 class EndpointTests(TestCase):
@@ -73,7 +73,7 @@ class EndpointTests(TestCase):
         Tests that the API endpoint refuses to give information without auth
         """
         request = self.client.post("/v1/langate/authenticate", format="json")
-        self.assertEquals(request.status_code, 403)
+        self.assertEqual(request.status_code, 403)
 
     def test_authenticated_user(self):
         """Verify result on an authenticated user"""
@@ -88,17 +88,17 @@ class EndpointTests(TestCase):
 
         self.client.login(username="limefox", password="bad_pass")
         reply = self.client.post('/v1/langate/authenticate')
-        self.assertEquals(reply.status_code, 404)
+        self.assertEqual(reply.status_code, 404)
 
         ser = reply.data
-        self.assertEquals(ser["err"], LangateReply.RegistrationStatus.NOT_REGISTERED)
+        self.assertEqual(ser["err"], LangateReply.RegistrationStatus.NOT_REGISTERED)
 
         user_dc = ser["user"]
-        self.assertEquals(user_dc["username"], "limefox")
-        self.assertEquals(user_dc["email"], "test@example.com")
-        self.assertEquals(user_dc["name"], "Lux Amelia Phifollen")
+        self.assertEqual(user_dc["username"], "limefox")
+        self.assertEqual(user_dc["email"], "test@example.com")
+        self.assertEqual(user_dc["name"], "Lux Amelia Phifollen")
 
-        self.assertEquals(len(ser["tournaments"]), 0)
+        self.assertEqual(len(ser["tournaments"]), 0)
 
     def test_no_ongoing_event(self):
         """
@@ -118,7 +118,7 @@ class EndpointTests(TestCase):
         self.client.login(username="limefox", password="bad_pass")
         reply = self.client.post('/v1/langate/authenticate')
         # No ongoing event triggers a 500
-        self.assertEquals(reply.status_code, 500)
+        self.assertEqual(reply.status_code, 500)
 
     def test_no_ongoing_event_with_id(self):
         """
@@ -138,7 +138,7 @@ class EndpointTests(TestCase):
         self.client.login(username="limefox", password="bad_pass")
         reply = self.client.post('/v1/langate/authenticate', data={"event_id": evobj.id})
         # No ongoing event triggers a 500
-        self.assertEquals(reply.status_code, 500)
+        self.assertEqual(reply.status_code, 500)
 
     def test_one_ongoing_event_no_id(self):
         """
