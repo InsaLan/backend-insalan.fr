@@ -4,12 +4,14 @@
 # "Too few public methods"
 # pylint: disable=R0903
 
-from rest_framework import serializers
-
-from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, unique_event_registration_validator, tournament_announced, max_players_per_team_reached, tournament_registration_full, max_substitue_per_team_reached
-from insalan.user.models import User
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.hashers import make_password
+
+from rest_framework import serializers
+
+from insalan.user.models import User
+
+from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, unique_event_registration_validator, tournament_announced, max_players_per_team_reached, tournament_registration_full, max_substitue_per_team_reached
 
 class CasterSerializer(serializers.ModelSerializer):
     """Serializer for a tournament Caster"""
@@ -82,8 +84,7 @@ class TournamentSerializer(serializers.ModelSerializer):
         ret = super().to_representation(instance)
         if ret["is_announced"]:
             return ret
-        else:
-            return {"id": ret["id"], "is_announced": False}
+        return {"id": ret["id"], "is_announced": False}
 
 
 class TeamSerializer(serializers.ModelSerializer):
@@ -121,7 +122,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
         if len(data.get("players_name_in_games", [])) != len(data.get("get_players_id", [])):
             raise serializers.ValidationError(_("Il manque des name_in_games de joueur⋅euses"))
-        
+
         if len(data.get("substitutes_name_in_games", [])) != len(data.get("get_substitutes_id", [])):
             raise serializers.ValidationError(_("Il manque des name_in_games de remplaçant⋅e⋅s"))
 
@@ -160,6 +161,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
         # Catch the players and managers keywords
         if "get_players_id" in validated_data:
+            # pylint: disable=unused-variable
             players_name_in_games = validated_data.pop("players_name_in_games", [])
             players = set(validated_data.pop("get_players_id", []))
 
@@ -258,7 +260,7 @@ class ManagerSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 _("Ce tournoi n'est pas encore annoncé")
             )
-        
+
         return data
 
 

@@ -1,0 +1,16 @@
+[MAIN]
+ignore-paths=.*/migrations 
+
+disable=
+    line-too-long,
+    too-many-arguments,
+    too-many-locals,
+    too-many-instance-attributes,
+    too-many-return-statements,
+    fixme,
+    arguments-renamed,
+    abstract-method,
+    too-many-lines,
+    cyclic-import,
+    duplicate-code,
+    protected-access

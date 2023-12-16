@@ -6,7 +6,6 @@
 
 from django.db import models
 
-from insalan.tournament.models import PaymentStatus
 from insalan.user.models import User
 
 

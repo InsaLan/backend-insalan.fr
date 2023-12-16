@@ -1,3 +1,12 @@
+"""
+This module contains test cases for the models in the insalan.cms app.
+
+The test cases cover the following models:
+- Content
+- Constant
+
+Each test case verifies the functionality and behavior of the respective model.
+"""
 from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.core.exceptions import ValidationError
@@ -7,6 +16,9 @@ from insalan.cms.models import Constant, Content
 
 
 class ContentTestCase(TestCase):
+    """
+    Test case for the Content model.
+    """
     def test_content_with_constants(self):
         """test that we can create a content using constant"""
         Constant.objects.create(name="a", value="je suis la valeur a")
@@ -44,6 +56,9 @@ class ContentTestCase(TestCase):
 
 
 class ConstantTestCase(TestCase):
+    """
+    Test case for the Constant model.
+    """
     def test_create_two_constants_with_same_name(self) -> None:
         """Test that the name unicity of a constant is checked"""
         with self.assertRaises(IntegrityError):

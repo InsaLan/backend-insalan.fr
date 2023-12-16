@@ -1,14 +1,17 @@
 """User Tests Module"""
-from typing import Dict
-from django.test import TestCase
-from rest_framework.test import APIClient
-from django.core import mail
-from rest_framework import serializers
-from insalan.user.models import User
-from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.models import Permission
 import json
 import re
+
+from typing import Dict
+from django.test import TestCase
+from django.core import mail
+from django.utils.translation import gettext_lazy as _
+from django.contrib.auth.models import Permission
+
+from rest_framework.test import APIClient
+from rest_framework import serializers
+
+from insalan.user.models import User
 
 
 class UserTestCase(TestCase):
@@ -117,7 +120,7 @@ class UserEndToEndTestCase(TestCase):
             is_active=True,
         )
         user.user_permissions.add(Permission.objects.get(codename="email_active"))
-        
+
 
     def test_register_invalid_data(self):
         """
@@ -193,27 +196,27 @@ class UserEndToEndTestCase(TestCase):
         )
 
     def test_register_bot_account(self):
+        """
+        Test registering valid users
+        """
+
+        def send_bot_data(data):
             """
-            Test registering valid users
+            Helper function that will request a register and check its output
             """
+            request = self.client.post("/v1/user/register/", data, format="json")
 
-            def send_bot_data(data):
-                """
-                Helper function that will request a register and check its output
-                """
-                request = self.client.post("/v1/user/register/", data, format="json")
+            self.assertEqual(request.status_code, 400)
+            self.assertRaises(serializers.ValidationError)
 
-                self.assertEqual(request.status_code, 400)
-                self.assertRaises(serializers.ValidationError)
-
-            send_bot_data(
-                {
-                    "username": "newplayer",
-                    "password": "1111qwer!",
-                    "password_validation": "1111qwer!",
-                    "email": "email@example.com",
-                    "name": "je suis un bot"
-                })
+        send_bot_data(
+            {
+                "username": "newplayer",
+                "password": "1111qwer!",
+                "password_validation": "1111qwer!",
+                "email": "email@example.com",
+                "name": "je suis un bot"
+            })
 
     def test_register_read_only_fields(self):
         """

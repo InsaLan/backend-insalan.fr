@@ -2,10 +2,8 @@
 Langate unit tests
 """
 
-from django.db import models
 from django.test import TestCase
 from django.utils.translation import gettext_lazy as _
-from rest_framework.test import APIClient
 
 from insalan.tournament.models import Event, Game, Tournament, Player, Team, Manager, PaymentStatus
 from insalan.user.models import User

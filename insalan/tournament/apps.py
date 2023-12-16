@@ -11,6 +11,7 @@ class TournamentConfig(AppConfig):
 
     def ready(self):
         """Called when the module is ready"""
+        # pylint: disable-next=import-outside-toplevel
         from .payment import payment_handler_register
 
         payment_handler_register()

@@ -2,12 +2,10 @@
 
 import logging
 
-from insalan.payment.models import ProductCategory
-from insalan.payment.hooks import PaymentHooks, PaymentCallbackSystem
-
 from django.utils.translation import gettext_lazy as _
 
 from insalan.payment.models import ProductCategory
+from insalan.payment.hooks import PaymentHooks, PaymentCallbackSystem
 from insalan.tickets.models import Ticket
 from insalan.tournament.models import Player, Manager, Substitute, PaymentStatus
 
@@ -63,19 +61,18 @@ class PaymentHandler(PaymentHooks):
             if len(reg) == 0:
                 raise RuntimeError(_("Aucune inscription remplaçant trouvée"))
             return (reg[0], False, True)
-        else:
-            reg = Player.objects.filter(
-                team__tournament=tourney,
-                user=user,
-                payment_status=PaymentStatus.NOT_PAID,
+        reg = Player.objects.filter(
+            team__tournament=tourney,
+            user=user,
+            payment_status=PaymentStatus.NOT_PAID,
+        )
+        if len(reg) > 1:
+            raise RuntimeError(
+                _("Plusieurs inscription joueur⋅euse à un même tournoi")
             )
-            if len(reg) > 1:
-                raise RuntimeError(
-                    _("Plusieurs inscription joueur⋅euse à un même tournoi")
-                )
-            if len(reg) == 0:
-                raise RuntimeError(_("Aucune inscription joueur⋅euse trouvée"))
-            return (reg[0], False, False)
+        if len(reg) == 0:
+            raise RuntimeError(_("Aucune inscription joueur⋅euse trouvée"))
+        return (reg[0], False, False)
 
     @staticmethod
     def prepare_transaction(transaction, product, _count) -> bool:
@@ -83,7 +80,7 @@ class PaymentHandler(PaymentHooks):
 
         user_obj = transaction.payer
         try:
-            (reg, _, _) = PaymentHandler.fetch_registration(product, user_obj)
+            PaymentHandler.fetch_registration(product, user_obj)
         except RuntimeError:
             # Not gonna work out
             return False
@@ -144,7 +141,7 @@ class PaymentHandler(PaymentHooks):
         """Handle the failure of a registration"""
 
         user_obj = transaction.payer
-        (reg, _is_manager, is_substitute) = PaymentHandler.fetch_registration(product, user_obj)
+        PaymentHandler.fetch_registration(product, user_obj)
 
         # Whatever happens, just delete the registration
         # reg.delete()
@@ -174,10 +171,8 @@ class PaymentHandler(PaymentHooks):
             )
 
         if len(reg_list) == 0:
-            logger.warn(
-                _("Aucune inscription à détruire trouvée pour le refund de %s").format(
-                    transaction.id
-                )
+            logger.warning(
+                _(f"Aucune inscription à détruire trouvée pour le refund de {transaction.id}")
             )
             return
 

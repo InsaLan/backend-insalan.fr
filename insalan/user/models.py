@@ -1,10 +1,8 @@
 """
 Module for the definition of models tied to users
 """
-from os import getenv
 from datetime import datetime
 
-import insalan.settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser, PermissionsMixin, Permission
 from django.contrib.auth.tokens import (
@@ -13,18 +11,18 @@ from django.contrib.auth.tokens import (
 )
 from django.core.mail import send_mail
 from django.db import models
-from django.urls import reverse
 from django.utils import timezone
-from django.utils.http import urlencode
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import FileExtensionValidator
 
+import insalan.settings
 
 class UserManager(BaseUserManager):
     """
     Managers the User objects (kind of like a serializer but not quite that)
     """
 
+    # pylint: disable=unused-argument
     def create_user(
         self, email, username, password, password_validation=None, **extra_fields
     ):
@@ -110,9 +108,15 @@ class User(AbstractUser, PermissionsMixin):
     object = UserManager()
 
     def is_email_active(self):
+        """
+        Check if the user has the email_active permission
+        """
         return self.has_perm("user.email_active")
 
     def set_email_active(self, active=True):
+        """
+        Set the email_active permission
+        """
         if active:
             self.user_permissions.add(Permission.objects.get(codename="email_active"))
         else:
@@ -151,11 +155,10 @@ class UserMailer:
         )
         token = EmailConfirmationTokenGenerator().make_token(user_object)
         user = user_object.username
-        # TODO Give a frontend page instead of direct API link
         send_mail(
             _("Confirmez votre courriel"),
             _("Confirmez votre adresse de courriel en cliquant sur ")
-            + insalan.settings.PROTOCOL 
+            + insalan.settings.PROTOCOL
             + "://"
             + insalan.settings.WEBSITE_HOST
             + "/verification/"
@@ -174,7 +177,6 @@ class UserMailer:
         """
         token = default_token_generator.make_token(user_object)
         user = user_object.username
-        # TODO Give a frontend page instead of direct API link
         send_mail(
             _("Demande de ré-initialisation de mot de passe"),
             _(

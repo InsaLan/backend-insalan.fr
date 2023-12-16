@@ -5,10 +5,10 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
-from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 from django.core.validators import FileExtensionValidator
 
+from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 
 from .models import User, UserMailer
 

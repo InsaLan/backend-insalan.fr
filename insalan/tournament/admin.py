@@ -14,7 +14,6 @@ from django.urls import path, reverse
 from django.http import Http404, HttpResponseRedirect
 from django.utils.html import escape
 from django.contrib.auth.forms import AdminPasswordChangeForm, UsernameField
-from django.utils.translation import gettext
 from django.contrib.admin.options import IS_POPUP_VAR
 from django.template.response import TemplateResponse
 from django.core.exceptions import ValidationError
@@ -22,10 +21,9 @@ from django.core.exceptions import PermissionDenied
 from django.views.decorators.debug import sensitive_post_parameters
 from django.utils.decorators import method_decorator
 
-sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
-
 from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus
 
+sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
 
 class EventAdmin(admin.ModelAdmin):
     """Admin handler for Events"""
@@ -47,6 +45,9 @@ class GameAdmin(admin.ModelAdmin):
 admin.site.register(Game, GameAdmin)
 
 class EventTournamentFilter(admin.SimpleListFilter):
+    """
+    This filter is used to only show tournaments from the selected event
+    """
     title = 'Event' # or use _('country') for translated title
     parameter_name = 'event'
 
@@ -56,10 +57,12 @@ class EventTournamentFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(event__id=self.value())
-        else:
-            return queryset
-        
+        return queryset
+
 class GameTournamentFilter(admin.SimpleListFilter):
+    """
+    This filter is used to only show tournaments from the selected game
+    """
     title = 'Game' # or use _('country') for translated title
     parameter_name = 'game'
 
@@ -69,8 +72,7 @@ class GameTournamentFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(game__id=self.value())
-        else:
-            return queryset
+        return queryset
 
 class TournamentAdmin(admin.ModelAdmin):
     """Admin handler for Tournaments"""
@@ -81,6 +83,9 @@ class TournamentAdmin(admin.ModelAdmin):
     list_filter = (EventTournamentFilter,GameTournamentFilter)
 
     def get_occupancy(self, obj):
+        """
+        Returns the occupancy of the tournament
+        """
         return str(Team.objects.filter(tournament=obj, validated=True).count()) + " / " + str(obj.maxTeam)
 
     get_occupancy.short_description = 'Remplissage'
@@ -138,18 +143,26 @@ class TeamCreationForm(forms.ModelForm):
     )
 
     class Meta:
+        """
+        Meta options for the form
+        """
         model = Team
         fields = ("name", "tournament", "validated")
         field_classes = {"name": UsernameField}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # pylint: disable-next=no-member
         if self._meta.model.name in self.fields:
+            # pylint: disable-next=no-member
             self.fields[self._meta.model.name].widget.attrs[
                 "autofocus"
             ] = True
 
     def clean_password2(self):
+        """
+        Check that the two password entries match
+        """
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
         if password1 and password2 and password1 != password2:
@@ -171,6 +184,9 @@ class TeamCreationForm(forms.ModelForm):
                 self.add_error("password2", error)
 
     def save(self, commit=True):
+        """
+        Save the provided password in hashed format
+        """
         user = super().save(commit=False)
         user.password = make_password(self.cleaned_data["password1"])
         if commit:
@@ -180,6 +196,9 @@ class TeamCreationForm(forms.ModelForm):
         return user
 
 class TeamTournamentFilter(admin.SimpleListFilter):
+    """
+    This filter is used to only show teams from the selected tournament
+    """
     title = 'Tournament' # or use _('country') for translated title
     parameter_name = 'tournament'
 
@@ -189,10 +208,12 @@ class TeamTournamentFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(tournament__id=self.value())
-        else:
-            return queryset
+        return queryset
 
 class ValidatedFilter(admin.SimpleListFilter):
+    """
+    This filter is used to only show teams from the selected tournament
+    """
     title = 'Validation' # or use _('country') for translated title
     parameter_name = 'validated'
 
@@ -202,8 +223,7 @@ class ValidatedFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(validated=self.value())
-        else:
-            return queryset
+        return queryset
 
 class TeamAdmin(admin.ModelAdmin):
     """Admin handler for Team"""
@@ -226,11 +246,14 @@ class TeamAdmin(admin.ModelAdmin):
     list_filter = (TeamTournamentFilter,ValidatedFilter)
 
     def get_quota(self, obj):
+        """
+        Returns the quota of the team
+        """
         return str(Player.objects.filter(team=obj).count()) + " / " + str(obj.tournament.game.players_per_team)
 
     get_quota.short_description = 'Nombre de Joueurs'
 
-    def get_form(self, request, obj=None, **kwargs):
+    def get_form(self, request, obj=None, change=False, **kwargs):
         """
         Use special form during user creation
         """
@@ -238,7 +261,7 @@ class TeamAdmin(admin.ModelAdmin):
         if obj is None:
             defaults["form"] = self.add_form
         defaults.update(kwargs)
-        return super().get_form(request, obj, **defaults)
+        return super().get_form(request, obj, change, **defaults)
 
     def get_fieldsets(self, request, obj=None):
         if not obj:
@@ -254,11 +277,11 @@ class TeamAdmin(admin.ModelAdmin):
             ),
         ] + super().get_urls()
     change_password_form = AdminPasswordChangeForm
-    
+
     @sensitive_post_parameters_m
-    def team_change_password(self, request, id, form_url=""):
+    def team_change_password(self, request, team_id, form_url=""):
         """Change the password of a team"""
-        team = Team.objects.get(pk=id)
+        team = Team.objects.get(pk=team_id)
         if not self.has_change_permission(request, team):
             raise PermissionDenied
         if team is None:
@@ -266,23 +289,18 @@ class TeamAdmin(admin.ModelAdmin):
                 _("%(name)s object with primary key %(key)r does not exist.")
                 % {
                     "name": self.opts.verbose_name,
-                    "key": escape(id),
+                    "key": escape(team_id),
                 }
             )
         if request.method == "POST":
             form = self.change_password_form(team, request.POST)
             if form.is_valid():
                 if form.cleaned_data["password1"] != form.cleaned_data["password2"]:
-                    msg = gettext("The two password fields didn't match.")
+                    msg = _("The two password fields didn't match.")
                     messages.error(request, msg)
                     return HttpResponseRedirect(
                         reverse(
-                            "%s:%s_%s_change"
-                            % (
-                                self.admin_site.name,
-                                team._meta.app_label,
-                                team._meta.model_name,
-                            ),
+                            f"{self.admin_site.name}:{team._meta.app_label}_{team._meta.model_name}_change",
                             args=(team.pk,),
                         )
                     )
@@ -290,16 +308,11 @@ class TeamAdmin(admin.ModelAdmin):
                 team.save()
                 change_message = self.construct_change_message(request, form, None)
                 self.log_change(request, team, change_message)
-                msg = gettext("Password changed successfully.")
+                msg = _("Password changed successfully.")
                 messages.success(request, msg)
                 return HttpResponseRedirect(
                     reverse(
-                        "%s:%s_%s_change"
-                        % (
-                            self.admin_site.name,
-                            team._meta.app_label,
-                            team._meta.model_name,
-                        ),
+                        f"{self.admin_site.name}:{team._meta.app_label}_{team._meta.model_name}_change",
                         args=(team.pk,),
                     )
                 )
@@ -340,6 +353,9 @@ class TeamAdmin(admin.ModelAdmin):
 admin.site.register(Team, TeamAdmin)
 
 class EventFilter(admin.SimpleListFilter):
+    """
+    This filter is used to only show players from the selected event
+    """
     title = 'Event' # or use _('country') for translated title
     parameter_name = 'event'
 
@@ -349,10 +365,12 @@ class EventFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(team__tournament__event__id=self.value())
-        else:
-            return queryset
+        return queryset
 
 class OngoingTournamentFilter(admin.SimpleListFilter):
+    """
+    This filter is used to only show players from the selected tournament
+    """
     title = 'Tournament' # or use _('country') for translated title
     parameter_name = 'tournament'
 
@@ -362,10 +380,12 @@ class OngoingTournamentFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(team__tournament__id=self.value())
-        else:
-            return queryset
+        return queryset
 
 class PaymentStatusFilter(admin.SimpleListFilter):
+    """
+    This filter is used to only show players from the selected payment status
+    """
     title = 'Payment Status' # or use _('country') for translated title
     parameter_name = 'payment_status'
 
@@ -375,8 +395,7 @@ class PaymentStatusFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(payment_status=self.value())
-        else:
-            return queryset
+        return queryset
 
 class PlayerAdmin(admin.ModelAdmin):
     """Admin handler for Player Registrations"""
@@ -387,8 +406,11 @@ class PlayerAdmin(admin.ModelAdmin):
     list_filter = (EventFilter,OngoingTournamentFilter,PaymentStatusFilter)
 
     def get_tournament(self, obj):
+        """
+        Returns the tournament of the player
+        """
         return obj.team.tournament.name
-    
+
     get_tournament.short_description = 'Tournament'
 
 admin.site.register(Player, PlayerAdmin)
@@ -403,8 +425,11 @@ class ManagerAdmin(admin.ModelAdmin):
     list_filter = (EventFilter,OngoingTournamentFilter,PaymentStatusFilter)
 
     def get_tournament(self, obj):
+        """
+        Returns the tournament of the manager
+        """
         return obj.team.tournament.name
-    
+
     get_tournament.short_description = 'Tournament'
 
 
@@ -427,8 +452,11 @@ class SubstituteAdmin(admin.ModelAdmin):
     list_filter = (EventFilter,PaymentStatusFilter)
 
     def get_tournament(self, obj):
+        """
+        Returns the tournament of the substitute
+        """
         return obj.team.tournament.name
-    
+
     get_tournament.short_description = 'Tournament'
 
 

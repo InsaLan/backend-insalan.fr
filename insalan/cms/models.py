@@ -1,14 +1,22 @@
+"""
+This module contains the models for the CMS (Content Management System) of the InsaLan website.
+
+The models include:
+- Content: Represents markdown content to be placed on website pages.
+- Constant: Stores constant values used on the InsaLan website.
+"""
+
+import re
+
 from djongo import models
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
-import re
-
 
 def constant_definition_validator(content: str):
     """
-    validator to ensure that any used constant in content is defined
+    Validator to ensure that any used constant in content is defined.
     """
-    regex = re.compile("\$\{(?P<name>[^\{\}]*)\}")
+    regex = re.compile(r"\$\{(?P<name>[^\{\}]*)\}")
     constant_list = set(
         re.findall(regex, content)
     )  # get the constant names in the content
@@ -23,14 +31,14 @@ def constant_definition_validator(content: str):
     if len(excess_constants) > 0:
         raise ValidationError(
             _(
-                "Des constantes non définies sont utilisées: {}".format(', '.join(sorted(excess_constants)))
+                f"Des constantes non définies sont utilisées: {', '.join(sorted(excess_constants))}"
             )
         )
 
 
 class Content(models.Model):
     """
-    markdown content to place on the website pages
+    Represents markdown content to be placed on website pages.
     """
 
     name = models.CharField(
@@ -41,6 +49,9 @@ class Content(models.Model):
     )
 
     class Meta:
+        """
+        Meta class for the Content model.
+        """
         verbose_name = _("Contenu")
         verbose_name_plural = _("Contenus")
 
@@ -50,8 +61,7 @@ class Content(models.Model):
 
 class Constant(models.Model):
     """
-    This model stores the constant values on the insalan's website (e.g: date,
-    staff, prices..)
+    Stores the constant values on the InsaLan website (e.g: date, staff, prices..).
     """
 
     name = models.CharField(
@@ -60,6 +70,9 @@ class Constant(models.Model):
     value = models.CharField(max_length=200, verbose_name=_("Valeur de la constante"))
 
     class Meta:
+        """
+        Meta class for the Constant model.
+        """
         verbose_name = _("Constante")
         verbose_name_plural = _("Constantes")
 

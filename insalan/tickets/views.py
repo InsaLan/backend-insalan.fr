@@ -1,27 +1,31 @@
+"""
+This module contains Django views for ticket-related operations.
+
+It includes views for retrieving ticket details, scanning tickets, and generating QR codes for tickets.
+"""
 import io
 import uuid
 
-from django.core import serializers
-from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
+
 from qrcode import make
 from qrcode.image.svg import SvgImage
+
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
-from .models import Ticket
 from insalan.user.models import User
-
+from .models import Ticket
 
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def get(request: HttpRequest, username: str, token: str) -> JsonResponse:
     """Get ticket details for the given username and token."""
     try:
-        token_uuid = uuid.UUID(hex=token)
+        uuid.UUID(hex=token)
     except ValueError:
         return JsonResponse({'err': _("UUID invalide")},
                             status=status.HTTP_400_BAD_REQUEST)
@@ -80,13 +84,13 @@ def scan(request: HttpRequest, token: str) -> JsonResponse:
 def qrcode(request: HttpRequest, token: str) -> HttpResponse:
     """Generate a QR code for the ticket with the token."""
     try:
-        token_uuid = uuid.UUID(hex=token)
+        uuid.UUID(hex=token)
     except ValueError:
         return JsonResponse({'err': _("UUID invalide")},
                             status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        ticket = Ticket.objects.get(token=uuid.UUID(token), user=request.user)
+        Ticket.objects.get(token=uuid.UUID(token), user=request.user)
     except Ticket.DoesNotExist:
         return JsonResponse({'err': _("Ticket non trouvé")},
                             status=status.HTTP_404_NOT_FOUND)
