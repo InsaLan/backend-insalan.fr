@@ -1063,10 +1063,10 @@ class TournamentFullDerefEndpoint(TestCase):
                 "logo": None,
             },
             "game": {
-                "id": game_obj.id, 
-                "name": "Test Game", 
-                "short_name": "TFG", 
-                "players_per_team": 1, 
+                "id": game_obj.id,
+                "name": "Test Game",
+                "short_name": "TFG",
+                "players_per_team": 1,
                 "substitute_players_per_team": 0,
             },
             "name": "Test Tournament",
@@ -1095,14 +1095,14 @@ class TournamentFullDerefEndpoint(TestCase):
                     "id": team_one.id,
                     "name": "Team One",
                     "players": [
-                        {"user": "test_user_one", "name_in_game": "playerone"},
-                        {"user": "test_user_two", "name_in_game": "playertwo"},
+                        {"user": "test_user_one", "name_in_game": "playerone", "payment_status": None},
+                        {"user": "test_user_two", "name_in_game": "playertwo", "payment_status": None},
                     ],
                     "managers": [
                         "test_user_three",
                     ],
                     "substitutes": [
-                        {"user": "test_user_four", "name_in_game": "substitute"},
+                        {"user": "test_user_four", "name_in_game": "substitute", "payment_status": None},
                     ],
                     "validated": team_one.validated,
                 }
