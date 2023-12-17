@@ -620,13 +620,13 @@ class TeamTestCase(TestCase):
         )
 
         trnm_one = Tournament.objects.create(
-            event=event_one, 
+            event=event_one,
             game=game,
             is_announced=True,
             maxTeam = 10
         )
         trnm_two = Tournament.objects.create(
-            event=event_one, 
+            event=event_one,
             game=game,
             is_announced=True,
             maxTeam = 10
@@ -1060,10 +1060,10 @@ class TournamentFullDerefEndpoint(TestCase):
                 "logo": None,
             },
             "game": {
-                "id": game_obj.id, 
-                "name": "Test Game", 
-                "short_name": "TFG", 
-                "players_per_team": 1, 
+                "id": game_obj.id,
+                "name": "Test Game",
+                "short_name": "TFG",
+                "players_per_team": 1,
                 "substitute_players_per_team": 0,
             },
             "name": "Test Tournament",
@@ -1092,14 +1092,14 @@ class TournamentFullDerefEndpoint(TestCase):
                     "id": team_one.id,
                     "name": "Team One",
                     "players": [
-                        {"user": "test_user_one", "name_in_game": "playerone"},
-                        {"user": "test_user_two", "name_in_game": "playertwo"},
+                        {"user": "test_user_one", "name_in_game": "playerone", "payment_status": None},
+                        {"user": "test_user_two", "name_in_game": "playertwo", "payment_status": None},
                     ],
                     "managers": [
                         "test_user_three",
                     ],
                     "substitutes": [
-                        {"user": "test_user_four", "name_in_game": "substitute"},
+                        {"user": "test_user_four", "name_in_game": "substitute", "payment_status": None},
                     ],
                     "validated": team_one.validated,
                 }
@@ -1413,7 +1413,7 @@ class ManagerTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game")
         trnm = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event,
             is_announced=True,
         )
@@ -1465,12 +1465,12 @@ class ManagerTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game")
         trnm = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event,
             is_announced=True,
         )
         trnm_two = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event,
             is_announced=True,
         )
@@ -1505,12 +1505,12 @@ class ManagerTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game")
         trnm = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event,
             is_announced=True,
         )
         trnm_two = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event_two,
             is_announced=True,
         )
@@ -1694,7 +1694,7 @@ class SubstituteTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
         trnm = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event,
             is_announced=True,
         )
@@ -1746,12 +1746,12 @@ class SubstituteTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
         trnm = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event,
             is_announced=True,
         )
         trnm_two = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event,
             is_announced=True,
         )
@@ -1786,12 +1786,12 @@ class SubstituteTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
         trnm = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event,
             is_announced=True,
         )
         trnm_two = Tournament.objects.create(
-            game=game, 
+            game=game,
             event=event_two,
             is_announced=True,
         )
@@ -1888,8 +1888,8 @@ class TournamentTeamEndpoints(TestCase):
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
         trnm = Tournament.objects.create(
-            game=game, 
-            event=event, 
+            game=game,
+            event=event,
             maxTeam=16,
             is_announced=True
         )
@@ -2072,7 +2072,7 @@ class TournamentMeTests(TestCase):
         self.team_one = Team.objects.create(name="Team One", tournament=self.tourneyobj_one, password=make_password("password"))
         self.plobjt = Player.objects.create(
             user_id=self.usrobj.id,
-            team=self.team_one, 
+            team=self.team_one,
             name_in_game="pseudo"
         )
 
@@ -2083,7 +2083,7 @@ class TournamentMeTests(TestCase):
         )
         self.subobj = Substitute.objects.create(
             user_id=self.usrobj.id,
-            team=self.team_two, 
+            team=self.team_two,
             name_in_game="pseudo"
         )
 

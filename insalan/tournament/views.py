@@ -172,18 +172,28 @@ class TournamentDetailsFull(APIView):
                 ).data
                 del team_preser["tournament"]
 
+                team_members: list[int] = team_preser["players"] + team_preser["managers"] + team_preser["substitutes"]
+                can_see_payment_status: bool = request.user.is_staff or request.user.id in team_members
                 # Dereference players/managers to name_in_game
                 team_preser["players"] = [
-                    {"user": Player.objects.get(id=pid).as_user().username, "name_in_game": Player.objects.get(id=pid).name_in_game} for pid in team_preser["players"]
+                    {
+                        "user": Player.objects.get(id=pid).as_user().username,
+                        "name_in_game": Player.objects.get(id=pid).name_in_game,
+                        "payment_status": Player.objects.get(id=pid).payment_status if can_see_payment_status else None
+                    } for pid in team_preser["players"]
                 ]
                 team_preser["managers"] = [
                     Manager.objects.get(id=pid).as_user().username for pid in team_preser["managers"]
                 ]
                 team_preser["substitutes"] = [
-                    {"user": Substitute.objects.get(id=pid).as_user().username, "name_in_game": Substitute.objects.get(id=pid).name_in_game} for pid in team_preser["substitutes"]
+                    {
+                        "user": Substitute.objects.get(id=pid).as_user().username,
+                        "name_in_game": Substitute.objects.get(id=pid).name_in_game,
+                        "payment_status": Substitute.objects.get(id=pid).payment_status if can_see_payment_status else None
+                    } for pid in team_preser["substitutes"]
                 ]
-
                 teams_serialized.append(team_preser)
+
 
             tourney_serialized["teams"].clear()
             tourney_serialized["teams"] = teams_serialized
@@ -192,7 +202,7 @@ class TournamentDetailsFull(APIView):
 
 
 class TournamentMe(APIView):
-    """ 
+    """
     Details on tournament of a logged user
     This endpoint does many requests to the database and should be used wisely
     """
@@ -226,7 +236,7 @@ class TournamentMe(APIView):
                 Event.objects.get(id=player["team"]["tournament"]["event"]),
                 context={"request": request},
             ).data
-        
+
         # retrieve registration as Manager
         managers = Manager.objects.filter(user=user)
         # serialize it
