@@ -48,7 +48,7 @@ class EventTournamentFilter(admin.SimpleListFilter):
     """
     This filter is used to only show tournaments from the selected event
     """
-    title = 'Event' # or use _('country') for translated title
+    title = _('Event')
     parameter_name = 'event'
 
     def lookups(self, request, model_admin):
@@ -63,7 +63,7 @@ class GameTournamentFilter(admin.SimpleListFilter):
     """
     This filter is used to only show tournaments from the selected game
     """
-    title = 'Game' # or use _('country') for translated title
+    title = _('Game')
     parameter_name = 'game'
 
     def lookups(self, request, model_admin):
@@ -199,7 +199,7 @@ class TeamTournamentFilter(admin.SimpleListFilter):
     """
     This filter is used to only show teams from the selected tournament
     """
-    title = 'Tournament' # or use _('country') for translated title
+    title = _('Tournament')
     parameter_name = 'tournament'
 
     def lookups(self, request, model_admin):
@@ -214,7 +214,7 @@ class ValidatedFilter(admin.SimpleListFilter):
     """
     This filter is used to only show teams from the selected tournament
     """
-    title = 'Validation' # or use _('country') for translated title
+    title = _('Validation')
     parameter_name = 'validated'
 
     def lookups(self, request, model_admin):
@@ -356,7 +356,7 @@ class EventFilter(admin.SimpleListFilter):
     """
     This filter is used to only show players from the selected event
     """
-    title = 'Event' # or use _('country') for translated title
+    title = _('Event')
     parameter_name = 'event'
 
     def lookups(self, request, model_admin):
@@ -371,7 +371,7 @@ class OngoingTournamentFilter(admin.SimpleListFilter):
     """
     This filter is used to only show players from the selected tournament
     """
-    title = 'Tournament' # or use _('country') for translated title
+    title = _('Tournament')
     parameter_name = 'tournament'
 
     def lookups(self, request, model_admin):
@@ -386,7 +386,7 @@ class PaymentStatusFilter(admin.SimpleListFilter):
     """
     This filter is used to only show players from the selected payment status
     """
-    title = 'Payment Status' # or use _('country') for translated title
+    title = _('Payment Status')
     parameter_name = 'payment_status'
 
     def lookups(self, request, model_admin):
