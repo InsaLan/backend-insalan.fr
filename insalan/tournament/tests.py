@@ -2121,6 +2121,177 @@ class TournamentTeamEndpoints(TestCase):
 
         self.assertEqual(request.status_code, 403)
 
+    def test_can_patch_team_captain(self):
+        """Test that we can patch a team"""
+        user: User = User.objects.get(username="validemail")
+
+        user2: User = User.objects.create_user(
+            username="validemail2",
+            email="valideemail@gmail.com",
+            password="ThisIsPassword",
+        )
+
+        self.client.force_login(user=user)
+
+
+        event = Event.objects.get(name="InsaLan Test")
+        trnm = event.get_tournaments()[0]
+
+        # Create a team
+        team = Team.objects.create(name="Nom d'équipe 1", tournament=trnm, password=make_password("password"))
+
+        old_password = team.password
+
+        # Create players
+        player = Player.objects.create(team=team, user=user, name_in_game="pseudo")
+        player2 = Player.objects.create(team=team, user=user2, name_in_game="pseudo2")
+
+        # patch data
+        data = {
+            "name": "Nom d'équipe 2",
+            "password": "password2",
+            "players": [
+            ]
+        }
+
+        # patch request
+        request = self.client.patch(
+            f"/v1/tournament/team/{team.id}/",
+            data,
+            content_type="application/json",
+        )
+
+        self.assertEqual(request.status_code, 200)
+
+        # check that the team has been updated
+        team = Team.objects.get(id=team.id)
+        self.assertEqual(team.name, "Nom d'équipe 2")
+        self.assertNotEqual(team.password, old_password)
+
+        # check that the players have been updated
+        players = team.get_players()
+        self.assertEqual(len(players), 1)
+        self.assertEqual(players[0].id, player.id)
+
+    def test_cant_patch_team_not_captain(self):
+        """Test that we can't patch a team if we're not the captain"""
+        user: User = User.objects.get(username="validemail")
+
+        user2: User = User.objects.create_user(
+            username="validemail2",
+            email="valideemail@gmail.com",
+            password="ThisIsPassword",
+        )
+
+        self.client.force_login(user=user2)
+
+        event = Event.objects.get(name="InsaLan Test")
+        trnm = event.get_tournaments()[0]
+
+        # Create a team
+        team = Team.objects.create(name="Nom d'équipe 1", tournament=trnm, password=make_password("password"))
+
+        # Create players
+        player = Player.objects.create(team=team, user=user, name_in_game="pseudo")
+        player2 = Player.objects.create(team=team, user=user2, name_in_game="pseudo2")
+
+        # patch data
+        data = {
+            "name": "Nom d'équipe 2",
+            "password": "password2",
+            "players": [
+            ]
+        }
+
+        # patch request
+        request = self.client.patch(
+            f"/v1/tournament/team/{team.id}/",
+            data,
+            content_type="application/json",
+        )
+
+        self.assertEqual(request.status_code, 403)
+
+    def test_can_patch_team_manager(self):
+        """Test that we can patch a team"""
+        user: User = User.objects.get(username="validemail")
+
+        user2: User = User.objects.create_user(
+            username="validemail2",
+            email="valideemail@gmail.com",
+            password="ThisIsPassword",
+        )
+
+        self.client.force_login(user=user2)
+
+        event = Event.objects.get(name="InsaLan Test")
+        trnm = event.get_tournaments()[0]
+
+        # Create a team
+        team = Team.objects.create(name="Nom d'équipe 1", tournament=trnm, password=make_password("password"))
+
+        Manager.objects.create(team=team, user=user2)
+
+        # patch data
+        data = {
+            "name": "Nom d'équipe 2",
+            "password": "password2",
+            "players": [
+            ]
+        }
+
+        # patch request
+        request = self.client.patch(
+            f"/v1/tournament/team/{team.id}/",
+            data,
+            content_type="application/json",
+        )
+
+        self.assertEqual(request.status_code, 200)
+
+        # check that the team has been updated
+        team = Team.objects.get(id=team.id)
+        self.assertEqual(team.name, "Nom d'équipe 2")
+        self.assertNotEqual(team.password, "password")
+
+    def test_cant_patch_team_substitute(self):
+        """Test that we can't patch a team"""
+        user: User = User.objects.get(username="validemail")
+
+        user2: User = User.objects.create_user(
+            username="validemail2",
+            email="valideemail@gmail.com",
+            password="ThisIsPassword",
+        )
+
+        self.client.force_login(user=user2)
+
+        event = Event.objects.get(name="InsaLan Test")
+
+        trnm = event.get_tournaments()[0]
+
+        # Create a team
+        team = Team.objects.create(name="Nom d'équipe 1", tournament=trnm, password=make_password("password"))
+
+        Substitute.objects.create(team=team, user=user2, name_in_game="pseudo")
+
+        # patch data
+        data = {
+            "name": "Nom d'équipe 2",
+            "password": "password2",
+            "players": [
+            ]
+        }
+
+        # patch request
+        request = self.client.patch(
+            f"/v1/tournament/team/{team.id}/",
+            data,
+            content_type="application/json",
+        )
+
+        self.assertEqual(request.status_code, 403)
+
     def test_can_join_a_team_with_a_valid_email(self):
         """Try to join an existing team with a valid email"""
         user: User = User.objects.get(username="validemail")

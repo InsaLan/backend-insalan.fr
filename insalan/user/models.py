@@ -196,5 +196,18 @@ class UserMailer:
             fail_silently=False,
         )
 
+    @staticmethod
+    def send_kick_mail(user_object: User, team_name: str, user_name: str):
+        """
+        Send a mail to a user that has been kicked.
+        """
+        send_mail(
+            _("Vous avez été exclu.e de votre équipe"),
+            _("Vous avez été exclu.e de l'équipe ") + team_name
+            + _(" par ") + user_name + _("."),
+            None,  # Django falls back to default of settings.py
+            [user_object.email],
+            fail_silently=False,
+        )
 
 # vim: set tw=80 cc=80:
