@@ -16,7 +16,7 @@ def constant_definition_validator(content: str):
     """
     Validator to ensure that any used constant in content is defined.
     """
-    regex = re.compile(r"\$\{(?P<name>[^\{\}]*)\}")
+    regex = re.compile(r"\${(?P<name>[^{}]*)}")
     constant_list = set(
         re.findall(regex, content)
     )  # get the constant names in the content

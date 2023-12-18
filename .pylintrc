@@ -2,7 +2,6 @@
 ignore-paths=.*/migrations 
 
 disable=
-    line-too-long,
     too-many-arguments,
     too-many-locals,
     too-many-instance-attributes,
@@ -12,5 +11,4 @@ disable=
     abstract-method,
     too-many-lines,
     cyclic-import,
-    duplicate-code,
     protected-access
