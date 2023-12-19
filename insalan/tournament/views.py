@@ -165,6 +165,23 @@ class TournamentDetailsFull(APIView):
                 tourney.game, context={"request": request}
             ).data
 
+            user_player = None
+            user_manager = None
+            user_substitue = None
+            if request.user.is_authenticated:
+                try:
+                    user_player = Player.objects.get(user=request.user, team__tournament=tourney)
+                except Player.DoesNotExist:
+                    pass
+                try:
+                    user_manager = Manager.objects.get(user=request.user, team__tournament=tourney)
+                except Manager.DoesNotExist:
+                    pass
+                try:
+                    user_substitue = Substitute.objects.get(user=request.user, team__tournament=tourney)
+                except Substitute.DoesNotExist:
+                    pass
+
             # Dereference the teams
             teams_serialized = []
             for team in tourney_serialized["teams"]:
@@ -173,8 +190,12 @@ class TournamentDetailsFull(APIView):
                 ).data
                 del team_preser["tournament"]
 
-                team_members: list[int] = team_preser["players"] + team_preser["managers"] + team_preser["substitutes"]
-                can_see_payment_status: bool = request.user.is_staff or request.user.id in team_members
+                can_see_payment_status: bool = (
+                    request.user.is_staff or
+                    user_player is not None and user_player.id in team_preser["players"] or
+                    user_manager is not None and user_manager.id in team_preser["managers"] or
+                    user_substitue is not None and user_substitue.id in team_preser["substitutes"]
+                )
                 # Dereference players/managers to name_in_game
                 team_preser["players"] = [
                     {

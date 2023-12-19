@@ -1024,6 +1024,13 @@ class TournamentFullDerefEndpoint(TestCase):
         uobj_four = User.objects.create(
             username="test_user_four", email="four@example.com"
         )
+        uobj_five = User.objects.create(
+            username="test_user_five", email="five@example.com"
+        )
+
+        admin = User.objects.create(
+            username="admin", email="admin@example.com", is_staff=True
+        )
 
         game_obj = Game.objects.create(name="Test Game", short_name="TFG")
 
@@ -1112,6 +1119,57 @@ class TournamentFullDerefEndpoint(TestCase):
             "description": "",
             "casters": [],
         }
+
+        self.assertEqual(request.data["teams"], model["teams"])
+        self.assertEqual(request.data, model)
+
+        self.client.force_login(user=uobj_five)
+        request = self.client.get(
+            reverse("tournament/details-full", args=[tourneyobj_one.id]), format="json"
+        )
+        self.assertEqual(request.status_code, 200)
+
+        self.assertEqual(request.data["teams"], model["teams"])
+        self.assertEqual(request.data, model)
+
+        self.client.force_login(user=uobj_one)
+        request = self.client.get(
+            reverse("tournament/details-full", args=[tourneyobj_one.id]), format="json"
+        )
+        self.assertEqual(request.status_code, 200)
+
+        model["teams"][0]["players"][0]["payment_status"] = PaymentStatus.NOT_PAID
+        model["teams"][0]["players"][1]["payment_status"] = PaymentStatus.NOT_PAID
+        model["teams"][0]["substitutes"][0]["payment_status"] = PaymentStatus.NOT_PAID
+
+        self.assertEqual(request.data["teams"], model["teams"])
+        self.assertEqual(request.data, model)
+
+        self.client.force_login(user=uobj_three)
+        request = self.client.get(
+            reverse("tournament/details-full", args=[tourneyobj_one.id]), format="json"
+        )
+        self.assertEqual(request.status_code, 200)
+
+        self.assertEqual(request.data["teams"], model["teams"])
+        self.assertEqual(request.data, model)
+
+
+        self.client.force_login(user=uobj_four)
+        request = self.client.get(
+            reverse("tournament/details-full", args=[tourneyobj_one.id]), format="json"
+        )
+        self.assertEqual(request.status_code, 200)
+
+        self.assertEqual(request.data["teams"], model["teams"])
+        self.assertEqual(request.data, model)
+
+        self.client.force_login(user=admin)
+
+        request = self.client.get(
+            reverse("tournament/details-full", args=[tourneyobj_one.id]), format="json"
+        )
+        self.assertEqual(request.status_code, 200)
 
         self.assertEqual(request.data["teams"], model["teams"])
         self.assertEqual(request.data, model)
