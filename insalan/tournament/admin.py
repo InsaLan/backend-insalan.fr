@@ -78,7 +78,7 @@ class TournamentAdmin(admin.ModelAdmin):
     """Admin handler for Tournaments"""
 
     list_display = ("id", "name", "event", "game", "is_announced", "cashprizes", "get_occupancy")
-    search_fields = ["name", "event", "game"]
+    search_fields = ["name", "event__name", "game__name"]
 
     list_filter = (EventTournamentFilter,GameTournamentFilter)
 
@@ -229,7 +229,7 @@ class TeamAdmin(admin.ModelAdmin):
     """Admin handler for Team"""
 
     list_display = ("id", "name", "tournament", "validated", "get_quota")
-    search_fields = ["name", "tournament"]
+    search_fields = ["name", "tournament__name"]
     add_fieldsets = (
         (
             None,
@@ -401,7 +401,7 @@ class PlayerAdmin(admin.ModelAdmin):
     """Admin handler for Player Registrations"""
 
     list_display = ("id", "user", "name_in_game", "team", "payment_status", "get_tournament")
-    search_fields = ["user", "team", "payment_status", "name_in_game"]
+    search_fields = ["user__username", "team__name", "name_in_game"]
 
     list_filter = (EventFilter,OngoingTournamentFilter,PaymentStatusFilter)
 
@@ -420,7 +420,7 @@ class ManagerAdmin(admin.ModelAdmin):
     """Admin handler for Manager Registrations"""
 
     list_display = ("id", "user", "team", "payment_status", "get_tournament")
-    search_fields = ["user", "team", "payment_status"]
+    search_fields = ["user__username", "team__name"]
 
     list_filter = (EventFilter,OngoingTournamentFilter,PaymentStatusFilter)
 
@@ -439,7 +439,7 @@ class CasterAdmin(admin.ModelAdmin):
     """Admin handler for tournament Casters"""
 
     list_display = ("id", "name", "tournament")
-    search_fields = ["name", "tournament"]
+    search_fields = ["name", "tournament__name"]
 
 admin.site.register(Caster, CasterAdmin)
 
@@ -447,7 +447,7 @@ class SubstituteAdmin(admin.ModelAdmin):
     """Admin handler for Substitute Registrations"""
 
     list_display = ("id", "user", "name_in_game", "team", "payment_status", "get_tournament")
-    search_fields = ["user", "team", "payment_status", "name_in_game"]
+    search_fields = ["user__username", "team__name", "name_in_game"]
 
     list_filter = (EventFilter,PaymentStatusFilter)
 
