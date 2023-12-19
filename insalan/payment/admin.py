@@ -74,8 +74,8 @@ class TransactionAdmin(admin.ModelAdmin):
     )
     search_fields = [
         "id",
-        "payer",
-        "products",
+        "payer__username",
+        "products__name",
         "payment_status",
         "creation_date",
         "intent_id",
