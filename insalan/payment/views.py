@@ -95,7 +95,7 @@ class Notifications(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         ntype = data.get("eventType")  # defaults to None
-        data = data.get("data", default={})
+        data = data.get("data", {})
 
         if ntype == "Order":
             # From "Order", get the payments
@@ -173,7 +173,7 @@ class Notifications(APIView):
                 )
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
-            order_id = data.get("order", default={}).get("id")
+            order_id = data.get("order", {}).get("id")
             if order_id is None:
                 logger.error(
                     "Payment %s has no order field or no order.id field", pay_id
