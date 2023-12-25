@@ -241,3 +241,6 @@ HA_BACK_URL = getenv("HELLOASSO_BACK_URL", f"https://{WEBSITE_HOST}/")
 # OAuth Credentials
 HA_OAUTH_CLIENT_SECRET = getenv("HELLOASSO_CLIENT_SECRET")
 HA_OAUTH_CLIENT_ID = getenv("HELLOASSO_CLIENT_ID")
+
+# Session cookie settings
+SESSION_COOKIE_AGE = int(getenv("SESSION_COOKIE_AGE", "1209600"))
