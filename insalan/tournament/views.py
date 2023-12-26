@@ -714,7 +714,7 @@ class SubstituteRegistration(generics.RetrieveAPIView):
 
         substitute.save()
 
-        serializer = serializers.SubstituteIdSerializer(substitute, context={"request": request})
+        serializer = serializers.SubstituteSerializer(substitute, context={"request": request})
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
