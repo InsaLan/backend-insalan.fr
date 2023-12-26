@@ -443,6 +443,15 @@ class Team(models.Model):
         verbose_name=_("Mot de passe de l'équipe"),
     )
 
+    captain = models.ForeignKey(
+        "Player",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        verbose_name=_("Capitaine"),
+        related_name="team_captain",
+    )
+
     class Meta:
         """Meta Options"""
 
@@ -542,6 +551,12 @@ class Team(models.Model):
                 _("Tournoi complet")
             )
 
+    def save(self, *args, **kwargs):
+        if self.captain is None:
+            players = self.get_players()
+            if len(players) > 0:
+                self.captain = players[0]
+        super().save(*args, **kwargs)
 
 class PaymentStatus(models.TextChoices):
     """Information about the current payment status of a Player/Manager"""
@@ -635,6 +650,12 @@ class Player(models.Model):
 
     def save(self,*args,**kwargs):
         super().save(*args,**kwargs)
+        self.team.refresh_validation()
+
+    def delete(self,*args,**kwargs):
+        if self.team.captain == self:
+            self.team.captain = None
+        super().delete(*args,**kwargs)
         self.team.refresh_validation()
 
 
