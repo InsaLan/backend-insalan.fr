@@ -441,6 +441,62 @@ class PlayerRegistration(generics.RetrieveAPIView):
     serializer_class = serializers.PlayerSerializer
     queryset = Player.objects.all().order_by("id")
 
+    def patch(self, request, *args, **kwargs):
+        """
+        Patch a player
+        """
+        user = request.user
+        data = request.data
+
+        if user is None or not user.is_authenticated:
+            raise PermissionDenied()
+
+        # get the player
+        player = Player.objects.get(id=kwargs["pk"])
+
+        # check if the user is related to the player
+        if player.as_user().id != user.id:
+            return Response({
+                "player": _("Vous n'avez pas la permission de modifier cette inscription.")
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        if "name_in_game" in data:
+            player.name_in_game = data["name_in_game"]
+
+        player.save()
+
+        serializer = serializers.PlayerSerializer(player, context={"request": request})
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, *args, **kwargs):
+        """
+        Delete a player
+        """
+        user = request.user
+
+        if user is None or not user.is_authenticated:
+            raise PermissionDenied()
+
+        # get the player
+        player = Player.objects.get(id=kwargs["pk"])
+
+        # check if the user is related to the player
+        if player.as_user().id != user.id:
+            return Response({
+                "player": _("Vous n'avez pas la permission de supprimer cette inscription.")
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # if player has paid, can't delete
+        if player.payment_status != PaymentStatus.NOT_PAID:
+            return Response({
+                "player": _("Vous ne pouvez pas supprimer votre inscription si vous avez payé.")
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        player.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class PlayerRegistrationList(generics.ListCreateAPIView):
     """Get all player registrations"""
@@ -526,6 +582,34 @@ class ManagerRegistration(generics.RetrieveAPIView):
     serializer_class = serializers.ManagerSerializer
     queryset = Manager.objects.all().order_by("id")
 
+    def delete(self, request, *args, **kwargs):
+        """
+        Delete a manager
+        """
+        user = request.user
+
+        if user is None or not user.is_authenticated:
+            raise PermissionDenied()
+
+        # get the manager
+        manager = Manager.objects.get(id=kwargs["pk"])
+
+        # check if the user is related to the manager
+        if manager.as_user().id != user.id:
+            return Response({
+                "manager": _("Vous n'avez pas la permission de supprimer cette inscription.")
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # if manager has paid, can't delete
+        if manager.payment_status != PaymentStatus.NOT_PAID:
+            return Response({
+                "manager": _("Vous ne pouvez pas supprimer votre inscription si vous avez payé.")
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        manager.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class ManagerRegistrationList(generics.ListCreateAPIView):
     """Show all manager registrations"""
@@ -605,6 +689,62 @@ class SubstituteRegistration(generics.RetrieveAPIView):
 
     serializer_class = serializers.SubstituteSerializer
     queryset = Substitute.objects.all().order_by("id")
+
+    def patch(self, request, *args, **kwargs):
+        """
+        Patch a substitute
+        """
+        user = request.user
+        data = request.data
+
+        if user is None or not user.is_authenticated:
+            raise PermissionDenied()
+
+        # get the substitute
+        substitute = Substitute.objects.get(id=kwargs["pk"])
+
+        # check if the user is related to the substitute
+        if substitute.as_user().id != user.id:
+            return Response({
+                "substitute": _("Vous n'avez pas la permission de modifier cette inscription.")
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        if "name_in_game" in data:
+            substitute.name_in_game = data["name_in_game"]
+
+        substitute.save()
+
+        serializer = serializers.SubstituteIdSerializer(substitute, context={"request": request})
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, *args, **kwargs):
+        """
+        Delete a substitute
+        """
+        user = request.user
+
+        if user is None or not user.is_authenticated:
+            raise PermissionDenied()
+
+        # get the substitute
+        substitute = Substitute.objects.get(id=kwargs["pk"])
+
+        # check if the user is related to the substitute
+        if substitute.as_user().id != user.id:
+            return Response({
+                "substitute": _("Vous n'avez pas la permission de supprimer cette inscription.")
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # if substitute has paid, can't delete
+        if substitute.payment_status != PaymentStatus.NOT_PAID:
+            return Response({
+                "substitute": _("Vous ne pouvez pas supprimer votre inscription si vous avez payé.")
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        substitute.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class SubstituteRegistrationList(generics.ListCreateAPIView):
     """Show all substitute registrations"""
