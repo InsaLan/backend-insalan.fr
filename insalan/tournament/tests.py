@@ -991,6 +991,101 @@ class PlayerTestCase(TestCase):
 
         self.assertRaises(Player.DoesNotExist, Player.objects.get, id=play_obj.id)
 
+    def test_patch_user(self):
+        """
+        Test the patch method of the Player API
+        """
+        user = User.objects.get(username="testplayer")
+
+        player = Player.objects.get(user=user)
+
+        self.client.force_login(user=user)
+
+        # patch data
+        data = {
+            "name_in_game": "playerOneModified",
+        }
+
+        # patch request
+        request = self.client.patch(
+            f"/v1/tournament/player/{player.id}/",
+            data,
+            content_type="application/json",
+        )
+
+        # check response
+        self.assertEqual(request.status_code, 200)
+
+        # check data
+        self.assertEqual(request.data["name_in_game"], "playerOneModified")
+
+    def test_patch_user_not_owner(self):
+        """
+        Test the patch method of the Player API when the user is not related to the player
+        """
+        user = User.objects.get(username="testplayer")
+        user_two = User.objects.get(username="randomplayer")
+
+        player = Player.objects.get(user=user)
+
+        self.client.force_login(user=user_two)
+
+        # patch data
+        data = {
+            "name_in_game": "playerOneModified",
+        }
+
+        # patch request
+        request = self.client.patch(
+            f"/v1/tournament/player/{player.id}/",
+            data,
+            content_type="application/json",
+        )
+
+        # check response
+        self.assertEqual(request.status_code, 403)
+
+    def test_delete_user(self):
+        """
+        Test the delete method of the Player API
+        """
+        user = User.objects.get(username="testplayer")
+
+        player = Player.objects.get(user=user)
+
+        self.client.force_login(user=user)
+
+        # delete request
+        request = self.client.delete(
+            f"/v1/tournament/player/{player.id}/",
+            content_type="application/json",
+        )
+
+        # check response
+        self.assertEqual(request.status_code, 204)
+
+        # check data
+        self.assertRaises(Player.DoesNotExist, Player.objects.get, id=player.id)
+
+    def test_delete_user_not_owner(self):
+        """
+        Test the delete method of the Player API when the user is not related to the player
+        """
+        user = User.objects.get(username="testplayer")
+        user_two = User.objects.get(username="randomplayer")
+
+        player = Player.objects.get(user=user)
+
+        self.client.force_login(user=user_two)
+
+        # delete request
+        request = self.client.delete(
+            f"/v1/tournament/player/{player.id}/",
+            content_type="application/json",
+        )
+
+        # check response
+        self.assertEqual(request.status_code, 403)
 
 # TODO: Add tests of the API
 
@@ -1655,6 +1750,47 @@ class ManagerTestCase(TestCase):
 
         self.assertEqual(PaymentStatus.PAY_LATER, man_reg.payment_status)
 
+    def test_delete_manager(self):
+        """
+        Test the delete method of the Manager API
+        """
+        user = User.objects.get(username="randomplayer")
+
+        manager = Manager.objects.get(user=user)
+
+        self.client.force_login(user=user)
+
+        # delete request
+        request = self.client.delete(
+            f"/v1/tournament/manager/{manager.id}/",
+            content_type="application/json",
+        )
+
+        # check response
+        self.assertEqual(request.status_code, 204)
+
+        # check data
+        self.assertRaises(Manager.DoesNotExist, Manager.objects.get, id=manager.id)
+
+    def test_delete_manager_not_owner(self):
+        """
+        Test the delete method of the Manager API when the user is not related to the manager
+        """
+        user = User.objects.get(username="randomplayer")
+        user_two = User.objects.get(username="testplayer")
+
+        manager = Manager.objects.get(user=user)
+
+        self.client.force_login(user=user_two)
+
+        # delete request
+        request = self.client.delete(
+            f"/v1/tournament/manager/{manager.id}/",
+            content_type="application/json",
+        )
+
+        # check response
+        self.assertEqual(request.status_code, 403)
 
 # Substitute Class Tests
 class SubstituteTestCase(TestCase):
@@ -1936,6 +2072,101 @@ class SubstituteTestCase(TestCase):
 
         self.assertEqual(PaymentStatus.PAY_LATER, man_reg.payment_status)
 
+    def test_patch_substitute(self):
+        """
+        Test the patch method of the Substitute API
+        """
+        user = User.objects.get(username="randomplayer")
+
+        substitute = Substitute.objects.get(user=user)
+
+        self.client.force_login(user=user)
+
+        # patch data
+        data = {
+            "name_in_game": "new pseudo",
+        }
+
+        # patch request
+        request = self.client.patch(
+            f"/v1/tournament/substitute/{substitute.id}/",
+            data,
+            content_type="application/json",
+        )
+
+        # check response
+        self.assertEqual(request.status_code, 200)
+
+        # check data
+        self.assertEqual(request.data["name_in_game"], "new pseudo")
+
+    def test_patch_substitute_not_owner(self):
+        """
+        Test the patch method of the Substitute API when the user is not related to the substitute
+        """
+        user = User.objects.get(username="randomplayer")
+        user_two = User.objects.get(username="testplayer")
+
+        substitute = Substitute.objects.get(user=user)
+
+        self.client.force_login(user=user_two)
+
+        # patch data
+        data = {
+            "name_in_game": "new pseudo",
+        }
+
+        # patch request
+        request = self.client.patch(
+            f"/v1/tournament/substitute/{substitute.id}/",
+            data,
+            content_type="application/json",
+        )
+
+        # check response
+        self.assertEqual(request.status_code, 403)
+
+    def test_delete_substitute(self):
+        """
+        Test the delete method of the Substitute API
+        """
+        user = User.objects.get(username="randomplayer")
+
+        substitute = Substitute.objects.get(user=user)
+
+        self.client.force_login(user=user)
+
+        # delete request
+        request = self.client.delete(
+            f"/v1/tournament/substitute/{substitute.id}/",
+            content_type="application/json",
+        )
+
+        # check response
+        self.assertEqual(request.status_code, 204)
+
+        # check data
+        self.assertRaises(Substitute.DoesNotExist, Substitute.objects.get, id=substitute.id)
+
+    def test_delete_substitute_not_owner(self):
+        """
+        Test the delete method of the Substitute API when the user is not related to the substitute
+        """
+        user = User.objects.get(username="randomplayer")
+        user_two = User.objects.get(username="testplayer")
+
+        substitute = Substitute.objects.get(user=user)
+
+        self.client.force_login(user=user_two)
+
+        # delete request
+        request = self.client.delete(
+            f"/v1/tournament/substitute/{substitute.id}/",
+            content_type="application/json",
+        )
+
+        # check response
+        self.assertEqual(request.status_code, 403)
 
 class TournamentTeamEndpoints(TestCase):
     """Tournament Registration Endpoint Test Class"""
