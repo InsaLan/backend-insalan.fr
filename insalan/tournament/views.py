@@ -30,12 +30,12 @@ class ReadOnly(BasePermission):
         """Define the permissions for this class"""
         return request.method in SAFE_METHODS
 
-class ReadOnlyPlusPatch(BasePermission):
-    """Admin or read-only permissions, plus patch"""
+class Patch(BasePermission):
+    """Is the request using HTTP Method PATCH"""
 
     def has_permission(self, request, _view):
         """Define the permissions for this class"""
-        return request.method in SAFE_METHODS or request.method == "PATCH"
+        return request.method == "PATCH"
 
 
 class EventList(generics.ListCreateAPIView):
@@ -350,7 +350,7 @@ class TeamDetails(generics.RetrieveUpdateDestroyAPIView):
 
     queryset = Team.objects.all().order_by("id")
     serializer_class = serializers.TeamSerializer
-    permission_classes = [permissions.IsAdminUser | ReadOnlyPlusPatch]
+    permission_classes = [permissions.IsAdminUser | ReadOnly | Patch]
 
     def patch(self, request, *args, **kwargs):
         """
@@ -374,7 +374,7 @@ class TeamDetails(generics.RetrieveUpdateDestroyAPIView):
             }, status=status.HTTP_403_FORBIDDEN)
 
         # check if the player is the team's captain or a manager
-        if len(manager) == 0 and team.get_players_id()[0] != player[0].id:
+        if len(manager) == 0 and team.captain.id != player[0].id:
             return Response({
                 "team": _("Vous n'avez pas la permission de modifier cette équipe.")
             }, status=status.HTTP_403_FORBIDDEN)
