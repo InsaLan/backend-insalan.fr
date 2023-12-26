@@ -1049,10 +1049,11 @@ class TournamentFullDerefEndpoint(TestCase):
             is_announced=True,
         )
         team_one = Team.objects.create(name="Team One", tournament=tourneyobj_one)
-        Player.objects.create(user=uobj_one, team=team_one, name_in_game="playerone")
+        first = Player.objects.create(user=uobj_one, team=team_one, name_in_game="playerone")
         Player.objects.create(user=uobj_two, team=team_one, name_in_game="playertwo")
         Manager.objects.create(user=uobj_three, team=team_one)
         Substitute.objects.create(user=uobj_four, team=team_one, name_in_game="substitute")
+        team_one.save()
 
         request = self.client.get(
             reverse("tournament/details-full", args=[tourneyobj_one.id]), format="json"
@@ -1111,6 +1112,7 @@ class TournamentFullDerefEndpoint(TestCase):
                     "substitutes": [
                         {"user": "test_user_four", "name_in_game": "substitute", "payment_status": None},
                     ],
+                    "captain": first.id,
                     "validated": team_one.validated,
                 }
             ],
