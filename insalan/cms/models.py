@@ -58,6 +58,28 @@ class Content(models.Model):
     def __str__(self) -> str:
         return f"[Content] {self.name}"
 
+    def save(self, *args, **kwargs):
+        """
+        Override the save method to ensure that the content is valid.
+        """
+        # Apply some operations on the content to make it look better
+        if self.name == "planning":
+            if self.content.startswith("<meta"):
+                self.content = "\n".join(self.content.split("\n")[1:])
+            self.content = self.content.replace(
+                "background-color:#f3f3f3", 
+                "background-color:#434343"
+            )
+            self.content = self.content.replace("color:#555555", "color:#000000")
+            self.content = self.content.replace(";color:#434343;", ";color:#f3f3f3;")
+            self.content = self.content.replace("background-color:#ffffff;", "")
+            self.content = re.sub(
+                r"border-right:1px SOLID #[a-f0-9]*",
+                "border-right:1px SOLID #000000",
+                self.content
+            )
+        super().save(*args, **kwargs)
+
 
 class Constant(models.Model):
     """
