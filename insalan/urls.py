@@ -43,4 +43,4 @@ if not int(getenv("DEV", "1")):
         )))
 
 # Set admin site url correctly for the admin panel
-admin.site.site_url = "/v1/"
+admin.site.site_url = getenv("HTTP_PROTOCOL", "http") + "://" + getenv("WEBSITE_HOST", "localhost")
