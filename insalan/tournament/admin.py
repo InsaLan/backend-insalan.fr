@@ -279,9 +279,9 @@ class TeamAdmin(admin.ModelAdmin):
     change_password_form = AdminPasswordChangeForm
 
     @sensitive_post_parameters_m
-    def team_change_password(self, request, team_id, form_url=""):
+    def team_change_password(self, request, id, form_url=""):
         """Change the password of a team"""
-        team = Team.objects.get(pk=team_id)
+        team = Team.objects.get(pk=id)
         if not self.has_change_permission(request, team):
             raise PermissionDenied
         if team is None:
@@ -289,7 +289,7 @@ class TeamAdmin(admin.ModelAdmin):
                 _("%(name)s object with primary key %(key)r does not exist.")
                 % {
                     "name": self.opts.verbose_name,
-                    "key": escape(team_id),
+                    "key": escape(id),
                 }
             )
         if request.method == "POST":
