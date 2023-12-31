@@ -7,6 +7,7 @@ The models include:
 """
 
 import re
+import string
 
 from djongo import models
 from django.utils.translation import gettext_lazy as _
@@ -97,6 +98,32 @@ class Content(models.Model):
                 "border-right:1px SOLID #000000",
                 self.content
             )
+
+            # Remove the letters in the table headers
+            letters = string.ascii_uppercase
+            for i in letters:
+                # If we haven't reached the end of the columns
+                if f">{i}<" in self.content:
+                    # Remove the letter
+                    self.content = self.content.replace(
+                        f">{i}<", "><"
+                    )
+                else:
+                    break
+
+            # Remove the numbers in the table headers
+            number = 1
+            while True:
+                # If we haven't reached the end of the rows
+                if f">{number}<" in self.content:
+                    # Remove the number
+                    self.content = self.content.replace(
+                        f">{number}<", "><"
+                    )
+                else:
+                    break
+                number += 1
+
         super().save(*args, **kwargs)
 
 
