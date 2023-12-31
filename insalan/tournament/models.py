@@ -294,6 +294,13 @@ class Tournament(models.Model):
         verbose_name=_("Description du tournoi"),
         max_length=300,
     )
+    planning = models.CharField(
+        null=False,
+        blank=True,
+        default='',
+        verbose_name=_("Nom du content du planning du tournoi"),
+        max_length=300,
+    )
 
     class Meta:
         """Meta options"""
