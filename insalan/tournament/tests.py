@@ -1215,6 +1215,7 @@ class TournamentFullDerefEndpoint(TestCase):
             "validated_teams": 0,
             "description": "",
             "casters": [],
+            "planning": "",
         }
 
         self.assertEqual(request.data["teams"], model["teams"])
@@ -1463,6 +1464,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
                     "player_online_product": tourney.player_online_product.id,
                     "description": "",
                     "casters": [],
+                    "planning": "",
                 }
             ],
             "logo": None,
