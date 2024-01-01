@@ -46,8 +46,8 @@ class Product(models.Model):
     price = models.DecimalField(
         null=False, max_digits=5, decimal_places=2, verbose_name=_("prix")
     )
-    name = models.CharField(max_length=50, verbose_name=_("intitulé"))
-    desc = models.CharField(max_length=50, verbose_name=_("description"))
+    name = models.CharField(max_length=80, verbose_name=_("intitulé"))
+    desc = models.CharField(max_length=80, verbose_name=_("description"))
     category = models.CharField(
         max_length=20,
         blank=False,
