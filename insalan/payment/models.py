@@ -14,6 +14,7 @@ from rest_framework.serializers import ValidationError
 
 import insalan.settings as app_settings
 
+from insalan.pizza.models import TimeSlot
 from insalan.tournament.models import Tournament
 from insalan.user.models import User
 
@@ -60,6 +61,13 @@ class Product(models.Model):
         Tournament,
         on_delete=models.CASCADE,
         verbose_name=_("Tournoi associé"),
+        null=True,
+        blank=True,
+    )
+    associated_timeslot = models.ForeignKey(
+        TimeSlot,
+        on_delete=models.CASCADE,
+        verbose_name=_("Créneau associé"),
         null=True,
         blank=True,
     )

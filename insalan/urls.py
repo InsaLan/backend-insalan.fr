@@ -35,6 +35,7 @@ urlpatterns = [
     path("v1/content/", include("insalan.cms.urls")),
     path("v1/admin/", admin.site.urls),
     path("v1/payment/", include("insalan.payment.urls")),
+    path("v1/pizza/", include("insalan.pizza.urls")),
 ]
 
 if not int(getenv("DEV", "1")):
