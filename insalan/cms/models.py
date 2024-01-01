@@ -64,8 +64,10 @@ class Content(models.Model):
         """
         # Apply some operations on the content to make it look better
         if self.name == "planning":
+            # Remove the first line of the content (meta tag is not needed)
             if self.content.startswith("<meta"):
                 self.content = "\n".join(self.content.split("\n")[1:])
+            # Replace background color and text color to match the website
             self.content = self.content.replace(
                 "background-color:#f3f3f3", 
                 "background-color:#434343"
@@ -73,6 +75,7 @@ class Content(models.Model):
             self.content = self.content.replace("color:#555555", "color:#000000")
             self.content = self.content.replace(";color:#434343;", ";color:#f3f3f3;")
             self.content = self.content.replace("background-color:#ffffff;", "")
+            # Replace border color
             self.content = re.sub(
                 r"border-right:1px SOLID #[a-f0-9]*",
                 "border-right:1px SOLID #000000",
