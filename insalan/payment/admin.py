@@ -13,7 +13,7 @@ from .models import Product, Transaction, Payment
 class ProductAdmin(admin.ModelAdmin):
     """Admin handler for Products"""
 
-    list_display = ("id", "price", "name", "desc", "category", "associated_tournament")
+    list_display = ("id", "price", "name", "desc", "category", "associated_tournament", "associated_timeslot")
     search_fields = ["id", "price", "name"]
 
 

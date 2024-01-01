@@ -86,6 +86,7 @@ INSTALLED_APPS = [
     "insalan.tickets",
     "insalan.cms",
     "insalan.payment",
+    "insalan.pizza",
 ]
 
 MIDDLEWARE = [
