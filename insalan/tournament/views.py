@@ -401,7 +401,7 @@ class TeamDetails(generics.RetrieveUpdateDestroyAPIView):
                 player = Player.objects.get(id=uid)
                 # if player hasn't paid, remove him from the team
                 if player.as_user().id != user.id and player.payment_status == PaymentStatus.NOT_PAID:
-                    UserMailer.send_kick_mail(player.as_user(), team.name, user.username)
+                    UserMailer.send_kick_mail(player.as_user(), team.name)
                     player.delete()
 
         # manager edit
@@ -413,7 +413,7 @@ class TeamDetails(generics.RetrieveUpdateDestroyAPIView):
                 manager = Manager.objects.get(id=uid)
                 # if manager hasn't paid, remove him from the team
                 if manager.as_user().id != user.id and manager.payment_status == PaymentStatus.NOT_PAID:
-                    UserMailer.send_kick_mail(manager.as_user(), team.name, user.username)
+                    UserMailer.send_kick_mail(manager.as_user(), team.name)
                     manager.delete()
 
         # substitute edit
@@ -425,7 +425,7 @@ class TeamDetails(generics.RetrieveUpdateDestroyAPIView):
                 substitute = Substitute.objects.get(id=uid)
                 # if substitute hasn't paid, remove him from the team
                 if substitute.as_user().id != user.id and substitute.payment_status == PaymentStatus.NOT_PAID:
-                    UserMailer.send_kick_mail(substitute.as_user(), team.name, user.username)
+                    UserMailer.send_kick_mail(substitute.as_user(), team.name)
                     substitute.delete()
 
         team.save()
