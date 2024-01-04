@@ -495,6 +495,12 @@ class PlayerRegistration(generics.RetrieveAPIView):
 
         player.delete()
 
+        # if the team is empty, delete it
+        if len(player.team.get_players_id()) == 0 \
+            and len(player.team.get_managers_id()) == 0 \
+            and len(player.team.get_substitutes_id()) == 0:
+            player.team.delete()
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -607,6 +613,12 @@ class ManagerRegistration(generics.RetrieveAPIView):
             }, status=status.HTTP_403_FORBIDDEN)
 
         manager.delete()
+
+        # if the team is empty, delete it
+        if len(manager.team.get_players_id()) == 0 \
+            and len(manager.team.get_managers_id()) == 0 \
+            and len(manager.team.get_substitutes_id()) == 0:
+            manager.team.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -743,6 +755,12 @@ class SubstituteRegistration(generics.RetrieveAPIView):
             }, status=status.HTTP_403_FORBIDDEN)
 
         substitute.delete()
+
+        # if the team is empty, delete it
+        if len(substitute.team.get_players_id()) == 0 \
+            and len(substitute.team.get_managers_id()) == 0 \
+            and len(substitute.team.get_substitutes_id()) == 0:
+            substitute.team.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
