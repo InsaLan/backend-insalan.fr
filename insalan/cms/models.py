@@ -47,6 +47,13 @@ class Content(models.Model):
     content = models.TextField(
         verbose_name=_("Contenu"), validators=[constant_definition_validator]
     )
+    planning = models.BooleanField(
+        default=False,
+        verbose_name=_("Est-ce que ce contenu est un planning exporté depuis un gsheet ?"),
+        help_text=_(
+            "Si oui, les couleurs seront modifiées pour correspondre au site web."
+        ),
+    )
 
     class Meta:
         """
@@ -63,7 +70,7 @@ class Content(models.Model):
         Override the save method to ensure that the content is valid.
         """
         # Apply some operations on the content to make it look better
-        if self.name == "planning":
+        if self.planning:
             # Remove the first line of the content (meta tag is not needed)
             if self.content.startswith("<meta"):
                 self.content = "\n".join(self.content.split("\n")[1:])
