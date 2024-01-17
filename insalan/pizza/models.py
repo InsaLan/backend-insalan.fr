@@ -216,7 +216,7 @@ class Order(models.Model):
             ("CA", _("Carte")),
             ("CH", _("Chèque")),
             ("ES", _("Espèces")),
-            ("LI", _("Lifpay")),
+            ("LI", _("Lyfpay")),
         ],
         default="CA",
     )
