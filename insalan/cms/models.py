@@ -68,6 +68,15 @@ class Content(models.Model):
     def save(self, *args, **kwargs):
         """
         Override the save method to ensure that the content is valid.
+
+        /!\ ------------------------------------ /!\
+        TODO : This code is a temporary method to have working plannings on the website.
+
+        It should be removed for the XIX edition of the InsaLan and replaced by a
+        better solution. The best solution would be to use a calendar file (e.g: ics)
+        and format it through the front. 
+
+        /!\ ------------------------------------ /!\
         """
         # Apply some operations on the content to make it look better
         if self.planning:
