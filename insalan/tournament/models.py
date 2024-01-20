@@ -903,6 +903,8 @@ def tournament_announced(tournament: Tournament):
 
 def tournament_registration_full(tournament: Tournament, exclude=None):
     """Validate if a tournament is full"""
+    if exclude is not None:
+        return False
     if tournament.get_validated_teams(exclude) >= tournament.get_max_team():
         return True
     return False
