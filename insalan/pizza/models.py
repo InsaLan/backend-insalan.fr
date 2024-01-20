@@ -28,8 +28,14 @@ class Pizza(models.Model):
         max_length=200, verbose_name=_("Nom de la pizza")
     )
     ingredients: models.CharField = ArrayField(
-        models.CharField(max_length=200, verbose_name=_("Ingrédients")),
+        models.CharField(max_length=200, verbose_name=_("Ingrédient")),
         verbose_name=_("Ingrédients"),
+        blank=True,
+        null=True,
+    )
+    allergens: models.CharField = ArrayField(
+        models.CharField(max_length=200, verbose_name=_("Allergène")),
+        verbose_name = _("Allergènes"),
         blank=True,
         null=True,
     )
@@ -39,6 +45,7 @@ class Pizza(models.Model):
         validators=[
             FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp"])
         ],
+        null=True,
     )
 
     def __str__(self) -> str:
@@ -197,6 +204,11 @@ class Order(models.Model):
     user: models.CharField = models.CharField(
         verbose_name=_("Utilisateur"),
         max_length=200,
+    )
+    user_obj: models.ForeignKey = models.ForeignKey(
+            "user.user",
+            verbose_name=_("Utilisateur du site"),
+            on_delete=models.CASCADE,
     )
     time_slot: models.ForeignKey = models.ForeignKey(
         "pizza.TimeSlot",
