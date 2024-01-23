@@ -10,7 +10,9 @@ from django.core.validators import FileExtensionValidator
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from .models import User, UserMailer
+from .models import User
+from insalan.mailer import MailManager
+from insalan.settings import EMAIL_AUTH
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -85,7 +87,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     def create(self, data):
         user_object = User.object.create_user(**data)
         user_object.save()
-        UserMailer.send_email_confirmation(user_object)
+        MailManager.get_mailer(EMAIL_AUTH["contact"][0]).send_email_confirmation(user_object)
         return user_object
 
 

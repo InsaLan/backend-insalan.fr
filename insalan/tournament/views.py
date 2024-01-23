@@ -18,7 +18,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication
 
-from insalan.user.models import User, UserMailer
+from insalan.settings import EMAIL_AUTH
+from insalan.user.models import User
+from insalan.mailer import MailManager
 import insalan.tournament.serializers as serializers
 from insalan.tickets.serializers import TicketSerializer
 from insalan.tickets.models import Ticket
@@ -406,7 +408,7 @@ class TeamDetails(generics.RetrieveUpdateDestroyAPIView):
                 player = Player.objects.get(id=uid)
                 # if player hasn't paid, remove him from the team
                 if player.as_user().id != user.id and player.payment_status == PaymentStatus.NOT_PAID:
-                    UserMailer.send_kick_mail(player.as_user(), team.name)
+                    MailManager.get_mailer(EMAIL_AUTH["contact"][0]).send_kick_mail(player.as_user(), team.name)
                     player.delete()
 
         # manager edit
@@ -418,7 +420,7 @@ class TeamDetails(generics.RetrieveUpdateDestroyAPIView):
                 manager = Manager.objects.get(id=uid)
                 # if manager hasn't paid, remove him from the team
                 if manager.as_user().id != user.id and manager.payment_status == PaymentStatus.NOT_PAID:
-                    UserMailer.send_kick_mail(manager.as_user(), team.name)
+                    MailManager.get_mailer(EMAIL_AUTH["contact"][0]).send_kick_mail(manager.as_user(), team.name)
                     manager.delete()
 
         # substitute edit
@@ -430,7 +432,7 @@ class TeamDetails(generics.RetrieveUpdateDestroyAPIView):
                 substitute = Substitute.objects.get(id=uid)
                 # if substitute hasn't paid, remove him from the team
                 if substitute.as_user().id != user.id and substitute.payment_status == PaymentStatus.NOT_PAID:
-                    UserMailer.send_kick_mail(substitute.as_user(), team.name)
+                    MailManager.get_mailer(EMAIL_AUTH["contact"][0]).send_kick_mail(substitute.as_user(), team.name)
                     substitute.delete()
 
         team.save()

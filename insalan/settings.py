@@ -14,6 +14,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 from os import getenv, path
 from pathlib import Path
 from sys import argv
+import json
 
 from django.utils.translation import gettext_lazy as _
 
@@ -224,10 +225,12 @@ CSRF_COOKIE_DOMAIN = '.' + getenv("WEBSITE_HOST", "localhost")
 # MAILER SETTINGS
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
+EMAIL_AUTH = json.loads(getenv("MAIL_AUTH", '{"contact":["contact@localhost", ""], "tournament":["tournament@localhost", ""]}'))
+
 EMAIL_HOST = getenv("MAIL_HOST", "localhost")
-EMAIL_HOST_PASSWORD = getenv("MAIL_PASS", "")
-EMAIL_HOST_USER = getenv("MAIL_FROM", "insalan@localhost")
-DEFAULT_FROM_EMAIL = getenv("MAIL_FROM", "email@localhost")
+EMAIL_HOST_PASSWORD = EMAIL_AUTH["contact"][1]
+EMAIL_HOST_USER = EMAIL_AUTH["contact"][0]
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_PORT = int(getenv("MAIL_PORT", "465"))
 EMAIL_USE_SSL = getenv("MAIL_SSL", "true").lower() in ["true", "1", "t", "y", "yes"]
 EMAIL_SUBJECT_PREFIX = "[InsaLan] "
