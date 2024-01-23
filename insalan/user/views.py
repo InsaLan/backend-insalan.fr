@@ -28,8 +28,9 @@ from insalan.user.serializers import (
     UserSerializer,
 )
 
-from .models import EmailConfirmationTokenGenerator, User, UserMailer, UserManager
-
+from insalan.settings import EMAIL_AUTH
+from insalan.mailer import EmailConfirmationTokenGenerator, MailManager
+from .models import User, UserManager
 
 @require_GET
 @ensure_csrf_cookie
@@ -118,7 +119,7 @@ class UserMe(APIView):
 
         if "email" in data:
             user.email = UserManager.normalize_email(data["email"])
-            UserMailer.send_email_confirmation(user)
+            MailManager.get_mailer(EMAIL_AUTH["contact"][0]).send_email_confirmation(user)
 
         if "first_name" in data:
             user.first_name = data["first_name"]
@@ -210,7 +211,7 @@ class AskForPasswordReset(APIView):
         """
         try:
             user_object: User = User.objects.get(email=request.data["email"])
-            UserMailer.send_password_reset(user_object)
+            MailManager.get_mailer(EMAIL_AUTH["contact"][0]).send_password_reset(user_object)
         except User.DoesNotExist:
             pass
 
@@ -309,7 +310,7 @@ class ResendEmailConfirmView(APIView):
         if user_object.has_perm("email_active"):
             return Response({"msg": error_text}, status=status.HTTP_400_BAD_REQUEST)
 
-        UserMailer.send_email_confirmation(user_object)
+        MailManager.get_mailer(EMAIL_AUTH["contact"][0]).send_email_confirmation(user_object)
         return Response()
 
 

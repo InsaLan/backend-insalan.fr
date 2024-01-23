@@ -1,0 +1,159 @@
+from django.contrib.auth.models import Permission
+from django.core.mail import EmailMessage, get_connection, send_mail
+from django.contrib.auth.tokens import (
+    PasswordResetTokenGenerator,
+    default_token_generator,
+)
+from django.utils.translation import gettext_lazy as _
+
+import insalan.settings
+from insalan.user.models import User
+
+class EmailConfirmationTokenGenerator(PasswordResetTokenGenerator):
+    """
+    Generate an email confirmation token.
+    It's just a PasswordResetTokenGenerator with a different salt.
+
+    (NB: the django app secret is also used as a salt)
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.key_salt = "IWontLaunch8TwitchStreamsWhenConnectionIsAlreadyBad"
+
+
+class UserMailer:
+    """
+    Send emails.
+    """
+    def __init__(self, MAIL_FROM: str, MAIL_PASS: str):
+        self.MAIL_FROM = MAIL_FROM
+        self.MAIL_PASS = MAIL_PASS
+
+    def send_email_confirmation(self, user_object: User):
+        """
+        Send an e-mail confirmation token to the user registring.
+        """
+        # remove email confirmation permission
+        user_object.user_permissions.remove(
+            Permission.objects.get(codename="email_active")
+        )
+        token = EmailConfirmationTokenGenerator().make_token(user_object)
+        user = user_object.username
+        send_mail(
+            insalan.settings.EMAIL_SUBJECT_PREFIX + _("Confirmez votre courriel"),
+            _("Confirmez votre adresse de courriel en cliquant sur ")
+            + insalan.settings.PROTOCOL
+            + "://"
+            + insalan.settings.WEBSITE_HOST
+            + "/verification/"
+            + user
+            + "/"
+            + token,
+            self.MAIL_FROM,
+            [user_object.email],
+            fail_silently=False,
+            auth_password=self.MAIL_PASS,
+        )
+
+    def send_password_reset(self, user_object: User):
+        """
+        Send a password reset token.
+        """
+        token = default_token_generator.make_token(user_object)
+        user = user_object.username
+        send_mail(
+            insalan.settings.EMAIL_SUBJECT_PREFIX + _("Demande de ré-initialisation de mot de passe"),
+            _(
+                "Une demande de ré-initialisation de mot de passe a été effectuée"
+                "pour votre compte. Si vous êtes à l'origine de cette demande,"
+                "vous pouvez cliquer sur le lien suivant: "
+            )
+            + insalan.settings.PROTOCOL
+            + "://"
+            + insalan.settings.WEBSITE_HOST
+            + "/reset-password/"
+            + user
+            + "/"
+            + token,
+            self.MAIL_FROM,
+            [user_object.email],
+            fail_silently=False,
+            auth_password=self.MAIL_PASS,
+        )
+
+    def send_kick_mail(self, user_object: User, team_name: str):
+        """
+        Send a mail to a user that has been kicked.
+        """
+        send_mail(
+            insalan.settings.EMAIL_SUBJECT_PREFIX + _("Vous avez été exclu.e de votre équipe"),
+            _("Vous avez été exclu.e de l'équipe %s.") % team_name,
+            self.MAIL_FROM,
+            [user_object.email],
+            fail_silently=False,
+            auth_password=self.MAIL_PASS,
+        )
+
+    def send_ticket_mail(self, user_object: User, ticket: str):
+        """
+        Send a mail to a user that has been kicked.
+        """
+        # prevent circular import
+        from insalan.tickets.models import TicketManager
+
+        ticket_pdf = TicketManager.generate_ticket_pdf(ticket)
+
+        connection = get_connection(
+            fail_silently=False,
+            username=self.MAIL_FROM,
+        )
+        email = EmailMessage(
+            insalan.settings.EMAIL_SUBJECT_PREFIX + _("Votre billet pour l'InsaLan"),
+            _("Votre inscription pour l'Insalan a été payée. Votre billet est disponible en pièce jointe. Vous pouvez retrouver davantages d'informations sur l'évènement sur le site internet de l'InsaLan."),
+            self.MAIL_FROM,
+            [user_object.email],
+            connection=connection,
+        )
+        email.attach(
+            TicketManager.create_pdf_name(ticket),
+            ticket_pdf,
+            "application/pdf"
+        )
+        email.send()
+
+
+class MailManager:
+    """
+    Manage emails.
+    """
+    mailers = {}
+
+    @staticmethod
+    def get_mailer(MAIL_FROM: str) -> UserMailer:
+        """
+        Get a mailer for a specific email address.
+        """
+        if MAIL_FROM not in MailManager.mailers:
+            return None
+        return MailManager.mailers[MAIL_FROM]
+    
+    @staticmethod
+    def get_default_mailer() -> UserMailer:
+        """
+        Get a mailer for a specific email address.
+        """
+        if len(MailManager.mailers) == 0:
+            return None
+        return list(MailManager.mailers.values())[0]
+
+    @staticmethod
+    def add_mailer(MAIL_FROM: str, MAIL_PASS: str):
+        """
+        Add a mailer for a specific email address.
+        """
+        MailManager.mailers[MAIL_FROM] = UserMailer(MAIL_FROM, MAIL_PASS)
+
+for auth in insalan.settings.EMAIL_AUTH:
+    EMAIL_FROM, EMAIL_PASS = insalan.settings.EMAIL_AUTH[auth]
+    MailManager.add_mailer(EMAIL_FROM, EMAIL_PASS)
