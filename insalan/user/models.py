@@ -9,7 +9,7 @@ from django.contrib.auth.tokens import (
     PasswordResetTokenGenerator,
     default_token_generator,
 )
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage, get_connection, send_mail
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -208,5 +208,26 @@ class UserMailer:
             [user_object.email],
             fail_silently=False,
         )
+
+    @staticmethod
+    def send_ticket_mail(user_object: User, ticket: str):
+        """
+        Send a mail to a user that has been kicked.
+        """
+        # prevent circular import
+        from insalan.tickets.models import TicketManager
+
+        ticket_pdf = TicketManager.generate_ticket_pdf(ticket)
+
+        connection = get_connection(fail_silently=False)
+        email = EmailMessage(
+            _("Votre billet pour l'InsaLan"),
+            _("Votre inscription pour l'Insalan a été payée. Votre billet est disponible en pièce jointe. Vous pouvez retrouver davantages d'informations sur l'évènement sur le site internet de l'InsaLan."),
+            None,  # Django falls back to default of settings.py
+            [user_object.email],
+            connection=connection,
+        )
+        email.attach(f"billet-{user_object.username.replace(' ', '-')}-{ticket.tournament.event.name.replace(' ', '-')}.pdf", ticket_pdf, "application/pdf")
+        email.send()
 
 # vim: set tw=80 cc=80:
