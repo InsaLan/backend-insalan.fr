@@ -18,12 +18,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 from insalan.user.models import User
-from .models import Ticket
+from .models import Ticket, TicketManager
+from django.shortcuts import render
 
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
-def get(request: HttpRequest, username: str, token: str) -> JsonResponse:
-    """Get ticket details for the given username and token."""
+def get(request: HttpRequest, id: str, token: str) -> JsonResponse:
+    """Get ticket details for the given id and token."""
     try:
         uuid.UUID(hex=token)
     except ValueError:
@@ -31,7 +32,7 @@ def get(request: HttpRequest, username: str, token: str) -> JsonResponse:
                             status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        user = User.objects.get(username=username)
+        user = User.objects.get(id=id)
     except User.DoesNotExist:
         return JsonResponse({'err': _("Utilisateur⋅ice non trouvé⋅e")},
                             status=status.HTTP_404_NOT_FOUND)
@@ -97,7 +98,7 @@ def qrcode(request: HttpRequest, token: str) -> HttpResponse:
 
     assert isinstance(request.user, User)
     url = request.build_absolute_uri(
-        reverse("tickets:get", args=[request.user.username, token])
+        reverse("tickets:get", args=[request.user.id, token])
     )
     ticket_qrcode = make(url, image_factory=SvgImage)
     buffer = io.BytesIO()
