@@ -20,6 +20,8 @@ from django.core.validators import (
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
+from django import forms
+
 
 from insalan.tickets.models import Ticket
 from insalan.user.models import User
@@ -855,6 +857,54 @@ class Caster(models.Model):
         blank=True,
         null=True,
     )
+
+
+class TournamentMailer(models.Model):
+    class Meta:
+        managed = False
+        verbose_name_plural = 'mailers'  # The name displayed in the admin sidebar
+
+    tournament = models.ManyToManyField(
+        Tournament,
+        blank=True,
+        verbose_name=_("Filtre de tournoi"),
+        help_text=_("Si aucun tournoi n'est sélectionné, le mail sera envoyé à tous les membres . ")
+    )
+    team_validated = models.BooleanField(
+        default=False,
+        blank=True,
+        verbose_name=_("Filtre d'équipe validée")
+    )
+    captains = models.BooleanField(
+        default=False,
+        blank=True,
+        verbose_name=_("Filtre de capitaines")
+    )
+    title = models.CharField(
+        verbose_name=_("Titre du mail"),
+        max_length=100,
+        null=False,
+        blank=True,
+        default="",
+    )
+    content = models.TextField(
+        verbose_name=_("Contenu du mail"),
+        max_length=50000,
+        null=False,
+        blank=True,
+        default="",
+    )
+    attachment = models.FileField(
+        verbose_name=_("Pièce jointe"),
+        blank=True,
+        null=True,
+        upload_to="mail-attachments",
+    )
+
+    def save(self, *args, **kwargs):
+        """Override default save of TournamentMailer"""
+        pass
+
 
 
 def unique_event_registration_validator(user: User, event: Event, player = None, manager = None, substitute = None):
