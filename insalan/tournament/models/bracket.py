@@ -13,7 +13,8 @@ class Bracket(models.Model):
     )
     tournament = models.ForeignKey(
         "Tournament",
-        verbose_name=_("Tournoi")
+        verbose_name=_("Tournoi"),
+        on_delete=models.CASCADE
     )
     bracket_type = models.CharField(
         default=BracketType.SINGLE,
