@@ -7,7 +7,8 @@ class Group(models.Model):
     )
     tournament = models.ForeignKey(
         "Tournament",
-        verbose_name=_("Tournoi")
+        verbose_name=_("Tournoi"),
+        on_delete=models.CASCADE
     )
 
     class Meta:
