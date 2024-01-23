@@ -54,6 +54,14 @@ class Team(models.Model):
         verbose_name=_("Capitaine"),
         related_name="team_captain",
     )
+    group = models.ForeignKey(
+        "Group",
+        verbose_name=_("Poule")
+    )
+    bracket = models.ForeignKey(
+        "Bracket",
+        verbose_name=_("Arbre de tournoi")
+    )
 
     class Meta:
         """Meta Options"""
