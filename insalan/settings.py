@@ -190,6 +190,7 @@ LOCALE_PATHS = [path.join(BASE_DIR, 'locale')]
 
 STATIC_URL = "v1/static/"
 STATIC_ROOT = "v1/" + getenv("STATIC_ROOT", "static/")
+STATICFILES_DIRS = [path.join(BASE_DIR, "assets")]
 
 MEDIA_URL = 'v1/media/'
 MEDIA_ROOT = 'v1/' + getenv("MEDIA_ROOT", "media/")
