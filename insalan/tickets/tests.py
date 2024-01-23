@@ -30,7 +30,7 @@ def create_ticket(
     token: str,
     tourney: Tournament,
     ticket_status: Ticket.Status = Ticket.Status.VALID,
-) -> None:
+) -> int:
     """
     Create a ticket for the given username and token.
     """
@@ -42,6 +42,7 @@ def create_ticket(
     Ticket.objects.create(
         user=user, token=uuid.UUID(token), status=ticket_status, tournament=tourney
     )
+    return user.id
 
 
 class TicketTestCase(TestCase):
@@ -128,11 +129,11 @@ class TicketTODO(APITestCase):
         Test the `get` API endpoint.
         """
         tourney = Tournament.objects.all()[0]
-        create_ticket("user1", "00000000-0000-0000-0000-000000000001", tourney)
+        user1_id = create_ticket("user1", "00000000-0000-0000-0000-000000000001", tourney)
 
         response = self.client.get(
             reverse(
-                "tickets:get", args=["user1", "00000000-0000-0000-0000-000000000001"]
+                "tickets:get", args=[user1_id, "00000000-0000-0000-0000-000000000001"]
             )
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -141,7 +142,7 @@ class TicketTODO(APITestCase):
 
         response = self.client.get(
             reverse(
-                "tickets:get", args=["user1", "00000000-0000-0000-0000-000000000001"]
+                "tickets:get", args=[user1_id, "00000000-0000-0000-0000-000000000001"]
             )
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -149,14 +150,14 @@ class TicketTODO(APITestCase):
         self.login("admin")
 
         response = self.client.get(
-            reverse("tickets:get", args=["user1", "invalid-uuid"])
+            reverse("tickets:get", args=[user1_id, "invalid-uuid"])
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json(), {"err": _("UUID invalide")})
 
         response = self.client.get(
             reverse(
-                "tickets:get", args=["user2", "00000000-0000-0000-0000-000000000001"]
+                "tickets:get", args=[1000, "00000000-0000-0000-0000-000000000001"]
             )
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -164,7 +165,7 @@ class TicketTODO(APITestCase):
 
         response = self.client.get(
             reverse(
-                "tickets:get", args=["user1", "00000000-0000-0000-0000-000000000002"]
+                "tickets:get", args=[user1_id, "00000000-0000-0000-0000-000000000002"]
             )
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -172,7 +173,7 @@ class TicketTODO(APITestCase):
 
         response = self.client.get(
             reverse(
-                "tickets:get", args=["user1", "00000000-0000-0000-0000-000000000001"]
+                "tickets:get", args=[user1_id, "00000000-0000-0000-0000-000000000001"]
             )
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
