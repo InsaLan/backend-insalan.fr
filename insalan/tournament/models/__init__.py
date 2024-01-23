@@ -7,5 +7,6 @@ from .player import Player
 from .substitute import Substitute
 from .team import Team
 from .tournament import Tournament, in_thirty_days
+from .mailer import MailManager
 
 from .validators import *
