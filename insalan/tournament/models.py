@@ -861,14 +861,13 @@ class Caster(models.Model):
 
 class TournamentMailer(models.Model):
     class Meta:
-        managed = False
         verbose_name_plural = 'mailers'  # The name displayed in the admin sidebar
 
-    tournament = models.ManyToManyField(
+    tournament = models.ForeignKey(
         Tournament,
-        blank=True,
-        verbose_name=_("Filtre de tournoi"),
-        help_text=_("Si aucun tournoi n'est sélectionné, le mail sera envoyé à tous les membres . ")
+        verbose_name=_("Tournoi"),
+        on_delete=models.SET_NULL,
+        null=True,
     )
     team_validated = models.BooleanField(
         default=False,
