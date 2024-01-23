@@ -21,7 +21,7 @@ from django.core.exceptions import PermissionDenied
 from django.views.decorators.debug import sensitive_post_parameters
 from django.utils.decorators import method_decorator
 
-from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus
+from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus, TournamentMailer
 
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
 
@@ -461,3 +461,34 @@ class SubstituteAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Substitute, SubstituteAdmin)
+
+class MailerAdmin(admin.ModelAdmin):
+    """
+    Admin handler for TournamentMailer
+    """
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def add_view(self, request, form_url="", extra_context=None):
+        return self.changeform_view(request, None, form_url, {
+            'show_save_and_add_another': False,
+            'show_save_and_continue': False,
+            'title': _('Envoyer un mail')
+        })
+
+    # replace the list url with the add one
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('', self.admin_site.admin_view(self.add_view), name='mailer_add'),
+        ]
+        return custom_urls + urls
+
+    def response_add(self, request, obj, post_url_continue=None):
+        messages.info(request, _("Le mail est en cours d'envoi"))
+        return HttpResponseRedirect(reverse('admin:mailer_add'))
+
+admin.site.register(TournamentMailer, MailerAdmin)
