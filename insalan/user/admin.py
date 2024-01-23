@@ -16,7 +16,9 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.utils.decorators import method_decorator
 from insalan.tournament.models import Player, Manager, Substitute
 
-from .models import User, UserMailer
+from .models import User
+from insalan.mailer import MailManager
+from insalan.settings import EMAIL_AUTH
 
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
 
@@ -167,7 +169,7 @@ class CustomUserAdmin(UserAdmin):
                 )
             )
         else:
-            UserMailer.send_email_confirmation(user)
+            MailManager.get_mailer(EMAIL_AUTH["contact"][0]).send_email_confirmation(user)
             msg = _("The confirmation email was resent.")
             messages.success(request, msg)
             return HttpResponseRedirect(
