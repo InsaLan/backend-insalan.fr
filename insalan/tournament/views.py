@@ -20,6 +20,8 @@ from rest_framework.authentication import SessionAuthentication
 
 from insalan.user.models import User, UserMailer
 import insalan.tournament.serializers as serializers
+from insalan.tickets.serializers import TicketSerializer
+from insalan.tickets.models import Ticket
 
 from .models import Player, Manager, Substitute, Event, Tournament, Game, Team, PaymentStatus
 
@@ -269,6 +271,7 @@ class TournamentMe(APIView):
                 Event.objects.get(id=player["team"]["tournament"]["event"]),
                 context={"request": request},
             ).data
+            player["ticket"] = Ticket.objects.get(id=player["ticket"]).token if player["ticket"] is not None else None
 
         # retrieve registration as Manager
         managers = Manager.objects.filter(user=user)
@@ -291,6 +294,7 @@ class TournamentMe(APIView):
                 Event.objects.get(id=manager["team"]["tournament"]["event"]),
                 context={"request": request},
             ).data
+            manager["ticket"] = Ticket.objects.get(id=manager["ticket"]).token if manager["ticket"] is not None else None
 
         # retrieve registration as Substitute
         substitutes = Substitute.objects.filter(user=user)
@@ -313,6 +317,7 @@ class TournamentMe(APIView):
                 Event.objects.get(id=substitute["team"]["tournament"]["event"]),
                 context={"request": request},
             ).data
+            substitute["ticket"] = Ticket.objects.get(id=substitute["ticket"]).token if substitute["ticket"] is not None else None
 
         return Response({"player": players, "manager": managers, "substitute": substitutes}, status=status.HTTP_200_OK)
 
