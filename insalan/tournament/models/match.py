@@ -53,20 +53,25 @@ class Match(models.Model):
 class GroupMatch(Match):
     group = models.ForeignKey(
         "Group",
-        verbose_name=_("Poule")
+        verbose_name=_("Poule"),
+        on_delete=models.CASCADE
     )
+
+    class Meta:
+        verbose_name = _("Match de poule")
+        verbose_name_plural = _("Matchs de poule")
     
 
 class KnockoutMatch(Match):
     bracket = models.ForeignKey(
         "Bracket",
         verbose_name=_("Arbre de tournoi"),
-        null=False,
-        blank=False
+        on_delete=models.CASCADE
     )
     bracket_set = models.CharField(
         default=BracketSet.UPPER,
-        choices=BracketSet.choices
+        choices=BracketSet.choices,
+        verbose_name=_("Type de tableau, gagnant ou perdant")
     )
     # winner_next = models.ForeignKey(
     #     KnockoutMatch,
@@ -79,17 +84,30 @@ class KnockoutMatch(Match):
     #     null=True
     # )
 
+    class Meta:
+        verbose_name = _("Match dans un arbre")
+        verbose_name_plural = _("Matchs dans un arbre")
+
 class Score(models.Model):
     score = models.IntegerField(
         verbose_name=_("Score")
     )
     team = models.ForeignKey(
         "Team",
-        verbose_name=_("Équipe")
+        verbose_name=_("Équipe"),
+        on_delete=models.CASCADE
     )
     group_match = models.ForeignKey(
-        "Group"
+        "Group",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name=_("Match de poule lié à ce score")
     )
     bracket_match = models.ForeignKey(
-        "Bracket"
+        "Bracket",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name=_("Match dans un arbre lié à ce score")
     )

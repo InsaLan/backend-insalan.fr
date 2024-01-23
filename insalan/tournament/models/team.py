@@ -56,11 +56,17 @@ class Team(models.Model):
     )
     group = models.ForeignKey(
         "Group",
-        verbose_name=_("Poule")
+        verbose_name=_("Poule"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
     )
     bracket = models.ForeignKey(
         "Bracket",
-        verbose_name=_("Arbre de tournoi")
+        verbose_name=_("Arbre de tournoi"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
     )
 
     class Meta:
