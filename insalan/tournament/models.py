@@ -23,6 +23,8 @@ from django.contrib.postgres.fields import ArrayField
 from django import forms
 
 
+from insalan.settings import EMAIL_AUTH
+from insalan.mailer import MailManager
 from insalan.tickets.models import Ticket
 from insalan.user.models import User
 
@@ -868,6 +870,7 @@ class TournamentMailer(models.Model):
         verbose_name=_("Tournoi"),
         on_delete=models.SET_NULL,
         null=True,
+        blank=True,
     )
     team_validated = models.BooleanField(
         default=False,
@@ -902,8 +905,31 @@ class TournamentMailer(models.Model):
 
     def save(self, *args, **kwargs):
         """Override default save of TournamentMailer"""
-        pass
-
+        # get every players of the ongoing event
+        players = Player.objects.filter(team__tournament__event__ongoing=True)
+        # if the tournament is specified, filter by tournament
+        if self.tournament is not None:
+            players = players.filter(team__tournament=self.tournament)
+        # if the team is validated, filter by validated teams
+        if self.team_validated:
+            players = players.filter(team__validated=True)
+        # if the captains filter is enabled, filter by captains
+        if self.captains:
+            # get every teams
+            teams = Team.objects.all()
+            # get every captains
+            captains = [team.captain.id for team in teams if team.captain is not None]
+            # filter players by captains
+            players = players.filter(id__in=captains)
+        # send the mail to every players
+        for player in players:
+            # send the mail
+            MailManager.get_mailer(EMAIL_AUTH["tournament"][0]).send_tournament_mail(
+                player.user,
+                self.title,
+                self.content,
+                self.attachment,
+            )
 
 
 def unique_event_registration_validator(user: User, event: Event, player = None, manager = None, substitute = None):
