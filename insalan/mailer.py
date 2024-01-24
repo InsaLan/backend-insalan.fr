@@ -1,3 +1,4 @@
+import logging
 from django.contrib.auth.models import Permission
 from django.core.mail import EmailMessage, get_connection, send_mail
 from django.contrib.auth.tokens import (
@@ -8,6 +9,8 @@ from django.utils.translation import gettext_lazy as _
 
 import insalan.settings
 from insalan.user.models import User
+from insalan.tickets.models import TicketManager
+from apscheduler.schedulers.background import BackgroundScheduler
 
 class EmailConfirmationTokenGenerator(PasswordResetTokenGenerator):
     """
@@ -29,6 +32,7 @@ class UserMailer:
     def __init__(self, MAIL_FROM: str, MAIL_PASS: str):
         self.MAIL_FROM = MAIL_FROM
         self.MAIL_PASS = MAIL_PASS
+        self.queue = []
 
     def send_email_confirmation(self, user_object: User):
         """
@@ -40,7 +44,12 @@ class UserMailer:
         )
         token = EmailConfirmationTokenGenerator().make_token(user_object)
         user = user_object.username
-        send_mail(
+
+        connection = get_connection(
+            fail_silently=False,
+            username=self.MAIL_FROM,
+        )
+        email = EmailMessage(
             insalan.settings.EMAIL_SUBJECT_PREFIX + _("Confirmez votre courriel"),
             _("Confirmez votre adresse de courriel en cliquant sur ")
             + insalan.settings.PROTOCOL
@@ -52,9 +61,9 @@ class UserMailer:
             + token,
             self.MAIL_FROM,
             [user_object.email],
-            fail_silently=False,
-            auth_password=self.MAIL_PASS,
+            connection=connection,
         )
+        self.queue.append(email)
 
     def send_password_reset(self, user_object: User):
         """
@@ -62,7 +71,12 @@ class UserMailer:
         """
         token = default_token_generator.make_token(user_object)
         user = user_object.username
-        send_mail(
+
+        connection = get_connection(
+            fail_silently=False,
+            username=self.MAIL_FROM,
+        )
+        email = EmailMessage(
             insalan.settings.EMAIL_SUBJECT_PREFIX + _("Demande de ré-initialisation de mot de passe"),
             _(
                 "Une demande de ré-initialisation de mot de passe a été effectuée"
@@ -78,29 +92,31 @@ class UserMailer:
             + token,
             self.MAIL_FROM,
             [user_object.email],
-            fail_silently=False,
-            auth_password=self.MAIL_PASS,
+            connection=connection,
         )
+        self.queue.append(email)
 
     def send_kick_mail(self, user_object: User, team_name: str):
         """
         Send a mail to a user that has been kicked.
         """
-        send_mail(
+        connection = get_connection(
+            fail_silently=False,
+            username=self.MAIL_FROM,
+        )
+        email = EmailMessage(
             insalan.settings.EMAIL_SUBJECT_PREFIX + _("Vous avez été exclu.e de votre équipe"),
             _("Vous avez été exclu.e de l'équipe %s.") % team_name,
             self.MAIL_FROM,
             [user_object.email],
-            fail_silently=False,
-            auth_password=self.MAIL_PASS,
+            connection=connection,
         )
+        self.queue.append(email)
 
     def send_ticket_mail(self, user_object: User, ticket: str):
         """
         Send a mail to a user that has been kicked.
         """
-        # prevent circular import
-        from insalan.tickets.models import TicketManager
 
         ticket_pdf = TicketManager.generate_ticket_pdf(ticket)
 
@@ -120,8 +136,17 @@ class UserMailer:
             ticket_pdf,
             "application/pdf"
         )
-        email.send()
 
+        self.queue.append(email)
+
+    def send_first_mail(self):
+        """
+        Send the first mail in the queue.
+        """
+        if len(self.queue) == 0:
+            return
+        self.queue[0].send()
+        self.queue.pop(0)
 
 class MailManager:
     """
@@ -154,6 +179,24 @@ class MailManager:
         """
         MailManager.mailers[MAIL_FROM] = UserMailer(MAIL_FROM, MAIL_PASS)
 
-for auth in insalan.settings.EMAIL_AUTH:
-    EMAIL_FROM, EMAIL_PASS = insalan.settings.EMAIL_AUTH[auth]
-    MailManager.add_mailer(EMAIL_FROM, EMAIL_PASS)
+    @staticmethod
+    def send_queued_mail():
+        """
+        Send first mail in all mailer's queue.
+        """
+        for mailer in MailManager.mailers.values():
+            mailer.send_first_mail()
+
+def start_scheduler():
+    # Remove apscheduler logs
+    logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
+    
+    # Add mailers
+    for auth in insalan.settings.EMAIL_AUTH:
+        EMAIL_FROM, EMAIL_PASS = insalan.settings.EMAIL_AUTH[auth]
+        MailManager.add_mailer(EMAIL_FROM, EMAIL_PASS)
+
+    # Start scheduler
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(MailManager.send_queued_mail, 'interval', seconds=30)
+    scheduler.start()

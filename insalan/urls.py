@@ -20,6 +20,7 @@ from django.views.generic.base import RedirectView
 from django.urls import include, path
 from rest_framework import routers
 
+from insalan.mailer import start_scheduler
 from insalan.langate import views as langate_views
 router = routers.DefaultRouter()
 # Wire up our API using automatic URL routing.
@@ -44,3 +45,5 @@ if not int(getenv("DEV", "1")):
 
 # Set admin site url correctly for the admin panel
 admin.site.site_url = getenv("HTTP_PROTOCOL", "http") + "://" + getenv("WEBSITE_HOST", "localhost")
+
+start_scheduler()
