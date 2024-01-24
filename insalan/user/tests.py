@@ -305,23 +305,24 @@ class UserEndToEndTestCase(TestCase):
         }
 
         request = self.client.post("/v1/user/register/", data, format="json")
+        user_pk = str(User.objects.get(username=data["username"]).pk)
 
         self.assertFalse(User.objects.get(username=data["username"]).is_email_active())
         match = re.match(
-            ".*https?://[^ ]*/(?P<username>[^ /]*)/(?P<token>[^ /]*)",
+            ".*https?://[^ ]*/(?P<user_pk>[^ /]*)/(?P<token>[^ /]*)",
             mail.outbox[0].body,
         )
-
-        username = match["username"]
+        
+        match_user_pk = match["user_pk"]
         token = match["token"]
 
-        self.assertEqual(username, data["username"])
+        self.assertEqual(match_user_pk, user_pk)
 
-        request = self.client.get(f"/v1/user/confirm/{username}/{token}")
+        request = self.client.get(f"/v1/user/confirm/{data['username']}/{token}")
         self.assertEqual(request.status_code, 200)
 
         self.assertTrue(User.objects.get(username=data["username"]).is_email_active())
-
+    
     def test_can_confirm_email_only_once(self):
         """
         Test that an user can confirm their email only once
@@ -336,18 +337,19 @@ class UserEndToEndTestCase(TestCase):
         }
 
         self.client.post("/v1/user/register/", data, format="json")
+        user_pk = User.objects.get(username=data["username"]).pk
         match = re.match(
-            ".*https?://[^ ]*/(?P<username>[^ /]*)/(?P<token>[^ /]*)",
+            ".*https?://[^ ]*/(?P<user_pk>[^ /]*)/(?P<token>[^ /]*)",
             mail.outbox[0].body,
         )
 
-        username = match["username"]
+        match_user_pk = match["user_pk"]
         token = match["token"]
 
-        request = self.client.get(f"/v1/user/confirm/{username}/{token}")
+        request = self.client.get(f"/v1/user/confirm/{data['username']}/{token}")
         self.assertEqual(request.status_code, 200)
 
-        request = self.client.get(f"/v1/user/confirm/{username}/{token}")
+        request = self.client.get(f"/v1/user/confirm/{data['username']}/{token}")
         self.assertEqual(request.status_code, 400)
 
     def test_confirmation_email_is_token_checked(self):
@@ -549,12 +551,13 @@ class UserEndToEndTestCase(TestCase):
 
         match = re.search(
             # "https?://[^ ]*/password-reset/ask[^ ]*",
-            ".*https?://[^ ]*/(?P<username>[^ &]*)/(?P<token>[^ /]*)",
+            ".*https?://[^ ]*/(?P<user_pk>[^ &]*)/(?P<token>[^ /]*)",
             mail.outbox[0].body,
         )
 
-        username = match["username"]
+        user_pk = match["user_pk"]
         token = match["token"]
+        username = User.objects.get(id=user_pk).username
 
         data = {
             "user": username,
@@ -596,12 +599,13 @@ class UserEndToEndTestCase(TestCase):
 
         match = re.search(
             # "https?://[^ ]*/password-reset/ask[^ ]*",
-            ".*https?://[^ ]*/(?P<username>[^ &]*)/(?P<token>[^ /]*)",
+            ".*https?://[^ ]*/(?P<user_pk>[^ &]*)/(?P<token>[^ /]*)",
             mail.outbox[0].body,
         )
 
-        username = match["username"]
+        user_pk = match["user_pk"]
         token = match["token"]
+        username = User.objects.get(id=user_pk).username
 
         data = {
             "user": username,
