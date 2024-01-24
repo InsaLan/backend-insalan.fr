@@ -1,4 +1,5 @@
 import logging
+import sys
 from django.contrib.auth.models import Permission
 from django.core.mail import EmailMessage, get_connection, send_mail
 from django.contrib.auth.tokens import (
@@ -29,9 +30,10 @@ class UserMailer:
     """
     Send emails.
     """
-    def __init__(self, MAIL_FROM: str, MAIL_PASS: str):
+    def __init__(self, MAIL_FROM: str, MAIL_PASS: str, TEST: bool = False):
         self.MAIL_FROM = MAIL_FROM
         self.MAIL_PASS = MAIL_PASS
+        self.TEST = TEST
         self.queue = []
 
     def send_email_confirmation(self, user_object: User):
@@ -63,7 +65,10 @@ class UserMailer:
             [user_object.email],
             connection=connection,
         )
-        self.queue.append(email)
+        if self.TEST:
+            email.send()
+        else:
+            self.queue.append(email)
 
     def send_password_reset(self, user_object: User):
         """
@@ -94,7 +99,10 @@ class UserMailer:
             [user_object.email],
             connection=connection,
         )
-        self.queue.append(email)
+        if self.TEST:
+            email.send()
+        else:
+            self.queue.append(email)
 
     def send_kick_mail(self, user_object: User, team_name: str):
         """
@@ -111,7 +119,10 @@ class UserMailer:
             [user_object.email],
             connection=connection,
         )
-        self.queue.append(email)
+        if self.TEST:
+            email.send()
+        else:
+            self.queue.append(email)
 
     def send_ticket_mail(self, user_object: User, ticket: str):
         """
@@ -137,7 +148,10 @@ class UserMailer:
             "application/pdf"
         )
 
-        self.queue.append(email)
+        if self.TEST:
+            email.send()
+        else:
+            self.queue.append(email)
 
     def send_first_mail(self):
         """
@@ -173,11 +187,11 @@ class MailManager:
         return list(MailManager.mailers.values())[0]
 
     @staticmethod
-    def add_mailer(MAIL_FROM: str, MAIL_PASS: str):
+    def add_mailer(MAIL_FROM: str, MAIL_PASS: str, TEST: bool = False):
         """
         Add a mailer for a specific email address.
         """
-        MailManager.mailers[MAIL_FROM] = UserMailer(MAIL_FROM, MAIL_PASS)
+        MailManager.mailers[MAIL_FROM] = UserMailer(MAIL_FROM, MAIL_PASS, TEST=TEST)
 
     @staticmethod
     def send_queued_mail():
@@ -190,13 +204,18 @@ class MailManager:
 def start_scheduler():
     # Remove apscheduler logs
     logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
-    
+
+    # Check if we are in test mode
+    TEST = 'test' in sys.argv
+    print(TEST, file=sys.stderr)
+
     # Add mailers
     for auth in insalan.settings.EMAIL_AUTH:
         EMAIL_FROM, EMAIL_PASS = insalan.settings.EMAIL_AUTH[auth]
-        MailManager.add_mailer(EMAIL_FROM, EMAIL_PASS)
+        MailManager.add_mailer(EMAIL_FROM, EMAIL_PASS, TEST=TEST)
 
     # Start scheduler
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(MailManager.send_queued_mail, 'interval', seconds=30)
-    scheduler.start()
+    if not TEST:
+        scheduler = BackgroundScheduler()
+        scheduler.add_job(MailManager.send_queued_mail, 'interval', seconds=30)
+        scheduler.start()
