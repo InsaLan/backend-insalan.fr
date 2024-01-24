@@ -153,6 +153,29 @@ class UserMailer:
         else:
             self.queue.append(email)
 
+    def send_tournament_mail(self, user_object: User, title: str, content: str, attachment: str):
+        """
+        Send a mail
+        """
+        connection = get_connection(
+            fail_silently=False,
+            username=self.MAIL_FROM,
+        )
+        email = EmailMessage(
+            insalan.settings.EMAIL_SUBJECT_PREFIX + title,
+            content,
+            self.MAIL_FROM,
+            [user_object.email],
+            connection=connection,
+        )
+        if attachment:
+            email.attach(attachment.name, attachment.read())
+
+        if self.TEST:
+            email.send()
+        else:
+            self.queue.append(email)
+
     def send_first_mail(self):
         """
         Send the first mail in the queue.
