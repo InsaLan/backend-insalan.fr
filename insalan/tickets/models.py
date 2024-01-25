@@ -3,6 +3,7 @@ Module for defining the Ticket model.
 """
 import uuid
 from io import BytesIO
+from os import path
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -14,7 +15,7 @@ from PIL import Image
 
 from insalan import settings
 from insalan.user.models import User
-
+from insalan.cms.models import Content
 
 class Ticket(models.Model):
     """
@@ -73,7 +74,7 @@ class TicketManager(models.Manager):
         p = canvas.Canvas(buffer, pagesize=(page_width, page_height))
 
         # get and resize (to reduce the size of the pdf) the tournament image
-        image = Image.open(settings.MEDIA_ROOT + "/" + str(ticket.tournament.logo))
+        image = Image.open(path.join(settings.MEDIA_ROOT, str(ticket.tournament.logo)))
         image.thumbnail((page_width*1.5, page_height*1.5), Image.BILINEAR)
         img = utils.ImageReader(image)
         iw, ih = img.getSize()
@@ -109,7 +110,7 @@ class TicketManager(models.Manager):
         p.drawImage(qr, page_width/4, 0.117 * page_height, qr_size, qr_size)
 
         # add the logo from static
-        logo = Image.open(settings.STATIC_ROOT + "/images/logo.png")
+        logo = Image.open(path.join(settings.STATIC_ROOT, "images/logo.png"))
         img = utils.ImageReader(logo)
         im_size = 150/850 * page_height
         p.drawImage(img, 0.08 * page_width, 0.588 * page_height, im_size, im_size, mask='auto')
@@ -203,18 +204,34 @@ class TicketManager(models.Manager):
 
         # split the string in multiple lines
         n = 105
-        CGV = "En faisant l'acquisition de ce billet, le détenteur reconnaît et accepte les conditions suivantes : aucun remboursement ne sera effectué, sauf en cas d'annulation de l'événement par l'insalan. L'insalan décline toute responsabilité en cas de perte, vol ou dommage des billets. L'admission à l'événement est conditionnée au respect des règles en vigueur sur le site. En participant, le détenteur autorise l'utilisation de son image à des fins promotionnelles. Pour de plus amples informations, veuillez consulter le site web de l'insalan."
-        parts = []
-        for i in CGV.split(" "):
-            if len(parts) == 0 or len(parts[-1]) + 1 + len(i) > n:
-                parts.append(i)
-            else:
-                parts[-1] += " " + i
-        
-        # write the lines
-        for i, part in enumerate(parts):
-            p.drawCentredString(page_width/2, 0.094 * page_height - i * 0.0141 * page_height, part)
+        CGV = Content.objects.filter(name="ticket_CGV")
+        if CGV:
+            parts = []
+            for i in CGV.first().content.split(" "):
+                if len(parts) == 0 or len(parts[-1]) + 1 + len(i) > n:
+                    parts.append(i)
+                else:
+                    parts[-1] += " " + i
+
+            # write the lines
+            for i, part in enumerate(parts):
+                p.drawCentredString(page_width/2, 0.094 * page_height - i * 0.0141 * page_height, part)
 
         p.showPage()
         p.save()
         return buffer.getvalue()
+
+    @staticmethod
+    def create_pdf_name(ticket):
+        """
+        Create the name of the pdf file for a ticket.
+        """
+        # we only keep alphanumeric characters and spaces
+        username = ''.join(
+            c for c in ticket.user.username if c.isalnum() or c == " "
+        ).replace(' ', '-')
+        event_name = ''.join(
+            c for c in ticket.tournament.event.name if c.isalnum() or c == " "
+        ).replace(' ', '-')
+
+        return f"billet-{username}-{event_name}.pdf"

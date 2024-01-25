@@ -227,7 +227,11 @@ class UserMailer:
             [user_object.email],
             connection=connection,
         )
-        email.attach(f"billet-{user_object.username.replace(' ', '-')}-{ticket.tournament.event.name.replace(' ', '-')}.pdf", ticket_pdf, "application/pdf")
+        email.attach(
+            TicketManager.create_pdf_name(ticket),
+            ticket_pdf,
+            "application/pdf"
+        )
         email.send()
 
 # vim: set tw=80 cc=80:
