@@ -18,13 +18,12 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 from insalan.user.models import User
-from .models import Ticket, TicketManager
-from django.shortcuts import render
+from .models import Ticket
 
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def get(request: HttpRequest, id: str, token: str) -> JsonResponse:
-    """Get ticket details for the given id and token."""
+    """Get ticket details for the given user id and token."""
     try:
         uuid.UUID(hex=token)
     except ValueError:
