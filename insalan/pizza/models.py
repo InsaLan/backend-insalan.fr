@@ -6,6 +6,8 @@ It includes the following models:
 - TimeSlot: Represents a time slot for ordering pizzas, including delivery time, end time, and maximum number of pizzas.
 - Order: Represents a pizza order, including the user, time slot, pizzas, payment method, price, and delivery status.
 """
+from typing import List
+
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils import timezone
@@ -190,6 +192,7 @@ class PizzaOrder(models.Model):
     order = models.ForeignKey('Order', on_delete=models.CASCADE)
     pizza = models.ForeignKey('pizza.Pizza', on_delete=models.CASCADE)
 
+
 class Order(models.Model):
     """
     Order model
@@ -254,5 +257,10 @@ class Order(models.Model):
         auto_now=True,
     )
 
+    def get_pizza_ids(self) -> List[int]:
+        """
+        retrieve pizza associated to an order with their id
+        """
+        return PizzaOrder.objects.filter(order=self)
     def __str__(self) -> str:
         return f"{self.user} - {self.time_slot}"
