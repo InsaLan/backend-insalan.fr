@@ -9,6 +9,7 @@ class BracketType(models.TextChoices):
 
 class Bracket(models.Model):
     name = models.CharField(
+        max_length=40,
         verbose_name=_("Nom de l'arbre")
     )
     tournament = models.ForeignKey(
@@ -18,7 +19,8 @@ class Bracket(models.Model):
     )
     bracket_type = models.CharField(
         default=BracketType.SINGLE,
-        choices=BracketType.choices
+        choices=BracketType.choices,
+        max_length=10
     )
 
     class Meta:

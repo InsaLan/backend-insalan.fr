@@ -42,6 +42,11 @@ class Game(models.Model):
         validators=[MinValueValidator(0)],
         default=0
     )
+    team_per_match = models.IntegerField(
+        verbose_name=_("Nombre maximum d'équipe par matche"),
+        validators=[MinValueValidator(2)],
+        default=2
+    )
 
     def __str__(self) -> str:
         """Format this Game to a str"""
@@ -62,3 +67,7 @@ class Game(models.Model):
     def get_substitute_players_per_team(self) -> int:
         """Return the number of substitute players per team"""
         return self.substitute_players_per_team
+
+    def get_team_per_match(self) -> int:
+        """Return the maximum number of teams in a match"""
+        return self.team_per_match
