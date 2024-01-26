@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.contrib.postgres.fields import ArrayField
 
 class MatchStatus(models.TextChoices):
     """Information about the status of a match"""
@@ -24,7 +25,7 @@ class BestofType(models.TextChoices):
 
 class Match(models.Model):
     teams = models.ManyToManyField(
-        "Liste des équipes",
+        "Team",
         verbose_name=_("Liste des équipes")
     )
     round_number = models.IntegerField(
@@ -34,16 +35,22 @@ class Match(models.Model):
         verbose_name=_("Indexe du match dans un round")
     )
     status = models.CharField(
+        max_length=10,
         default=MatchStatus.SCHEDULED,
         choices=MatchStatus.choices
     )
     bo_type = models.CharField(
+        max_length=5,
         default=BestofType.BO1,
         choices=BestofType.choices,
         verbose_name=_("Type de série")
     )
-    times = models.ArrayField(
-        verbose_name=_("Liste des durées des parties du match")
+    times = ArrayField(
+        models.IntegerField(
+            default=0
+        ),
+        verbose_name=_("Liste des durées des parties du match"),
+        default=list
     )
 
     class Meta:
@@ -69,7 +76,8 @@ class KnockoutMatch(Match):
         on_delete=models.CASCADE
     )
     bracket_set = models.CharField(
-        default=BracketSet.UPPER,
+        max_length=10,
+        default=BracketSet.WINNER,
         choices=BracketSet.choices,
         verbose_name=_("Type de tableau, gagnant ou perdant")
     )
