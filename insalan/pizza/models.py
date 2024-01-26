@@ -48,6 +48,7 @@ class Pizza(models.Model):
             FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp"])
         ],
         null=True,
+        blank=True,
     )
 
     def __str__(self) -> str:
@@ -188,6 +189,12 @@ class TimeSlot(models.Model):
         if need_save:
             self.save()
 
+    def get_orders_id(self) -> List[int]:
+        """
+        retrieve orders associated to a timeslot with their id
+        """
+        return Order.objects.filter(time_slot=self).values_list("id", flat=True)
+
 class PizzaOrder(models.Model):
     order = models.ForeignKey('Order', on_delete=models.CASCADE)
     pizza = models.ForeignKey('pizza.Pizza', on_delete=models.CASCADE)
@@ -207,11 +214,14 @@ class Order(models.Model):
     user: models.CharField = models.CharField(
         verbose_name=_("Utilisateur"),
         max_length=200,
+        blank=True,
     )
     user_obj: models.ForeignKey = models.ForeignKey(
-            "user.user",
-            verbose_name=_("Utilisateur du site"),
-            on_delete=models.CASCADE,
+        "user.user",
+        verbose_name=_("Utilisateur du site"),
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
     time_slot: models.ForeignKey = models.ForeignKey(
         "pizza.TimeSlot",
@@ -252,10 +262,6 @@ class Order(models.Model):
         verbose_name=_("Date de création"),
         auto_now_add=True,
     )
-    updated_at: models.DateTimeField = models.DateTimeField(
-        verbose_name=_("Date de modification"),
-        auto_now=True,
-    )
 
     def get_pizza_ids(self) -> List[int]:
         """
@@ -264,3 +270,12 @@ class Order(models.Model):
         return PizzaOrder.objects.filter(order=self)
     def __str__(self) -> str:
         return f"{self.user} - {self.time_slot}"
+
+    def get_username(self) -> str:
+        """
+        return the username of the user
+        """
+        if self.user_obj:
+            return self.user_obj.username
+        return self.user
+    get_username.short_description = _('Utilisateur')

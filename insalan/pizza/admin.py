@@ -21,7 +21,7 @@ class PizzaOrderInline(admin.TabularInline):
     extra = 1
 
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "time_slot", "created_at")
+    list_display = ("id", "get_username", "time_slot", "created_at")
     search_fields = ["user", "time_slot"]
     inlines = [PizzaOrderInline]
 
