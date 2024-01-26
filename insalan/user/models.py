@@ -154,7 +154,7 @@ class UserMailer:
             Permission.objects.get(codename="email_active")
         )
         token = EmailConfirmationTokenGenerator().make_token(user_object)
-        user = user_object.username
+        user_pk = str(user_object.pk)
         send_mail(
             _("Confirmez votre courriel"),
             _("Confirmez votre adresse de courriel en cliquant sur ")
@@ -162,7 +162,7 @@ class UserMailer:
             + "://"
             + insalan.settings.WEBSITE_HOST
             + "/verification/"
-            + user
+            + user_pk
             + "/"
             + token,
             None,  # Django falls back to default of settings.py
@@ -176,7 +176,7 @@ class UserMailer:
         Send a password reset token.
         """
         token = default_token_generator.make_token(user_object)
-        user = user_object.username
+        user_pk = str(user_object.pk)
         send_mail(
             _("Demande de ré-initialisation de mot de passe"),
             _(
@@ -188,7 +188,7 @@ class UserMailer:
             + "://"
             + insalan.settings.WEBSITE_HOST
             + "/reset-password/"
-            + user
+            + user_pk
             + "/"
             + token,
             None,  # Django falls back to default of settings.py
