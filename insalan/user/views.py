@@ -282,15 +282,15 @@ class EmailConfirmView(APIView):
             )
         }
     )
-    def get(self, request, user=None, token=None):
+    def get(self, request, pk=None, token=None):
         """
         If requested with valid parameters, will validate an user's email
         """
         error_text = _("Utilisateur·rice ou jeton invalide (ou adresse déjà confirmée)")
 
-        if user and token:
+        if pk and token:
             try:
-                user_object: User = User.objects.get(username=user)
+                user_object: User = User.objects.get(pk=pk)
             except User.DoesNotExist:
                 return Response(
                     {"user": [error_text]},
