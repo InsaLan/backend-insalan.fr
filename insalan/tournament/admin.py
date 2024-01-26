@@ -21,7 +21,7 @@ from django.core.exceptions import PermissionDenied
 from django.views.decorators.debug import sensitive_post_parameters
 from django.utils.decorators import method_decorator
 
-from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus
+from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus, Group
 
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
 
@@ -461,3 +461,11 @@ class SubstituteAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Substitute, SubstituteAdmin)
+
+class GroupAdmin(admin.ModelAdmin):
+    """Admin handler for Groups"""
+
+    list_display = ("id", "name", "tournament")
+    search_fields = ["name","tournament"]
+
+admin.site.register(Group, GroupAdmin)
