@@ -11,7 +11,8 @@ from rest_framework import serializers
 
 from insalan.user.models import User
 
-from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, unique_event_registration_validator, tournament_announced, max_players_per_team_reached, tournament_registration_full, max_substitue_per_team_reached
+from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, Group, Leaderboard, GroupMatch
+from .models import unique_event_registration_validator, tournament_announced, max_players_per_team_reached, tournament_registration_full, max_substitue_per_team_reached
 
 class CasterSerializer(serializers.ModelSerializer):
     """Serializer for a tournament Caster"""
@@ -144,7 +145,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
         for player, name_in_game in zip(players,players_name_in_games):
             user_obj = User.objects.get(id=player)
-            Player.objects.create(user=user_obj, team=team_obj, name_in_game=name_in_game)
+            Player.objects.create(user=user_obj, team=team_obj,name_in_game=name_in_game)
 
         for manager in managers:
             user_obj = User.objects.get(id=manager)
@@ -305,3 +306,75 @@ class SubstituteIdSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         """Turn a Django object into a serialized representation"""
         return instance.id
+
+class GroupSerializer(serializers.ModelSerializer):
+    """Serializer for a group in a tournament"""
+
+    teams = serializers.ListField(required=False,source="get_teams_id")
+    create_matchs = serializers.BooleanField(required=False,write_only=True,default=False)
+
+    class Meta:
+        """Meta options for the serializer"""
+
+        model = Group
+        fields = "__all__"
+
+    def validate(self,data):
+        if not tournament_announced(data["tournament"]):
+            raise serializers.ValidationError(
+                _("Ce tournoi n'est pas encore annoncé")
+            )
+        # test for the existance of the teams
+
+        return data
+
+    def create(self, validated_data):
+        teams = validated_data.pop("get_teams_id",[])
+        create_matchs = validated_data.pop("create_matchs")
+
+        group = Group.objects.create(**validated_data)
+
+        # for team in teams:
+        #     if len(Leaderboard.objects.filter(team=team,group=group)) == 0:
+        #         Leaderboard.objects.create(team,group)
+
+        if create_matchs:
+            create_group_matchs(teams,group)
+
+        return group
+
+    def update(self, instance, validated_data):
+        teams = validated_data.pop("teams",[])
+        create_matchs = validated_data.pop("create_matchs")
+
+        # for team in teams:
+        #     if len(Leaderboard.objects.filter(team=team,group=instance)) == 0:
+        #         Leaderboard.objects.create(team,instance)
+
+        if create_matchs:
+            create_group_matchs(teams,instance)
+        
+        super().update(instance,validated_data)
+
+        return instance
+        
+
+
+def create_group_matchs(teams,group):
+    team_per_match = group.get_tournament().get_game().get_team_per_match()
+    nb_match = len(teams)//team_per_match + 1
+    nb_round = group.get_nb_round()
+
+    def index(k):
+        if k%2:
+            return k
+        else:
+            return -(k+1)//2
+    
+    for j in range(1,nb_round+1):
+        if nb_match == 1:
+            GroupMatch.objects.create(teams=teams,round_number=j,index_in_round=1,group=group)
+        else:
+            for i in range(nb_match):
+                match_teams = [teams[index(k)+i*team_per_match] for k in range(team_per_match) if (abs(index(k))+abs(index(k-1)) + 1) <= len(teams)]
+                GroupMatch.objects.create(teams=match_teams,round_number=j,index_in_round=i+1,group=group)
