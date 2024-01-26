@@ -18,7 +18,7 @@ class Manager(models.Model):
         on_delete=models.CASCADE,
     )
     team = models.ForeignKey(
-        "tournament.Team",
+        "Team",
         verbose_name=_("Équipe"),
         on_delete=models.CASCADE
     )

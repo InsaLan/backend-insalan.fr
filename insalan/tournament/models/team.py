@@ -61,13 +61,13 @@ class Team(models.Model):
         null=True,
         blank=True
     )
-    bracket = models.ForeignKey(
-        "Bracket",
-        verbose_name=_("Arbre de tournoi"),
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
+    # bracket = models.ForeignKey(
+    #     "Bracket",
+    #     verbose_name=_("Arbre de tournoi"),
+    #     on_delete=models.SET_NULL,
+    #     null=True,
+    #     blank=True
+    # )
 
     class Meta:
         """Meta Options"""
