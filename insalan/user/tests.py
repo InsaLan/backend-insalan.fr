@@ -318,7 +318,7 @@ class UserEndToEndTestCase(TestCase):
 
         self.assertEqual(match_user_pk, user_pk)
 
-        request = self.client.get(f"/v1/user/confirm/{data['username']}/{token}")
+        request = self.client.get(f"/v1/user/confirm/{match_user_pk}/{token}")
         self.assertEqual(request.status_code, 200)
 
         self.assertTrue(User.objects.get(username=data["username"]).is_email_active())
@@ -346,10 +346,10 @@ class UserEndToEndTestCase(TestCase):
         match_user_pk = match["user_pk"]
         token = match["token"]
 
-        request = self.client.get(f"/v1/user/confirm/{data['username']}/{token}")
+        request = self.client.get(f"/v1/user/confirm/{match_user_pk}/{token}")
         self.assertEqual(request.status_code, 200)
 
-        request = self.client.get(f"/v1/user/confirm/{data['username']}/{token}")
+        request = self.client.get(f"/v1/user/confirm/{match_user_pk}/{token}")
         self.assertEqual(request.status_code, 400)
 
     def test_confirmation_email_is_token_checked(self):
