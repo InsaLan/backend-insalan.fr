@@ -70,6 +70,8 @@ class PizzaListByGivenTimeSlot(generics.RetrieveAPIView):
     permission_classes = [ReadOnly]
 
     def get(self, request, *args, **kwargs):
+        if not TimeSlot.objects.filter(id=self.kwargs["pk"]).exists():
+            return Response({"detail": _("Not found.")}, status=404)
         timeslot = TimeSlot.objects.get(id=self.kwargs["pk"])
         serializer = serializers.PizzaByTimeSlotSerializer(timeslot)
         # only return the pizzas ordered
@@ -95,12 +97,14 @@ class TimeSlotListFull(generics.ListAPIView):
     permission_classes = [ReadOnly]
 
 
-class TimeSlotDetail(generics.RetrieveAPIView):
+class TimeSlotDetail(generics.RetrieveAPIView, generics.DestroyAPIView):
     """Find a timeslot by its id"""
     queryset = TimeSlot.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
     def get(self, request, *args, **kwargs):
+        if not TimeSlot.objects.filter(id=self.kwargs["pk"]).exists():
+            return Response({"detail": _("Not found.")}, status=404)
         timeslot = TimeSlot.objects.get(id=self.kwargs["pk"])
         serializer = serializers.TimeSlotSerializer(timeslot, context={"request": request}).data
 
@@ -156,14 +160,20 @@ class OrderListFull(generics.ListAPIView):
     serializer_class = serializers.OrderSerializer
     permission_classes = [ permissions.IsAdminUser]
 
-class OrderDetail(generics.RetrieveAPIView):
+class OrderDetail(generics.RetrieveUpdateDestroyAPIView):
     """Find an order by its id"""
     queryset = Order.objects.all()
-    serializer_class = serializers.OrderSerializer
     permission_classes = [ permissions.IsAdminUser ]
     queryset = Order.objects.all()
 
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return serializers.OrderSerializer
+        return serializers.CreateOrderSerializer
+
     def get(self, request, *args, **kwargs):
+        if not Order.objects.filter(id=self.kwargs["pk"]).exists():
+            return Response({"detail": _("Not found.")}, status=404)
         order = Order.objects.get(id=self.kwargs["pk"])
         serializer = serializers.OrderSerializer(order, context={"request": request}).data
 
@@ -175,3 +185,22 @@ class OrderDetail(generics.RetrieveAPIView):
         serializer["time_slot"] = timeslot_serializer
 
         return Response(serializer)
+
+    def patch(self, request, *args, **kwargs):
+        if not Order.objects.filter(id=self.kwargs["pk"]).exists():
+            return Response({"detail": _("Not found.")}, status=404)
+        order = Order.objects.get(id=self.kwargs["pk"])
+        data = request.data
+
+        if "delivered" in data and data["delivered"] is True:
+            order.delivered = True
+            order.delivery_date = timezone.now()
+            order.save()
+            return Response({"detail": _("Modified.")}, status=200)
+        elif "delivered" in data and data["delivered"] is False:
+            order.delivered = False
+            order.delivery_date = None
+            order.save()
+            return Response({"detail": _("Modified.")}, status=200)
+        else:
+            return Response({"detail": _("Bad request.")}, status=400)
