@@ -11,13 +11,18 @@
    - GET: return timeslot list id
    - POST: create a timeslot (admin only)
 - /pizza/timeslot/full: return timeslot list with their infos
-- /pizza/timeslot/<id>: get/update/delete a timeslot by id
+- /pizza/timeslot/<id>:
+   - GET: return timeslot by id
+   - DELETE: delete timeslot by id
 - /pizza/timeslot/next/: get the next timeslot
 - /pizza/order/:
    - GET: return order list id
    - POST: create an order (admin only, user can only use /pay)
 - /pizza/order/full
-- /pizza/order/<id>
+- /pizza/order/<id>:
+   - GET: get an order by id
+   - PATCH: update an order by id
+   - DELETE: delete an order by id
 """
 from django.urls import path
 
