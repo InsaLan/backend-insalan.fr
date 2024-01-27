@@ -6,6 +6,8 @@ from typing import List
 
 class PizzaSerializer(serializers.ModelSerializer):
     """Serializer for a pizza model"""
+    image = serializers.ImageField(required=False)
+
     class Meta:
         model = Pizza
         fields = "__all__"
@@ -25,7 +27,30 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         read_only_fields = ("id", )
-        fields = ("id", "user", "time_slot", "pizza", "price", "paid", "created_at", "delivered", "delivery_date")
+        fields = ("id", "user", "time_slot", "pizza", "payment_method", "price", "paid", "created_at", "delivered", "delivery_date")
+
+class CreateOrderSerializer(serializers.ModelSerializer):
+    """ Serializer for an order"""
+    pizza = serializers.ListField(required=True)
+
+    class Meta:
+        model = Order
+        read_only_fields = ("id", )
+        fields = ("id", "user", "time_slot", "pizza", "payment_method")
+
+    def create(self, validated_data):
+        """Create an order"""
+        pizza = validated_data.pop("pizza")
+        price = TimeSlot.objects.get(id=validated_data["time_slot"].id).external_price * len(pizza)
+        validated_data["price"] = price
+        order = Order.objects.create(**validated_data)
+        for p in pizza:
+            PizzaOrder.objects.create(order=order, pizza=Pizza.objects.get(id=p))
+        return order
+
+    def to_representation(self, instance):
+        """Turn a Django object into a serialized representation"""
+        return OrderSerializer(instance).data
 
 class OrderIdSerializer(serializers.ModelSerializer):
     """ Serializer for an order"""
@@ -48,7 +73,7 @@ class TimeSlotIdSerializer(serializers.ModelSerializer):
         """Turn a Django object into a serialized representation"""
         return instance.id
 
-class PizzaByOrderSerializer(serializers.ModelSerializer):
+class PizzaByTimeSlotSerializer(serializers.ModelSerializer):
     pizza = serializers.SerializerMethodField()
 
     class Meta:

@@ -256,7 +256,8 @@ class Order(models.Model):
     )
     delivery_date: models.DateField = models.DateField(
         verbose_name=_("Date de livraison"),
-        default=timezone.now,
+        default=None,
+        null=True,
     )
     created_at: models.DateTimeField = models.DateTimeField(
         verbose_name=_("Date de création"),
