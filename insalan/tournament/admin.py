@@ -4,13 +4,17 @@
 # "Too few public methods"
 # pylint: disable=R0903
 
+from typing import Any
 from django.contrib.auth import password_validation
 from django.contrib import admin, messages
+from django.db.models.fields.related import ForeignKey
+from django.forms.models import ModelChoiceField
+from django.http.request import HttpRequest
 from django.utils.translation import gettext as _
 from django import forms
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from django.urls import path, reverse
+from django.urls import path, reverse, resolve
 from django.http import Http404, HttpResponseRedirect
 from django.utils.html import escape
 from django.contrib.auth.forms import AdminPasswordChangeForm, UsernameField
@@ -21,7 +25,8 @@ from django.core.exceptions import PermissionDenied
 from django.views.decorators.debug import sensitive_post_parameters
 from django.utils.decorators import method_decorator
 
-from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus, Group
+from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus, Group, GroupMatch, KnockoutMatch, Bracket, Seeding
+from insalan.tournament.manage import create_group_matchs
 
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
 
@@ -462,10 +467,38 @@ class SubstituteAdmin(admin.ModelAdmin):
 
 admin.site.register(Substitute, SubstituteAdmin)
 
+
+class GroupTeamsInline(admin.TabularInline):
+    model = Seeding
+    extra = 1
+
+    def formfield_for_foreignkey(self, db_field: ForeignKey[Any], request: HttpRequest | None, **kwargs: Any) -> ModelChoiceField | None:
+        if db_field.name == "team":
+            resolved = resolve(request.path_info)
+            kwargs["queryset"] = Team.objects.filter(tournament=self.parent_model.objects.get(pk=resolved.kwargs["object_id"]).tournament)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 class GroupAdmin(admin.ModelAdmin):
     """Admin handler for Groups"""
 
     list_display = ("id", "name", "tournament")
     search_fields = ["name","tournament"]
+    inlines = [GroupTeamsInline]
+    actions = ["create_group_matchs_action"]
+
+    @admin.action(description=_("Créer les matchs des poules"))
+    def create_group_matchs_action(self,request,queryset):
+        for group in queryset:
+            create_group_matchs(group)
 
 admin.site.register(Group, GroupAdmin)
+
+
+class GroupMatchAdmin(admin.ModelAdmin):
+    """Admin handlet for group matchs"""
+
+    list_display = ("id", "status", "group")
+    search_fields = ["index_in_round","round_number"]
+    filter_horizontal = ("teams",)
+
+admin.site.register(GroupMatch, GroupMatchAdmin)
