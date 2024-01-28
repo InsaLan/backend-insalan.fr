@@ -353,11 +353,10 @@ class GroupSerializer(serializers.ModelSerializer):
 
         if create_matchs:
             create_group_matchs(teams,instance)
-        
+
         super().update(instance,validated_data)
 
         return instance
-        
 
 
 def create_group_matchs(teams,group):
@@ -370,7 +369,7 @@ def create_group_matchs(teams,group):
             return k
         else:
             return -(k+1)//2
-    
+
     for j in range(1,nb_round+1):
         if nb_match == 1:
             GroupMatch.objects.create(teams=teams,round_number=j,index_in_round=1,group=group)
