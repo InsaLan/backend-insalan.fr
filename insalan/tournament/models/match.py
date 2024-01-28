@@ -26,7 +26,7 @@ class BestofType(models.TextChoices):
 class Match(models.Model):
     teams = models.ManyToManyField(
         "Team",
-        verbose_name=_("Liste des équipes")
+        verbose_name=_("Liste des équipes"),
     )
     round_number = models.IntegerField(
         verbose_name=_("Numéro du round")
@@ -37,7 +37,8 @@ class Match(models.Model):
     status = models.CharField(
         max_length=10,
         default=MatchStatus.SCHEDULED,
-        choices=MatchStatus.choices
+        choices=MatchStatus.choices,
+        verbose_name = _("Status du match")
     )
     bo_type = models.CharField(
         max_length=5,
@@ -55,18 +56,6 @@ class Match(models.Model):
 
     class Meta:
         abstract = True
-
-
-class GroupMatch(Match):
-    group = models.ForeignKey(
-        "Group",
-        verbose_name=_("Poule"),
-        on_delete=models.CASCADE
-    )
-
-    class Meta:
-        verbose_name = _("Match de poule")
-        verbose_name_plural = _("Matchs de poule")
     
 
 class KnockoutMatch(Match):

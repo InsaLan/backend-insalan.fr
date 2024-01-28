@@ -9,10 +9,11 @@ from django.utils.translation import gettext_lazy as _
 from insalan.tickets.models import Ticket
 from insalan.user.models import User
 
-from . import tournament
 from . import player
 from . import manager
 from . import substitute
+
+from . import validators
 
 class Team(models.Model):
     """
@@ -54,13 +55,14 @@ class Team(models.Model):
         verbose_name=_("Capitaine"),
         related_name="team_captain",
     )
-    group = models.ForeignKey(
-        "Group",
-        verbose_name=_("Poule"),
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
+    # group = models.ForeignKey(
+    #     "Group",
+    #     verbose_name=_("Poule"),
+    #     on_delete=models.SET_NULL,
+    #     null=True,
+    #     blank=True
+    # )
+    # seeding = models.IntegerField()
     # bracket = models.ForeignKey(
     #     "Bracket",
     #     verbose_name=_("Arbre de tournoi"),
@@ -159,11 +161,11 @@ class Team(models.Model):
         """
         Assert that the tournament associated with the provided team is announced
         """
-        if not tournament_announced(self.tournament):
+        if not validators.tournament_announced(self.tournament):
             raise ValidationError(
                 _("Tournoi non annoncé")
             )
-        if tournament_registration_full(self.tournament, exclude=self.id):
+        if validators.tournament_registration_full(self.tournament, exclude=self.id):
             raise ValidationError(
                 _("Tournoi complet")
             )
