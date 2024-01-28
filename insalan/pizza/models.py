@@ -24,6 +24,7 @@ class Pizza(models.Model):
 
         verbose_name = _("Pizza")
         verbose_name_plural = _("Pizzas")
+        ordering = ["id"]
 
     id: int
     name: models.CharField = models.CharField(
@@ -63,6 +64,7 @@ class TimeSlot(models.Model):
 
         verbose_name = _("Créneau de commande")
         verbose_name_plural = _("Créneaux de commande")
+        ordering = ["id"]
 
     id: int
     delivery_time: models.DateTimeField = models.DateTimeField(
@@ -209,6 +211,7 @@ class Order(models.Model):
 
         verbose_name = _("Commande")
         verbose_name_plural = _("Commandes")
+        ordering = ["id"]
 
     id: int
     user: models.CharField = models.CharField(
