@@ -32,15 +32,16 @@ class OrderSerializer(serializers.ModelSerializer):
 class CreateOrderSerializer(serializers.ModelSerializer):
     """ Serializer for an order"""
     pizza = serializers.ListField(required=True)
+    type = serializers.CharField(required=True)
 
     class Meta:
         model = Order
         read_only_fields = ("id", )
-        fields = ("id", "user", "time_slot", "pizza", "payment_method")
+        fields = ("id", "user", "time_slot", "pizza", "type", "payment_method")
 
     def create(self, validated_data):
         """Create an order"""
-        price_type = validated_data.pop("type")
+        price_type = validated_data.pop('type')
         pizza = validated_data.pop("pizza")
 
         if price_type == "staff":
