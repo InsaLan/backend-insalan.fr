@@ -261,7 +261,11 @@ class PizzaEndpointsTestCase(TestCase):
         client.force_login(user=self.admin_user)
         response = client.post(
             reverse("order/list"),
-            {"time_slot": self.time_slot.id, "pizza": [self.pizza1.id]},
+            {
+                "time_slot": self.time_slot.id,
+                "pizza": [self.pizza1.id],
+                'type': 'staff',
+            },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["time_slot"], self.time_slot.id)
