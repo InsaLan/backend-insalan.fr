@@ -270,6 +270,25 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["time_slot"], self.time_slot.id)
         self.assertEqual(response.data["pizza"][0], self.pizza1.id)
+        self.assertEqual(response.data["price"], 5)
+        self.assertEqual(Order.objects.count(), 2)
+
+    def test_order_external_price_post(self):
+        """Test the order post endpoint"""
+        client = APIClient()
+        client.force_login(user=self.admin_user)
+        response = client.post(
+            reverse("order/list"),
+            {
+                "time_slot": self.time_slot.id,
+                "pizza": [self.pizza1.id],
+                'type': 'external',
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["time_slot"], self.time_slot.id)
+        self.assertEqual(response.data["pizza"][0], self.pizza1.id)
+        self.assertEqual(response.data["price"], 15)
         self.assertEqual(Order.objects.count(), 2)
 
     def test_order_post_unauthorized(self):
@@ -327,39 +346,6 @@ class PizzaEndpointsTestCase(TestCase):
         client.force_login(user=self.admin_user)
         response = client.get(reverse("order/detail", kwargs={"pk": 999}))
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_order_post(self):
-        """Test the order post endpoint"""
-        client = APIClient()
-        client.force_login(user=self.admin_user)
-        response = client.post(
-            reverse("order/list"),
-            {"time_slot": self.time_slot.id, "pizza": [self.pizza1.id]},
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["time_slot"], self.time_slot.id)
-        self.assertEqual(response.data["pizza"][0], self.pizza1.id)
-        self.assertEqual(Order.objects.count(), 2)
-
-    def test_order_post_unauthorized(self):
-        """Test the order post endpoint with unauthorized user"""
-        client = APIClient()
-        response = client.post(
-            reverse("order/list"),
-            {"time_slot": self.time_slot.id, "pizza": [self.pizza1.id]},
-        )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(Order.objects.count(), 1)
-
-    def test_order_post_not_found(self):
-        """Test the order post endpoint with wrong id"""
-        client = APIClient()
-        client.force_login(user=self.admin_user)
-        response = client.post(
-            reverse("order/list"), {"time_slot": 999, "pizza": [self.pizza1.id]}
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(Order.objects.count(), 1)
 
     def test_order_patch(self):
         """Test the order patch endpoint"""
