@@ -40,8 +40,15 @@ class CreateOrderSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Create an order"""
+        price_type = validated_data.pop("type")
         pizza = validated_data.pop("pizza")
-        price = TimeSlot.objects.get(id=validated_data["time_slot"].id).external_price * len(pizza)
+
+        if price_type == "staff":
+            price = TimeSlot.objects.get(id=validated_data["time_slot"].id).staff_price * len(pizza)
+        elif price_type == "player":
+            price = TimeSlot.objects.get(id=validated_data["time_slot"].id).player_price * len(pizza)
+        else:
+            price = TimeSlot.objects.get(id=validated_data["time_slot"].id).external_price * len(pizza)
         validated_data["price"] = price
         order = Order.objects.create(**validated_data)
         for p in pizza:
