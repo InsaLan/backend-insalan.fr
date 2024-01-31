@@ -114,7 +114,7 @@ class PaymentHandler(PaymentHooks):
         reg.save()
 
         # Send an email to the user
-        MailManager.get_mailer(EMAIL_AUTH["contact"][0]).send_ticket_mail(reg.user, tick)
+        MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_ticket_mail(reg.user, tick)
 
     @staticmethod
     def handle_manager_reg(reg: Manager):
@@ -129,7 +129,7 @@ class PaymentHandler(PaymentHooks):
         reg.save()
 
         # Send an email to the user
-        MailManager.get_mailer(EMAIL_AUTH["contact"][0]).send_ticket_mail(reg.user, tick)
+        MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_ticket_mail(reg.user, tick)
 
     @staticmethod
     def handle_substitute_reg(reg: Substitute):
@@ -144,7 +144,7 @@ class PaymentHandler(PaymentHooks):
         reg.save()
 
         # Send an email to the user
-        MailManager.get_mailer(EMAIL_AUTH["contact"][0]).send_ticket_mail(reg.user, tick)
+        MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_ticket_mail(reg.user, tick)
 
     @staticmethod
     def payment_failure(transaction, product, _count):
