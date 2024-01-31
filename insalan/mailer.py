@@ -60,14 +60,8 @@ class UserMailer:
         )
         email = EmailMessage(
             insalan.settings.EMAIL_SUBJECT_PREFIX + _("Confirmez votre courriel"),
-            _("Confirmez votre adresse de courriel en cliquant sur ")
-            + insalan.settings.PROTOCOL
-            + "://"
-            + insalan.settings.WEBSITE_HOST
-            + "/verification/"
-            + user
-            + "/"
-            + token,
+            _("Confirmez votre adresse de courriel en cliquant sur ") +
+            f"{insalan.settings.PROTOCOL}://{insalan.settings.WEBSITE_HOST}/verification/{user}/{token}",
             self.MAIL_FROM,
             [user_object.email],
             connection=connection,
@@ -95,17 +89,11 @@ class UserMailer:
         email = EmailMessage(
             insalan.settings.EMAIL_SUBJECT_PREFIX + _("Demande de ré-initialisation de mot de passe"),
             _(
-                "Une demande de ré-initialisation de mot de passe a été effectuée"
-                "pour votre compte. Si vous êtes à l'origine de cette demande,"
+                "Une demande de ré-initialisation de mot de passe a été effectuée "
+                "pour votre compte. Si vous êtes à l'origine de cette demande, "
                 "vous pouvez cliquer sur le lien suivant: "
-            )
-            + insalan.settings.PROTOCOL
-            + "://"
-            + insalan.settings.WEBSITE_HOST
-            + "/reset-password/"
-            + user
-            + "/"
-            + token,
+            ) +
+            f"{insalan.settings.PROTOCOL}://{insalan.settings.WEBSITE_HOST}/reset-password/{user}/{token}",
             self.MAIL_FROM,
             [user_object.email],
             connection=connection,
