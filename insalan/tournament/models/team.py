@@ -14,6 +14,7 @@ from . import manager
 from . import substitute
 
 from . import validators
+from . import payement_status as ps
 
 class Team(models.Model):
     """
@@ -152,7 +153,7 @@ class Team(models.Model):
 
             threshold = ceil((game.get_players_per_team()+1)/2)
 
-            paid_seats = len(players.filter(payment_status=PaymentStatus.PAID))
+            paid_seats = len(players.filter(payment_status=ps.PaymentStatus.PAID))
 
             self.validated = paid_seats >= threshold
             self.save()

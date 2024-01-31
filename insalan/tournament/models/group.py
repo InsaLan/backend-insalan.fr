@@ -78,10 +78,9 @@ class Seeding(models.Model):
         Group,
         on_delete=models.CASCADE
     )
-    team = models.ForeignKey(
+    team = models.OneToOneField(
         "Team",
         on_delete=models.CASCADE,
-        unique=True
     )
     seeding = models.IntegerField()
 
