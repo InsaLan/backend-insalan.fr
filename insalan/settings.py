@@ -225,7 +225,7 @@ CSRF_COOKIE_DOMAIN = '.' + getenv("WEBSITE_HOST", "localhost")
 # MAILER SETTINGS
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
-EMAIL_AUTH = json.loads(getenv("MAIL_AUTH", "{}"))
+EMAIL_AUTH = json.loads(getenv("MAIL_AUTH", '{"contact": {"from":"noreply@insalan.fr", "pass":"password", "host":"localhost", "port":587, "ssl":true}, "tournament": {"from":"noreply@insalan.fr", "pass":"password", "host":"localhost", "port":587, "ssl":true}}'))
 
 EMAIL_PORT = int(getenv("MAIL_PORT", "465"))
 EMAIL_USE_SSL = getenv("MAIL_SSL", "true").lower() in ["true", "1", "t", "y", "yes"]
