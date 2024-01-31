@@ -43,7 +43,7 @@ class Game(models.Model):
         default=0
     )
     team_per_match = models.IntegerField(
-        verbose_name=_("Nombre maximum d'équipe par matche"),
+        verbose_name=_("Nombre maximum d'équipe par match"),
         validators=[MinValueValidator(2)],
         default=2
     )

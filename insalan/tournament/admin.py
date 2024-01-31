@@ -25,7 +25,7 @@ from django.core.exceptions import PermissionDenied
 from django.views.decorators.debug import sensitive_post_parameters
 from django.utils.decorators import method_decorator
 
-from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus, Group, GroupMatch, KnockoutMatch, Bracket, Seeding
+from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus, Group, GroupMatch, KnockoutMatch, Bracket, Seeding, MatchStatus
 from insalan.tournament.manage import create_group_matchs
 
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
@@ -475,7 +475,8 @@ class GroupTeamsInline(admin.TabularInline):
     def formfield_for_foreignkey(self, db_field: ForeignKey[Any], request: HttpRequest | None, **kwargs: Any) -> ModelChoiceField | None:
         if db_field.name == "team":
             resolved = resolve(request.path_info)
-            kwargs["queryset"] = Team.objects.filter(tournament=self.parent_model.objects.get(pk=resolved.kwargs["object_id"]).tournament)
+            if "object_id" in resolved.kwargs:
+                kwargs["queryset"] = Team.objects.filter(tournament=self.parent_model.objects.get(pk=resolved.kwargs["object_id"]).tournament)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 class GroupAdmin(admin.ModelAdmin):
@@ -486,10 +487,18 @@ class GroupAdmin(admin.ModelAdmin):
     inlines = [GroupTeamsInline]
     actions = ["create_group_matchs_action"]
 
+    list_filter = ["tournament","tournament__event","tournament__game"]
+
     @admin.action(description=_("Créer les matchs des poules"))
     def create_group_matchs_action(self,request,queryset):
         for group in queryset:
+            matchs_status = GroupMatch.objects.filter(group=group).values_list("status", flat=True)
+            if MatchStatus.ONGOING in matchs_status or MatchStatus.COMPLETED in matchs_status:
+               self.message_user(request,_("Impossible de créer les matchs, des matchs existent déjà et sont en cours ou terminés."),messages.ERROR)
+               return
+ 
             create_group_matchs(group)
+            self.message_user(request,_("Matchs créés avec succes"))
 
 admin.site.register(Group, GroupAdmin)
 
@@ -500,5 +509,23 @@ class GroupMatchAdmin(admin.ModelAdmin):
     list_display = ("id", "status", "group")
     search_fields = ["index_in_round","round_number"]
     filter_horizontal = ("teams",)
+    actions = ["launch_group_matchs_action"]
+
+    list_filter = ["group","group__tournament","round_number"]
+
+    @admin.action(description=_("Lancer les matchs"))
+    def launch_group_matchs_action(self,request,queryset):
+        for match in queryset:
+            for team in match.teams.all():
+                team_matchs = GroupMatch.objects.filter(teams=team)
+                for team_math in team_matchs:
+                    if team_math.status == MatchStatus.ONGOING:
+                        self.message_user(request,_(f"L'équipe {team.name} est encore dans un match en cours"), messages.ERROR)
+                        return
+            
+            match.status = MatchStatus.ONGOING
+            match.save()
+        self.message_user(request,_("Les matchs ont bien été lancés"))
+
 
 admin.site.register(GroupMatch, GroupMatchAdmin)

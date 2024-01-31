@@ -9,12 +9,6 @@ class MatchStatus(models.TextChoices):
     ONGOING = "ONGOING", _("En cours")
     COMPLETED = "COMPLETED", _("Terminé")
 
-class BracketSet(models.TextChoices):
-    """Information on the bracket set, winner or looser"""
-
-    WINNER = "WINNER"
-    LOOSER = "LOOSER"
-
 class BestofType(models.TextChoices):
     """Best of type for a match"""
 
@@ -51,39 +45,12 @@ class Match(models.Model):
             default=0
         ),
         verbose_name=_("Liste des durées des parties du match"),
-        default=list
+        default=list,
+        blank=True
     )
 
     class Meta:
         abstract = True
-    
-
-class KnockoutMatch(Match):
-    bracket = models.ForeignKey(
-        "Bracket",
-        verbose_name=_("Arbre de tournoi"),
-        on_delete=models.CASCADE
-    )
-    bracket_set = models.CharField(
-        max_length=10,
-        default=BracketSet.WINNER,
-        choices=BracketSet.choices,
-        verbose_name=_("Type de tableau, gagnant ou perdant")
-    )
-    # winner_next = models.ForeignKey(
-    #     KnockoutMatch,
-    #     verbose_name=_("Match suivant pour le/les gagnants"),
-    #     null=True
-    # )
-    # looser_next = models.ForeignKey(
-    #     KnockoutMatch,
-    #     verbose_name=_("Match suivant pour le/les perdants"),
-    #     null=True
-    # )
-
-    class Meta:
-        verbose_name = _("Match dans un arbre")
-        verbose_name_plural = _("Matchs dans un arbre")
 
 class Score(models.Model):
     score = models.IntegerField(
