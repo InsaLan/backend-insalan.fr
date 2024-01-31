@@ -24,7 +24,7 @@ class TicketAdmin(admin.ModelAdmin):
         Action to send tickets to mail
         """
         for ticket in queryset:
-            MailManager.get_mailer(EMAIL_AUTH["contact"][0]).send_ticket_mail(ticket.user, ticket)
+            MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_ticket_mail(ticket.user, ticket)
         messages.info(request, _("Les tickets sélectionnés sont en cours d'envoi."))
 
 admin.site.register(Ticket, TicketAdmin)
