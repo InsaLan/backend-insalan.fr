@@ -169,7 +169,7 @@ class CustomUserAdmin(UserAdmin):
                 )
             )
         else:
-            MailManager.get_mailer(EMAIL_AUTH["contact"][0]).send_email_confirmation(user)
+            MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_email_confirmation(user)
             msg = _("The confirmation email was resent.")
             messages.success(request, msg)
             return HttpResponseRedirect(

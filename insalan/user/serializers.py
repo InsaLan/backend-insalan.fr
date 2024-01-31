@@ -87,7 +87,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     def create(self, data):
         user_object = User.object.create_user(**data)
         user_object.save()
-        MailManager.get_mailer(EMAIL_AUTH["contact"][0]).send_email_confirmation(user_object)
+        MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_email_confirmation(user_object)
         return user_object
 
 

@@ -924,7 +924,7 @@ class TournamentMailer(models.Model):
         # send the mail to every players
         for player in players:
             # send the mail
-            MailManager.get_mailer(EMAIL_AUTH["tournament"][0]).send_tournament_mail(
+            MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"]).send_tournament_mail(
                 player.user,
                 self.title,
                 self.content,

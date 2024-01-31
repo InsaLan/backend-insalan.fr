@@ -119,7 +119,7 @@ class UserMe(APIView):
 
         if "email" in data:
             user.email = UserManager.normalize_email(data["email"])
-            MailManager.get_mailer(EMAIL_AUTH["contact"][0]).send_email_confirmation(user)
+            MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_email_confirmation(user)
 
         if "first_name" in data:
             user.first_name = data["first_name"]
@@ -211,7 +211,7 @@ class AskForPasswordReset(APIView):
         """
         try:
             user_object: User = User.objects.get(email=request.data["email"])
-            MailManager.get_mailer(EMAIL_AUTH["contact"][0]).send_password_reset(user_object)
+            MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_password_reset(user_object)
         except User.DoesNotExist:
             pass
 
@@ -310,7 +310,7 @@ class ResendEmailConfirmView(APIView):
         if user_object.has_perm("email_active"):
             return Response({"msg": error_text}, status=status.HTTP_400_BAD_REQUEST)
 
-        MailManager.get_mailer(EMAIL_AUTH["contact"][0]).send_email_confirmation(user_object)
+        MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_email_confirmation(user_object)
         return Response()
 
 
