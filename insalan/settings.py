@@ -219,7 +219,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://api." + getenv("WEBSITE_HOST", "localhost"),
     "http://" + getenv("WEBSITE_HOST", "localhost"),
     "http://api." + getenv("WEBSITE_HOST", "localhost"),
-    "https://" + getenv("HELLOASSO_HOSTNAME", "localhost") # helloasso has be to trusted
+    "https://" + getenv("HELLOASSO_HOSTNAME", "localhost"), # helloasso has be to trusted
+    "https://gate." + getenv("WEBSITE_HOST", "localhost"),
 
 ]
 CSRF_COOKIE_DOMAIN = '.' + getenv("WEBSITE_HOST", "localhost")
