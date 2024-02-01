@@ -1,4 +1,4 @@
-from .bracket import Bracket, KnockoutMatch
+from .bracket import Bracket, KnockoutMatch, BracketSet, BracketType
 from .event import Event
 from .caster import Caster
 from .game import Game
