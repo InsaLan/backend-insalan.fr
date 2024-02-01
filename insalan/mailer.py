@@ -30,13 +30,13 @@ class UserMailer:
     """
     Send emails.
     """
-    def __init__(self, MAIL_HOST:str, MAIL_PORT:str, MAIL_FROM: str, MAIL_PASS: str, MAIL_SSL:bool, TEST: bool = False):
-        self.MAIL_HOST = MAIL_HOST
-        self.MAIL_PORT = MAIL_PORT
-        self.MAIL_SSL = MAIL_SSL
-        self.MAIL_FROM = MAIL_FROM
-        self.MAIL_PASS = MAIL_PASS
-        self.TEST = TEST
+    def __init__(self, mail_host:str, mail_port:str, mail_from: str, mail_pass: str, mail_ssl:bool, test: bool = False):
+        self.mail_host = mail_host
+        self.mail_port = mail_port
+        self.mail_ssl = mail_ssl
+        self.mail_from = mail_from
+        self.mail_pass = mail_pass
+        self.test = test
         self.queue = []
 
     def send_email_confirmation(self, user_object: User):
@@ -51,22 +51,22 @@ class UserMailer:
         user = user_object.username
 
         connection = get_connection(
-            host=self.MAIL_HOST,
-            port=self.MAIL_PORT,
-            password=self.MAIL_PASS,
+            host=self.mail_host,
+            port=self.mail_port,
+            password=self.mail_pass,
             fail_silently=False,
-            use_ssl=self.MAIL_SSL,
-            username=self.MAIL_FROM,
+            use_ssl=self.mail_ssl,
+            username=self.mail_from,
         )
         email = EmailMessage(
             insalan.settings.EMAIL_SUBJECT_PREFIX + _("Confirmez votre courriel"),
             _("Confirmez votre adresse de courriel en cliquant sur ") +
             f"{insalan.settings.PROTOCOL}://{insalan.settings.WEBSITE_HOST}/verification/{user}/{token}",
-            self.MAIL_FROM,
+            self.mail_from,
             [user_object.email],
             connection=connection,
         )
-        if self.TEST:
+        if self.test:
             email.send()
         else:
             self.queue.append(email)
@@ -80,11 +80,11 @@ class UserMailer:
 
         connection = get_connection(
             fail_silently=False,
-            username=self.MAIL_FROM,
-            password=self.MAIL_PASS,
-            host=self.MAIL_HOST,
-            port=self.MAIL_PORT,
-            use_ssl=self.MAIL_SSL,
+            username=self.mail_from,
+            password=self.mail_pass,
+            host=self.mail_host,
+            port=self.mail_port,
+            use_ssl=self.mail_ssl,
         )
         email = EmailMessage(
             insalan.settings.EMAIL_SUBJECT_PREFIX + _("Demande de ré-initialisation de mot de passe"),
@@ -94,11 +94,11 @@ class UserMailer:
                 "vous pouvez cliquer sur le lien suivant: "
             ) +
             f"{insalan.settings.PROTOCOL}://{insalan.settings.WEBSITE_HOST}/reset-password/{user}/{token}",
-            self.MAIL_FROM,
+            self.mail_from,
             [user_object.email],
             connection=connection,
         )
-        if self.TEST:
+        if self.test:
             email.send()
         else:
             self.queue.append(email)
@@ -109,43 +109,43 @@ class UserMailer:
         """
         connection = get_connection(
             fail_silently=False,
-            username=self.MAIL_FROM,
-            password=self.MAIL_PASS,
-            host=self.MAIL_HOST,
-            port=self.MAIL_PORT,
-            use_ssl=self.MAIL_SSL,
+            username=self.mail_from,
+            password=self.mail_pass,
+            host=self.mail_host,
+            port=self.mail_port,
+            use_ssl=self.mail_ssl,
         )
         email = EmailMessage(
             insalan.settings.EMAIL_SUBJECT_PREFIX + _("Vous avez été exclu.e de votre équipe"),
             _("Vous avez été exclu.e de l'équipe %s.") % team_name,
-            self.MAIL_FROM,
+            self.mail_from,
             [user_object.email],
             connection=connection,
         )
-        if self.TEST:
+        if self.test:
             email.send()
         else:
             self.queue.append(email)
 
     def send_ticket_mail(self, user_object: User, ticket: str):
         """
-        Send a mail to a user that has been kicked.
+        Send a mail with the ticket in attachment.
         """
 
         ticket_pdf = TicketManager.generate_ticket_pdf(ticket)
 
         connection = get_connection(
             fail_silently=False,
-            username=self.MAIL_FROM,
-            password=self.MAIL_PASS,
-            host=self.MAIL_HOST,
-            port=self.MAIL_PORT,
-            use_ssl=self.MAIL_SSL,
+            username=self.mail_from,
+            password=self.mail_pass,
+            host=self.mail_host,
+            port=self.mail_port,
+            use_ssl=self.mail_ssl,
         )
         email = EmailMessage(
             insalan.settings.EMAIL_SUBJECT_PREFIX + _("Votre billet pour l'InsaLan"),
             _("Votre inscription pour l'Insalan a été payée. Votre billet est disponible en pièce jointe. Vous pouvez retrouver davantages d'informations sur l'évènement sur le site internet de l'InsaLan."),
-            self.MAIL_FROM,
+            self.mail_from,
             [user_object.email],
             connection=connection,
         )
@@ -155,7 +155,7 @@ class UserMailer:
             "application/pdf"
         )
 
-        if self.TEST:
+        if self.test:
             email.send()
         else:
             self.queue.append(email)
@@ -166,23 +166,23 @@ class UserMailer:
         """
         connection = get_connection(
             fail_silently=False,
-            username=self.MAIL_FROM,
-            password=self.MAIL_PASS,
-            host=self.MAIL_HOST,
-            port=self.MAIL_PORT,
-            use_ssl=self.MAIL_SSL,
+            username=self.mail_from,
+            password=self.mail_pass,
+            host=self.mail_host,
+            port=self.mail_port,
+            use_ssl=self.mail_ssl,
         )
         email = EmailMessage(
             insalan.settings.EMAIL_SUBJECT_PREFIX + title,
             content,
-            self.MAIL_FROM,
+            self.mail_from,
             [user_object.email],
             connection=connection,
         )
         if attachment:
             email.attach(attachment.name, attachment.read())
 
-        if self.TEST:
+        if self.test:
             email.send()
         else:
             self.queue.append(email)
@@ -203,13 +203,13 @@ class MailManager:
     mailers = {}
 
     @staticmethod
-    def get_mailer(MAIL_FROM: str) -> UserMailer:
+    def get_mailer(mail_from: str) -> UserMailer:
         """
         Get a mailer for a specific email address.
         """
-        if MAIL_FROM not in MailManager.mailers:
+        if mail_from not in MailManager.mailers:
             return None
-        return MailManager.mailers[MAIL_FROM]
+        return MailManager.mailers[mail_from]
     
     @staticmethod
     def get_default_mailer() -> UserMailer:
@@ -221,11 +221,11 @@ class MailManager:
         return list(MailManager.mailers.values())[0]
 
     @staticmethod
-    def add_mailer(MAIL_HOST:str, MAIL_PORT: str, MAIL_FROM: str, MAIL_PASS: str, MAIL_SSL:bool, TEST: bool = False):
+    def add_mailer(mail_host:str, mail_port: str, mail_from: str, mail_pass: str, mail_ssl:bool, test: bool = False):
         """
         Add a mailer for a specific email address.
         """
-        MailManager.mailers[MAIL_FROM] = UserMailer(MAIL_HOST, MAIL_PORT, MAIL_FROM, MAIL_PASS, MAIL_SSL, TEST=TEST)
+        MailManager.mailers[mail_from] = UserMailer(mail_host, mail_port, mail_from, mail_pass, mail_ssl, test=test)
 
     @staticmethod
     def send_queued_mail():
@@ -240,16 +240,16 @@ def start_scheduler():
     logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
 
     # Check if we are in test mode
-    TEST = 'test' in sys.argv
-    print(TEST, file=sys.stderr)
+    test = 'test' in sys.argv
+    print(test, file=sys.stderr)
 
     # Add mailers
     for auth in insalan.settings.EMAIL_AUTH:
         mailer = insalan.settings.EMAIL_AUTH[auth]
-        MailManager.add_mailer(mailer["host"], mailer["port"], mailer["from"], mailer["pass"], mailer["ssl"], TEST=TEST)
+        MailManager.add_mailer(mailer["host"], mailer["port"], mailer["from"], mailer["pass"], mailer["ssl"], test=test)
 
     # Start scheduler
-    if not TEST:
+    if not test:
         scheduler = BackgroundScheduler()
         scheduler.add_job(MailManager.send_queued_mail, 'interval', seconds=30)
         scheduler.start()

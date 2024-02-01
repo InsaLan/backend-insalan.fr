@@ -862,6 +862,18 @@ class Caster(models.Model):
 
 
 class TournamentMailer(models.Model):
+    """
+    The TournamentMailer model is used to send emails to players of a tournament with filters.
+    
+    The filters are:
+    - tournament: the tournament of the players
+    - team_validated: if the players are in validated teams
+    - captains: if the players are captains
+
+    The save method is overriden to send the mail to every players matching the filters and not
+    actually save the object. The database table should be empty at all time.
+
+    """
     class Meta:
         verbose_name_plural = 'mailers'  # The name displayed in the admin sidebar
 
