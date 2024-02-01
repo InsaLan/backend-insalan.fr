@@ -13,19 +13,19 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from insalan.tournament.models import Event, Player, PaymentStatus, Manager
+from insalan.tournament.models import Event, Player, PaymentStatus, Manager, Substitute
 from insalan.user.models import User
 
 from .models import LangateReply, TournamentRegistration
 from .serializers import ReplySerializer
 
+from insalan.user.serializers import UserLoginSerializer
 
 class LangateUserView(CreateAPIView):
     """
     API endpoint used by the langate to authenticate and verify a user's data
     """
     authentication_classes = [SessionAuthentication]
-    permission_classes = [IsAuthenticated]
     serializer_class = ReplySerializer
 
     def post(self, request, *args, **kwargs):
@@ -45,10 +45,20 @@ class LangateUserView(CreateAPIView):
         Our response is lengthier, and should contain all of the information
         necessary for the langate to identify the user.
         """
-        # Name of the user
+        # authenticate the user
+        data = request.data
+        serializer = UserLoginSerializer(data=data, context={"request": request})
+        if serializer.is_valid():
+            user = serializer.check_validity(data)
+            if user is None:
+                return Response(
+                    {"user": [_("Nom d'utilisateur·rice ou mot de passe incorrect")]},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
         # If we reached here, they are authenticated correctly, so now we
         # fetch their data
-        gate_user = request.user
+        gate_user = data.get("username")
 
         # Attempt to determine what the event id is
         # How many ongoing events are there?
@@ -59,33 +69,8 @@ class LangateUserView(CreateAPIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        event_id = request.data.get("event_id")
-        if event_id is not None:
-            event_id = int(event_id)
-
-        # If there is only one event...
-        if len(ongoing_events) == 1:
-            # ...and there is none provided: use it
-            if event_id is not None and ongoing_events[0] != event_id:
-                return Response(
-                    {"err": _("Évènement demandé incompatible")},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            event_id = ongoing_events[0]
-        else:
-            if event_id is None:
-                return Response(
-                    {"err": _("Identifiant manquant")}, status=status.HTTP_400_BAD_REQUEST
-                )
-
-        if not event_id in ongoing_events:
-            return Response(
-                {"err": _("Évènement non en cours")},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         # Get the event
-        ev_obj = Event.objects.get(id=event_id)
+        ev_obj = Event.objects.get(id=ongoing_events[0])
         if not ev_obj.ongoing:
             return Response(
                 {"err": _("Évènement non en cours")},
@@ -96,7 +81,8 @@ class LangateUserView(CreateAPIView):
         user_obj = User.objects.get(username=gate_user)
         regs_pl = Player.objects.filter(user=user_obj, team__tournament__event=ev_obj)
         regs_man = Manager.objects.filter(user=user_obj, team__tournament__event=ev_obj)
-        regs = list(regs_pl) + list(regs_man)
+        regs_sub = Substitute.objects.filter(user=user_obj, team__tournament__event=ev_obj)
+        regs = list(regs_pl) + list(regs_man) + list(regs_sub)
 
         found_count = len(regs)
 

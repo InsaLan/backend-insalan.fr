@@ -19,7 +19,8 @@ class SimplifiedUserData:
     """
 
     username = models.CharField(max_length=100, blank=False)
-    name = models.CharField(max_length=100)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
     email = models.EmailField(verbose_name="email address", max_length=255, blank=False)
     is_staff = models.BooleanField()
     is_admin = models.BooleanField()
@@ -34,7 +35,8 @@ class SimplifiedUserData:
         """
         s_user_data = cls()
         s_user_data.username = user.get_username()
-        s_user_data.name = user.get_full_name()
+        s_user_data.first_name = user.first_name
+        s_user_data.last_name = user.last_name
         s_user_data.email = user.email
         s_user_data.is_staff = user.is_staff
         s_user_data.is_admin = user.is_superuser
@@ -51,6 +53,7 @@ class TournamentRegistration:
     team = models.CharField(max_length=25, blank=False)
     manager = models.BooleanField()
     has_paid = models.BooleanField()
+    email = models.EmailField(verbose_name="email address", max_length=255, blank=False)
 
 
 class LangateReply:
