@@ -529,3 +529,64 @@ class GroupMatchAdmin(admin.ModelAdmin):
 
 
 admin.site.register(GroupMatch, GroupMatchAdmin)
+
+
+class BracketAdmin(admin.ModelAdmin):
+    """Admin handle for Brackets"""
+
+    list_display = ("id", "name", "tournament")
+    search_fields = ["name","tournament","tournament__event","tournament__game"]
+    actions = ["create_empty_knockout_matchs_action","fill_knockout_matchs_action"]
+
+    list_filter = ["tournament","tournament__event"]
+
+    @admin.action(description=_("Créer les matchs"))
+    def create_empty_knockout_matchs_action(self,request,queryset):
+        for bracket in queryset:
+            if any([MatchStatus.SCHEDULED != m.status for m in KnockoutMatch.objects.filter(bracket=bracket)]):
+                self.message_user(request,_("Des matchs existent déjà et sont en cours ou terminés"))
+
+            create_empty_knockout_matchs(bracket)
+            self.message_user(request,_("Matchs créer avec succès"))
+
+    @admin.action(description=_("Remplir les matchs"))
+    def fill_knockout_matchs_action(self,request,queryset):
+        for bracket in queryset:
+            # fill_knockout_matchs(bracket)
+            pass
+
+admin.site.register(Bracket, BracketAdmin)
+
+class KnockoutMatchAdmin(admin.ModelAdmin):
+    """Admin handle for Knockout matchs"""
+
+    list_display = ("id", "bracket", "status")
+    filter_horizontal = ("teams",)
+    actions = [""]
+
+    list_filter = ["bracket", "bracket__tournament", "round_number", "index_in_round"]
+
+    @admin.action(description=_("Lancer les matchs"))
+    def launch_knockout_matchs_action(self,request,queryset):
+        for match in queryset:
+            for team in match.get_teams():
+                team_matchs = KnockoutMatch.objects.filter(teams=team,round_index__gt=match.round_number)
+                for team_match in team_matchs:
+                    if team_match.status == MatchStatus.ONGOING:
+                        self.message_user(request,_(f"L'équipe {team.name} est encore dans un match en cours"), messages.ERROR)
+                        return
+                    if team_match.status == MatchStatus.SCHEDULED:
+                        self.message_user(request,_(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"), messages.ERROR)
+                        return
+
+            if len(match.get_teams()) == 1:
+                match.status = MatchStatus.COMPLETED
+                # score
+            else:
+                match.status = MatchStatus.ONGOING
+
+            match.save()
+        self.message_user(request,_("Les matchs ont bien été lancés"))
+
+
+admin.site.register(KnockoutMatch, KnockoutMatchAdmin)
