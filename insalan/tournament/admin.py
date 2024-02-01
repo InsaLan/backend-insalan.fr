@@ -505,26 +505,34 @@ class GroupAdmin(admin.ModelAdmin):
 admin.site.register(Group, GroupAdmin)
 
 class GroupMatchAdmin(admin.ModelAdmin):
-    """Admin handlet for group matchs"""
+    """Admin handle for group matchs"""
 
-    list_display = ("id", "status", "group")
+    list_display = ("id", "group", "status")
     search_fields = ["index_in_round","round_number"]
     filter_horizontal = ("teams",)
     actions = ["launch_group_matchs_action"]
 
-    list_filter = ["group","group__tournament","round_number"]
+    list_filter = ["group","group__tournament","round_number","index_in_round"]
 
     @admin.action(description=_("Lancer les matchs"))
     def launch_group_matchs_action(self,request,queryset):
         for match in queryset:
-            for team in match.teams.all():
-                team_matchs = GroupMatch.objects.filter(teams=team)
-                for team_math in team_matchs:
-                    if team_math.status == MatchStatus.ONGOING:
+            for team in match.get_teams():
+                team_matchs = GroupMatch.objects.filter(teams=team,round_number__lt=match.round_number)
+                for team_match in team_matchs:
+                    if team_match.status == MatchStatus.ONGOING:
                         self.message_user(request,_(f"L'équipe {team.name} est encore dans un match en cours"), messages.ERROR)
                         return
-            
-            match.status = MatchStatus.ONGOING
+                    if team_match.status == MatchStatus.SCHEDULED:
+                        self.message_user(request,_(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"), messages.ERROR)
+                        return
+
+            if len(match.get_teams()) == 1:
+                match.status = MatchStatus.COMPLETED
+                # score de la team à changer
+            else:
+                match.status = MatchStatus.ONGOING
+
             match.save()
         self.message_user(request,_("Les matchs ont bien été lancés"))
 
