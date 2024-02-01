@@ -8,6 +8,7 @@ from insalan.tickets.models import Ticket
 from insalan.user.models import User
 
 from .payement_status import PaymentStatus
+from . import validators
 
 class Substitute(models.Model):
     """
@@ -83,15 +84,15 @@ class Substitute(models.Model):
         """
         user = self.user
         event = self.get_team().get_tournament().get_event()
-        if not unique_event_registration_validator(user,event, substitute=self.id):
+        if not validators.unique_event_registration_validator(user,event, substitute=self.id):
             raise ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
-        if max_substitue_per_team_reached(self.team, exclude=self.id):
+        if validators.max_substitue_per_team_reached(self.team, exclude=self.id):
             raise ValidationError(
                 _("Nombre maximum de remplaçants déjà atteint")
             )
-        if not tournament_announced(self.team.get_tournament()):
+        if not validators.tournament_announced(self.team.get_tournament()):
             raise ValidationError(
                 _("Tournoi non annoncé")
             )

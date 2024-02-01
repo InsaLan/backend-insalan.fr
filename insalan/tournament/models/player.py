@@ -7,7 +7,7 @@ from insalan.tickets.models import Ticket
 from insalan.user.models import User
 
 from .payement_status import PaymentStatus
-from . import team
+from . import team, validators
 
 class Player(models.Model):
     """
@@ -78,15 +78,15 @@ class Player(models.Model):
         """
         user = self.user
         event = self.team.get_tournament().get_event()
-        if not unique_event_registration_validator(user,event,player=self.id):
+        if not validators.unique_event_registration_validator(user,event,player=self.id):
             raise ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
-        if max_players_per_team_reached(self.team, exclude=self.id):
+        if validators.max_players_per_team_reached(self.team, exclude=self.id):
             raise ValidationError(
                 _("Équipe déjà remplie")
             )
-        if not tournament_announced(self.team.get_tournament()):
+        if not validators.tournament_announced(self.team.get_tournament()):
             raise ValidationError(
                 _("Tournoi non annoncé")
             )

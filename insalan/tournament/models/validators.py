@@ -3,13 +3,13 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.validators import ValidationError
 
 # from .event import Event
-from . import player
-from . import manager
-from . import substitute
+from . import player as play
+from . import manager as manage
+from . import substitute as sub
 
 def unique_event_registration_validator(user: User, event: "Event", player = None, manager = None, substitute = None):
     """Validate a unique registration per event"""
-    e_regs = player.Player.objects.filter(team__tournament__event=event,user=user).exclude(id=player).values("id").union(manager.Manager.objects.filter(team__tournament__event=event, user=user).exclude(id=manager).values("id")).union(substitute.Substitute.objects.filter(team__tournament__event=event, user=user).exclude(id=substitute).values("id"))
+    e_regs = play.Player.objects.filter(team__tournament__event=event,user=user).exclude(id=player).values("id").union(manage.Manager.objects.filter(team__tournament__event=event, user=user).exclude(id=manager).values("id")).union(sub.Substitute.objects.filter(team__tournament__event=event, user=user).exclude(id=substitute).values("id"))
     if len(e_regs) > 0:
         return False
     return True
