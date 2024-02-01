@@ -55,6 +55,11 @@ class LangateUserView(CreateAPIView):
                     {"user": [_("Nom d'utilisateur·rice ou mot de passe incorrect")]},
                     status=status.HTTP_404_NOT_FOUND,
                 )
+        else:
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
+
 
         # If we reached here, they are authenticated correctly, so now we
         # fetch their data
