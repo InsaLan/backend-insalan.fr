@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
+from typing import List
 
 class MatchStatus(models.TextChoices):
     """Information about the status of a match"""
@@ -51,6 +52,9 @@ class Match(models.Model):
 
     class Meta:
         abstract = True
+
+    def get_teams(self) -> List["Team"]:
+        return self.teams.all()
 
 class Score(models.Model):
     score = models.IntegerField(
