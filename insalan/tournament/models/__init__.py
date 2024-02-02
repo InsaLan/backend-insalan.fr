@@ -4,7 +4,7 @@ from .caster import Caster
 from .game import Game
 from .group import Group, Seeding, GroupMatch
 from .manager import Manager
-from .match import MatchStatus
+from .match import MatchStatus, Score
 from .payement_status import PaymentStatus
 from .player import Player
 from .substitute import Substitute

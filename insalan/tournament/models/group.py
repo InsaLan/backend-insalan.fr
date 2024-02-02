@@ -67,7 +67,8 @@ class Group(models.Model):
         leaderboard = []
 
         for team in self.get_teams():
-            score = sum(GroupMatchScore.objects.filter(team=team,match__group=self).values_list("score",flat=True))
+            group_matchs = GroupMatch.filter(teams=team,group=self)
+            score = sum(Score.objects.filter(team=team,match__in=group_matchs).values_list("score",flat=True))
             leaderboard.append(tuple([team,score]))
 
         return leaderboard
@@ -96,13 +97,13 @@ class GroupMatch(match.Match):
         verbose_name = _("Match de poule")
         verbose_name_plural = _("Matchs de poule")
 
-class GroupMatchScore(models.Model):
-    score = models.IntegerField()
-    match = models.ForeignKey(
-        GroupMatch,
-        on_delete=models.CASCADE
-    )
-    team = models.ForeignKey(
-        "Team",
-        on_delete=models.CASCADE
-    )
+# class GroupMatchScore(models.Model):
+#     score = models.IntegerField()
+#     match = models.ForeignKey(
+#         GroupMatch,
+#         on_delete=models.CASCADE
+#     )
+#     team = models.ForeignKey(
+#         "Team",
+#         on_delete=models.CASCADE
+#     )
