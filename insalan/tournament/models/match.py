@@ -22,6 +22,7 @@ class Match(models.Model):
     teams = models.ManyToManyField(
         "Team",
         verbose_name=_("Liste des équipes"),
+        through="Score"
     )
     round_number = models.IntegerField(
         verbose_name=_("Numéro du round")
@@ -50,32 +51,46 @@ class Match(models.Model):
         blank=True
     )
 
-    class Meta:
-        abstract = True
+    # class Meta:
+    #     abstract = True
 
     def get_teams(self) -> List["Team"]:
         return self.teams.all()
 
 class Score(models.Model):
-    score = models.IntegerField(
-        verbose_name=_("Score")
-    )
     team = models.ForeignKey(
         "Team",
         verbose_name=_("Équipe"),
         on_delete=models.CASCADE
     )
-    group_match = models.ForeignKey(
-        "Group",
+    match = models.ForeignKey(
+        Match,
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        verbose_name=_("Match de poule lié à ce score")
+        verbose_name=_("Match")
     )
-    bracket_match = models.ForeignKey(
-        "Bracket",
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        verbose_name=_("Match dans un arbre lié à ce score")
+    score = models.IntegerField(
+        verbose_name=_("Score"),
+        default=0
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["team","match"],
+                name="no_duplicate_team_in_a_match"
+            )
+        ]
+    # group_match = models.ForeignKey(
+    #     "Group",
+    #     on_delete=models.CASCADE,
+    #     null=True,
+    #     blank=True,
+    #     verbose_name=_("Match de poule lié à ce score")
+    # )
+    # bracket_match = models.ForeignKey(
+    #     "Bracket",
+    #     on_delete=models.CASCADE,
+    #     null=True,
+    #     blank=True,
+    #     verbose_name=_("Match dans un arbre lié à ce score")
+    # )

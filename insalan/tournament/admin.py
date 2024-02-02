@@ -27,7 +27,7 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.utils.decorators import method_decorator
 
 from insalan.mailer import MailManager
-from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus, Group, GroupMatch, KnockoutMatch, Bracket, Seeding, MatchStatus, TournamentMailer
+from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus, Group, GroupMatch, KnockoutMatch, Bracket, Seeding, MatchStatus, Score, TournamentMailer
 from insalan.tournament.manage import create_group_matchs, create_empty_knockout_matchs
 
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
@@ -481,6 +481,10 @@ class GroupTeamsInline(admin.TabularInline):
                 kwargs["queryset"] = Team.objects.filter(tournament=self.parent_model.objects.get(pk=resolved.kwargs["object_id"]).tournament)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
+class ScoreInline(admin.TabularInline):
+    model = Score
+    extra = 0
+
 class GroupAdmin(admin.ModelAdmin):
     """Admin handler for Groups"""
 
@@ -509,7 +513,8 @@ class GroupMatchAdmin(admin.ModelAdmin):
 
     list_display = ("id", "group", "status")
     search_fields = ["index_in_round","round_number"]
-    filter_horizontal = ("teams",)
+    # filter_horizontal = ("teams",)
+    inlines = [ScoreInline]
     actions = ["launch_group_matchs_action"]
 
     list_filter = ["group","group__tournament","round_number","index_in_round"]
@@ -529,7 +534,9 @@ class GroupMatchAdmin(admin.ModelAdmin):
 
             if len(match.get_teams()) == 1:
                 match.status = MatchStatus.COMPLETED
-                # score de la team à changer
+                score = Score.objects.get(team=match.get_teams()[0],match=match)
+                score.score = 1
+                score.save()
             else:
                 match.status = MatchStatus.ONGOING
 
@@ -639,7 +646,9 @@ class KnockoutMatchAdmin(admin.ModelAdmin):
 
             if len(match.get_teams()) == 1:
                 match.status = MatchStatus.COMPLETED
-                # score
+                score = Score.objects.get(team=match.get_teams()[0],match=match)
+                score.score = 1
+                score.save()
             else:
                 match.status = MatchStatus.ONGOING
 
