@@ -8,6 +8,7 @@ from .match import MatchStatus, Score
 from .payement_status import PaymentStatus
 from .player import Player
 from .substitute import Substitute
+from .swiss import SwissRound, SwissSeeding, SwissMatch
 from .team import Team
 from .tournament import Tournament, in_thirty_days
 from .mailer import TournamentMailer
