@@ -107,10 +107,10 @@ def qrcode(request: HttpRequest, token: str) -> HttpResponse:
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def generate_pdf(request: HttpRequest, id: str) -> JsonResponse:
+def generate_pdf(request: HttpRequest, token: str) -> JsonResponse:
     """Generate a pdf ticket for the given user id."""
     try:
-        ticket = Ticket.objects.get(id=id)
+        ticket = Ticket.objects.get(token=uuid.UUID(token))
     except Ticket.DoesNotExist:
         return JsonResponse({'err': _("Ticket non trouvé")},
                             status=status.HTTP_404_NOT_FOUND)
