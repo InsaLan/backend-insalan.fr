@@ -18,7 +18,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 from insalan.user.models import User
-from .models import Ticket
+from .models import Ticket, TicketManager
 
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
@@ -104,3 +104,20 @@ def qrcode(request: HttpRequest, token: str) -> HttpResponse:
     ticket_qrcode.save(buffer)
 
     return HttpResponse(buffer.getvalue().decode(), content_type="image/svg+xml")
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def generate_pdf(request: HttpRequest, id: str) -> JsonResponse:
+    """Generate a pdf ticket for the given user id."""
+    try:
+        ticket = Ticket.objects.get(id=id)
+    except Ticket.DoesNotExist:
+        return JsonResponse({'err': _("Ticket non trouvé")},
+                            status=status.HTTP_404_NOT_FOUND)
+
+    if ticket.user != request.user:
+        return JsonResponse({'err': _("Vous n'avez pas accès à ce ticket")},
+                            status=status.HTTP_403_FORBIDDEN)
+
+    pdf = TicketManager.generate_ticket_pdf(ticket)
+    return HttpResponse(pdf, content_type='application/pdf')
