@@ -6,12 +6,13 @@
 
 from django.contrib.auth import password_validation
 from django.contrib import admin, messages
+from django.db.models.query import QuerySet
 from django.utils.translation import gettext as _
 from django import forms
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.urls import path, reverse
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpRequest, HttpResponseRedirect
 from django.utils.html import escape
 from django.contrib.auth.forms import AdminPasswordChangeForm, UsernameField
 from django.contrib.admin.options import IS_POPUP_VAR
@@ -22,6 +23,7 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.utils.decorators import method_decorator
 
 from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus, TournamentMailer
+from insalan.mailer import MailManager
 
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
 
@@ -466,6 +468,9 @@ class MailerAdmin(admin.ModelAdmin):
     """
     Admin handler for TournamentMailer
     """
+    exclude = ('mail', 'number')
+    list_display = ('mail', 'number')
+
     def has_change_permission(self, request, obj=None):
         return False
 
@@ -473,19 +478,35 @@ class MailerAdmin(admin.ModelAdmin):
         return False
 
     def add_view(self, request, form_url="", extra_context=None):
+        super().add_view(request, form_url, extra_context)
         return self.changeform_view(request, None, form_url, {
             'show_save_and_add_another': False,
             'show_save_and_continue': False,
-            'title': _('Envoyer un mail')
-        })
+            'title': _('Envoyer un mail'),
+    })
 
     # replace the list url with the add one
     def get_urls(self):
-        urls = super().get_urls()
         custom_urls = [
-            path('', self.admin_site.admin_view(self.add_view), name='mailer_add'),
+            path('add/', self.admin_site.admin_view(self.add_view), name='tournament_tournamentmailer_add'),
+            path('', self.admin_site.admin_view(self.changelist_view), name='tournament_tournamentmailer_changelist'),
         ]
-        return custom_urls + urls
+        return custom_urls
+
+    def get_queryset(self, request: HttpRequest) -> QuerySet:
+        # remove everything from the queryset
+        TournamentMailer.objects.all().delete()
+
+        # create an object for each mailer
+        for mailer in MailManager.mailers.values():
+            mailer_obj = TournamentMailer.objects.create(
+                mail=mailer.mail_from,
+                number=len(mailer.queue)
+            )
+            mailer_obj.save()
+
+        # return the queryset
+        return TournamentMailer.objects.all()
 
     def response_add(self, request, obj, post_url_continue=None):
         messages.info(request, _("Le mail est en cours d'envoi"))
