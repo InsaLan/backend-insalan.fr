@@ -877,6 +877,20 @@ class TournamentMailer(models.Model):
     class Meta:
         verbose_name_plural = 'mailers'  # The name displayed in the admin sidebar
 
+
+    mail = models.CharField(
+        verbose_name=_("Mail"),
+        max_length=100,
+        null=False,
+        blank=True,
+        default="",
+    )
+    number = models.IntegerField(
+        verbose_name=_("Nombre de mails dans la file"),
+        null=False,
+        blank=True,
+        default=0,
+    )
     tournament = models.ForeignKey(
         Tournament,
         verbose_name=_("Tournoi"),
@@ -917,6 +931,8 @@ class TournamentMailer(models.Model):
 
     def save(self, *args, **kwargs):
         """Override default save of TournamentMailer"""
+        if self.mail != "":
+            return super().save(*args, **kwargs)
         # get every players of the ongoing event
         players = Player.objects.filter(team__tournament__event__ongoing=True)
         # if the tournament is specified, filter by tournament
