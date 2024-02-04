@@ -25,8 +25,8 @@ from django.core.exceptions import PermissionDenied
 from django.views.decorators.debug import sensitive_post_parameters
 from django.utils.decorators import method_decorator
 
-from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus, Group, GroupMatch, KnockoutMatch, Bracket, Seeding, MatchStatus, Score
-from insalan.tournament.manage import create_group_matchs, create_empty_knockout_matchs
+from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus, Group, GroupMatch, KnockoutMatch, Bracket, Seeding, MatchStatus, Score, SwissRound, SwissMatch, SwissSeeding
+from insalan.tournament.manage import create_group_matchs, create_empty_knockout_matchs, create_swiss_matchs
 
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
 
@@ -607,3 +607,49 @@ class KnockoutMatchAdmin(admin.ModelAdmin):
 
 
 admin.site.register(KnockoutMatch, KnockoutMatchAdmin)
+
+
+class SwissSeedingInline(admin.TabularInline):
+    model = SwissSeeding
+    extra = 0
+
+    def formfield_for_foreignkey(self, db_field: ForeignKey[Any], request: HttpRequest | None, **kwargs: Any) -> ModelChoiceField | None:
+        if db_field.name == "team":
+            resolved = resolve(request.path_info)
+            if "object_id" in resolved.kwargs:
+                kwargs["queryset"] = Team.objects.filter(tournament=self.parent_model.objects.get(pk=resolved.kwargs["object_id"]).tournament)
+        return super().formfield_for_foreignkey(db_field,request,**kwargs)
+
+class SwissRoundAdmin(admin.ModelAdmin):
+    """Admin handle for Swiss Round"""
+
+    list_display = ("id", "tournament")
+    search_fields = ["tournament"]
+    inlines = [SwissSeedingInline]
+    actions = ["create_swiss_matchs_action"]
+    
+    list_filter = ["tournament","tournament__game","tournament__event"]
+
+    @admin.action(description=_("Créer les matchs du système suisse"))
+    def create_swiss_matchs_action(self,request,queryset):
+        for swiss in queryset:
+            matchs_status = SwissMatch.objects.filter(swiss=swiss).values_list("status", flat=True)
+            if any([status != MatchStatus.SCHEDULED for status in matchs_status]):
+                self.message_user(request,_("Des matchs existent déjà et sont en cours ou terminés"))
+                return
+
+            create_swiss_matchs(swiss)
+            self.message_user(request,_("Matchs créés avec succès"))
+
+admin.site.register(SwissRound,SwissRoundAdmin)
+
+class SwissMatchAdmin(admin.ModelAdmin):
+    """Admin handle for Swiss matchs"""
+
+    list_display = ("id","swiss","status")
+    inlines = [ScoreInline]
+    actions = []
+
+    list_filter = ["swiss", "swiss__tournament","round_number","index_in_round"]
+
+admin.site.register(SwissMatch, SwissMatchAdmin)
