@@ -13,10 +13,10 @@ def create_group_matchs(group: Group):
     for gmatch in GroupMatch.objects.filter(group=group):
         gmatch.delete()
 
-    for round_n in range(nb_rounds):
+    for round_idx in range(nb_rounds):
         matchs = []
-        for match_n in range(nb_matchs):
-            matchs.append(GroupMatch.objects.create(round_number=round_n+1,index_in_round=match_n+1,group=group))
+        for match_idx in range(nb_matchs):
+            matchs.append(GroupMatch.objects.create(round_number=round_idx+1,index_in_round=match_idx+1,group=group))
         
         matchs += matchs[::-1]
 
