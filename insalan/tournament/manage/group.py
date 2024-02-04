@@ -8,26 +8,21 @@ def create_group_matchs(group: Group):
     nb_matchs = math.ceil(len(teams)/team_per_match)
     nb_rounds = group.get_nb_rounds()
 
+    teams += [None]*(nb_matchs*team_per_match-len(teams))
+
     for gmatch in GroupMatch.objects.filter(group=group):
         gmatch.delete()
 
-    def index(k,n_match):
-        if k%2 == 0:
-            return k + n_match*team_per_match
-        else:
-            return -(k+1)//2 + n_match*team_per_match
+    for round_n in range(nb_rounds):
+        matchs = []
+        for match_n in range(nb_matchs):
+            matchs.append(GroupMatch.objects.create(round_number=round_n+1,index_in_round=match_n+1,group=group))
+        
+        matchs += matchs[::-1]
 
-    for round in range(1,nb_rounds+1):
-        if nb_matchs == 1:
-            gmatch = GroupMatch.objects.create(round_number=round,index_in_round=1,group=group)
-            for team in teams:
-                gmatch.teams.add(team)
-        else:
-            for n_match in range(nb_matchs):
-                match_teams = [teams[index(k,n_match)] for k in range(team_per_match) if k == 1 or (abs(index(k,n_match))+abs(index(k-1,n_match)) + 1) <= len(teams)]
-                gmatch = GroupMatch.objects.create(round_number=round,index_in_round=n_match+1,group=group)
-                for team in match_teams:
-                    gmatch.teams.add(team)
-            
-            if len(teams) > 2:
-                teams = [teams[0]] + teams[2:] + [teams[1]]
+        for i,team in enumerate(teams):
+            if team != None:
+                matchs[i%(nb_matchs*2)].teams.add(team)
+
+        if len(teams) > 2:
+            teams.insert(1,teams.pop())
