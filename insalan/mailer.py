@@ -193,8 +193,13 @@ class UserMailer:
         """
         if len(self.queue) == 0:
             return
-        self.queue[0].send()
-        self.queue.pop(0)
+        try:
+            self.queue[0].send()
+            self.queue.pop(0)
+        except Exception as e:
+            print("Error sending mail", e, file=sys.stderr)
+            mail = self.queue.pop(0)
+            self.queue.append(mail)
 
 class MailManager:
     """
