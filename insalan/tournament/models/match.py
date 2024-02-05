@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
 from typing import List
+import math
 
 class MatchStatus(models.TextChoices):
     """Information about the status of a match"""
@@ -17,6 +18,7 @@ class BestofType(models.TextChoices):
     BO3 = "BO3", _("Série de 3")
     BO5 = "BO5", _("Série de 5")
     BO7 = "BO7", _("Série de 7")
+    RANKING = "RANKING", _("Classement")
 
 class Match(models.Model):
     teams = models.ManyToManyField(
@@ -53,9 +55,24 @@ class Match(models.Model):
 
     # class Meta:
     #     abstract = True
+    
+    def get_nb_teams(self) -> int:
+        return len(self.get_teams())
 
     def get_teams(self) -> List["Team"]:
         return self.teams.all()
+
+    def get_max_score(self) -> int:
+        if self.bo_type == BestofType.RANKING:
+            return self.get_nb_teams()
+
+        return int(self.bo_type[2])
+
+    def get_winning_score(self) -> int:
+        if self.bo_type == BestofType.RANKING:
+            return math.ceil(self.get_nb_teams()/2)
+        
+        return math.ceil(self.get_max_score()/2)
 
 class Score(models.Model):
     team = models.ForeignKey(
