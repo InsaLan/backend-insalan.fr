@@ -93,13 +93,22 @@ class TimeSlot(models.Model):
         default=False
     )
     player_price: models.FloatField = models.DecimalField(
-        verbose_name=_("Prix pour les joueurs")
+        verbose_name=_("Prix pour les joueurs"),
+        default=0.0,
+        max_digits=5,
+        decimal_places=2,
     )
     staff_price: models.FloatField = models.DecimalField(
-        verbose_name=_("Prix pour les staffs")
+        verbose_name=_("Prix pour les staffs"),
+        default=0.0,
+        max_digits=5,
+        decimal_places=2,
     )
     external_price: models.FloatField = models.DecimalField(
-        verbose_name=_("Prix pour les externes")
+        verbose_name=_("Prix pour les externes"),
+        default=0.0,
+        max_digits=5,
+        decimal_places=2,
     )
 
     player_product: models.ForeignKey = models.ForeignKey(
