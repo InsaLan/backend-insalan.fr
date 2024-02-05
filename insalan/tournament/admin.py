@@ -697,8 +697,32 @@ class SwissMatchAdmin(admin.ModelAdmin):
 
     list_display = ("id","swiss","status")
     inlines = [ScoreInline]
-    actions = []
+    actions = ["launch_swiss_matchs_action"]
 
     list_filter = ["swiss", "swiss__tournament","round_number","index_in_round"]
+
+    @admin.action(description=_("Lancer les matchs"))
+    def launch_swiss_matchs_action(self,request,queryset):
+        for match in queryset:
+            for team in match.get_teams():
+                team_matchs = SwissMatch.objects.filter(teams=team,round_number__lt=match.round_number)
+                for team_match in team_matchs:
+                    if team_match.status == MatchStatus.ONGOING:
+                        self.message_user(request,_(f"L'équipe {team.name} est encore dans un match en cours"), messages.ERROR)
+                        return
+                    if team_match.status == MatchStatus.SCHEDULED:
+                        self.message_user(request,_(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"), messages.ERROR)
+                        return
+
+            if len(match.get_teams()) == 1:
+                match.status = MatchStatus.COMPLETED
+                score = Score.objects.get(team=match.get_teams()[0],match=match)
+                score.score = 1
+                score.save()
+            else:
+                match.status = MatchStatus.ONGOING
+
+            match.save()
+        self.message_user(request,_(f"Les matchs ont bien été lancés, {match.get_max_score()}"))
 
 admin.site.register(SwissMatch, SwissMatchAdmin)
