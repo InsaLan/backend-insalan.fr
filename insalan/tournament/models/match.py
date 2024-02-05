@@ -39,7 +39,7 @@ class Match(models.Model):
         verbose_name = _("Status du match")
     )
     bo_type = models.CharField(
-        max_length=5,
+        max_length=10,
         default=BestofType.BO1,
         choices=BestofType.choices,
         verbose_name=_("Type de série")
