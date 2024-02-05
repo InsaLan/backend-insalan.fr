@@ -250,10 +250,17 @@ class PizzaEndpointsTestCase(TestCase):
     def test_order_list(self):
         """Test the order list endpoint"""
         client = APIClient()
+        client.force_login(user=self.admin_user)
         response = client.get(reverse("order/list"))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data["results"]), 1)
         self.assertEqual(response.data["results"][0], self.order.id)
+
+    def test_order_list_unauthorized(self):
+        """Test the order list endpoint with unauthorized user"""
+        client = APIClient()
+        response = client.get(reverse("order/list"))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_order_post(self):
         """Test the order post endpoint"""

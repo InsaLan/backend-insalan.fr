@@ -92,13 +92,13 @@ class TimeSlot(models.Model):
         verbose_name=_("Créneau terminé"),
         default=False
     )
-    player_price: models.FloatField = models.FloatField(
+    player_price: models.FloatField = models.DecimalField(
         verbose_name=_("Prix pour les joueurs")
     )
-    staff_price: models.FloatField = models.FloatField(
+    staff_price: models.FloatField = models.DecimalField(
         verbose_name=_("Prix pour les staffs")
     )
-    external_price: models.FloatField = models.FloatField(
+    external_price: models.FloatField = models.DecimalField(
         verbose_name=_("Prix pour les externes")
     )
 
@@ -241,12 +241,12 @@ class Order(models.Model):
         verbose_name=_("Moyen de paiement"),
         max_length=2,
         choices=[
-            ("CA", _("Carte")),
+            ("CB", _("Carte")),
             ("CH", _("Chèque")),
             ("ES", _("Espèces")),
             ("LI", _("Lyfpay")),
         ],
-        default="CA",
+        default="CB",
     )
     price: models.FloatField = models.FloatField(verbose_name=_("Prix"))
     paid: models.BooleanField = models.BooleanField(

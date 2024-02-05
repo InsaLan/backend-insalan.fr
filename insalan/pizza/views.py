@@ -147,7 +147,7 @@ class NextTimeSlot(generics.ListAPIView):
 class OrderList(generics.ListCreateAPIView):
     """List all orders"""
     queryset = Order.objects.all()
-    permission_classes = [permissions.IsAdminUser | ReadOnly]
+    permission_classes = [permissions.IsAdminUser]
 
     def get_serializer_class(self):
         if self.request.method == "GET":

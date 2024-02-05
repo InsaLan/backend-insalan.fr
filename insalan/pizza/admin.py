@@ -4,7 +4,7 @@ from .models import Pizza, TimeSlot, Order, PizzaOrder
 
 class PizzaAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "ingredients")
-    search_fields = ["name", "ingredients"]
+    search_fields = ["name", "ingredients", "allergens"]
 
 admin.site.register(Pizza, PizzaAdmin)
 
