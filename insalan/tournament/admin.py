@@ -534,7 +534,7 @@ class GroupMatchAdmin(admin.ModelAdmin):
             if len(match.get_teams()) == 1:
                 match.status = MatchStatus.COMPLETED
                 score = Score.objects.get(team=match.get_teams()[0],match=match)
-                score.score = 1
+                score.score = match.get_winning_score()
                 score.save()
             else:
                 match.status = MatchStatus.ONGOING
@@ -597,7 +597,7 @@ class KnockoutMatchAdmin(admin.ModelAdmin):
             if len(match.get_teams()) == 1:
                 match.status = MatchStatus.COMPLETED
                 score = Score.objects.get(team=match.get_teams()[0],match=match)
-                score.score = 1
+                score.score = match.get_winning_score()
                 score.save()
             else:
                 match.status = MatchStatus.ONGOING
@@ -668,12 +668,12 @@ class SwissMatchAdmin(admin.ModelAdmin):
             if len(match.get_teams()) == 1:
                 match.status = MatchStatus.COMPLETED
                 score = Score.objects.get(team=match.get_teams()[0],match=match)
-                score.score = 1
+                score.score = match.get_winning_score()
                 score.save()
             else:
                 match.status = MatchStatus.ONGOING
 
             match.save()
-        self.message_user(request,_(f"Les matchs ont bien été lancés, {match.get_max_score()}"))
+        self.message_user(request,_("Les matchs ont bien été lancés"))
 
 admin.site.register(SwissMatch, SwissMatchAdmin)
