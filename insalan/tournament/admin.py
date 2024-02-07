@@ -25,7 +25,7 @@ from django.core.exceptions import PermissionDenied
 from django.views.decorators.debug import sensitive_post_parameters
 from django.utils.decorators import method_decorator
 
-from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus, Group, GroupMatch, KnockoutMatch, Bracket, Seeding, MatchStatus, Score, SwissRound, SwissMatch, SwissSeeding, BestofType
+from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus, Group, GroupMatch, KnockoutMatch, Bracket, Seeding, MatchStatus, Score, SwissRound, SwissMatch, SwissSeeding, BestofType, BracketSet
 from insalan.tournament.manage import create_group_matchs, create_empty_knockout_matchs, create_swiss_matchs
 
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
@@ -204,7 +204,7 @@ class TeamTournamentFilter(admin.SimpleListFilter):
     """
     This filter is used to only show teams from the selected tournament
     """
-    title = _('Tournament')
+    title = _('Tournoi')
     parameter_name = 'tournament'
 
     def lookups(self, request, model_admin):
@@ -497,6 +497,52 @@ def update_to_ranking_action(modeladmin,request,queryset):
     modeladmin.message_user(request,_("Les matchs ont bien été mis à jour"))
 
 
+class RoundNumberFilter(admin.SimpleListFilter):
+    """Filter for group and swiss match round number"""
+    title = _("numéro de round")
+    parameter_name = "round_number"
+
+    def lookups(self, request, model_admin):
+        return [(str(i),f"Round {i}") for i in set(model_admin.get_queryset(request).values_list("round_number", flat=True))]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(round_number=self.value())
+        return queryset
+
+
+class BracketMatchFilter(admin.SimpleListFilter):
+    """Filter for bracket matchs"""
+    title = _("niveau dans l'arbre")
+    parameter_name = "round_number"
+
+    def lookups(self, request, model_admin):
+        lookup = {
+            "W0" : "Grande finale",
+            "W1" : "Finale winner",
+            "L1" : "Finale looser"
+        }
+        max_depth = max(Bracket.objects.all().values_list("depth", flat=True))
+
+        for depth in range(1,max_depth+1):
+            if depth == 1:
+                lookup["W2"] = "Demi-finale winner"
+            elif depth == 2:
+                lookup["W3"] = "Quart de finale winner"
+            else:
+                lookup["W" + str(depth)] = f"1/{2**depth}ème winner"
+        
+        for tour,round_number in enumerate(range(2*(max_depth-1),1,-1)):
+            lookup["L" + str(round_number)] = f"Tour {tour+1} looser"
+        return lookup.items()
+
+    def queryset(self, request, queryset):
+        if self.value():
+            br_set = BracketSet.WINNER if self.value()[0] == "W" else BracketSet.LOOSER
+            return queryset.filter(round_number=self.value()[1:],bracket_set=br_set)
+        return queryset
+
+
 class GroupTeamsInline(admin.TabularInline):
     model = Seeding
     extra = 1
@@ -552,12 +598,12 @@ class GroupMatchAdmin(admin.ModelAdmin):
         update_to_ranking_action
     ]
 
-    list_filter = ["group","group__tournament","round_number","index_in_round"]
+    list_filter = ["group","group__tournament",RoundNumberFilter,"index_in_round"]
 
     @admin.action(description=_("Lancer les matchs"))
     def launch_group_matchs_action(self,request,queryset):
         for match in queryset:
-            if match.status != MatchStatus.COMPLETE:
+            if match.status != MatchStatus.COMPLETED:
                 for team in match.get_teams():
                     team_matchs = GroupMatch.objects.filter(teams=team,round_number__lt=match.round_number)
                     for team_match in team_matchs:
@@ -612,7 +658,7 @@ admin.site.register(Bracket, BracketAdmin)
 class KnockoutMatchAdmin(admin.ModelAdmin):
     """Admin handle for Knockout matchs"""
 
-    list_display = ("id", "bracket", "status","round_number","index_in_round","bo_type",)
+    list_display = ("id", "bracket", "status","bracket_set","round_number","index_in_round","bo_type",)
     filter_horizontal = ("teams",)
     actions = [
         "launch_knockout_matchs_action",
@@ -623,12 +669,12 @@ class KnockoutMatchAdmin(admin.ModelAdmin):
         update_to_ranking_action
     ]
 
-    list_filter = ["bracket", "bracket__tournament", "round_number", "index_in_round"]
+    list_filter = ["bracket", "bracket__tournament", BracketMatchFilter, "index_in_round"]
 
     @admin.action(description=_("Lancer les matchs"))
     def launch_knockout_matchs_action(self,request,queryset):
         for match in queryset:
-            if match.status != MatchStatus.COMPLETE:
+            if match.status != MatchStatus.COMPLETED:
                 for team in match.get_teams():
                     team_matchs = KnockoutMatch.objects.filter(teams=team,round_index__gt=match.round_number)
                     for team_match in team_matchs:
@@ -702,12 +748,12 @@ class SwissMatchAdmin(admin.ModelAdmin):
         update_to_ranking_action
     ]
 
-    list_filter = ["swiss", "swiss__tournament","round_number","index_in_round"]
+    list_filter = ["swiss", "swiss__tournament",RoundNumberFilter,"index_in_round"]
 
     @admin.action(description=_("Lancer les matchs"))
     def launch_swiss_matchs_action(self,request,queryset):
         for match in queryset:
-            if match.status != MatchStatus.COMPLETE:
+            if match.status != MatchStatus.COMPLETED:
                 for team in match.get_teams():
                     team_matchs = SwissMatch.objects.filter(teams=team,round_number__lt=match.round_number)
                     for team_match in team_matchs:
