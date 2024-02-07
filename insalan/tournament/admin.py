@@ -539,7 +539,7 @@ admin.site.register(Group, GroupAdmin)
 class GroupMatchAdmin(admin.ModelAdmin):
     """Admin handle for group matchs"""
 
-    list_display = ("id", "group", "status")
+    list_display = ("id", "group", "status","round_number","index_in_round","bo_type",)
     search_fields = ["index_in_round","round_number"]
     # filter_horizontal = ("teams",)
     inlines = [ScoreInline]
@@ -589,7 +589,7 @@ class BracketAdmin(admin.ModelAdmin):
     search_fields = ["name","tournament","tournament__event","tournament__game"]
     actions = ["create_empty_knockout_matchs_action","fill_knockout_matchs_action"]
 
-    list_filter = ["tournament","tournament__event"]
+    list_filter = ["tournament","tournament__event","tournament__game"]
 
     @admin.action(description=_("Créer les matchs"))
     def create_empty_knockout_matchs_action(self,request,queryset):
@@ -611,7 +611,7 @@ admin.site.register(Bracket, BracketAdmin)
 class KnockoutMatchAdmin(admin.ModelAdmin):
     """Admin handle for Knockout matchs"""
 
-    list_display = ("id", "bracket", "status")
+    list_display = ("id", "bracket", "status","round_number","index_in_round","bo_type",)
     filter_horizontal = ("teams",)
     actions = [
         "launch_knockout_matchs_action",
@@ -689,7 +689,7 @@ admin.site.register(SwissRound,SwissRoundAdmin)
 class SwissMatchAdmin(admin.ModelAdmin):
     """Admin handle for Swiss matchs"""
 
-    list_display = ("id","swiss","status")
+    list_display = ("id","swiss","status","round_number","index_in_round","bo_type",)
     inlines = [ScoreInline]
     actions = [
         "launch_swiss_matchs_action",
