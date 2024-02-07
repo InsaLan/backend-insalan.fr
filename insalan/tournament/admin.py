@@ -470,6 +470,35 @@ class SubstituteAdmin(admin.ModelAdmin):
 admin.site.register(Substitute, SubstituteAdmin)
 
 
+def update_bo_type_action(queryset,new_bo_type):
+    queryset.update(bo_type=new_bo_type)
+
+@admin.action(description=_("Passer en Bo1"))
+def update_to_Bo1_action(modeladmin,request,queryset):
+    update_bo_type_action(queryset,BestofType.BO1)
+    modeladmin.message_user(request,_("Les matchs ont bien été mis à jour"))
+
+@admin.action(description=_("Passer en Bo3"))
+def update_to_Bo3_action(modeladmin,request,queryset):
+    update_bo_type_action(queryset,BestofType.BO3)
+    modeladmin.message_user(request,_("Les matchs ont bien été mis à jour"))
+
+@admin.action(description=_("Passer en Bo5"))
+def update_to_Bo5_action(modeladmin,request,queryset):
+    update_bo_type_action(queryset,BestofType.BO5)
+    modeladmin.message_user(request,_("Les matchs ont bien été mis à jour"))
+
+@admin.action(description=_("Passer en Bo7"))
+def update_to_Bo7_action(modeladmin,request,queryset):
+    update_bo_type_action(queryset,BestofType.BO7)
+    modeladmin.message_user(request,_("Les matchs ont bien été mis à jour"))
+
+@admin.action(description=_("Passer à un classement"))
+def update_to_ranking_action(modeladmin,request,queryset):
+    update_bo_type_action(queryset,BestofType.RANKING)
+    modeladmin.message_user(request,_("Les matchs ont bien été mis à jour"))
+
+
 class GroupTeamsInline(admin.TabularInline):
     model = Seeding
     extra = 1
@@ -515,7 +544,14 @@ class GroupMatchAdmin(admin.ModelAdmin):
     search_fields = ["index_in_round","round_number"]
     # filter_horizontal = ("teams",)
     inlines = [ScoreInline]
-    actions = ["launch_group_matchs_action"]
+    actions = [
+        "launch_group_matchs_action",
+        update_to_Bo1_action,
+        update_to_Bo3_action,
+        update_to_Bo5_action,
+        update_to_Bo7_action,
+        update_to_ranking_action
+    ]
 
     list_filter = ["group","group__tournament","round_number","index_in_round"]
 
@@ -627,7 +663,14 @@ class KnockoutMatchAdmin(admin.ModelAdmin):
 
     list_display = ("id", "bracket", "status")
     filter_horizontal = ("teams",)
-    actions = [""]
+    actions = [
+        "launch_knockout_matchs_action",
+        update_to_Bo1_action,
+        update_to_Bo3_action,
+        update_to_Bo5_action,
+        update_to_Bo7_action,
+        update_to_ranking_action
+    ]
 
     list_filter = ["bracket", "bracket__tournament", "round_number", "index_in_round"]
 
@@ -697,7 +740,14 @@ class SwissMatchAdmin(admin.ModelAdmin):
 
     list_display = ("id","swiss","status")
     inlines = [ScoreInline]
-    actions = ["launch_swiss_matchs_action"]
+    actions = [
+        "launch_swiss_matchs_action",
+        update_to_Bo1_action,
+        update_to_Bo3_action,
+        update_to_Bo5_action,
+        update_to_Bo7_action,
+        update_to_ranking_action
+    ]
 
     list_filter = ["swiss", "swiss__tournament","round_number","index_in_round"]
 
