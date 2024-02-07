@@ -38,37 +38,8 @@ class Bracket(models.Model):
         verbose_name = _("Arbre de tournoi")
         verbose_name_plural = _("Arbres de tournoi")
 
-    # def __init__(self, *args, **kwargs) -> None:
-    #     super().__init__(*args,**kwargs)
-    #     self.cache_depth = self.depth
-
-    # def save(self, *args, **kwargs):
-    #     """
-    #     Override default save method to automatically create matchs when the Bracket is created or modified.
-    #     """
-    #     need_save = False
-
-    #     # if no match exist, then create them
-    #     if len(KnockoutMatch.objects.filter(bracket=self)) == 0:
-    #         for round_n in range(1,depth+1):
-    #             for match_id in range(1,2**(round_n-1)+1):
-    #                 KnockoutMatch.objects.create(round_number=round_n,index_in_round=match_id,bracket=self)
-    #         if self.bracket_type == BracketType.DOUBLE:
-    #             for round_n in range(1,2*depth-1):
-    #                 for match_id in range(1,2**((round_n-1)//2)+1):
-    #                     KnockoutMatch.objects.create(round_number=round_n,index_in_round=match_id,bracket=self,bracket_set=BracketSet.LOOSER)
-    #             KnockoutMatch.objects.create(round_number=0,index_in_round=1,bracket=self)
-    #         need_save = True
-    #     # if the depth has changed and no game is started, create or delete matchs
-    #     elif self.cache_depth < self.depth and all([match.MatchStatus.SCHEDULED == m.status for m in KnockoutMatch.objects.filter(bracket=self)]):
-
-    #         pass
-    #     elif self.cache_depth > self.depth and all([match.MatchStatus.SCHEDULED == m.status for m in KnockoutMatch.objects.filter(bracket=self)]):
-    #         # 
-    #         need_save = True
-
-    #     if need_save:
-    #         super().save()
+    def __str__(self):
+        return self.name
 
 class KnockoutMatch(match.Match):
     bracket = models.ForeignKey(
@@ -84,5 +55,5 @@ class KnockoutMatch(match.Match):
     )
 
     class Meta:
-        verbose_name = _("Match dans un arbre")
-        verbose_name_plural = _("Matchs dans un arbre")
+        verbose_name = _("Match d'arbre")
+        verbose_name_plural = _("Matchs d'arbre")
