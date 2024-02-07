@@ -18,7 +18,7 @@ class Game(models.Model):
         verbose_name_plural = _("Jeux")
 
     name = models.CharField(
-        verbose_name=_("Nom du jeux"),
+        verbose_name=_("Nom du jeu"),
         validators=[MinLengthValidator(2)],
         max_length=40,
         null=False,
@@ -31,19 +31,19 @@ class Game(models.Model):
         blank=False,
     )
     players_per_team = models.IntegerField(
-        verbose_name=_("Number of players per team"),
+        verbose_name=_("Nombre de joueurs par équipe"),
         null=False,
         validators=[MinValueValidator(1)],
         default=1
     )
     substitute_players_per_team = models.IntegerField(
-        verbose_name=_("Number of substitute players per team"),
+        verbose_name=_("Nombre de remplaçants par équipe"),
         null=False,
         validators=[MinValueValidator(0)],
         default=0
     )
     team_per_match = models.IntegerField(
-        verbose_name=_("Nombre maximum d'équipe par match"),
+        verbose_name=_("Nombre maximum d'équipes par match"),
         validators=[MinValueValidator(2)],
         default=2
     )

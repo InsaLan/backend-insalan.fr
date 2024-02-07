@@ -17,7 +17,7 @@ class SwissRound(models.Model):
 		verbose_name = _("Ronde Suisse")
 	
 	def __str__(self) -> str:
-		return "Ronde Suisse" + f"({self.tournament}, {self.tournament.event})"
+		return "Ronde Suisse" + f"({self.tournament})"
 
 	def get_teams(self) -> List["Team"]:
 		return [seeding.team for seeding in SwissSeeding.objects.filter(swiss=self)]
