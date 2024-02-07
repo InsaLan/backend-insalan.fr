@@ -25,7 +25,7 @@ from django.core.exceptions import PermissionDenied
 from django.views.decorators.debug import sensitive_post_parameters
 from django.utils.decorators import method_decorator
 
-from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus, Group, GroupMatch, KnockoutMatch, Bracket, Seeding, MatchStatus, Score, SwissRound, SwissMatch, SwissSeeding
+from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus, Group, GroupMatch, KnockoutMatch, Bracket, Seeding, MatchStatus, Score, SwissRound, SwissMatch, SwissSeeding, BestofType
 from insalan.tournament.manage import create_group_matchs, create_empty_knockout_matchs, create_swiss_matchs
 
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
@@ -557,25 +557,26 @@ class GroupMatchAdmin(admin.ModelAdmin):
     @admin.action(description=_("Lancer les matchs"))
     def launch_group_matchs_action(self,request,queryset):
         for match in queryset:
-            for team in match.get_teams():
-                team_matchs = GroupMatch.objects.filter(teams=team,round_number__lt=match.round_number)
-                for team_match in team_matchs:
-                    if team_match.status == MatchStatus.ONGOING:
-                        self.message_user(request,_(f"L'équipe {team.name} est encore dans un match en cours"), messages.ERROR)
-                        return
-                    if team_match.status == MatchStatus.SCHEDULED:
-                        self.message_user(request,_(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"), messages.ERROR)
-                        return
+            if match.status != MatchStatus.COMPLETE:
+                for team in match.get_teams():
+                    team_matchs = GroupMatch.objects.filter(teams=team,round_number__lt=match.round_number)
+                    for team_match in team_matchs:
+                        if team_match.status == MatchStatus.ONGOING:
+                            self.message_user(request,_(f"L'équipe {team.name} est encore dans un match en cours"), messages.ERROR)
+                            return
+                        if team_match.status == MatchStatus.SCHEDULED:
+                            self.message_user(request,_(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"), messages.ERROR)
+                            return
 
-            if len(match.get_teams()) == 1:
-                match.status = MatchStatus.COMPLETED
-                score = Score.objects.get(team=match.get_teams()[0],match=match)
-                score.score = match.get_winning_score()
-                score.save()
-            else:
-                match.status = MatchStatus.ONGOING
+                if len(match.get_teams()) == 1:
+                    match.status = MatchStatus.COMPLETED
+                    score = Score.objects.get(team=match.get_teams()[0],match=match)
+                    score.score = match.get_winning_score()
+                    score.save()
+                else:
+                    match.status = MatchStatus.ONGOING
 
-            match.save()
+                match.save()
         self.message_user(request,_("Les matchs ont bien été lancés"))
 
 
@@ -627,25 +628,26 @@ class KnockoutMatchAdmin(admin.ModelAdmin):
     @admin.action(description=_("Lancer les matchs"))
     def launch_knockout_matchs_action(self,request,queryset):
         for match in queryset:
-            for team in match.get_teams():
-                team_matchs = KnockoutMatch.objects.filter(teams=team,round_index__gt=match.round_number)
-                for team_match in team_matchs:
-                    if team_match.status == MatchStatus.ONGOING:
-                        self.message_user(request,_(f"L'équipe {team.name} est encore dans un match en cours"), messages.ERROR)
-                        return
-                    if team_match.status == MatchStatus.SCHEDULED:
-                        self.message_user(request,_(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"), messages.ERROR)
-                        return
+            if match.status != MatchStatus.COMPLETE:
+                for team in match.get_teams():
+                    team_matchs = KnockoutMatch.objects.filter(teams=team,round_index__gt=match.round_number)
+                    for team_match in team_matchs:
+                        if team_match.status == MatchStatus.ONGOING:
+                            self.message_user(request,_(f"L'équipe {team.name} est encore dans un match en cours"), messages.ERROR)
+                            return
+                        if team_match.status == MatchStatus.SCHEDULED:
+                            self.message_user(request,_(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"), messages.ERROR)
+                            return
 
-            if len(match.get_teams()) == 1:
-                match.status = MatchStatus.COMPLETED
-                score = Score.objects.get(team=match.get_teams()[0],match=match)
-                score.score = match.get_winning_score()
-                score.save()
-            else:
-                match.status = MatchStatus.ONGOING
+                if len(match.get_teams()) == 1:
+                    match.status = MatchStatus.COMPLETED
+                    score = Score.objects.get(team=match.get_teams()[0],match=match)
+                    score.score = match.get_winning_score()
+                    score.save()
+                else:
+                    match.status = MatchStatus.ONGOING
 
-            match.save()
+                match.save()
         self.message_user(request,_("Les matchs ont bien été lancés"))
 
 
@@ -705,25 +707,26 @@ class SwissMatchAdmin(admin.ModelAdmin):
     @admin.action(description=_("Lancer les matchs"))
     def launch_swiss_matchs_action(self,request,queryset):
         for match in queryset:
-            for team in match.get_teams():
-                team_matchs = SwissMatch.objects.filter(teams=team,round_number__lt=match.round_number)
-                for team_match in team_matchs:
-                    if team_match.status == MatchStatus.ONGOING:
-                        self.message_user(request,_(f"L'équipe {team.name} est encore dans un match en cours"), messages.ERROR)
-                        return
-                    if team_match.status == MatchStatus.SCHEDULED:
-                        self.message_user(request,_(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"), messages.ERROR)
-                        return
+            if match.status != MatchStatus.COMPLETE:
+                for team in match.get_teams():
+                    team_matchs = SwissMatch.objects.filter(teams=team,round_number__lt=match.round_number)
+                    for team_match in team_matchs:
+                        if team_match.status == MatchStatus.ONGOING:
+                            self.message_user(request,_(f"L'équipe {team.name} est encore dans un match en cours"), messages.ERROR)
+                            return
+                        if team_match.status == MatchStatus.SCHEDULED:
+                            self.message_user(request,_(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"), messages.ERROR)
+                            return
 
-            if len(match.get_teams()) == 1:
-                match.status = MatchStatus.COMPLETED
-                score = Score.objects.get(team=match.get_teams()[0],match=match)
-                score.score = match.get_winning_score()
-                score.save()
-            else:
-                match.status = MatchStatus.ONGOING
+                if len(match.get_teams()) == 1:
+                    match.status = MatchStatus.COMPLETED
+                    score = Score.objects.get(team=match.get_teams()[0],match=match)
+                    score.score = match.get_winning_score()
+                    score.save()
+                else:
+                    match.status = MatchStatus.ONGOING
 
-            match.save()
+                match.save()
         self.message_user(request,_("Les matchs ont bien été lancés"))
 
 admin.site.register(SwissMatch, SwissMatchAdmin)
