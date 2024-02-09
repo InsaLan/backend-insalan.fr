@@ -248,12 +248,10 @@ class ExportOrder(generics.ListCreateAPIView):
             orders = orders.exclude(id__in=export.orders.all())
 
         # if no order to export
-        if not orders.exists():
-            return Response({"detail": _("No order to export.")}, status=400)
-
-        # create the export
-        export = PizzaExport.objects.create(time_slot=timeslot)
-        export.orders.set(orders)
+        if orders.exists():
+            # create the export
+            export = PizzaExport.objects.create(time_slot=timeslot)
+            export.orders.set(orders)
 
         # return the export (using get)
         return self.get(request, *args, **kwargs)
