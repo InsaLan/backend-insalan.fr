@@ -204,7 +204,7 @@ class TimeSlot(models.Model):
         """
         retrieve orders associated to a timeslot with their id
         """
-        return Order.objects.filter(time_slot=self).values_list("id", flat=True)
+        return Order.objects.filter(time_slot=self).values_list("id", flat=True).order_by("-id")
 
 class PizzaOrder(models.Model):
     order = models.ForeignKey('Order', on_delete=models.CASCADE)
