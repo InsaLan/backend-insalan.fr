@@ -38,6 +38,7 @@ urlpatterns = [
    path("timeslot/", views.TimeSlotList.as_view(), name="timeslot/list"),
    path("timeslot/full/", views.TimeSlotListFull.as_view(), name="timeslot/list/full"),
    path("timeslot/<int:pk>/", views.TimeSlotDetail.as_view(), name="timeslot/detail"),
+   path("timeslot/<int:pk>/export/", views.ExportOrder.as_view(), name="timeslot/export"),
    path("timeslot/next/", views.NextTimeSlot.as_view(), name="timeslot/list/next"),
    path("order/", views.OrderList.as_view(), name="order/list"),
    path("order/full/", views.OrderListFull.as_view(), name="order/list/full"),

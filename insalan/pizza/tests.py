@@ -12,7 +12,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from insalan.pizza.models import Pizza, TimeSlot, Order, PizzaOrder
+from insalan.pizza.models import Pizza, TimeSlot, Order, PizzaOrder, PizzaExport
 from insalan.pizza.serializers import PizzaSerializer, PizzaIdSerializer
 from insalan.user.models import User
 from datetime import timedelta
@@ -411,3 +411,73 @@ class PizzaEndpointsTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(Order.objects.count(), 1)
+
+    def test_export_order_unauthorized(self):
+        """Test the export order endpoint with unauthorized user"""
+        client = APIClient()
+        response = client.get(
+            reverse("timeslot/export", kwargs={"pk": self.time_slot.id})
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_export_order_not_found(self):
+        """Test the export order endpoint with wrong id"""
+        client = APIClient()
+        client.force_login(user=self.admin_user)
+        response = client.get(
+            reverse("timeslot/export", kwargs={"pk": 999})
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_export_order_empty(self):
+        """Test the export order endpoint"""
+        client = APIClient()
+        client.force_login(user=self.admin_user)
+        response = client.get(
+            reverse("timeslot/export", kwargs={"pk": self.time_slot.id})
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
+
+    def test_export_order(self):
+        """Test the export order endpoint"""
+        client = APIClient()
+        client.force_login(user=self.admin_user)
+
+        export = PizzaExport.objects.create(time_slot=self.time_slot)
+        export.orders.add(self.order)
+
+        response = client.get(
+            reverse("timeslot/export", kwargs={"pk": self.time_slot.id})
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], export.id)
+        self.assertEqual(response.data[0]["orders"][self.order.pizza.all()[0].name], 1)
+        self.assertEqual(response.data[0]["orders"][self.order.pizza.all()[1].name], 1)
+
+    def test_export_order_post(self):
+        """Test the export order post endpoint"""
+        client = APIClient()
+        client.force_login(user=self.admin_user)
+        response = client.post(
+            reverse("timeslot/export", kwargs={"pk": self.time_slot.id})
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["orders"][self.order.pizza.all()[0].name], 1)
+        self.assertEqual(response.data[0]["orders"][self.order.pizza.all()[1].name], 1)
+
+    def test_export_order_post_full(self):
+        """Test the export order post endpoint"""
+        client = APIClient()
+        client.force_login(user=self.admin_user)
+
+        export = PizzaExport.objects.create(time_slot=self.time_slot)
+        export.orders.add(self.order)
+
+        response = client.post(
+            reverse("timeslot/export", kwargs={"pk": self.time_slot.id})
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {"detail": "No order to export."})

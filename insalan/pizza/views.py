@@ -9,9 +9,10 @@ from django.utils import timezone
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.serializers import Serializer
 
 import insalan.pizza.serializers as serializers
-from .models import Pizza, TimeSlot, Order
+from .models import Pizza, TimeSlot, Order, PizzaExport
 
 class ReadOnly(permissions.BasePermission):
     def has_permission(self, request, _view):
@@ -204,3 +205,55 @@ class OrderDetail(generics.RetrieveUpdateDestroyAPIView):
             return Response({"detail": _("Modified.")}, status=200)
         else:
             return Response({"detail": _("Bad request.")}, status=400)
+
+class ExportOrder(generics.ListCreateAPIView):
+    """Export an order"""
+    queryset = PizzaExport.objects.all()
+    permission_classes = [ permissions.IsAdminUser ]
+    # body is expected to be empty
+    serializer_class = Serializer
+
+    def get(self, request, *args, **kwargs):
+        if not TimeSlot.objects.filter(id=self.kwargs["pk"]).exists():
+            return Response({"detail": _("Not found.")}, status=404)
+        export = PizzaExport.objects.filter(time_slot=self.kwargs["pk"])
+        serializer = serializers.PizzaExportSerializer(export, many=True).data
+
+        for s in serializer:
+            s.pop("time_slot")
+
+            pizza_count = {}
+            for order in s["orders"]:
+                order = Order.objects.get(id=order)
+                for pizza in order.pizza.all():
+                    if pizza.name not in pizza_count:
+                        pizza_count[pizza.name] = 1
+                    else:
+                        pizza_count[pizza.name] += 1
+
+            s["orders"] = pizza_count
+
+        return Response(serializer)
+
+    def post(self, request, *args, **kwargs):
+        if not TimeSlot.objects.filter(id=self.kwargs["pk"]).exists():
+            return Response({"detail": _("Not found.")}, status=404)
+        timeslot = TimeSlot.objects.get(id=self.kwargs["pk"])
+
+        # get the list of orders
+        orders = Order.objects.filter(time_slot=timeslot)
+
+        # remove the order already exported
+        for export in PizzaExport.objects.filter(time_slot=timeslot):
+            orders = orders.exclude(id__in=export.orders.all())
+
+        # if no order to export
+        if not orders.exists():
+            return Response({"detail": _("No order to export.")}, status=400)
+
+        # create the export
+        export = PizzaExport.objects.create(time_slot=timeslot)
+        export.orders.set(orders)
+
+        # return the export (using get)
+        return self.get(request, *args, **kwargs)

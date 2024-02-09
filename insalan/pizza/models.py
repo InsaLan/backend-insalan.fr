@@ -292,3 +292,51 @@ class Order(models.Model):
             return self.user_obj.username
         return self.user
     get_username.short_description = _('Utilisateur')
+
+class PizzaExport(models.Model):
+    """
+    Pizza export model
+    """
+    class Meta:
+        """Meta options"""
+
+        verbose_name = _("Export de pizza")
+        verbose_name_plural = _("Exports de pizza")
+        ordering = ["id"]
+
+    id: int
+    time_slot: models.ForeignKey = models.ForeignKey(
+        "pizza.TimeSlot",
+        verbose_name=_("Créneau de commande"),
+        on_delete=models.CASCADE,
+    )
+    created_at: models.DateTimeField = models.DateTimeField(
+        verbose_name=_("Date de création"),
+        auto_now_add=True,
+    )
+    orders: models.ManyToManyField = models.ManyToManyField(
+        "pizza.Order",
+        verbose_name=_("Commandes"),
+        related_name="orders",
+    )
+
+    def __str__(self) -> str:
+        return f"{self.time_slot}"
+
+    def get_orders_id(self) -> List[int]:
+        """
+        retrieve orders associated to a timeslot with their id
+        """
+        return self.orders.all().values_list("id", flat=True)
+
+    def get_orders(self) -> List[Order]:
+        """
+        retrieve orders associated to a timeslot
+        """
+        return self.orders.all()
+
+    def get_time_slot(self) -> TimeSlot:
+        """
+        retrieve the timeslot associated to the export
+        """
+        return self.time_slot
