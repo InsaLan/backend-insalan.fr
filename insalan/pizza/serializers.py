@@ -1,7 +1,7 @@
 """ Serializers for pizza models"""
 from rest_framework import serializers
 
-from .models import Pizza, Order, TimeSlot, PizzaOrder
+from .models import Pizza, Order, TimeSlot, PizzaOrder, PizzaExport
 from typing import List
 
 class PizzaSerializer(serializers.ModelSerializer):
@@ -94,3 +94,14 @@ class PizzaByTimeSlotSerializer(serializers.ModelSerializer):
         for pizza in PizzaOrder.objects.filter(order__time_slot__id=obj.id).values("pizza__id").distinct():
             result[pizza["pizza__id"]] = PizzaOrder.objects.filter(order__time_slot__id=obj.id, pizza__id=pizza["pizza__id"]).count()
         return result
+
+class PizzaExportSerializer(serializers.ModelSerializer):
+    """Serializer for a pizza model"""
+    orders = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PizzaExport
+        fields = "__all__"
+
+    def get_orders(self, obj):
+        return obj.get_orders_id()

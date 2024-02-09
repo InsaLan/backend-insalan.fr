@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Pizza, TimeSlot, Order, PizzaOrder
+from .models import Pizza, TimeSlot, Order, PizzaOrder, PizzaExport
 
 class PizzaAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "ingredients")
@@ -26,3 +26,9 @@ class OrderAdmin(admin.ModelAdmin):
     inlines = [PizzaOrderInline]
 
 admin.site.register(Order, OrderAdmin)
+
+class ExportAdmin(admin.ModelAdmin):
+    list_display = ("id", "time_slot", "created_at")
+    search_fields = ["time_slot"]
+
+admin.site.register(PizzaExport, ExportAdmin)
