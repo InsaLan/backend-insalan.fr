@@ -64,8 +64,15 @@ class UserMe(APIView):
         """
         Returns an user's own informations
         """
-        user = UserSerializer(request.user, context={"request": request})
-        return Response(user.data)
+        user = UserSerializer(request.user, context={"request": request}).data
+
+        user_groups = []
+        for group in request.user.groups.all():
+            user_groups.append(group.name)
+
+        user["groups"] = user_groups
+
+        return Response(user)
 
     def patch(self, request):
         """
