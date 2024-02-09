@@ -479,5 +479,6 @@ class PizzaEndpointsTestCase(TestCase):
         response = client.post(
             reverse("timeslot/export", kwargs={"pk": self.time_slot.id})
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, {"detail": "No order to export."})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["orders"][self.order.pizza.all()[0].name], 1)
