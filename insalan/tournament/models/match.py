@@ -11,14 +11,14 @@ class MatchStatus(models.TextChoices):
     ONGOING = "ONGOING", _("En cours")
     COMPLETED = "COMPLETED", _("Terminé")
 
-class BestofType(models.TextChoices):
+class BestofType(models.IntegerChoices):
     """Best of type for a match"""
 
-    BO1 = "BO1", _("Série de 1")
-    BO3 = "BO3", _("Série de 3")
-    BO5 = "BO5", _("Série de 5")
-    BO7 = "BO7", _("Série de 7")
-    RANKING = "RANKING", _("Classement")
+    BO1 = 1, _("Série de 1")
+    BO3 = 3, _("Série de 3")
+    BO5 = 5, _("Série de 5")
+    BO7 = 7, _("Série de 7")
+    RANKING = 0, _("Classement")
 
 class Match(models.Model):
     teams = models.ManyToManyField(
@@ -38,8 +38,7 @@ class Match(models.Model):
         choices=MatchStatus.choices,
         verbose_name = _("Status du match")
     )
-    bo_type = models.CharField(
-        max_length=10,
+    bo_type = models.IntegerField(
         default=BestofType.BO1,
         choices=BestofType.choices,
         verbose_name=_("Type de série")
@@ -66,7 +65,7 @@ class Match(models.Model):
         if self.bo_type == BestofType.RANKING:
             return self.get_team_count()
 
-        return int(self.bo_type[2])
+        return self.bo_type
 
     def get_winning_score(self) -> int:
         if self.bo_type == BestofType.RANKING:
@@ -97,17 +96,3 @@ class Score(models.Model):
                 name="no_duplicate_team_in_a_match"
             )
         ]
-    # group_match = models.ForeignKey(
-    #     "Group",
-    #     on_delete=models.CASCADE,
-    #     null=True,
-    #     blank=True,
-    #     verbose_name=_("Match de poule lié à ce score")
-    # )
-    # bracket_match = models.ForeignKey(
-    #     "Bracket",
-    #     on_delete=models.CASCADE,
-    #     null=True,
-    #     blank=True,
-    #     verbose_name=_("Match dans un arbre lié à ce score")
-    # )
