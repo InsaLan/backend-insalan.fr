@@ -496,6 +496,14 @@ def update_to_ranking_action(modeladmin,request,queryset):
     update_bo_type_action(queryset,BestofType.RANKING)
     modeladmin.message_user(request,_("Les matchs ont bien été mis à jour"))
 
+update_bo_type_action_list = [
+    update_to_Bo1_action,
+    update_to_Bo3_action,
+    update_to_Bo5_action,
+    update_to_Bo7_action,
+    update_to_ranking_action
+]
+
 
 class RoundNumberFilter(admin.SimpleListFilter):
     """Filter for group and swiss match round number"""
@@ -596,11 +604,7 @@ class GroupMatchAdmin(admin.ModelAdmin):
     inlines = [ScoreInline]
     actions = [
         "launch_group_matchs_action",
-        update_to_Bo1_action,
-        update_to_Bo3_action,
-        update_to_Bo5_action,
-        update_to_Bo7_action,
-        update_to_ranking_action
+        *update_bo_type_action_list
     ]
 
     list_filter = ["group","group__tournament",RoundNumberFilter,"index_in_round"]
@@ -639,7 +643,7 @@ class BracketAdmin(admin.ModelAdmin):
 
     list_display = ("id", "name", "tournament")
     search_fields = ["name","tournament","tournament__event","tournament__game"]
-    actions = ["create_empty_knockout_matchs_action","fill_knockout_matchs_action"]
+    actions = ["create_empty_knockout_matchs_action"]
 
     list_filter = ["tournament","tournament__event","tournament__game"]
 
@@ -664,14 +668,10 @@ class KnockoutMatchAdmin(admin.ModelAdmin):
     """Admin handle for Knockout matchs"""
 
     list_display = ("id", "bracket", "status","bracket_set","round_number","index_in_round","bo_type",)
-    filter_horizontal = ("teams",)
+    inlines = [ScoreInline]
     actions = [
         "launch_knockout_matchs_action",
-        update_to_Bo1_action,
-        update_to_Bo3_action,
-        update_to_Bo5_action,
-        update_to_Bo7_action,
-        update_to_ranking_action
+        *update_bo_type_action_list
     ]
 
     list_filter = [ "bracket__tournament", "bracket", "bracket_set", BracketMatchFilter, "index_in_round"]
@@ -746,11 +746,7 @@ class SwissMatchAdmin(admin.ModelAdmin):
     inlines = [ScoreInline]
     actions = [
         "launch_swiss_matchs_action",
-        update_to_Bo1_action,
-        update_to_Bo3_action,
-        update_to_Bo5_action,
-        update_to_Bo7_action,
-        update_to_ranking_action
+        *update_bo_type_action_list
     ]
 
     list_filter = ["swiss", "swiss__tournament",RoundNumberFilter,"index_in_round"]
