@@ -6,7 +6,7 @@ def create_group_matchs(group: Group):
     teams = group.get_sorted_teams()
     team_per_match = group.get_tournament().get_game().get_team_per_match()
     nb_matchs = math.ceil(len(teams)/team_per_match)
-    nb_rounds = group.get_nb_rounds()
+    nb_rounds = group.get_round_count()
 
     teams += [None]*(nb_matchs*team_per_match-len(teams))
 
