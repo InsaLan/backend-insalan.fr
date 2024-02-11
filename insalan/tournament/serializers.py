@@ -110,9 +110,9 @@ class TournamentSerializer(serializers.ModelSerializer):
     teams = serializers.ListField(required=False, read_only=True, source="get_teams_id")
     validated_teams = serializers.IntegerField(read_only=True, source="get_validated_teams")
     casters = CasterSerializer(many=True, source="get_casters")
-    groups = GroupSerializer(many=True, source="get_groups")
-    brackets = BracketSerializer(many=True, source="get_brackets")
-    swissRounds = SwissRoundSerializer(many=True, source="get_swissRounds")
+    groups = serializers.ListField(required=False,source="get_groups")
+    brackets = serializers.ListField(required=False,source="get_brackets")
+    swissRounds = serializers.ListField(required=False,source="get_swissRounds")
 
     class Meta:
         """Meta options of the serializer"""
