@@ -17,7 +17,7 @@ class Group(models.Model):
         verbose_name=_("Tournoi"),
         on_delete=models.CASCADE
     )
-    nb_round = models.IntegerField(
+    round_count = models.IntegerField(
         verbose_name=_("Nombre de rounds"),
         default=1
     )
@@ -60,8 +60,8 @@ class Group(models.Model):
     def get_teams_id(self) -> List[int]:
         return self.get_teams().values_list("id", flat=True)
 
-    def get_nb_rounds(self) -> int:
-        return self.nb_round
+    def get_round_count(self) -> int:
+        return self.round_count
     
     def get_leaderboard(self) -> List[Tuple["Team",int]]:
         leaderboard = []
