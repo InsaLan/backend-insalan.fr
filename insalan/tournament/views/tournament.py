@@ -134,7 +134,7 @@ class TournamentDetailsFull(APIView):
                 swiss_data = serializers.SwissRoundSerializer(SwissRound.objects.get(pk=swissRound), context={"request": request}).data
                 for match in swiss_data["matchs"]:
                     del match["swiss"]
-                tourney_serialized["swissRound"].append(swiss_data)
+                tourney_serialized["swissRounds"].append(swiss_data)
 
             tourney_serialized["teams"].clear()
             tourney_serialized["teams"] = teams_serialized
