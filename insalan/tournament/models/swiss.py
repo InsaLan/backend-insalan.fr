@@ -20,7 +20,10 @@ class SwissRound(models.Model):
 		return "Ronde Suisse" + f"({self.tournament})"
 
 	def get_teams(self) -> List["Team"]:
-		return [seeding.team for seeding in SwissSeeding.objects.filter(swiss=self)]
+		return SwissSeeding.objects.filter(swiss=self).values_list("team", flat=True)
+
+	def get_teams_id(self) -> List[int]:
+		return self.get_teams().values_list("id", flat=True)
 
 	def get_teams_seeding(self) -> List[Tuple["Team",int]]:
 		return [(seeding.team,seeding.seeding) for seeding in SwissSeeding.objects.filter(swiss=self)]
@@ -32,6 +35,9 @@ class SwissRound(models.Model):
 
 		teams.sort(key=lambda e: e[1])
 		return [team[0] for team in teams]
+
+	def get_matchs(self) -> List["SwissMatch"]:
+		return SwissMatch.objects.filter(swiss=self)
 
 class SwissSeeding(models.Model):
 	swiss = models.ForeignKey(

@@ -3,7 +3,9 @@ from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
 import math
 
-from . import match
+from typing import List
+
+from . import match, team
 
 class BracketType(models.TextChoices):
     """Information about the type of a bracket, single or double elimination"""
@@ -50,6 +52,16 @@ class Bracket(models.Model):
 
     def get_max_match_count(self) -> int:
         return math.ceil(self.team_count/self.tournament.get_game().get_team_per_match())
+
+    def get_teams(self) -> List["Team"]:
+        # return [match.get_teams() for match in KnockoutMatch.objects.filter(bracket=self)]
+        return team.Team.objects.filter(pk__in=KnockoutMatch.objects.filter(bracket=self).values("teams"))
+
+    def get_teams_id(self) -> List[int]:
+        return self.get_teams().values_list("id", flat=True)
+
+    def get_matchs(self) -> List["KnockoutMatch"]:
+        return KnockoutMatch.objects.filter(bracket=self).order_by("id")
 
 class KnockoutMatch(match.Match):
     bracket = models.ForeignKey(
