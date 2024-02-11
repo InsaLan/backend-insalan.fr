@@ -1217,6 +1217,9 @@ class TournamentFullDerefEndpoint(TestCase):
             "description": "",
             "casters": [],
             "planning": "",
+            "groups" : [],
+            "brackets" : [],
+            "swissRounds" : []
         }
 
         self.assertEqual(request.data["teams"], model["teams"])
@@ -1466,6 +1469,9 @@ class EventDerefAndGroupingEndpoints(TestCase):
                     "description": "",
                     "casters": [],
                     "planning": "",
+                    "groups" : [],
+                    "brackets" : [],
+                    "swissRounds" : []
                 }
             ],
             "logo": None,
