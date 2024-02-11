@@ -46,8 +46,10 @@ class Group(models.Model):
         return self.tournament
 
     def get_teams(self) -> List["Team"]:
-        return [seeding.team for seeding in Seeding.objects.filter(group=self)]
-        # return team.Team.objects.filter(group=self)
+        return Seeding.objects.filter(group=self).values_list("team", flat=True)
+
+    def get_teams_id(self) -> List[int]:
+        return self.get_teams().values_list("id", flat=True)
     
     def get_teams_seeding(self) -> List[Tuple["Team",int]]:
         return [(seeding.team,seeding.seeding) for seeding in Seeding.objects.filter(group=self)]
@@ -56,9 +58,6 @@ class Group(models.Model):
         teams = self.get_teams_seeding()
         teams.sort(key=lambda e: e[1])
         return [team[0] for team in teams]
-
-    def get_teams_id(self) -> List[int]:
-        return self.get_teams().values_list("id", flat=True)
 
     def get_round_count(self) -> int:
         return self.round_count
@@ -72,6 +71,9 @@ class Group(models.Model):
             leaderboard.append(tuple([team,score]))
 
         return leaderboard
+
+    def get_matchs(self) -> List["GroupMatch"]:
+        return GroupMatch.objects.filter(group=self).order_by("id")
 
 
 class Seeding(models.Model):
