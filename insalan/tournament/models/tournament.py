@@ -10,8 +10,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
 
-from . import team
-from . import caster
+from . import team, caster, group, bracket, swiss
 
 def in_thirty_days():
     """Return now + 30 days"""
@@ -280,3 +279,12 @@ class Tournament(models.Model):
     def get_casters(self) -> List["Caster"]:
         """Return the list of casters for this tournament"""
         return caster.Caster.objects.filter(tournament=self)
+
+    def get_groups(self) -> List["Group"]:
+        return group.Group.objects.filter(tournament=self)
+
+    def get_brackets(self) -> List["Bracket"]:
+        return bracket.Bracket.objects.filter(tournament=self)
+
+    def get_swissRounds(self) -> List["SwissRound"]:
+        return swiss.SwissRound.objects.filter(tournament=self)
