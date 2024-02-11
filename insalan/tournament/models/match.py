@@ -56,7 +56,7 @@ class Match(models.Model):
     # class Meta:
     #     abstract = True
     
-    def get_nb_teams(self) -> int:
+    def get_team_count(self) -> int:
         return len(self.get_teams())
 
     def get_teams(self) -> List["Team"]:
@@ -64,13 +64,13 @@ class Match(models.Model):
 
     def get_max_score(self) -> int:
         if self.bo_type == BestofType.RANKING:
-            return self.get_nb_teams()
+            return self.get_team_count()
 
         return int(self.bo_type[2])
 
     def get_winning_score(self) -> int:
         if self.bo_type == BestofType.RANKING:
-            return math.ceil(self.get_nb_teams()/2)
+            return math.ceil(self.get_team_count()/2)
         
         return math.ceil(self.get_max_score()/2)
 
