@@ -12,8 +12,8 @@ class BracketType(models.TextChoices):
 class BracketSet(models.TextChoices):
     """Information on the bracket set, winner or looser"""
 
-    WINNER = "WINNER"
-    LOOSER = "LOOSER"
+    WINNER = "WINNER", _("Gagnant")
+    LOOSER = "LOOSER", _("Perdant")
 
 class Bracket(models.Model):
     name = models.CharField(
