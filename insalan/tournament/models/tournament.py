@@ -280,11 +280,11 @@ class Tournament(models.Model):
         """Return the list of casters for this tournament"""
         return caster.Caster.objects.filter(tournament=self)
 
-    def get_groups(self) -> List["Group"]:
-        return group.Group.objects.filter(tournament=self)
+    def get_groups(self) -> List[int]:
+        return group.Group.objects.filter(tournament=self).values_list("id",flat=True)
 
-    def get_brackets(self) -> List["Bracket"]:
-        return bracket.Bracket.objects.filter(tournament=self)
+    def get_brackets(self) -> List[int]:
+        return bracket.Bracket.objects.filter(tournament=self).values_list("id",flat=True)
 
-    def get_swissRounds(self) -> List["SwissRound"]:
-        return swiss.SwissRound.objects.filter(tournament=self)
+    def get_swissRounds(self) -> List[int]:
+        return swiss.SwissRound.objects.filter(tournament=self).values_list("id",flat=True)

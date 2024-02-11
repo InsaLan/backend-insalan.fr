@@ -16,7 +16,7 @@ from insalan.tickets.models import Ticket
 from insalan.user.models import User
 import insalan.tournament.serializers as serializers
 
-from ..models import Player, Manager, Substitute, Event, Tournament, Game, Team, PaymentStatus
+from ..models import Player, Manager, Substitute, Event, Tournament, Game, Team, PaymentStatus, Group, Bracket, SwissRound
 from .permissions import ReadOnly, Patch
 
 
@@ -119,6 +119,23 @@ class TournamentDetailsFull(APIView):
                 ]
                 teams_serialized.append(team_preser)
 
+            for group in tourney.get_groups():
+                group_data = serializers.GroupSerializer(Group.objects.get(pk=group), context={"request": request}).data
+                for match in group_data["matchs"]:
+                    del match["group"]
+                tourney_serialized["groups"].append(group_data)
+
+            for bracket in tourney.get_brackets():
+                bracket_data = serializers.BracketSerializer(Bracket.objects.get(pk=bracket), context={"request": request}).data
+                for match in bracket_data["matchs"]:
+                    del match["bracket"]
+                tourney_serialized["brackets"].append(bracket_data)
+            
+            for swissRound in tourney.get_swissRounds():
+                swiss_data = serializers.SwissRoundSerializer(SwissRound.objects.get(pk=swissRound), context={"request": request}).data
+                for match in swiss_data["matchs"]:
+                    del match["swiss"]
+                tourney_serialized["swissRound"].append(swiss_data)
 
             tourney_serialized["teams"].clear()
             tourney_serialized["teams"] = teams_serialized
