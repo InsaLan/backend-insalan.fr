@@ -119,30 +119,39 @@ class TournamentDetailsFull(APIView):
                 ]
                 teams_serialized.append(team_preser)
             # deref groups
+            group_serialized = []
             for group in tourney.get_groups():
                 group_data = serializers.GroupSerializer(Group.objects.get(pk=group), context={"request": request}).data
                 for match in group_data["matchs"]:
                     del match["group"]
-                tourney_serialized["groups"].clear()
-                tourney_serialized["groups"].append(group_data)
+                group_serialized.append(group_data)
             # deref bracket
+
+            bracket_serialized = []
             for bracket in tourney.get_brackets():
                 bracket_data = serializers.BracketSerializer(Bracket.objects.get(pk=bracket), context={"request": request}).data
                 for match in bracket_data["matchs"]:
                     del match["bracket"]
 
-                tourney_serialized["brackets"].clear()
-                tourney_serialized["brackets"].append(bracket_data)
+                bracket_serialized.append(bracket_data)
             # deref swissRound 
+            swiss_serialized = []
             for swissRound in tourney.get_swissRounds():
                 swiss_data = serializers.SwissRoundSerializer(SwissRound.objects.get(pk=swissRound), context={"request": request}).data
                 for match in swiss_data["matchs"]:
                     del match["swiss"]
 
-                tourney_serialized["swissRounds"].clear()
-                tourney_serialized["swissRounds"].append(swiss_data)
+                swiss_serialized.append(swiss_data)
+
+
+            tourney_serialized["groups"].clear()
+            tourney_serialized["brackets"].clear()
+            tourney_serialized["swissRounds"].clear()
             tourney_serialized["teams"].clear()
             tourney_serialized["teams"] = teams_serialized
+            tourney_serialized["groups"] = group_serialized
+            tourney_serialized["brackets"] = bracket_serialized
+            tourney_serialized["swissRounds"] = swiss_serialized
 
         return Response(tourney_serialized, status=status.HTTP_200_OK)
 
