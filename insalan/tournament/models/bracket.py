@@ -1,5 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.core.validators import MinValueValidator
+import math
 
 from . import match
 
@@ -30,8 +32,10 @@ class Bracket(models.Model):
         choices=BracketType.choices,
         max_length=10
     )
-    depth = models.IntegerField(
-        default=1
+    team_count = models.IntegerField(
+        default=2,
+        verbose_name=_("Nombre d'équipes"),
+        validators=[MinValueValidator(2)]
     )
 
     class Meta:
@@ -40,6 +44,12 @@ class Bracket(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_depth(self) -> int:
+        return math.ceil(math.log2(self.team_count/self.tournament.get_game().get_team_per_match())) + 1
+
+    def get_max_match_count(self) -> int:
+        return math.ceil(self.team_count/self.tournament.get_game().get_team_per_match())
 
 class KnockoutMatch(match.Match):
     bracket = models.ForeignKey(

@@ -524,15 +524,20 @@ class BracketMatchFilter(admin.SimpleListFilter):
             "W1" : "Finale winner",
             "L1" : "Finale looser"
         }
-        max_depth = max(Bracket.objects.all().values_list("depth", flat=True))
+        depths = [bracket.get_depth() for bracket in Bracket.objects.all()]
 
-        for depth in range(1,max_depth+1):
+        if len(depths):
+            max_depth = max(depths)
+        else:
+            max_depth = 0
+
+        for depth in range(1,max_depth):
             if depth == 1:
                 lookup["W2"] = "Demi-finale winner"
             elif depth == 2:
                 lookup["W3"] = "Quart de finale winner"
             else:
-                lookup["W" + str(depth)] = f"1/{2**depth}ème winner"
+                lookup["W" + str(depth+1)] = f"1/{2**depth}ème winner"
         
         for tour,round_number in enumerate(range(2*(max_depth-1),1,-1)):
             lookup["L" + str(round_number)] = f"Tour {tour+1} looser"
@@ -719,7 +724,7 @@ class KnockoutMatchAdmin(admin.ModelAdmin):
         update_to_ranking_action
     ]
 
-    list_filter = ["bracket", "bracket__tournament", BracketMatchFilter, "index_in_round"]
+    list_filter = [ "bracket__tournament", "bracket", "bracket_set", BracketMatchFilter, "index_in_round"]
 
     @admin.action(description=_("Lancer les matchs"))
     def launch_knockout_matchs_action(self,request,queryset):
