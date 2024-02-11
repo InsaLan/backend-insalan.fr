@@ -1,7 +1,7 @@
 from ..models import Bracket, KnockoutMatch, BracketType, BracketSet
 
 def create_empty_knockout_matchs(bracket: Bracket):
-    depth = bracket.depth
+    depth = bracket.get_depth()
 
     for match in KnockoutMatch.objects.filter(bracket=bracket):
         match.delete()
