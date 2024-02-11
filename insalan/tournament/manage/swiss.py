@@ -5,7 +5,6 @@ def create_swiss_matchs(swiss: SwissRound):
     teams = swiss.get_sorted_teams()
     team_per_match = swiss.tournament.get_game().get_team_per_match()
     nb_matchs = math.ceil(len(teams)/team_per_match)
-    # nb_rounds = 2*swiss.min_score-1
 
     teams += [None]*(nb_matchs*team_per_match-len(teams))
 
