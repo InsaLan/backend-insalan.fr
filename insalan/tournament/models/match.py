@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
 from typing import List
 import math
+from insalan.user.models import User
 
 class MatchStatus(models.TextChoices):
     """Information about the status of a match"""
@@ -61,6 +62,9 @@ class Match(models.Model):
     def get_teams(self) -> List["Team"]:
         return self.teams.all()
 
+    def get_teams_id(self) -> List[int]:
+        return self.teams.all().values_list("id", flat=True)
+
     def get_max_score(self) -> int:
         if self.bo_type == BestofType.RANKING:
             return self.get_team_count()
@@ -72,6 +76,9 @@ class Match(models.Model):
             return math.ceil(self.get_team_count()/2)
         
         return math.ceil(self.get_max_score()/2)
+
+    def is_user_in_match(self, user: User) -> bool:
+        return any([user == player_user for player_user in [player.as_user() in [team.get_players() for team in self.get_teams()]]])
 
 class Score(models.Model):
     team = models.ForeignKey(
