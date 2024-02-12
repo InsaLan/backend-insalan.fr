@@ -7,18 +7,18 @@ from rest_framework.exceptions import NotFound
 
 import insalan.tournament.serializers as serializers
 
-from ..models import Group, GroupMatch, MatchStatus, validate_match_data
-from ..manage import update_match_score
+from ..models import SwissRound, SwissMatch, MatchStatus, validate_match_data
+from ..manage import update_match_score, update_next_knockout_match
 
 from .permissions import ReadOnly, Patch
 
 from collections import Counter
 
-class GroupMatchScore(generics.UpdateAPIView):
-    """Update score of a group match"""
+class SwissMatchScore(generics.UpdateAPIView):
+    """Update score of a swiss match"""
 
-    queryset = GroupMatch.objects.all().order_by("id")
-    serializer_class = serializers.GroupMatchSerializer
+    queryset = SwissMatch.objects.all().order_by("id")
+    serializer_class = serializers.SwissMatchSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def patch(self, request, *args, **kwargs):
@@ -26,15 +26,15 @@ class GroupMatchScore(generics.UpdateAPIView):
         data = request.data
 
         try:
-            match = GroupMatch.objects.get(pk=kwargs["match_id"],group=kwargs["group_id"])
+            match = SwissMatch.objects.get(pk=kwargs["match_id"],swiss=kwargs["swiss_id"])
         except:
             raise NotFound()
 
         if not match.is_user_in_match(user):
             raise PermissionDenied()
 
-        if data["group"] != match.group.id:
-            raise BadRequest(_("Mauvaise poule"))
+        if data["swiss"] != match.swiss.id:
+            raise BadRequest(_("Mauvaise rounde suisse"))
         if data["id"] != match.id:
             raise BadRequest(_("Mauvais id de match"))
 
@@ -42,6 +42,6 @@ class GroupMatchScore(generics.UpdateAPIView):
 
         update_match_score(match,data)
 
-        serializer = serializers.GroupMatchSerializer(match, context={"request": request})
+        serializer = serializers.SwissMatchSerializer(match, context={"request": request})
 
         return Response(serializer.data, status=status.HTTP_200_OK)
