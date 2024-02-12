@@ -112,11 +112,14 @@ class Match(models.Model):
 
         for team in self.get_teams():
             if scores[team.id] >= self.get_winning_score():
-                winners.append(team)
+                winners.append((team,scores[team.id]))
             else:
-                loosers.append(team)
+                loosers.append((team,scores[team.id]))
 
-        return winners,loosers
+        winners.sort(key=lambda e: e[1],reverse=True)
+        loosers.sort(key=lambda e: e[1],reverse=True)
+
+        return [winner[0] for winner in winners] ,[looser[0] for looser in loosers]
 
 class Score(models.Model):
     team = models.ForeignKey(
