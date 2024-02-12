@@ -50,6 +50,7 @@ class KnockoutMatchSerializer(serializers.ModelSerializer):
 class BracketSerializer(serializers.ModelSerializer):
     teams = serializers.ListField(source="get_teams_id")
     matchs = KnockoutMatchSerializer(many=True,source="get_matchs")
+    winner = serializers.IntegerField(source="get_winner")
 
     class Meta:
         model = Bracket
