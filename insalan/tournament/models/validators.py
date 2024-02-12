@@ -64,16 +64,19 @@ def tournament_registration_full(tournament: "Tournament", exclude=None):
 def validate_match_data(match: "Match", data):
     if match.status != Match.MatchStatus.ONGOING:
         raise BadRequest(_("Le match n'est pas en cours"))
+
     if match.round_number != data["round_number"]:
         raise BadRequest(_("Mauvais numéro de round"))
+
     if match.index_in_round != data["index_in_round"]:
         raise BadRequest(_("Mauvais index du match dans le round"))
-    if not data["bracket_set"] in [member.value for member in BracketSet]:
-        raise BadRequest(_("Type de tableau invalide"))
+
     if Counter(map(int,data["score"].keys())) != Counter(match.get_teams_id()) or Counter(data["teams"]) != Counter(match.get_teams_id()):
         raise BadRequest(_("Liste des équipes invalide"))
+
     if sum(data["score"].values()) > match.get_total_max_score():
         raise BadRequest(_("Les scores sont invalides, le score total cummulé est trop grand"))
+
     for _,score in data["score"].items():
         if score > match.get_max_score():
             raise BadRequest(_("Le score d'une équipe est trop grand"))
