@@ -11,10 +11,17 @@ from rest_framework import serializers
 
 from insalan.user.models import User
 
-from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, Group, GroupMatch, Bracket, KnockoutMatch, SwissRound, SwissMatch
+from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, Group, GroupMatch, Bracket, KnockoutMatch, SwissRound, SwissMatch, Score
 from .models import unique_event_registration_validator, tournament_announced, max_players_per_team_reached, tournament_registration_full, max_substitue_per_team_reached
 
+class ScoreSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Score
+        fields = ["team","score"]
+
 class GroupMatchSerializer(serializers.ModelSerializer):
+    score = serializers.DictField(required=False,source="get_scores")
 
     class Meta:
         model = GroupMatch
@@ -25,6 +32,7 @@ class GroupSerializer(serializers.ModelSerializer):
 
     teams = serializers.ListField(required=False,source="get_teams_id")
     matchs = GroupMatchSerializer(many=True,source="get_matchs")
+    scores = serializers.DictField(required=False,source="get_scores")
 
     class Meta:
         """Meta options for the serializer"""
@@ -33,6 +41,7 @@ class GroupSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class KnockoutMatchSerializer(serializers.ModelSerializer):
+    score = serializers.DictField(required=False,source="get_scores")
 
     class Meta:
         model = KnockoutMatch
@@ -47,6 +56,7 @@ class BracketSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class SwissMatchSerializer(serializers.ModelSerializer):
+    score = serializers.DictField(required=False,source="get_scores")
 
     class Meta:
         model = SwissMatch

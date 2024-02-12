@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
-from typing import List
+from typing import List, Dict
 import math
 from insalan.user.models import User
 
@@ -52,9 +52,6 @@ class Match(models.Model):
         default=list,
         blank=True
     )
-
-    # class Meta:
-    #     abstract = True
     
     def get_team_count(self) -> int:
         return len(self.get_teams())
@@ -66,19 +63,31 @@ class Match(models.Model):
         return self.teams.all().values_list("id", flat=True)
 
     def get_max_score(self) -> int:
+        """Return the cumulated maximum score"""
         if self.bo_type == BestofType.RANKING:
-            return self.get_team_count()
+            return (self.get_team_count()*(self.get_team_count()+1))//2
 
         return self.bo_type
 
     def get_winning_score(self) -> int:
+        """Minimum score for a team to be considered a winner"""
         if self.bo_type == BestofType.RANKING:
             return math.ceil(self.get_team_count()/2)
         
         return math.ceil(self.get_max_score()/2)
 
     def is_user_in_match(self, user: User) -> bool:
+        """Test if a user is a player in a team of the match"""
         return any([user == player_user for player_user in [player.as_user() in [team.get_players() for team in self.get_teams()]]])
+
+    def get_scores(self) -> Dict[int,int]:
+        scores = {}
+
+        for team in self.teams.all():
+            score = Score.objects.get(team=team,match=self).score
+            scores[team.id] = score
+
+        return scores
 
 class Score(models.Model):
     team = models.ForeignKey(
