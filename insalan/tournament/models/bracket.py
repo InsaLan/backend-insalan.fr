@@ -63,6 +63,22 @@ class Bracket(models.Model):
     def get_matchs(self) -> List["KnockoutMatch"]:
         return KnockoutMatch.objects.filter(bracket=self).order_by("id")
 
+    def get_winner(self) -> int:
+        if self.bracket_type == BracketType.SINGLE:
+            final = KnockoutMatch.objects.filter(round_number=1,index_in_round=1,bracket=self,bracket_set=BracketSet.WINNER)
+        else:
+            final = KnockoutMatch.objects.filter(round_number=0,index_in_round=1,bracket=self,bracket_set=BracketSet.WINNER)
+
+        if len(final) != 1:
+            return None
+
+        winners, _ = final[0].get_winners_loosers()
+        if len(winners):
+            return winners[0].id
+
+        return None
+
+
 class KnockoutMatch(match.Match):
     bracket = models.ForeignKey(
         "Bracket",
