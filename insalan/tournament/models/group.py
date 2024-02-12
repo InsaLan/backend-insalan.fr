@@ -2,7 +2,7 @@ from pyexpat import model
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
-from typing import List, Tuple
+from typing import List, Dict, Tuple
 
 from . import team
 from . import match
@@ -46,7 +46,8 @@ class Group(models.Model):
         return self.tournament
 
     def get_teams(self) -> List["Team"]:
-        return Seeding.objects.filter(group=self).values_list("team", flat=True)
+        teams = Seeding.objects.filter(group=self).values_list("team", flat=True)
+        return team.Team.objects.filter(pk__in=teams)
 
     def get_teams_id(self) -> List[int]:
         return self.get_teams().values_list("id", flat=True)
@@ -62,15 +63,20 @@ class Group(models.Model):
     def get_round_count(self) -> int:
         return self.round_count
     
-    def get_leaderboard(self) -> List[Tuple["Team",int]]:
-        leaderboard = []
+    def get_leaderboard(self) -> Dict["Team",int]:
+        leaderboard = {}
 
         for team in self.get_teams():
-            group_matchs = GroupMatch.filter(teams=team,group=self)
-            score = sum(Score.objects.filter(team=team,match__in=group_matchs).values_list("score",flat=True))
-            leaderboard.append(tuple([team,score]))
+            group_matchs = GroupMatch.objects.filter(teams=team,group=self)
+            score = sum(match.Score.objects.filter(team=team,match__in=group_matchs).values_list("score",flat=True))
+            leaderboard[team] = score
 
         return leaderboard
+
+    def get_scores(self) -> Dict[int,int]:
+        leaderboard = self.get_leaderboard()
+        
+        return {team.id : score for team, score in leaderboard.items()}
 
     def get_matchs(self) -> List["GroupMatch"]:
         return GroupMatch.objects.filter(group=self).order_by("id")
