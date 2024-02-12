@@ -74,9 +74,11 @@ urlpatterns = [
     #     views.GroupList.as_view(),
     #     name="group/list"
     # ),
-    # path(
-    #     "group/<int:group_id>/match/<int:match_id>"
-    # ),
+    path(
+        "group/<int:group_id>/match/<int:match_id>",
+        views.GroupMatchScore.as_view(),
+        name="group/match/score"
+    ),
     # path(
     #     "bracket/"
     # ),
@@ -88,7 +90,9 @@ urlpatterns = [
     # path(
     #     "match/"
     # ),
-    # path(
-    #     "swiss/<int:swiss_id>/match/<int:match_id>"
-    # ),
+    path(
+        "swiss/<int:swiss_id>/match/<int:match_id>",
+        views.SwissMatchScore.as_view(),
+        name="swiss/match/score"
+    ),
 ]
