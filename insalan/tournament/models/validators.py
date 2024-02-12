@@ -1,6 +1,7 @@
 from insalan.user.models import User
 from django.utils.translation import gettext_lazy as _
 from rest_framework.validators import ValidationError
+from django.core.exceptions import BadRequest
 
 # from .event import Event
 from . import player as play
@@ -71,3 +72,8 @@ def validate_match_data(match: "Match", data):
         raise BadRequest(_("Type de tableau invalide"))
     if Counter(map(int,data["score"].keys())) != Counter(match.get_teams_id()) or Counter(data["teams"]) != Counter(match.get_teams_id()):
         raise BadRequest(_("Liste des équipes invalide"))
+    if sum(data["score"].values()) > match.get_total_max_score():
+        raise BadRequest(_("Les scores sont invalides, le score total cummulé est trop grand"))
+    for _,score in data["score"].items():
+        if score > match.get_max_score():
+            raise BadRequest(_("Le score d'une équipe est trop grand"))
