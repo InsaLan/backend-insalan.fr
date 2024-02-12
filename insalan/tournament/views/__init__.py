@@ -7,3 +7,4 @@ from .substitute import *
 from .team import *
 from .tournament import *
 from .bracket import *
+from .swiss import *
