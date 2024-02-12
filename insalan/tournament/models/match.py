@@ -78,7 +78,13 @@ class Match(models.Model):
 
     def is_user_in_match(self, user: User) -> bool:
         """Test if a user is a player in a team of the match"""
-        return any([user == player_user for player_user in [player.as_user() in [team.get_players() for team in self.get_teams()]]])
+        for team in self.get_teams():
+            for player in team.get_players():
+                if player.as_user() == user:
+                    return True
+        
+        return False
+        # return any([user == player_user for player_user in [player.as_user() for player in [team.get_players() for team in self.get_teams()]]])
 
     def get_scores(self) -> Dict[int,int]:
         scores = {}
@@ -88,6 +94,22 @@ class Match(models.Model):
             scores[team.id] = score
 
         return scores
+
+    def get_Scores(self) -> List["Score"]:
+        return Score.objects.filter(team__in=self.get_teams(),match=self)
+
+    def get_winners_loosers(self) -> List[List["Team"]]:
+        winners = []
+        loosers = []
+        scores = self.get_scores()
+
+        for team in self.get_teams():
+            if scores[team.id] >= self.get_winning_score():
+                winners.append(team)
+            else:
+                loosers.append(team)
+
+        return winners,loosers
 
 class Score(models.Model):
     team = models.ForeignKey(

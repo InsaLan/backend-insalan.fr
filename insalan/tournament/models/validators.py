@@ -6,6 +6,7 @@ from rest_framework.validators import ValidationError
 from . import player as play
 from . import manager as manage
 from . import substitute as sub
+from . import match as Match
 
 def unique_event_registration_validator(user: User, event: "Event", player = None, manager = None, substitute = None):
     """Validate a unique registration per event"""
@@ -56,3 +57,15 @@ def tournament_registration_full(tournament: "Tournament", exclude=None):
     if tournament.get_validated_teams(exclude) >= tournament.get_max_team():
         return True
     return False
+
+def validate_match_data(match: "Match", data):
+    if match.status != Match.MatchStatus.ONGOING:
+        raise BadRequest(_("Le match n'est pas en cours"))
+    if match.round_number != data["round_number"]:
+        raise BadRequest(_("Mauvais numéro de round"))
+    if match.index_in_round != data["index_in_round"]:
+        raise BadRequest(_("Mauvais index du match dans le round"))
+    if not data["bracket_set"] in [member.value for member in BracketSet]:
+        raise BadRequest(_("Type de tableau invalide"))
+    if Counter(map(int,data["score"].keys())) != Counter(match.get_teams_id()) or Counter(data["teams"]) != Counter(match.get_teams_id()):
+        raise BadRequest(_("Liste des équipes invalide"))
