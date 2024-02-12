@@ -21,7 +21,7 @@ class ScoreSerializer(serializers.ModelSerializer):
         fields = ["team","score"]
 
 class GroupMatchSerializer(serializers.ModelSerializer):
-    score = serializers.DictField(required=False,source="get_scores")
+    score = serializers.DictField(required=True,source="get_scores")
 
     class Meta:
         model = GroupMatch
@@ -41,7 +41,7 @@ class GroupSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class KnockoutMatchSerializer(serializers.ModelSerializer):
-    score = serializers.DictField(required=False,source="get_scores")
+    score = serializers.DictField(required=True,source="get_scores")
 
     class Meta:
         model = KnockoutMatch
@@ -56,7 +56,7 @@ class BracketSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class SwissMatchSerializer(serializers.ModelSerializer):
-    score = serializers.DictField(required=False,source="get_scores")
+    score = serializers.DictField(required=True,source="get_scores")
 
     class Meta:
         model = SwissMatch
