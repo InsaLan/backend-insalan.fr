@@ -25,13 +25,20 @@ class BracketMatchScore(generics.UpdateAPIView):
         user = request.user
         data = request.data
 
-        match = KnockoutMatch.objects.get(pk=kwargs["match_id"],bracket=kwargs["bracket_id"])
-
-        if match is None:
+        try:
+            match = KnockoutMatch.objects.get(pk=kwargs["match_id"],bracket=kwargs["bracket_id"])
+        except:
             raise NotFound()
 
         if not match.is_user_in_match(user):
             raise PermissionDenied()
+
+        if not data["bracket_set"] in [member.value for member in BracketSet]:
+            raise BadRequest(_("Type de tableau invalide"))
+        if data["bracket"] != match.bracket.id:
+            raise BadRequest(_("Arbre de tournoi incorrect"))
+        if data["id"] != match.id:
+            raise BadRequest(_("Mauvais id de match"))
 
         validate_match_data(match, data)
 
