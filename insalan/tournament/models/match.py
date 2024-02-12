@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import ValidationError
 from typing import List, Dict
 import math
 from insalan.user.models import User
@@ -62,19 +63,25 @@ class Match(models.Model):
     def get_teams_id(self) -> List[int]:
         return self.teams.all().values_list("id", flat=True)
 
-    def get_max_score(self) -> int:
+    def get_total_max_score(self) -> int:
         """Return the cumulated maximum score"""
         if self.bo_type == BestofType.RANKING:
             return (self.get_team_count()*(self.get_team_count()+1))//2
 
         return self.bo_type
 
+    def get_max_score(self) -> int:
+        if self.bo_type == BestofType.RANKING:
+            return self.get_team_count()
+
+        return self.get_winning_score()
+
     def get_winning_score(self) -> int:
         """Minimum score for a team to be considered a winner"""
         if self.bo_type == BestofType.RANKING:
             return math.ceil(self.get_team_count()/2)
         
-        return math.ceil(self.get_max_score()/2)
+        return math.ceil(self.get_total_max_score()/2)
 
     def is_user_in_match(self, user: User) -> bool:
         """Test if a user is a player in a team of the match"""
@@ -122,7 +129,7 @@ class Score(models.Model):
         on_delete=models.CASCADE,
         verbose_name=_("Match")
     )
-    score = models.IntegerField(
+    score = models.PositiveIntegerField(
         verbose_name=_("Score"),
         default=0
     )
@@ -134,3 +141,9 @@ class Score(models.Model):
                 name="no_duplicate_team_in_a_match"
             )
         ]
+
+    def clean(self):
+        if self.score > self.match.get_max_score():
+            raise ValidationError({
+                "score" :_(f"Le score est trop grand, il doit être inférieur ou égale à {self.match.get_max_score()}")
+            })
