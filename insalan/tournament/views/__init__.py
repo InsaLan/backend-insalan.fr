@@ -6,3 +6,4 @@ from .player import *
 from .substitute import *
 from .team import *
 from .tournament import *
+from .bracket import *

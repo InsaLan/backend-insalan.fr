@@ -69,24 +69,26 @@ urlpatterns = [
         views.SubstituteRegistrationListName.as_view(),
         name="substitute/listFromUsername",
     ),
-    path(
-        "group/",
-        views.GroupList.as_view(),
-        name="group/list"
-    ),
     # path(
-    #     "group/<int:pk>"
+    #     "group/",
+    #     views.GroupList.as_view(),
+    #     name="group/list"
+    # ),
+    # path(
+    #     "group/<int:group_id>/match/<int:match_id>"
     # ),
     # path(
     #     "bracket/"
     # ),
-    # path(
-    #     "bracket/<int:pk>"
-    # ),
+    path(
+        "bracket/<int:bracket_id>/match/<int:match_id>",
+        views.BracketMatchScore.as_view(),
+        name="bracket/match/score"
+    ),
     # path(
     #     "match/"
     # ),
     # path(
-    #     "match/<int:pk>"
+    #     "swiss/<int:swiss_id>/match/<int:match_id>"
     # ),
 ]
