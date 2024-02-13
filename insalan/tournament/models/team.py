@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from math import ceil
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -12,6 +12,7 @@ from insalan.user.models import User
 from . import player
 from . import manager
 from . import substitute
+from . import group, bracket, swiss
 
 from . import validators
 from . import payement_status as ps
@@ -140,6 +141,18 @@ class Team(models.Model):
     def get_password(self) -> str:
         """Return team password"""
         return self.password
+
+    def get_group_matchs(self) -> List["GroupMatch"]:
+        return group.GroupMatch.objects.filter(teams=self)
+
+    def get_knockout_matchs(self) -> List["KnockoutMatch"]:
+        return bracket.KnockoutMatch.objects.filter(teams=self)
+
+    def get_swiss_matchs(self) -> List["SwissMatch"]:
+        return swiss.SwissMatch.objects.filter(teams=self)
+
+    def get_matchs(self) -> List[Union[List["GroupMatch"],List["KnockoutMatch"],List["SwissMatch"]]]:
+        return self.get_group_matchs(), self.get_knockout_matchs(), self.get_swiss_matchs()
 
     def refresh_validation(self):
         """Refreshes the validation state of a tournament"""

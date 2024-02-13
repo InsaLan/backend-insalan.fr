@@ -7,15 +7,15 @@ def create_empty_knockout_matchs(bracket: Bracket):
     for match in KnockoutMatch.objects.filter(bracket=bracket):
         match.delete()
 
-    for roundIdx in range(1,depth+1):
-        matchCount = min(2**(roundIdx-1),ceil(bracket.get_max_match_count()/2**(depth-roundIdx)))
-        for matchId in range(1,matchCount+1):
-            KnockoutMatch.objects.create(round_number=roundIdx,index_in_round=matchId,bracket=bracket)
+    for round_idx in range(1,depth+1):
+        match_count = min(2**(round_idx-1),ceil(bracket.get_max_match_count()/2**(depth-round_idx)))
+        for match_id in range(1,match_count+1):
+            KnockoutMatch.objects.create(round_number=round_idx,index_in_round=match_id,bracket=bracket)
     if bracket.bracket_type == BracketType.DOUBLE:
-        for roundIdx in range(1,2*depth-1):
-            matchCount = min(2**((roundIdx-1)//2),ceil((bracket.get_max_match_count()//2)/2**(depth-(roundIdx+1)//2 - 1)))
-            for matchId in range(1,matchCount+1):
-                KnockoutMatch.objects.create(round_number=roundIdx,index_in_round=matchId,bracket=bracket,bracket_set=BracketSet.LOOSER)
+        for round_idx in range(1,2*depth-1):
+            match_count = min(2**((round_idx-1)//2),ceil((bracket.get_max_match_count()//2)/2**(depth-(round_idx+1)//2 - 1)))
+            for match_id in range(1,match_count+1):
+                KnockoutMatch.objects.create(round_number=round_idx,index_in_round=match_id,bracket=bracket,bracket_set=BracketSet.LOOSER)
         KnockoutMatch.objects.create(round_number=0,index_in_round=1,bracket=bracket)
 
 # def fill_knockout_matchs(bracket: Bracket):
