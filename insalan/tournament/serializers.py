@@ -263,6 +263,16 @@ class TeamSerializer(serializers.ModelSerializer):
         return instance
 
 
+class TeamMatchsSerializer(serializers.ModelSerializer):
+    """Serializer for team matchs"""
+    group_matchs = GroupMatchSerializer(many=True, source="get_group_matchs")
+    bracket_matchs = KnockoutMatchSerializer(many=True, source="get_knockout_matchs")
+    swiss_matchs = SwissMatchSerializer(many=True, source="get_swiss_matchs")
+
+    class Meta:
+        model = Team
+        fields = ["id","group_matchs","bracket_matchs","swiss_matchs"]
+
 class PlayerSerializer(serializers.ModelSerializer):
     """Serializer for a Player Registration"""
     password = serializers.CharField(write_only=True)
@@ -367,15 +377,3 @@ class SubstituteIdSerializer(serializers.ModelSerializer):
         """Turn a Django object into a serialized representation"""
         return instance.id
 
-
-
-# class GroupSerializer(serializers.ModelSerializer):
-#     """Serializer for a group in a tournament"""
-
-#     teams = serializers.ListField(required=False,source="get_teams_id")
-
-#     class Meta:
-#         """Meta options for the serializer"""
-
-#         model = Group
-#         fields = "__all__"

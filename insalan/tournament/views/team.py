@@ -136,3 +136,10 @@ class TeamDetails(generics.RetrieveUpdateDestroyAPIView):
         serializer = serializers.TeamSerializer(team, context={"request": request})
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class TeamMatchs(generics.RetrieveAPIView):
+
+    queryset = Team.objects.all().order_by("id")
+    serializer_class = serializers.TeamMatchsSerializer
+    permission_classes = [permissions.IsAdminUser | permissions.IsAuthenticated]
+    pagination_class = None
