@@ -31,9 +31,6 @@ class TeamList(generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         user = request.user
 
-        if user is None or not user.is_authenticated:
-            raise PermissionDenied()
-
         if not user.is_email_active():
             raise PermissionDenied(
                 {
@@ -53,7 +50,7 @@ class TeamDetails(generics.RetrieveUpdateDestroyAPIView):
 
     queryset = Team.objects.all().order_by("id")
     serializer_class = serializers.TeamSerializer
-    permission_classes = [permissions.IsAdminUser | ReadOnly | Patch]
+    permission_classes = [permissions.IsAdminUser | Patch | permissions.IsAuthenticatedOrReadOnly]
 
     def patch(self, request, *args, **kwargs):
         """
@@ -61,9 +58,6 @@ class TeamDetails(generics.RetrieveUpdateDestroyAPIView):
         """
         user = request.user
         data = request.data
-
-        if user is None or not user.is_authenticated:
-            raise PermissionDenied()
 
         # get the team
         team = Team.objects.get(id=kwargs["pk"])
