@@ -57,21 +57,6 @@ class Team(models.Model):
         verbose_name=_("Capitaine"),
         related_name="team_captain",
     )
-    # group = models.ForeignKey(
-    #     "Group",
-    #     verbose_name=_("Poule"),
-    #     on_delete=models.SET_NULL,
-    #     null=True,
-    #     blank=True
-    # )
-    # seeding = models.IntegerField()
-    # bracket = models.ForeignKey(
-    #     "Bracket",
-    #     verbose_name=_("Arbre de tournoi"),
-    #     on_delete=models.SET_NULL,
-    #     null=True,
-    #     blank=True
-    # )
 
     class Meta:
         """Meta Options"""
