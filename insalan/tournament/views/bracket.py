@@ -1,5 +1,5 @@
 from django.utils.translation import gettext_lazy as _
-from django.core.exceptions import PermissionDenied, BadRequest
+from django.core.exceptions import PermissionDenied
 
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
@@ -8,11 +8,10 @@ from rest_framework.exceptions import NotFound
 import insalan.tournament.serializers as serializers
 
 from ..models import Bracket, KnockoutMatch, MatchStatus, BracketSet, validate_match_data
+# , InvalidScores, InvalidTeamList, InvalidTeamScore, NotOngoingMatch
 from ..manage import update_match_score, update_next_knockout_match
 
 from .permissions import ReadOnly, Patch
-
-from collections import Counter
 
 class BracketMatchScore(generics.UpdateAPIView):
     """Update score of a bracket match"""
@@ -33,14 +32,9 @@ class BracketMatchScore(generics.UpdateAPIView):
         if not match.is_user_in_match(user):
             raise PermissionDenied()
 
-        if not data["bracket_set"] in [member.value for member in BracketSet]:
-            raise BadRequest(_("Type de tableau invalide"))
-        if data["bracket"] != match.bracket.id:
-            raise BadRequest(_("Arbre de tournoi incorrect"))
-        if data["id"] != match.id:
-            raise BadRequest(_("Mauvais id de match"))
-
-        validate_match_data(match, data)
+        error_response = validate_match_data(match, data)
+        if error_response != None:
+            return Response({k: _(v) for k,v in error_response.items()},status=status.HTTP_400_BAD_REQUEST)
 
         update_match_score(match,data)
 

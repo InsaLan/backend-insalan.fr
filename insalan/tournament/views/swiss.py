@@ -33,12 +33,9 @@ class SwissMatchScore(generics.UpdateAPIView):
         if not match.is_user_in_match(user):
             raise PermissionDenied()
 
-        if data["swiss"] != match.swiss.id:
-            raise BadRequest(_("Mauvaise rounde suisse"))
-        if data["id"] != match.id:
-            raise BadRequest(_("Mauvais id de match"))
-
-        validate_match_data(match, data)
+        error_response = validate_match_data(match, data)
+        if error_response != None:
+            return Response({k: _(v) for k,v in error_response.items()},status=status.HTTP_400_BAD_REQUEST)
 
         update_match_score(match,data)
 
