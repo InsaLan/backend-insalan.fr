@@ -608,7 +608,7 @@ class GroupMatchAdmin(admin.ModelAdmin):
         *update_bo_type_action_list
     ]
 
-    list_filter = ["group","group__tournament",RoundNumberFilter,"index_in_round"]
+    list_filter = ["group__tournament","group",RoundNumberFilter,"index_in_round","status"]
 
     @admin.action(description=_("Lancer les matchs"))
     def launch_group_matchs_action(self,request,queryset):
@@ -724,7 +724,7 @@ class KnockoutMatchAdmin(admin.ModelAdmin):
         *update_bo_type_action_list
     ]
 
-    list_filter = [ "bracket__tournament", "bracket", "bracket_set", BracketMatchFilter, "index_in_round"]
+    list_filter = [ "bracket__tournament", "bracket", "bracket_set", BracketMatchFilter, "index_in_round", "status"]
 
     @admin.action(description=_("Lancer les matchs"))
     def launch_knockout_matchs_action(self,request,queryset):
@@ -798,7 +798,7 @@ class SwissMatchAdmin(admin.ModelAdmin):
         *update_bo_type_action_list
     ]
 
-    list_filter = ["swiss", "swiss__tournament",RoundNumberFilter,"index_in_round"]
+    list_filter = ["swiss__tournament","swiss",RoundNumberFilter,"index_in_round","status"]
 
     @admin.action(description=_("Lancer les matchs"))
     def launch_swiss_matchs_action(self,request,queryset):
