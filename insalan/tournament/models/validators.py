@@ -2,6 +2,7 @@ from insalan.user.models import User
 from django.utils.translation import gettext_lazy as _
 from rest_framework.validators import ValidationError
 from django.core.exceptions import BadRequest
+from collections import Counter
 
 # from .event import Event
 from . import player as play
@@ -63,20 +64,29 @@ def tournament_registration_full(tournament: "Tournament", exclude=None):
 
 def validate_match_data(match: "Match", data):
     if match.status != Match.MatchStatus.ONGOING:
-        raise BadRequest(_("Le match n'est pas en cours"))
+        return {
+            "status" : "Le match n'est pas en cours"
+        }
 
-    if match.round_number != data["round_number"]:
-        raise BadRequest(_("Mauvais numéro de round"))
+    if len(data["score"]) != len(data["times"]):
+        return {
+            "data" : "Incohérence entre le nombre de score et le nombre de temps de partie"
+        }
 
-    if match.index_in_round != data["index_in_round"]:
-        raise BadRequest(_("Mauvais index du match dans le round"))
-
-    if Counter(map(int,data["score"].keys())) != Counter(match.get_teams_id()) or Counter(data["teams"]) != Counter(match.get_teams_id()):
-        raise BadRequest(_("Liste des équipes invalide"))
+    if Counter(map(int,data["score"].keys())) != Counter(match.get_teams_id()):
+        return {
+            "teams" : "Liste des équipes invalide"
+        }
 
     if sum(data["score"].values()) > match.get_total_max_score():
-        raise BadRequest(_("Les scores sont invalides, le score total cummulé est trop grand"))
+        return {
+            "score" : "Les scores sont invalides, le score total cummulé est trop grand"
+        }
 
     for _,score in data["score"].items():
         if score > match.get_max_score():
-            raise BadRequest(_("Le score d'une équipe est trop grand"))
+            return {
+                "score" : "Le score d'une équipe est trop grand"
+            }
+
+    return None
