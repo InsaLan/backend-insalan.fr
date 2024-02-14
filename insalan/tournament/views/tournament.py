@@ -15,7 +15,7 @@ from rest_framework.authentication import SessionAuthentication
 from insalan.user.models import User, UserMailer
 import insalan.tournament.serializers as serializers
 
-from ..models import Player, Manager, Substitute, Event, Tournament, Game, Team, PaymentStatus, Group, Bracket, SwissRound
+from ..models import Player, Manager, Substitute, Event, Tournament, Game, Team, PaymentStatus, Group, Bracket, SwissRound, GroupMatch, KnockoutMatch, SwissMatch
 from .permissions import ReadOnly, Patch
 
 
@@ -168,13 +168,41 @@ class TournamentMe(APIView):
         GET handler
         """
         user: User = request.user
+        ongoing_matchs = []
 
         if user is None:
             raise PermissionDenied()
 
         # retrieve registration as Player
         players = Player.objects.filter(user=user)
-        # serialize it
+
+        # serialize current ongoing match
+        for player in players :
+            ongoing_matchs += player.get_ongoing_match()
+
+        if len(ongoing_matchs) > 0:
+            if type(ongoing_matchs[0]) == GroupMatch:
+                ongoing_match = serializers.GroupMatchSerializer(ongoing_matchs[0],context={"request": request})
+            if type(ongoing_matchs[0]) == KnockoutMatch:
+                ongoing_match = serializers.KnockoutMatchSerializer(ongoing_matchs[0],context={"request": request})
+            if type(ongoing_matchs[0]) == SwissMatch:
+                ongoing_match = serializers.SwissMatchSerializer(ongoing_matchs[0],context={"request": request})
+
+            ongoing_match = ongoing_match.data
+
+            del ongoing_match["score"]
+            del ongoing_match["times"]
+            del ongoing_match["status"]
+
+            team_list = {}
+            for team in ongoing_match["teams"]:
+                team_list[str(team)] = Team.objects.get(pk=team).get_name()
+
+            ongoing_match["teams"] = team_list
+        else:
+            ongoing_match = None
+
+        # serialize registration as Player
         players = serializers.PlayerSerializer(
             players, context={"request": request}, many=True
         ).data
@@ -238,4 +266,4 @@ class TournamentMe(APIView):
                 context={"request": request},
             ).data
 
-        return Response({"player": players, "manager": managers, "substitute": substitutes}, status=status.HTTP_200_OK)
+        return Response({"player": players, "manager": managers, "substitute": substitutes,"ongoing_match": ongoing_match}, status=status.HTTP_200_OK)
