@@ -1,3 +1,5 @@
+from typing import Union
+
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator
@@ -7,7 +9,7 @@ from insalan.tickets.models import Ticket
 from insalan.user.models import User
 
 from .payement_status import PaymentStatus
-from . import team, validators
+from . import team, validators, group, bracket, swiss, match
 
 class Player(models.Model):
     """
@@ -70,6 +72,9 @@ class Player(models.Model):
     def get_name_in_game(self) -> str:
         """Return the name_in_game of the player"""
         return self.name_in_game
+
+    def get_ongoing_match(self) -> Union["GroupMatch","KnockoutMatch","SwissMatch"]:
+        return list(group.GroupMatch.objects.filter(teams=self.team,status=match.MatchStatus.ONGOING)) + list(bracket.KnockoutMatch.objects.filter(teams=self.team,status=match.MatchStatus.ONGOING)) + list(swiss.SwissMatch.objects.filter(teams=self.team,status=match.MatchStatus.ONGOING))
 
     def clean(self):
         """
