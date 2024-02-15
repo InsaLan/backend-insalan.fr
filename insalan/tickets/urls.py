@@ -16,4 +16,6 @@ urlpatterns = [
     path("scan/<str:token>", views.scan, name="scan"),
     path("qrcode/<str:token>", views.qrcode, name="qrcode"),
     path("generate/<str:token>", views.generate_pdf, name="generate"),
+    path("pay", views.pay, name="pay"),
+    path("unpaid", views.unpaid, name="unpaid"),
 ]
