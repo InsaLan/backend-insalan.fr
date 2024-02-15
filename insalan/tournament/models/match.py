@@ -91,7 +91,6 @@ class Match(models.Model):
                     return True
         
         return False
-        # return any([user == player_user for player_user in [player.as_user() for player in [team.get_players() for team in self.get_teams()]]])
 
     def get_scores(self) -> Dict[int,int]:
         scores = {}

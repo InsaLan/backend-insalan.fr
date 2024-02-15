@@ -65,9 +65,9 @@ class Bracket(models.Model):
 
     def get_winner(self) -> int:
         if self.bracket_type == BracketType.SINGLE:
-            final = KnockoutMatch.objects.filter(round_number=1,index_in_round=1,bracket=self,bracket_set=BracketSet.WINNER)
+            final = KnockoutMatch.objects.filter(round_number=1,index_in_round=1,bracket=self,bracket_set=BracketSet.WINNER,status=match.MatchStatus.COMPLETED)
         else:
-            final = KnockoutMatch.objects.filter(round_number=0,index_in_round=1,bracket=self,bracket_set=BracketSet.WINNER)
+            final = KnockoutMatch.objects.filter(round_number=0,index_in_round=1,bracket=self,bracket_set=BracketSet.WINNER,status=match.MatchStatus.COMPLETED)
 
         if len(final) != 1:
             return None
