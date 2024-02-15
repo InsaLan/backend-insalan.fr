@@ -200,6 +200,9 @@ def pay(request: HttpRequest) -> JsonResponse:
         ticket = Ticket.objects.create(user=manager.user, tournament=manager.team.tournament)
         MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_ticket_mail(manager.user, ticket)
         return JsonResponse({'success': True})
+    else:
+        return JsonResponse({'err': _("Type invalide")},
+                            status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
