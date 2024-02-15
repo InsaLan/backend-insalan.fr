@@ -17,6 +17,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
+from insalan.tournament.models import Team, Player, Substitute, Manager
 from insalan.user.models import User
 from .models import Ticket, TicketManager
 
@@ -42,11 +43,29 @@ def get(request: HttpRequest, id: str, token: str) -> JsonResponse:
         return JsonResponse({'err': _("Ticket non trouvé")},
                             status=status.HTTP_404_NOT_FOUND)
 
+    # Get the team name for the user
+    player = Player.objects.filter(user=user, team__tournament=ticket.tournament)
+    if player.exists():
+        team = player.first().team.name
+    else:
+        substitute = Substitute.objects.filter(user=user, team__tournament=ticket.tournament)
+        if substitute.exists():
+            team = substitute.first().team.name
+        else:
+            manager = Manager.objects.filter(user=user, team__tournament=ticket.tournament)
+            if manager.exists():
+                team = manager.first().team.name
+            else:
+                team = None
+
     return JsonResponse(
         {
             "user": user.username,
+            "identity": user.get_full_name(),
             "token": ticket.token,
             "status": ticket.status,
+            "tournament": ticket.tournament.name,
+            "team": team,
         }
     )
 
