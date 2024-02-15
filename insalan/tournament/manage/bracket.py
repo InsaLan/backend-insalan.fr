@@ -22,34 +22,45 @@ def create_empty_knockout_matchs(bracket: Bracket):
 
 def update_next_knockout_match(match: KnockoutMatch):
     if match.bracket_set == BracketSet.WINNER:
-        if len(match.get_teams()) > 2:
-            pass
+        winners, loosers = match.get_winners_loosers()
+        match_count = KnockoutMatch.objects.filter(bracket=match.bracket,bracket_set=match.bracket_set,round_number=match.round_number-1).count()
 
-        winner,looser = match.get_winners_loosers()
+        for i,winner in enumerate(winners):
+            new_index_in_round = (ceil(match.index_in_round/2) + i)%(match_count+ 1)
 
-        new_index_in_round = ceil(match.index_in_round/2)
+            next_match_winner = KnockoutMatch.objects.get(bracket=match.bracket,bracket_set=match.bracket_set,round_number=match.round_number-1,index_in_round=new_index_in_round)
 
-        next_match_winner = KnockoutMatch.objects.get(bracket=match.bracket,bracket_set=match.bracket_set,round_number=match.round_number-1,index_in_round=new_index_in_round)
+            next_match_winner.teams.add(winner)
 
-        next_match_winner.teams.add(*winner)
+        for i, looser in enumerate(loosers):
+            new_index_in_round = (ceil(match.index_in_round/2) + i)%(match_count+ 1)
 
-        if match.round_number == match.bracket.get_depth():
-            next_match_looser = KnockoutMatch.objects.get(bracket=match.bracket,bracket_set=BracketSet.LOOSER,round_number=2*(match.round_number-1),index_in_round=new_index_in_round)
-        else:
-            next_match_looser = KnockoutMatch.objects.get(bracket=match.bracket,bracket_set=BracketSet.LOOSER,round_number=2*match.round_number-1,index_in_round=new_index_in_round)
-        
-        next_match_looser.teams.add(*looser)
+            if match.round_number == match.bracket.get_depth():
+                looser_round = 2*(match.round_number-1)
+            else:
+                looser_round = 2*match.round_number-1
+
+            next_match_looser = KnockoutMatch.objects.get(bracket=match.bracket,bracket_set=BracketSet.LOOSER,round_number=looser_round,index_in_round=new_index_in_round)
+
+            next_match_looser.teams.add(looser)
+
     elif match.bracket_set == BracketSet.LOOSER:
-        if len(match.get_teams()) > 2:
-            pass
 
-        winner, _ = match.get_winners_loosers()
+        winners, _ = match.get_winners_loosers()
+        match_count = KnockoutMatch.objects.filter(bracket=match.bracket,bracket_set=match.bracket_set,round_number=match.round_number-1).count()
 
         if match.round_number == 1:
             next_match = KnockoutMatch.objects.get(bracket=match.bracket,bracket_set=BracketSet.WINNER,round_number=0,index_in_round=1)
-        elif match.round_number%2:
-            next_match = KnockoutMatch.objects.get(bracket=match.bracket,bracket_set=match.bracket_set,round_number=match.round_number-1,index_in_round=ceil(match.index_in_round/2))
+            next_match.teams.add(*winners)
         else:
-            next_match = KnockoutMatch.objects.get(bracket=match.bracket,bracket_set=match.bracket_set,round_number=match.round_number-1,index_in_round=match.index_in_round)
+            if match.round_number%2:
+                base_index_in_round = ceil(match.index_in_round/2)
+            else:
+                base_index_in_round = match.index_in_round
+            for i, winner in enumerate(winners):
+                new_index_in_round = (base_index_in_round + i)%(match_count + 1)
 
-        next_match.teams.add(*winner)
+                next_match = KnockoutMatch.objects.get(bracket=match.bracket,bracket_set=match.bracket_set,round_number=match.round_number-1,index_in_round=new_index_in_round)
+
+                next_match.teams.add(winner)
+
