@@ -183,13 +183,19 @@ class TournamentMe(APIView):
 
         if len(ongoing_matchs) > 0:
             if type(ongoing_matchs[0]) == GroupMatch:
-                ongoing_match = serializers.GroupMatchSerializer(ongoing_matchs[0],context={"request": request})
-            if type(ongoing_matchs[0]) == KnockoutMatch:
-                ongoing_match = serializers.KnockoutMatchSerializer(ongoing_matchs[0],context={"request": request})
-            if type(ongoing_matchs[0]) == SwissMatch:
-                ongoing_match = serializers.SwissMatchSerializer(ongoing_matchs[0],context={"request": request})
+                ongoing_match = serializers.GroupMatchSerializer(ongoing_matchs[0],context={"request": request}).data
+                ongoing_match["match_type"] = {"type": "group", "id": ongoing_match["group"]}
+                del ongoing_match["group"]
 
-            ongoing_match = ongoing_match.data
+            if type(ongoing_matchs[0]) == KnockoutMatch:
+                ongoing_match = serializers.KnockoutMatchSerializer(ongoing_matchs[0],context={"request": request}).data
+                ongoing_match["match_type"] = {"type": "bracket", "id": ongoing_match["bracket"]}
+                del ongoing_match["bracket"]
+
+            if type(ongoing_matchs[0]) == SwissMatch:
+                ongoing_match = serializers.SwissMatchSerializer(ongoing_matchs[0],context={"request": request}).data
+                ongoing_match["match_type"] = {"type": "swiss", "id": ongoing_match["swiss"]}
+                del ongoing_match["swiss"]
 
             del ongoing_match["score"]
             del ongoing_match["times"]

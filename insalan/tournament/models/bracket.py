@@ -74,7 +74,7 @@ class Bracket(models.Model):
 
         winners, _ = final[0].get_winners_loosers()
         if len(winners):
-            return winners[0].id
+            return winners[0]
 
         return None
 
