@@ -110,14 +110,20 @@ class Match(models.Model):
         loosers = []
         scores = self.get_scores()
 
-        for team in self.get_teams():
-            if scores[team.id] >= self.get_winning_score():
-                winners.append((team,scores[team.id]))
+        for team in self.get_teams_id():
+            if self.bo_type == BestofType.RANKING and scores[team] <= self.get_winning_score():
+                    winners.append((team,scores[team]))
+            elif self.bo_type != BestofType.RANKING and scores[team] >= self.get_winning_score():
+                winners.append((team,scores[team]))
             else:
-                loosers.append((team,scores[team.id]))
+                loosers.append((team,scores[team]))
 
-        winners.sort(key=lambda e: e[1],reverse=True)
-        loosers.sort(key=lambda e: e[1],reverse=True)
+        if self.bo_type == BestofType.RANKING:
+            winners.sort(key=lambda e: e[1])
+            loosers.sort(key=lambda e: e[1])
+        else:
+            winners.sort(key=lambda e: e[1],reverse=True)
+            loosers.sort(key=lambda e: e[1],reverse=True)
 
         return [winner[0] for winner in winners] ,[looser[0] for looser in loosers]
 
