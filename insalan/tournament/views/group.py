@@ -41,4 +41,4 @@ class GroupMatchScore(generics.UpdateAPIView):
 
         serializer = serializers.GroupMatchSerializer(match, context={"request": request})
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)

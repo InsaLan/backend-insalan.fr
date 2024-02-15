@@ -43,4 +43,4 @@ class BracketMatchScore(generics.UpdateAPIView):
 
         serializer = serializers.KnockoutMatchSerializer(match, context={"request": request})
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
