@@ -181,8 +181,11 @@ class TicketTODO(APITestCase):
             response.json(),
             {
                 "user": "user1",
+                "identity": "",
                 "token": "00000000-0000-0000-0000-000000000001",
                 "status": "VA",
+                "tournament": "Tournament",
+                "team": None,
             },
         )
 
