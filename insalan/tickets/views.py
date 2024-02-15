@@ -17,9 +17,11 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
-from insalan.tournament.models import Team, Player, Substitute, Manager
+from insalan.tournament.models import Team, Player, Substitute, Manager, PaymentStatus
 from insalan.user.models import User
 from .models import Ticket, TicketManager
+from insalan.mailer import MailManager
+from insalan.settings import EMAIL_AUTH
 
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
@@ -140,3 +142,104 @@ def generate_pdf(request: HttpRequest, token: str) -> JsonResponse:
 
     pdf = TicketManager.generate_ticket_pdf(ticket)
     return HttpResponse(pdf, content_type='application/pdf')
+
+@api_view(["POST"])
+@permission_classes([IsAdminUser])
+def pay(request: HttpRequest) -> JsonResponse:
+    """
+        This view is used to :
+        - Mark as paid a registration from it's type and id
+        - Create a ticket for the user that paid
+        - Send an email to the user with the ticket
+    """
+    data = request.data
+    print(data)
+    if 'type' not in data or 'id' not in data:
+        return JsonResponse({'err': _("Type ou id manquant")},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    if data['type'] == 'player':
+        try:
+            player = Player.objects.get(id=data['id'])
+        except Player.DoesNotExist:
+            return JsonResponse({'err': _("Inscription non trouvée")},
+                                status=status.HTTP_404_NOT_FOUND)
+        if player.payment_status == PaymentStatus.PAID:
+            return JsonResponse({'err': _("Inscription déjà payée")},
+                                status=status.HTTP_400_BAD_REQUEST)
+        player.payment_status = PaymentStatus.PAID
+        player.save()
+        ticket = Ticket.objects.create(user=player.user, tournament=player.team.tournament)
+        MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_ticket_mail(player.user, ticket)
+        return JsonResponse({'success': True})
+    elif data['type'] == 'substitute':
+        try:
+            substitute = Substitute.objects.get(id=data['id'])
+        except Substitute.DoesNotExist:
+            return JsonResponse({'err': _("Remplaçant⋅e non trouvé⋅e")},
+                                status=status.HTTP_404_NOT_FOUND)
+        if substitute.payment_status == PaymentStatus.PAID:
+            return JsonResponse({'err': _("Remplaçant⋅e déjà payé⋅e")},
+                                status=status.HTTP_400_BAD_REQUEST)
+        substitute.payment_status = PaymentStatus.PAID
+        substitute.save()
+        ticket = Ticket.objects.create(user=substitute.user, tournament=substitute.team.tournament)
+        MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_ticket_mail(substitute.user, ticket)
+        return JsonResponse({'success': True})
+    elif data['type'] == 'manager':
+        try:
+            manager = Manager.objects.get(id=data['id'])
+        except Manager.DoesNotExist:
+            return JsonResponse({'err': _("Manager non trouvé")},
+                                status=status.HTTP_404_NOT_FOUND)
+        if manager.payment_status == PaymentStatus.PAID:
+            return JsonResponse({'err': _("Manager déjà payé")},
+                                status=status.HTTP_400_BAD_REQUEST)
+        manager.payment_status = PaymentStatus.PAID
+        manager.save()
+        ticket = Ticket.objects.create(user=manager.user, tournament=manager.team.tournament)
+        MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_ticket_mail(manager.user, ticket)
+        return JsonResponse({'success': True})
+
+@api_view(["GET"])
+@permission_classes([IsAdminUser])
+def unpaid(request: HttpRequest) -> JsonResponse:
+    """
+        This view is used to get all the unpaid registrations
+    """
+    # Get all the registrations that are not paid
+    players = Player.objects.filter(
+        team__validated=True, 
+        team__tournament__event__ongoing=True
+    ).exclude(payment_status=PaymentStatus.PAID)
+    substitutes = Substitute.objects.filter(
+        team__validated=True,
+        team__tournament__event__ongoing=True
+    ).exclude(payment_status=PaymentStatus.PAID)
+    managers = Manager.objects.filter(
+        team__validated=True,
+        team__tournament__event__ongoing=True
+    ).exclude(payment_status=PaymentStatus.PAID)
+
+    return JsonResponse([
+        {
+            'id': reg.id,
+            'type': 'player',
+            'user': reg.user.username,
+            'team': reg.team.name,
+        } for reg in players
+    ] + [
+        {
+            'id': reg.id,
+            'type': 'substitute',
+            'user': reg.user.username,
+            'team': reg.team.name,
+        } for reg in substitutes
+    ] + [
+        {
+            'id': reg.id,
+            'type': 'manager',
+            'user': reg.user.username,
+            'team': reg.team.name,
+        } for reg in managers
+    ], safe=False)
