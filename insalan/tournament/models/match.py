@@ -105,7 +105,7 @@ class Match(models.Model):
     def get_Scores(self) -> List["Score"]:
         return Score.objects.filter(team__in=self.get_teams(),match=self)
 
-    def get_winners_loosers(self) -> List[List["Team"]]:
+    def get_winners_loosers(self) -> List[List[int]]:
         winners = []
         loosers = []
         scores = self.get_scores()

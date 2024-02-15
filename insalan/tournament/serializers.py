@@ -51,10 +51,11 @@ class BracketSerializer(serializers.ModelSerializer):
     teams = serializers.ListField(source="get_teams_id")
     matchs = KnockoutMatchSerializer(many=True,source="get_matchs")
     winner = serializers.IntegerField(source="get_winner")
+    depth = serializers.IntegerField(required=False,source="get_depth")
 
     class Meta:
         model = Bracket
-        fields = "__all__"
+        exclude = ["team_count"]
 
 class SwissMatchSerializer(serializers.ModelSerializer):
     score = serializers.DictField(required=True,source="get_scores")
