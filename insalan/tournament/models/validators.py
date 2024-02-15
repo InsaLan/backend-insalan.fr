@@ -66,11 +66,6 @@ def validate_match_data(match: "Match", data):
             "status" : "Le match n'est pas en cours"
         }
 
-    if len(data["score"]) != len(data["times"]):
-        return {
-            "data" : "Incohérence entre le nombre de score et le nombre de temps de partie"
-        }
-
     if Counter(map(int,data["score"].keys())) != Counter(match.get_teams_id()):
         return {
             "teams" : "Liste des équipes invalide"
