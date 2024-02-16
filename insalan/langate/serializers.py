@@ -13,6 +13,8 @@ class SimplifiedUserDataSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=100)
     name = serializers.CharField(max_length=100)
     email = serializers.EmailField(max_length=255)
+    is_staff = serializers.BooleanField()
+    is_admin = serializers.BooleanField()
 
 
 class TournamentRegistrationSerializer(serializers.Serializer):
