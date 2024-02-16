@@ -22,7 +22,7 @@ class PizzaOrderInline(admin.TabularInline):
 
 class OrderAdmin(admin.ModelAdmin):
     list_display = ("id", "get_username", "time_slot", "created_at")
-    search_fields = ["user", "time_slot"]
+    search_fields = ["user", "time_slot__delivery_time"]
     inlines = [PizzaOrderInline]
 
 admin.site.register(Order, OrderAdmin)
