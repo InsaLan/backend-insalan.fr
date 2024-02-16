@@ -21,6 +21,8 @@ class SimplifiedUserData:
     username = models.CharField(max_length=100, blank=False)
     name = models.CharField(max_length=100)
     email = models.EmailField(verbose_name="email address", max_length=255, blank=False)
+    is_staff = models.BooleanField()
+    is_admin = models.BooleanField()
 
     @classmethod
     def new(cls, user: User):
@@ -34,6 +36,8 @@ class SimplifiedUserData:
         s_user_data.username = user.get_username()
         s_user_data.name = user.get_full_name()
         s_user_data.email = user.email
+        s_user_data.is_staff = user.is_staff
+        s_user_data.is_admin = user.is_superuser
 
         return s_user_data
 
