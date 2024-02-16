@@ -125,13 +125,13 @@ class TimeSlotDetail(generics.RetrieveAPIView, generics.DestroyAPIView):
         return Response(serializer)
 
 class NextTimeSlot(generics.ListAPIView):
-    """Find the next timeslot"""
+    """Find the timeslot in the same day"""
     queryset = TimeSlot.objects.all()
     permission_classes = [ReadOnly]
 
     def get(self, request, *args, **kwargs):
-        # select incoming timeslot and currents timeslot
-        timeslot = TimeSlot.objects.filter(delivery_time__gte=timezone.now()).order_by("start")
+        # select incoming timeslot and currents timeslot in the same day
+        timeslot = TimeSlot.objects.filter(delivery_time__gte=timezone.now().date()).order_by("delivery_time")
 
         serializers_data = []
         for ts in timeslot:
