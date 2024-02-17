@@ -26,14 +26,14 @@ def update_next_knockout_match(match: KnockoutMatch):
         match_count = KnockoutMatch.objects.filter(bracket=match.bracket,bracket_set=match.bracket_set,round_number=match.round_number-1).count()
 
         for i,winner in enumerate(winners):
-            new_index_in_round = (ceil(match.index_in_round/2) + i)%(match_count+ 1)
+            new_index_in_round = (ceil(match.index_in_round/2) + i - 1)%match_count + 1
 
             next_match_winner = KnockoutMatch.objects.get(bracket=match.bracket,bracket_set=match.bracket_set,round_number=match.round_number-1,index_in_round=new_index_in_round)
 
             next_match_winner.teams.add(winner)
 
         for i, looser in enumerate(loosers):
-            new_index_in_round = (ceil(match.index_in_round/2) + i)%(match_count+ 1)
+            new_index_in_round = (ceil(match.index_in_round/2) + i - 1)%match_count + 1
 
             if match.round_number == match.bracket.get_depth():
                 looser_round = 2*(match.round_number-1)
@@ -58,7 +58,7 @@ def update_next_knockout_match(match: KnockoutMatch):
             else:
                 base_index_in_round = match.index_in_round
             for i, winner in enumerate(winners):
-                new_index_in_round = (base_index_in_round + i)%(match_count + 1)
+                new_index_in_round = (base_index_in_round + i - 1)%match_count + 1
 
                 next_match = KnockoutMatch.objects.get(bracket=match.bracket,bracket_set=match.bracket_set,round_number=match.round_number-1,index_in_round=new_index_in_round)
 
