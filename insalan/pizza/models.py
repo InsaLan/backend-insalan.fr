@@ -14,6 +14,14 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
 
+class PaymentMethod(models.TextChoices):
+    """
+    Payment method choices
+    """
+    CB = "CB", _("Carte bancaire")
+    CH = "CH", _("Chèque")
+    ES = "ES", _("Espèces")
+    LI = "LI", _("Lyfpay")
 
 class Pizza(models.Model):
     """
@@ -137,7 +145,7 @@ class TimeSlot(models.Model):
     )
 
     def __str__(self) -> str:
-        return f"{self.delivery_time}"
+        return f"{self.delivery_time.strftime('%A %d %B %Y %H:%M')}"
 
     def save(self, *args, **kwargs):
 
@@ -249,13 +257,8 @@ class Order(models.Model):
     payment_method: models.CharField = models.CharField(
         verbose_name=_("Moyen de paiement"),
         max_length=2,
-        choices=[
-            ("CB", _("Carte")),
-            ("CH", _("Chèque")),
-            ("ES", _("Espèces")),
-            ("LI", _("Lyfpay")),
-        ],
-        default="CB",
+        choices=PaymentMethod.choices,
+        default=PaymentMethod.CB,
     )
     price: models.FloatField = models.FloatField(verbose_name=_("Prix"))
     paid: models.BooleanField = models.BooleanField(
