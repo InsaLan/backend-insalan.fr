@@ -22,6 +22,7 @@ class PaymentMethod(models.TextChoices):
     CH = "CH", _("Chèque")
     ES = "ES", _("Espèces")
     LI = "LI", _("Lyfpay")
+    FR = "FR", _("Gratuit")
 
 class Pizza(models.Model):
     """

@@ -64,10 +64,9 @@ class PaymentAdmin(admin.ModelAdmin):
             payment_status = payment.transaction.payment_status
             if payment.transaction.payment_status == TransactionStatus.PENDING:
                 payment_status = TransactionStatus.FAILED
-            payment_type = ""
-            for product in payment.transaction.products.all():
-                payment_type += f"{product.name}, "
-            payment_type = payment_type[:-2]
+            payment_type = ", ".join(
+                [product.name for product in payment.transaction.products.all()]
+            )
 
             export += f"{payment.id};{payment.amount};{payment_type};{payment_status};{payment.transaction.creation_date};{payment.transaction.last_modification_date}\n"
         response = HttpResponse(export, content_type="text/csv")
