@@ -53,6 +53,10 @@ class Match(models.Model):
         default=list,
         blank=True
     )
+
+    class Meta:
+
+        ordering = ["round_number","index_in_round"]
     
     def get_team_count(self) -> int:
         return len(self.get_teams())
