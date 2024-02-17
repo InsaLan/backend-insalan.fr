@@ -61,7 +61,7 @@ class Bracket(models.Model):
         return self.get_teams().values_list("id", flat=True)
 
     def get_matchs(self) -> List["KnockoutMatch"]:
-        return KnockoutMatch.objects.filter(bracket=self).order_by("id")
+        return KnockoutMatch.objects.filter(bracket=self)
 
     def get_winner(self) -> int:
         if self.bracket_type == BracketType.SINGLE:

@@ -79,7 +79,7 @@ class Group(models.Model):
         return {team.id : score for team, score in leaderboard.items()}
 
     def get_matchs(self) -> List["GroupMatch"]:
-        return GroupMatch.objects.filter(group=self).order_by("id")
+        return GroupMatch.objects.filter(group=self)
 
 
 class Seeding(models.Model):
