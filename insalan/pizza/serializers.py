@@ -1,7 +1,7 @@
 """ Serializers for pizza models"""
 from rest_framework import serializers
 
-from .models import Pizza, Order, TimeSlot, PizzaOrder, PizzaExport
+from .models import Pizza, Order, TimeSlot, PizzaOrder, PizzaExport, PaymentMethod
 from typing import List
 
 class PizzaSerializer(serializers.ModelSerializer):
@@ -44,7 +44,9 @@ class CreateOrderSerializer(serializers.ModelSerializer):
         price_type = validated_data.pop('type')
         pizza = validated_data.pop("pizza")
 
-        if price_type == "staff":
+        if validated_data["payment_method"] == PaymentMethod.FR:
+            price = 0
+        elif price_type == "staff":
             price = TimeSlot.objects.get(id=validated_data["time_slot"].id).staff_price * len(pizza)
         elif price_type == "player":
             price = TimeSlot.objects.get(id=validated_data["time_slot"].id).player_price * len(pizza)
