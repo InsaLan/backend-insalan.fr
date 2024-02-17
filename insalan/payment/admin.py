@@ -5,9 +5,10 @@
 
 from django.contrib import admin, messages
 
+from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
-from .models import Product, Transaction, Payment
+from .models import Product, Transaction, Payment, TransactionStatus
 
 
 class ProductAdmin(admin.ModelAdmin):
@@ -39,6 +40,8 @@ class PaymentAdmin(admin.ModelAdmin):
 
     list_display = ("id", "amount", "transaction")
 
+    actions = ["export"]
+
     def has_add_permission(self, _request):
         """Remove the ability to add a payment from the backoffice"""
         return False
@@ -51,6 +54,27 @@ class PaymentAdmin(admin.ModelAdmin):
         """Remove the ability to edit a payment from the backoffice"""
         return False
 
+    def export(self, request, queryset):
+        """
+        Export the selected payments to a CSV file
+        """
+        export = "id;prix;type;statut;date de paiement;date de dernière modification\n"
+        for payment in queryset:
+            # /!\ This will be removed when the payment timeouts are implemented
+            payment_status = payment.transaction.payment_status
+            if payment.transaction.payment_status == TransactionStatus.PENDING:
+                payment_status = TransactionStatus.FAILED
+            payment_type = ""
+            for product in payment.transaction.products.all():
+                payment_type += f"{product.name}, "
+            payment_type = payment_type[:-2]
+
+            export += f"{payment.id};{payment.amount};{payment_type};{payment_status};{payment.transaction.creation_date};{payment.transaction.last_modification_date}\n"
+        response = HttpResponse(export, content_type="text/csv")
+        response["Content-Disposition"] = "attachment; filename=export.csv"
+        return response
+
+    export.short_description = "Exporter les paiements sélectionnés"
 
 admin.site.register(Payment, PaymentAdmin)
 
