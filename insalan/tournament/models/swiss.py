@@ -62,3 +62,6 @@ class SwissMatch(match.Match):
 	class Meta:
 		verbose_name = _("Match de ronde suisse")
 		verbose_name_plural = _("Matchs de ronde suisse")
+
+	def get_tournament(self):
+		return self.swiss.tournament

@@ -105,6 +105,9 @@ class GroupMatch(match.Match):
         verbose_name = _("Match de poule")
         verbose_name_plural = _("Matchs de poule")
 
+    def get_tournament(self):
+        return self.group.tournament
+
 # class GroupMatchScore(models.Model):
 #     score = models.IntegerField()
 #     match = models.ForeignKey(

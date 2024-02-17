@@ -95,3 +95,6 @@ class KnockoutMatch(match.Match):
     class Meta:
         verbose_name = _("Match d'arbre")
         verbose_name_plural = _("Matchs d'arbre")
+
+    def get_tournament(self):
+        return self.bracket.tournament
