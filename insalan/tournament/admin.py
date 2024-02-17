@@ -564,12 +564,19 @@ class GroupTeamsInline(admin.TabularInline):
         if db_field.name == "team":
             resolved = resolve(request.path_info)
             if "object_id" in resolved.kwargs:
-                kwargs["queryset"] = Team.objects.filter(tournament=self.parent_model.objects.get(pk=resolved.kwargs["object_id"]).tournament)
+                kwargs["queryset"] = Team.objects.filter(tournament=self.parent_model.objects.get(pk=resolved.kwargs["object_id"]).tournament,validated=True).order_by("name")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 class ScoreInline(admin.TabularInline):
     model = Score
     extra = 0
+
+    def formfield_for_foreignkey(self, db_field: ForeignKey[Any], request, **kwargs):
+        if db_field.name == "team":
+            resolved = resolve(request.path_info)
+            if "object_id" in resolved.kwargs:
+                kwargs["queryset"] = Team.objects.filter(tournament=self.parent_model.objects.get(pk=resolved.kwargs["object_id"]).get_tournament(),validated=True).order_by("name")
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 class GroupAdmin(admin.ModelAdmin):
     """Admin handler for Groups"""
@@ -713,7 +720,7 @@ class SwissSeedingInline(admin.TabularInline):
         if db_field.name == "team":
             resolved = resolve(request.path_info)
             if "object_id" in resolved.kwargs:
-                kwargs["queryset"] = Team.objects.filter(tournament=self.parent_model.objects.get(pk=resolved.kwargs["object_id"]).tournament)
+                kwargs["queryset"] = Team.objects.filter(tournament=self.parent_model.objects.get(pk=resolved.kwargs["object_id"]).tournament).order_by("name")
         return super().formfield_for_foreignkey(db_field,request,**kwargs)
 
 class SwissRoundAdmin(admin.ModelAdmin):
