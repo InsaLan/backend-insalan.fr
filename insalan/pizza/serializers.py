@@ -43,8 +43,12 @@ class CreateOrderSerializer(serializers.ModelSerializer):
         """Create an order"""
         price_type = validated_data.pop('type')
         pizza = validated_data.pop("pizza")
+        if "payment_method" not in validated_data:
+            payment_method = PaymentMethod.CB
+        else:
+            payment_method = validated_data["payment_method"]
 
-        if validated_data["payment_method"] == PaymentMethod.FR:
+        if payment_method == PaymentMethod.FR:
             price = 0
         elif price_type == "staff":
             price = TimeSlot.objects.get(id=validated_data["time_slot"].id).staff_price * len(pizza)
