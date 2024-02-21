@@ -1,46 +1,24 @@
-# Contributing
+# Insalan backend
 
-Please read carefully[the CONTRIBUTING.md file](CONTRIBUTING.md) before any
-contribution.
+## Description
 
-# How to
-First, enter in the python venv: `source env/bin/activate`
+This is the backend of the Insalan website. It is a Django and Django rest framework application. It is served by a Nginx server. It is part of the [insalan.fr](https://insalan.fr) infrastructure and is deployed with the [infra-insalan.fr](https://github.com/InsaLan/infra-insalan.fr) repository.
 
-if you want to create a new module, run `django-admin startapp your-new-app` in the `insalan` directory.
+## Contributing
 
-# Backend
+Please read carefully [the CONTRIBUTING.md file](CONTRIBUTING.md) before any contribution.
 
-framework used: https://www.django-rest-framework.org
+## Run the backend in local
 
-# Architecture
+The backend has to be deployed from the docker-compose setup (so you need to install it!).
+Please refer to [this README](https://github.com/InsaLan/infra-insalan.fr/blob/main/README.md)
+
+Once the docker-compose is running, you can access the frontend at `http://api.beta.localhost` if you are using the default beta configuration.
+
+## Architecture
 `insalan` is the root directory of the web application.
-`pizza`, `user` are apps in the Django language. They are micro-services that implement specific features of the application.
+`pizza`, `user`,... are apps in the Django language. They are micro-services that implement specific features of the application.
 
-For instance, `user` handles user-related actions (permission, authentication, etc...) and `pizza` handles the pizza application in the former website.
+For instance, `user` handles user-related actions (permission, authentication, etc...) and `pizza` handles the pizza application.
 
-The base api: `/api/version/endpoint`
-
-for example, for the pizza module: `/api/version/pizza/`
-
-
-# Roadmap
-
-## Backend
-
-### Modules
-- [ ] authentication
-- [ ] [user](user) [@Lugrim](https://www.github.com/Lugrim)
-	- [ ] placement
-	- [ ] langate [@Lux](https://www.github.com/Lymkwi)
-	- [ ] tournament
-- [ ] admin [@Mahal](https://www.github.com/ShiroUsagi-san)
-- [ ] payment
-- [ ] archive
-- [ ] connectors
-- [ ] [pizza](pizza) [@Khagana](https://www.github.com/ThibaultDidier)
-- [ ] partos [@somebody](https://github.com/floflo0/)
-
-## Frontend
-[@Mahal](https://www.github.com/ShiroUsagi-san)
-framework used: vuejs
-
+Each apps have their own `urls.py` file that defines the routes of the app. The endpoints are prefixed by the app name. For instance, the prefix to the pizza app is `/api/{version}/pizza`
