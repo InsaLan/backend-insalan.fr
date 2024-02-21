@@ -44,8 +44,9 @@ class EventDetails(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAdminUser | ReadOnly]
 
 
-class EventDetailsSomeDeref(APIView):
+class EventDetailsSomeDeref(generics.RetrieveAPIView):
     """Details about an Event that dereferences tournaments, but nothing else"""
+    serializer_class = serializers.EventSerializer
 
     def get(self, request, primary_key: int):
         """GET handler"""

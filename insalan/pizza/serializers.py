@@ -68,6 +68,13 @@ class CreateOrderSerializer(serializers.ModelSerializer):
 
 class OrderIdSerializer(serializers.ModelSerializer):
     """ Serializer for an order"""
+
+    class Meta:
+        """
+        Serializer for an order
+        """
+        model = Order
+        fields = ("id", )
     
     def to_representation(self, instance):
         """Turn a Django object into a serialized representation"""
@@ -83,6 +90,14 @@ class TimeSlotSerializer(serializers.ModelSerializer):
 
 class TimeSlotIdSerializer(serializers.ModelSerializer):
     """Serializer for a timeslot model"""
+
+    class Meta:
+        """
+        Serializer for a timeslot model
+        """
+        model = TimeSlot
+        fields = ("id", )
+
     def to_representation(self, instance):
         """Turn a Django object into a serialized representation"""
         return instance.id

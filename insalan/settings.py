@@ -88,6 +88,7 @@ INSTALLED_APPS = [
     "insalan.cms",
     "insalan.payment",
     "insalan.pizza",
+    "drf_yasg",
 ]
 
 MIDDLEWARE = [
@@ -101,6 +102,12 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+SWAGGER_SETTINGS = {
+    "USE_SESSION_AUTH": True,
+    "LOGIN_URL": "/v1/user/login/",
+    "LOGOUT_URL": "/v1/user/logout/",
+}
 
 ROOT_URLCONF = "insalan.urls"
 

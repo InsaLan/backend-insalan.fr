@@ -52,7 +52,7 @@ class UserView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer
 
 
-class UserMe(APIView):
+class UserMe(generics.RetrieveAPIView):
     """
     API endpoint that allows a logged in user to get and set some of their own
     account fields.
@@ -60,6 +60,7 @@ class UserMe(APIView):
 
     authentication_classes = [SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserSerializer
 
     def get(self, request):
         """
