@@ -37,8 +37,9 @@ class TournamentDetails(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAdminUser | ReadOnly]
 
 
-class TournamentDetailsFull(APIView):
+class TournamentDetailsFull(generics.RetrieveAPIView):
     """Details about a tournament, with full dereferencing of data"""
+    serializer_class = serializers.TournamentSerializer
 
     def get(self, request, primary_key: int):
         """Handle the GET word"""
@@ -156,13 +157,14 @@ class TournamentDetailsFull(APIView):
         return Response(tourney_serialized, status=status.HTTP_200_OK)
 
 
-class TournamentMe(APIView):
+class TournamentMe(generics.ListAPIView):
     """
     Details on tournament of a logged user
     This endpoint does many requests to the database and should be used wisely
     """
     authentication_classes =  [SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated & ReadOnly]
+    serializer_class = serializers.PlayerSerializer
 
     def get(self, request):
         """

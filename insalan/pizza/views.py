@@ -69,6 +69,8 @@ class PizzaListByGivenTimeSlot(generics.RetrieveAPIView):
     """Group pizzas by timeslot"""
     pagination_class = None
     permission_classes = [ReadOnly]
+    serializer_class = serializers.PizzaByTimeSlotSerializer
+    queryset = TimeSlot.objects.all()
 
     def get(self, request, *args, **kwargs):
         if not TimeSlot.objects.filter(id=self.kwargs["pk"]).exists():
@@ -102,6 +104,7 @@ class TimeSlotDetail(generics.RetrieveAPIView, generics.DestroyAPIView):
     """Find a timeslot by its id"""
     queryset = TimeSlot.objects.all()
     permission_classes = [permissions.IsAdminUser]
+    serializer_class = serializers.TimeSlotSerializer
 
     def get(self, request, *args, **kwargs):
         if not TimeSlot.objects.filter(id=self.kwargs["pk"]).exists():
@@ -128,6 +131,7 @@ class NextTimeSlot(generics.ListAPIView):
     """Find the timeslot in the same day"""
     queryset = TimeSlot.objects.all()
     permission_classes = [ReadOnly]
+    serializer_class = serializers.TimeSlotSerializer
 
     def get(self, request, *args, **kwargs):
         # select incoming timeslot and currents timeslot in the same day
