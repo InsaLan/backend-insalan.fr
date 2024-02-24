@@ -20,6 +20,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.core.exceptions import ValidationError
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 from insalan.user.serializers import (
     GroupSerializer,
     PermissionSerializer,
@@ -76,6 +79,83 @@ class UserMe(generics.RetrieveAPIView):
 
         return Response(user)
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "email": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Adresse de courriel")
+                ),
+                "first_name": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Prénom")
+                ),
+                "last_name": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Nom de famille")
+                ),
+                "display_name": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Nom d'affichage")
+                ),
+                "pronouns": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Pronoms")
+                ),
+                "status": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Statut")
+                ),
+                "new_password": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Nouveau mot de passe")
+                ),
+                "password_validation": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Validation du mot de passe")
+                ),
+                "current_password": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Mot de passe actuel")
+                ),
+            },
+        ),
+        responses={
+            200: UserSerializer,
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "password": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Mot de passe invalide")
+                        )
+                    ),
+                    "user": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Données invalides")
+                        )
+                    )
+                }
+            ),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "password": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Mot de passe actuel invalide")
+                        )
+                    )
+                }
+            )
+        }
+    )
     def patch(self, request):
         """
         Edit the current user following some limitations
@@ -177,6 +257,31 @@ class EmailConfirmView(APIView):
     permissions_classes = [permissions.AllowAny]
     authentication_classes = [SessionAuthentication]
 
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "msg": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Adresse de courriel confirmée")
+                    )
+                }
+            ),
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "user": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Utilisateur·rice ou jeton invalide (ou adresse déjà confirmée)")
+                        )
+                    )
+                }
+            )
+        }
+    )
     def get(self, request, user=None, token=None):
         """
         If requested with valid parameters, will validate an user's email
@@ -212,6 +317,28 @@ class AskForPasswordReset(APIView):
     permissions_classes = [permissions.AllowAny]
     authentication_classes = [SessionAuthentication]
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "email": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Adresse de courriel")
+                ),
+            },
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "msg": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Courriel de ré-initialisation envoyé")
+                    )
+                }
+            ),
+        }
+    )
     def post(self, request):
         """
         If requested with valid parameters, will send a password reset email to
@@ -234,6 +361,52 @@ class ResetPassword(APIView):
     permissions_classes = [permissions.AllowAny]
     authentication_classes = [SessionAuthentication]
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "user": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Nom d'utilisateur")
+                ),
+                "token": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Jeton de ré-initialisation")
+                ),
+                "password": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Nouveau mot de passe")
+                ),
+                "password_confirm": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Confirmation du nouveau mot de passe")
+                ),
+            },
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "msg": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Mot de passe ré-initialisé")
+                    )
+                }
+            ),
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "user": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Champ manquant/mot de passe invalide")
+                        )
+                    )
+                }
+            )
+        }
+    )
     def post(self, request):
         """
         If requested with valid parameters, will reset an user password
@@ -253,20 +426,22 @@ class ResetPassword(APIView):
             user_object: User = User.object.get(username=data["user"])
             if default_token_generator.check_token(user_object, data["token"]):
                 if data["password"] == data["password_confirm"]:
-                    validation_errors = validate_password(
-                        data["password"], user=user_object
-                    )
-                    if validation_errors is None:
-                        user_object.set_password(data["password"])
-                        user_object.save()
-                        return Response()
-                    return Response(
-                        {
-                            "user": [_("Mot de passe trop simple ou invalide")],
-                            "errors": validation_errors,
-                        },
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+                    try:
+                        validate_password(
+                            data["password"], user=user_object
+                        )
+                    except ValidationError as err:
+                        validation_errors = err.messages
+                        return Response(
+                            {
+                                "user": [_("Mot de passe trop simple ou invalide")],
+                                "errors": validation_errors,
+                            },
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                    user_object.set_password(data["password"])
+                    user_object.save()
+                    return Response()
                 return Response(
                     {"user": [_("Les mots de passe diffèrent")]},
                     status=status.HTTP_400_BAD_REQUEST,
@@ -282,9 +457,6 @@ class ResetPassword(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        return Response({}, status=status.HTTP_501_NOT_IMPLEMENTED)
-
-
 class ResendEmailConfirmView(APIView):
     """
     API endpoint to re-send a confirmation email
@@ -293,6 +465,40 @@ class ResendEmailConfirmView(APIView):
     permissions_classes = [permissions.AllowAny]
     authentication_classes = [SessionAuthentication]
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "username": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Nom d'utilisateur")
+                ),
+            },
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "msg": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Courriel de confirmation renvoyé")
+                    )
+                }
+            ),
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "user": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Impossible de renvoyer le courriel de confirmation")
+                        )
+                    )
+                }
+            )
+        }
+    )
     def post(self, request):
         """
         If the user is found, will send again a confirmation email
@@ -340,6 +546,68 @@ class UserLogin(APIView):
     permission_classes = [permissions.AllowAny]
     authentication_classes = [SessionAuthentication]
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "username": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Nom d'utilisateur")
+                ),
+                "password": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Mot de passe")
+                ),
+            },
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "user": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Utilisateur·rice connecté·e")
+                    )
+                }
+            ),
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "user": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Format des données soumises invalide")
+                        )
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "user": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Nom d'utilisateur·rice ou mot de passe incorrect")
+                        )
+                    )
+                }
+            ),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "user": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Veuillez confirmer votre adresse de courriel")
+                        )
+                    )
+                }
+            )
+        }
+    )
     def post(self, request):
         """
         Submit a login form
