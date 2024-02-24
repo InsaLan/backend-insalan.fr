@@ -11,6 +11,9 @@ from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.serializers import Serializer
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 import insalan.pizza.serializers as serializers
 from .models import Pizza, TimeSlot, Order, PizzaExport
 
@@ -33,6 +36,42 @@ class PizzaList(generics.ListCreateAPIView):
         if self.request.method == "GET":
             return serializers.PizzaIdSerializer
         return serializers.PizzaSerializer
+    
+    @swagger_auto_schema(
+        responses={
+            201: serializers.PizzaSerializer,
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Données invalides")
+                    )
+                }
+            )
+        }
+    )
+    def post(self, request, *args, **kwargs):
+        """
+        Create a pizza
+        """
+        return super().post(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_INTEGER
+                )
+            ),
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        """
+        Get all pizzas
+        """
+        return super().get(request, *args, **kwargs)
 
 class PizzaListFull(generics.ListAPIView):
     """List all pizzas"""
@@ -48,6 +87,26 @@ class PizzaDetail(generics.RetrieveAPIView):
     serializer_class = serializers.PizzaSerializer
     permission_classes = [ReadOnly]
 
+    @swagger_auto_schema(
+        responses={
+            200: serializers.PizzaSerializer,
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Pizza non trouvée")
+                    )
+                }
+            )
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        """
+        Get a pizza by its id
+        """
+        return super().get(request, *args, **kwargs)
+
 class PizzaSearch(generics.ListAPIView):
     """Search a pizza by its name"""
     pagination_class = None
@@ -57,6 +116,56 @@ class PizzaSearch(generics.ListAPIView):
     def get_queryset(self):
         partial_name = self.request.query_params.get("q", None)
         return Pizza.objects.filter(name__contains=partial_name)
+    
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter(
+                "q",
+                openapi.IN_QUERY,
+                description=_("Nom de la pizza"),
+                type=openapi.TYPE_STRING
+            )
+        ],
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "id": openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description=_("Identifiant de la pizza")
+                        ),
+                        "name": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Nom de la pizza")
+                        ),
+                        "ingredients": openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_STRING
+                            ),
+                        ),
+                        "allergens": openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_STRING
+                            ),
+                        ),
+                        "image": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Image de la pizza")
+                        )
+                    }
+                )
+            ),
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        """
+        Search a pizza by its name
+        """
+        return super().get(request, *args, **kwargs)
 
 class PizzaListByTimeSlot(generics.ListAPIView):
     """Group pizzas by timeslot"""
@@ -65,6 +174,57 @@ class PizzaListByTimeSlot(generics.ListAPIView):
     queryset = TimeSlot.objects.all()
     permission_classes = [ permissions.IsAdminUser ]
 
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Schema(
+                # array of serializers.PizzaByTimeSlotSerializer
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "id": openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description=_("Identifiant du timeslot")
+                        ),
+                        "pizza": openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            description=_("Pizzas commandées pour ce timeslot")
+                        ),
+                        "delivery_time": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Heure de livraison")
+                        ),
+                        "start": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Heure de début")
+                        ),
+                        "end": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Heure de fin")
+                        ),
+                        "pizza_max": openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description=_("Nombre maximum de pizzas")
+                        ),
+                        "public": openapi.Schema(
+                            type=openapi.TYPE_BOOLEAN,
+                            description=_("Timeslot public")
+                        ),
+                        "ended": openapi.Schema(
+                            type=openapi.TYPE_BOOLEAN,
+                            description=_("Timeslot terminé")
+                        )
+                    }
+                )
+            )
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        """
+        Get pizzas ordered for a timeslot
+        """
+        return super().get(request, *args, **kwargs)
+
 class PizzaListByGivenTimeSlot(generics.RetrieveAPIView):
     """Group pizzas by timeslot"""
     pagination_class = None
@@ -72,7 +232,24 @@ class PizzaListByGivenTimeSlot(generics.RetrieveAPIView):
     serializer_class = serializers.PizzaByTimeSlotSerializer
     queryset = TimeSlot.objects.all()
 
+    @swagger_auto_schema(
+        responses={
+            200: serializers.PizzaByTimeSlotSerializer,
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Timeslot non trouvé")
+                    )
+                }
+            )
+        }
+    )
     def get(self, request, *args, **kwargs):
+        """
+        Get pizzas ordered for a timeslot
+        """
         if not TimeSlot.objects.filter(id=self.kwargs["pk"]).exists():
             return Response({"detail": _("Not found.")}, status=404)
         timeslot = TimeSlot.objects.get(id=self.kwargs["pk"])
@@ -90,6 +267,42 @@ class TimeSlotList(generics.ListCreateAPIView):
         if self.request.method == "GET":
             return serializers.TimeSlotIdSerializer
         return serializers.TimeSlotSerializer
+    
+    @swagger_auto_schema(
+        responses={
+            201: serializers.TimeSlotSerializer,
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Données invalides")
+                    )
+                }
+            )
+        }
+    )
+    def post(self, request, *args, **kwargs):
+        """
+        Create a timeslot
+        """
+        return super().post(request, *args, **kwargs)
+    
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_INTEGER
+                ),
+            ),
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        """
+        Get all timeslots
+        """
+        return super().get(request, *args, **kwargs)
 
 
 class TimeSlotListFull(generics.ListAPIView):
@@ -106,6 +319,20 @@ class TimeSlotDetail(generics.RetrieveAPIView, generics.DestroyAPIView):
     permission_classes = [permissions.IsAdminUser]
     serializer_class = serializers.TimeSlotSerializer
 
+    @swagger_auto_schema(
+        responses={
+            200: serializers.TimeSlotSerializer,
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Timeslot non trouvé")
+                    )
+                }
+            )
+        }
+    )
     def get(self, request, *args, **kwargs):
         if not TimeSlot.objects.filter(id=self.kwargs["pk"]).exists():
             return Response({"detail": _("Not found.")}, status=404)
@@ -126,6 +353,26 @@ class TimeSlotDetail(generics.RetrieveAPIView, generics.DestroyAPIView):
         serializer.pop("external_product")
 
         return Response(serializer)
+    
+    @swagger_auto_schema(
+        responses={
+            200: serializers.TimeSlotSerializer,
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Timeslot non trouvé")
+                    )
+                }
+            )
+        }
+    )
+    def delete(self, request, *args, **kwargs):
+        """
+        Delete a timeslot
+        """
+        return super().delete(request, *args, **kwargs)
 
 class NextTimeSlot(generics.ListAPIView):
     """Find the timeslot in the same day"""
@@ -158,6 +405,27 @@ class OrderList(generics.ListCreateAPIView):
         if self.request.method == "GET":
             return serializers.OrderIdSerializer
         return serializers.CreateOrderSerializer
+    
+    @swagger_auto_schema(
+        responses={
+            200: serializers.OrderIdSerializer,
+            201: serializers.OrderIdSerializer,
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Données invalides")
+                    )
+                }
+            )
+        }
+    )
+    def post(self, request, *args, **kwargs):
+        """
+        Create an order
+        """
+        return super().post(request, *args, **kwargs)
 
 class OrderListFull(generics.ListAPIView):
     """List all orders"""
@@ -176,6 +444,20 @@ class OrderDetail(generics.RetrieveUpdateDestroyAPIView):
             return serializers.OrderSerializer
         return serializers.CreateOrderSerializer
 
+    @swagger_auto_schema(
+        responses={
+            200: serializers.OrderSerializer,
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Commande non trouvée")
+                    )
+                }
+            )
+        }
+    )
     def get(self, request, *args, **kwargs):
         if not Order.objects.filter(id=self.kwargs["pk"]).exists():
             return Response({"detail": _("Not found.")}, status=404)
@@ -191,6 +473,29 @@ class OrderDetail(generics.RetrieveUpdateDestroyAPIView):
 
         return Response(serializer)
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "delivered": openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN,
+                    description=_("Commande livrée")
+                )
+            },
+        ),
+        responses={
+            200: serializers.OrderSerializer,
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Commande non trouvée")
+                    )
+                }
+            )
+        }
+    )
     def patch(self, request, *args, **kwargs):
         if not Order.objects.filter(id=self.kwargs["pk"]).exists():
             return Response({"detail": _("Not found.")}, status=404)
@@ -210,6 +515,55 @@ class OrderDetail(generics.RetrieveUpdateDestroyAPIView):
         else:
             return Response({"detail": _("Bad request.")}, status=400)
 
+    @swagger_auto_schema(
+        responses={
+            200: serializers.OrderSerializer,
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Commande non trouvée")
+                    )
+                }
+            )
+        }
+    )
+    def delete(self, request, *args, **kwargs):
+        """
+        Delete an order
+        """
+        return super().delete(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "delivered": openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN,
+                    description=_("Commande livrée")
+                )
+            },
+        ),
+        responses={
+            200: serializers.OrderSerializer,
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Commande non trouvée")
+                    )
+                }
+            )
+        }
+    )
+    def put(self, request, *args, **kwargs):
+        """
+        Update an order
+        """
+        return super().put(request, *args, **kwargs)
+
 class ExportOrder(generics.ListCreateAPIView):
     """Export an order"""
     queryset = PizzaExport.objects.all()
@@ -217,6 +571,39 @@ class ExportOrder(generics.ListCreateAPIView):
     # body is expected to be empty
     serializer_class = Serializer
 
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "id": openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description=_("Identifiant de l'export")
+                        ),
+                        "orders": openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            description=_("Commandes exportées")
+                        ),
+                        "created_at": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Date d'export")
+                        )
+                    }
+                )
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Timeslot non trouvé")
+                    )
+                }
+            )
+        }
+    )
     def get(self, request, *args, **kwargs):
         if not TimeSlot.objects.filter(id=self.kwargs["pk"]).exists():
             return Response({"detail": _("Not found.")}, status=404)
@@ -239,6 +626,39 @@ class ExportOrder(generics.ListCreateAPIView):
 
         return Response(serializer)
 
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "id": openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description=_("Identifiant de l'export")
+                        ),
+                        "orders": openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            description=_("Commandes exportées")
+                        ),
+                        "created_at": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Date d'export")
+                        )
+                    }
+                )
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Timeslot non trouvé")
+                    )
+                }
+            )
+        }
+    )
     def post(self, request, *args, **kwargs):
         if not TimeSlot.objects.filter(id=self.kwargs["pk"]).exists():
             return Response({"detail": _("Not found.")}, status=404)
