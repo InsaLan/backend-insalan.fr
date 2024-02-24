@@ -31,6 +31,51 @@ class LangateUserView(CreateAPIView):
     authentication_classes = [SessionAuthentication]
     serializer_class = ReplySerializer
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "username": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Nom d'utilisateur")
+                ),
+                "password": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Mot de passe")
+                ),
+            },
+        ),
+        responses={
+            200: serializer_class,
+            500: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Pas d'évènement en cours")
+                    )
+                }
+            ),
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Nom d'utilisateur ou mot de passe incorrect")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Utilisateur non inscrit")
+                    )
+                }
+            ),
+        }
+    )
     def post(self, request, *args, **kwargs):
         """
         Function to handle retrieving and checking user data
