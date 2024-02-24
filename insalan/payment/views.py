@@ -16,6 +16,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 import insalan.settings as app_settings
 import insalan.payment.serializers as serializers
 
@@ -34,6 +37,17 @@ class ProductList(generics.ListAPIView):
     queryset = Product.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
+    @swagger_auto_schema(
+        responses={
+            200: serializers.ProductSerializer,
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        """
+        Get all products
+        """
+        return super().get(request, *args, **kwargs)
+    
 
 class ProductDetails(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -44,6 +58,96 @@ class ProductDetails(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
+    @swagger_auto_schema(
+        responses={
+            200: serializers.ProductSerializer,
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        """
+        Get a product
+        """
+        return super().get(request, *args, **kwargs)
+    
+    @swagger_auto_schema(
+        request_body=serializers.ProductSerializer,
+        responses={
+            200: serializers.ProductSerializer,
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Données invalides")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Produit non trouvé")
+                    )
+                }
+            )
+        }
+    )
+    def put(self, request, *args, **kwargs):
+        """
+        Update a product
+        """
+        return super().put(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        responses={
+            200: serializers.ProductSerializer,
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Produit non trouvé")
+                    )
+                }
+            )
+        }
+    )
+    def delete(self, request, *args, **kwargs):
+        """
+        Delete a product
+        """
+        return super().delete(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        request_body=serializers.ProductSerializer,
+        responses={
+            200: serializers.ProductSerializer,
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Données invalides")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Produit non trouvé")
+                    )
+                }
+            )
+        }
+    )
+    def patch(self, request, *args, **kwargs):
+        """
+        Partially update a product
+        """
+        return super().patch(request, *args, **kwargs)
 
 class TransactionList(generics.ListAPIView):
     """
@@ -73,12 +177,76 @@ class CreateProduct(generics.CreateAPIView):
     queryset = Product.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
+    @swagger_auto_schema(
+        request_body=serializers.ProductSerializer,
+        responses={
+            200: serializers.ProductSerializer,
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Données invalides")
+                    )
+                }
+            )
+        }
+    )
+    def post(self, request, *args, **kwargs):
+        """
+        Create a product
+        """
+        return super().post(request, *args, **kwargs)
 
 class Notifications(APIView):
     """
     Notifications view
     """
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "metadata": openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "uuid": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("UUID of the transaction")
+                        )
+                    }
+                ),
+                "eventType": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Type of event")
+                ),
+                "data": openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    description=_("Data of the event")
+                )
+            }
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "success": openapi.Schema(
+                        type=openapi.TYPE_BOOLEAN,
+                        description=_("Notification received")
+                    )
+                }
+            ),
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Données invalides")
+                    )
+                }
+            )
+        }
+    )
     def post(self, request):
         """Notification POST"""
 
@@ -310,3 +478,54 @@ class PayView(generics.CreateAPIView):
             {"err": _("Données de transaction invalides")},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "amount": openapi.Schema(
+                    type=openapi.TYPE_NUMBER,
+                    description=_("Montant à payer")
+                ),
+                "product": openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description=_("ID du produit")
+                ),
+                "payer": openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description=_("ID de l'utilisateur")
+                ),
+                "metadata": openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    description=_("Métadonnées")
+                )
+            }
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "success": openapi.Schema(
+                        type=openapi.TYPE_BOOLEAN,
+                        description=_("Paiement effectué")
+                    ),
+                    "redirect_url": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("URL de redirection")
+                    )
+                }
+            ),
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Données de transaction invalides")
+                    )
+                }
+            )
+        }
+    )
+    def post(self, request, *args, **kwargs):
+        """Process a payment request"""
+        return super().post(request, *args, **kwargs)
