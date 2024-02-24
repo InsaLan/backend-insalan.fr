@@ -13,6 +13,9 @@ from django.urls import reverse
 from qrcode import make
 from qrcode.image.svg import SvgImage
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -23,6 +26,58 @@ from .models import Ticket, TicketManager
 from insalan.mailer import MailManager
 from insalan.settings import EMAIL_AUTH
 
+@swagger_auto_schema(
+    method='get',
+    responses={
+        200: openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "user": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Nom d'utilisateur")
+                ),
+                "identity": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Identité")
+                ),
+                "token": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Token")
+                ),
+                "status": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Statut")
+                ),
+                "tournament": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Tournoi")
+                ),
+                "team": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Équipe")
+                ),
+            }
+        ),
+        404: openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "err": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Ticket non trouvé/Utilisateur⋅ice non trouvé⋅e")
+                )
+            }
+        ),
+        400: openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "err": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("UUID invalide")
+                )
+            }
+        )
+    }
+)
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def get(request: HttpRequest, id: str, token: str) -> JsonResponse:
@@ -72,6 +127,38 @@ def get(request: HttpRequest, id: str, token: str) -> JsonResponse:
     )
 
 
+@swagger_auto_schema(
+    method='get',
+    responses={
+        200: openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "success": openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN,
+                    description=_("Ticket scanné")
+                )
+            }
+        ),
+        404: openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "err": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Ticket non trouvé")
+                )
+            }
+        ),
+        400: openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "err": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("UUID invalide")
+                )
+            }
+        )
+    }
+)
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def scan(request: HttpRequest, token: str) -> JsonResponse:
@@ -100,6 +187,34 @@ def scan(request: HttpRequest, token: str) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
+@swagger_auto_schema(
+    method='get',
+    responses={
+        200: openapi.Schema(
+            type=openapi.TYPE_FILE,
+            format=openapi.FORMAT_BINARY,
+            description=_("QR code")
+        ),
+        404: openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "err": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Ticket non trouvé")
+                )
+            }
+        ),
+        400: openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "err": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("UUID invalide")
+                )
+            }
+        )
+    }
+)
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def qrcode(request: HttpRequest, token: str) -> HttpResponse:
@@ -126,6 +241,43 @@ def qrcode(request: HttpRequest, token: str) -> HttpResponse:
 
     return HttpResponse(buffer.getvalue().decode(), content_type="image/svg+xml")
 
+@swagger_auto_schema(
+    method='get',
+    responses={
+        200: openapi.Schema(
+            type=openapi.TYPE_FILE,
+            format=openapi.FORMAT_BINARY,
+            description=_("Ticket PDF")
+        ),
+        404: openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "err": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Ticket non trouvé")
+                )
+            }
+        ),
+        403: openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "err": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Vous n'avez pas accès à ce ticket")
+                )
+            }
+        ),
+        400: openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "err": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("UUID invalide")
+                )
+            }
+        )
+    }
+)
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def generate_pdf(request: HttpRequest, token: str) -> JsonResponse:
@@ -135,6 +287,9 @@ def generate_pdf(request: HttpRequest, token: str) -> JsonResponse:
     except Ticket.DoesNotExist:
         return JsonResponse({'err': _("Ticket non trouvé")},
                             status=status.HTTP_404_NOT_FOUND)
+    except ValueError:
+        return JsonResponse({'err': _("UUID invalide")},
+                            status=status.HTTP_400_BAD_REQUEST)
 
     if ticket.user != request.user:
         return JsonResponse({'err': _("Vous n'avez pas accès à ce ticket")},
@@ -143,6 +298,51 @@ def generate_pdf(request: HttpRequest, token: str) -> JsonResponse:
     pdf = TicketManager.generate_ticket_pdf(ticket)
     return HttpResponse(pdf, content_type='application/pdf')
 
+@swagger_auto_schema(
+    method='post',
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            "type": openapi.Schema(
+                type=openapi.TYPE_STRING,
+                description=_("Type de l'inscription")
+            ),
+            "id": openapi.Schema(
+                type=openapi.TYPE_INTEGER,
+                description=_("ID de l'inscription")
+            )
+        },
+    ),
+    responses={
+        200: openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "success": openapi.Schema(
+                    type=openapi.TYPE_BOOLEAN,
+                    description=_("Inscription payée")
+                )
+            }
+        ),
+        404: openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "err": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Inscription non trouvée")
+                )
+            }
+        ),
+        400: openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "err": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Type ou id manquant")
+                )
+            }
+        )
+    }
+)
 @api_view(["POST"])
 @permission_classes([IsAdminUser])
 def pay(request: HttpRequest) -> JsonResponse:
@@ -204,6 +404,35 @@ def pay(request: HttpRequest) -> JsonResponse:
         return JsonResponse({'err': _("Type invalide")},
                             status=status.HTTP_400_BAD_REQUEST)
 
+@swagger_auto_schema(
+    method='get',
+    responses={
+        200: openapi.Schema(
+            type=openapi.TYPE_ARRAY,
+            items=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "id": openapi.Schema(
+                        type=openapi.TYPE_INTEGER,
+                        description=_("ID de l'inscription")
+                    ),
+                    "type": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Type de l'inscription")
+                    ),
+                    "user": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Nom d'utilisateur")
+                    ),
+                    "team": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Nom de l'équipe")
+                    )
+                }
+            )
+        )
+    }
+)
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def unpaid(request: HttpRequest) -> JsonResponse:
