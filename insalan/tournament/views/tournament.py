@@ -12,6 +12,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 from insalan.tickets.models import Ticket
 from insalan.user.models import User
 import insalan.tournament.serializers as serializers
@@ -28,6 +31,33 @@ class TournamentList(generics.ListCreateAPIView):
     serializer_class = serializers.TournamentSerializer
     permission_classes = [permissions.IsAdminUser | ReadOnly]
 
+    @swagger_auto_schema(
+        responses={
+            201: serializer_class,
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Données invalides")
+                    )
+                }
+            ),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'êtes pas autorisé à créer un tournoi")
+                    )
+                }
+            )
+        }
+    )
+    def post(self, request, *args, **kwargs):
+        """Create a tournament"""
+        return super().post(request, *args, **kwargs)
+
 
 class TournamentDetails(generics.RetrieveUpdateDestroyAPIView):
     """Details about a tournament"""
@@ -35,6 +65,131 @@ class TournamentDetails(generics.RetrieveUpdateDestroyAPIView):
     queryset = Tournament.objects.all().order_by("id")
     serializer_class = serializers.TournamentSerializer
     permission_classes = [permissions.IsAdminUser | ReadOnly]
+
+    @swagger_auto_schema(
+        responses={
+            200: serializer_class,
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Tournoi introuvable")
+                    )
+                }
+            )
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        """Get a tournament"""
+        return super().get(request, *args, **kwargs)
+    
+    @swagger_auto_schema(
+        responses={
+            200: serializer_class,
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Données invalides")
+                    )
+                }
+            ),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'êtes pas autorisé à modifier un tournoi")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Tournoi introuvable")
+                    )
+                }
+            )
+        }
+    )
+    def patch(self, request, *args, **kwargs):
+        """Patch a tournament"""
+        return super().patch(request, *args, **kwargs)
+    
+    @swagger_auto_schema(
+        responses={
+            204: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Tournoi supprimé")
+                    )
+                }
+            ),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'êtes pas autorisé à supprimer un tournoi")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Tournoi introuvable")
+                    )
+                }
+            )
+        }
+    )
+    def delete(self, request, *args, **kwargs):
+        """Delete a tournament"""
+        return super().delete(request, *args, **kwargs)
+    
+    @swagger_auto_schema(
+        responses={
+            200: serializer_class,
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Données invalides")
+                    )
+                }
+            ),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'êtes pas autorisé à modifier un tournoi")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Tournoi introuvable")
+                    )
+                }
+            )
+        }
+    )
+    def put(self, request, *args, **kwargs):
+        """Put a tournament"""
+        return super().put(request, *args, **kwargs)
 
 
 class TournamentDetailsFull(generics.RetrieveAPIView):
@@ -157,7 +312,7 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
         return Response(tourney_serialized, status=status.HTTP_200_OK)
 
 
-class TournamentMe(generics.ListAPIView):
+class TournamentMe(generics.RetrieveAPIView):
     """
     Details on tournament of a logged user
     This endpoint does many requests to the database and should be used wisely
@@ -165,8 +320,139 @@ class TournamentMe(generics.ListAPIView):
     authentication_classes =  [SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated & ReadOnly]
     serializer_class = serializers.PlayerSerializer
+    pagination_class = None
 
-    def get(self, request):
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "player": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                "id": openapi.Schema(type=openapi.TYPE_INTEGER),
+                                "name_in_game": openapi.Schema(type=openapi.TYPE_STRING),
+                                "team": openapi.Schema(
+                                    type=openapi.TYPE_OBJECT,
+                                    properties={
+                                        "id": openapi.Schema(type=openapi.TYPE_INTEGER),
+                                        "name": openapi.Schema(type=openapi.TYPE_STRING),
+                                        "tournament": openapi.Schema(
+                                            type=openapi.TYPE_OBJECT,
+                                            properties={
+                                                "id": openapi.Schema(type=openapi.TYPE_INTEGER),
+                                                "name": openapi.Schema(type=openapi.TYPE_STRING),
+                                                "event": openapi.Schema(
+                                                    type=openapi.TYPE_OBJECT,
+                                                    properties={
+                                                        "id": openapi.Schema(type=openapi.TYPE_INTEGER),
+                                                        "name": openapi.Schema(type=openapi.TYPE_STRING)
+                                                    }
+                                                )
+                                            }
+                                        )
+                                    }
+                                ),
+                                "ticket": openapi.Schema(type=openapi.TYPE_STRING)
+                            }
+                        )
+                    ),
+                    "manager": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                "id": openapi.Schema(type=openapi.TYPE_INTEGER),
+                                "team": openapi.Schema(
+                                    type=openapi.TYPE_OBJECT,
+                                    properties={
+                                        "id": openapi.Schema(type=openapi.TYPE_INTEGER),
+                                        "name": openapi.Schema(type=openapi.TYPE_STRING),
+                                        "tournament": openapi.Schema(
+                                            type=openapi.TYPE_OBJECT,
+                                            properties={
+                                                "id": openapi.Schema(type=openapi.TYPE_INTEGER),
+                                                "name": openapi.Schema(type=openapi.TYPE_STRING),
+                                                "event": openapi.Schema(
+                                                    type=openapi.TYPE_OBJECT,
+                                                    properties={
+                                                        "id": openapi.Schema(type=openapi.TYPE_INTEGER),
+                                                        "name": openapi.Schema(type=openapi.TYPE_STRING)
+                                                    }
+                                                )
+                                            }
+                                        )
+                                    }
+                                ),
+                                "ticket": openapi.Schema(type=openapi.TYPE_STRING)
+                            }
+                        )
+                    ),
+                    "substitute": openapi.Schema(
+                        type=openapi.TYPE_ARRAY,
+                        items=openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                "id": openapi.Schema(type=openapi.TYPE_INTEGER),
+                                "name_in_game": openapi.Schema(type=openapi.TYPE_STRING),
+                                "team": openapi.Schema(
+                                    type=openapi.TYPE_OBJECT,
+                                    properties={
+                                        "id": openapi.Schema(type=openapi.TYPE_INTEGER),
+                                        "name": openapi.Schema(type=openapi.TYPE_STRING),
+                                        "tournament": openapi.Schema(
+                                            type=openapi.TYPE_OBJECT,
+                                            properties={
+                                                "id": openapi.Schema(type=openapi.TYPE_INTEGER),
+                                                "name": openapi.Schema(type=openapi.TYPE_STRING),
+                                                "event": openapi.Schema(
+                                                    type=openapi.TYPE_OBJECT,
+                                                    properties={
+                                                        "id": openapi.Schema(type=openapi.TYPE_INTEGER),
+                                                        "name": openapi.Schema(type=openapi.TYPE_STRING)
+                                                    }
+                                                )
+                                            }
+                                        )
+                                    }
+                                ),
+                                "ticket": openapi.Schema(type=openapi.TYPE_STRING)
+                            }
+                        )
+                    ),
+                    "ongoing_match": openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            "id": openapi.Schema(type=openapi.TYPE_INTEGER),
+                            "match_type": openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    "type": openapi.Schema(type=openapi.TYPE_STRING),
+                                    "id": openapi.Schema(type=openapi.TYPE_INTEGER)
+                                }
+                            ),
+                            "teams": openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                additional_properties=openapi.Schema(type=openapi.TYPE_STRING)
+                            )
+                        }
+                    )
+                }
+            ),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'êtes pas autorisé à accéder à ces informations")
+                    )
+                }
+            )
+        }
+    )
+    def get(self, request, *args, **kwargs):
         """
         GET handler
         """

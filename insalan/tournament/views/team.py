@@ -12,6 +12,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 from insalan.settings import EMAIL_AUTH
 from insalan.mailer import MailManager
 from insalan.user.models import User
@@ -28,6 +31,29 @@ class TeamList(generics.ListCreateAPIView):
     serializer_class = serializers.TeamSerializer
     permission_classes = [permissions.IsAuthenticated | ReadOnly]
 
+    @swagger_auto_schema(
+        responses={
+            201: serializer_class,
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Données invalides")
+                    )
+                }
+            ),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'êtes pas autorisé à créer une équipe")
+                    )
+                }
+            )
+        }
+    )
     def post(self, request, *args, **kwargs):
         user = request.user
 
@@ -45,13 +71,46 @@ class TeamList(generics.ListCreateAPIView):
         return super().post(request, *args, **kwargs)
 
 
-class TeamDetails(generics.RetrieveUpdateDestroyAPIView):
+class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
     """Details about a team"""
 
     queryset = Team.objects.all().order_by("id")
     serializer_class = serializers.TeamSerializer
     permission_classes = [permissions.IsAdminUser | Patch | permissions.IsAuthenticatedOrReadOnly]
 
+    @swagger_auto_schema(
+        request_body=serializers.TeamSerializer,
+        responses={
+            200: serializer_class,
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Données invalides")
+                    )
+                }
+            ),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'êtes pas autorisé à modifier cette équipe")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Équipe introuvable")
+                    )
+                }
+            )
+        }
+    )
     def patch(self, request, *args, **kwargs):
         """
         Patch a team
@@ -131,7 +190,47 @@ class TeamDetails(generics.RetrieveUpdateDestroyAPIView):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(
+        responses={
+            204: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "success": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Équipe supprimée")
+                    )
+                }
+            ),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'êtes pas autorisé à supprimer cette équipe")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Équipe introuvable")
+                    )
+                }
+            )
+        }
+    )
+    def delete(self, request, *args, **kwargs):
+        """
+        Delete a team
+        """
+        return super().delete(request, *args, **kwargs)
+
 class TeamMatchs(generics.RetrieveAPIView):
+    """
+    Get all matchs of a team
+    """
 
     queryset = Team.objects.all().order_by("id")
     serializer_class = serializers.TeamMatchsSerializer

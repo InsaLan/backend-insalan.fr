@@ -5,6 +5,9 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 import insalan.tournament.serializers as serializers
 
 from ..models import Bracket, KnockoutMatch, MatchStatus, BracketSet, validate_match_data
@@ -13,13 +16,62 @@ from ..manage import update_match_score, update_next_knockout_match
 
 from .permissions import ReadOnly, Patch
 
-class BracketMatchScore(generics.UpdateAPIView):
+class BracketMatchScore(generics.GenericAPIView):
     """Update score of a bracket match"""
 
     queryset = KnockoutMatch.objects.all().order_by("id")
     serializer_class = serializers.KnockoutMatchSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "team1_score": openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description=_("Score de l'équipe 1")
+                ),
+                "team2_score": openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description=_("Score de l'équipe 2")
+                ),
+            },
+        ),
+        responses={
+            200: serializer_class,
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "team1_score": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Score de l'équipe 1")
+                    ),
+                    "team2_score": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Score de l'équipe 2")
+                    ),
+                }
+            ),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'êtes pas autorisé à modifier ce match")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Match introuvable")
+                    )
+                }
+            )
+        }
+    )
     def patch(self, request, *args, **kwargs):
         user = request.user
         data = request.data
