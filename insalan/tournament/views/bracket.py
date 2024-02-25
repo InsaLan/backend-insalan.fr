@@ -10,11 +10,9 @@ from drf_yasg import openapi
 
 import insalan.tournament.serializers as serializers
 
-from ..models import Bracket, KnockoutMatch, MatchStatus, BracketSet, validate_match_data
+from ..models import KnockoutMatch, validate_match_data
 # , InvalidScores, InvalidTeamList, InvalidTeamScore, NotOngoingMatch
 from ..manage import update_match_score, update_next_knockout_match
-
-from .permissions import ReadOnly, Patch
 
 class BracketMatchScore(generics.GenericAPIView):
     """Update score of a bracket match"""

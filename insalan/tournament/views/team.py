@@ -1,26 +1,18 @@
-from django.core.exceptions import PermissionDenied, BadRequest
-from django.http import Http404
+from django.core.exceptions import PermissionDenied
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.hashers import check_password
-from django.http import QueryDict
 from django.contrib.auth.hashers import make_password
 
 from rest_framework import generics, permissions, status
-from rest_framework.exceptions import NotFound
-from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.authentication import SessionAuthentication
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from insalan.settings import EMAIL_AUTH
 from insalan.mailer import MailManager
-from insalan.user.models import User
 import insalan.tournament.serializers as serializers
 
-from ..models import Player, Manager, Substitute, Event, Tournament, Game, Team, PaymentStatus
+from ..models import Player, Manager, Substitute, Team, PaymentStatus
 from .permissions import ReadOnly, Patch
 
 

@@ -1,8 +1,9 @@
-from insalan.user.models import User
+from collections import Counter
+
 from django.utils.translation import gettext_lazy as _
 from rest_framework.validators import ValidationError
-from django.core.exceptions import BadRequest
-from collections import Counter
+
+from insalan.user.models import User
 
 # from .event import Event
 from . import player as play

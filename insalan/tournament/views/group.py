@@ -1,5 +1,5 @@
 from django.utils.translation import gettext_lazy as _
-from django.core.exceptions import PermissionDenied, BadRequest
+from django.core.exceptions import PermissionDenied
 
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
@@ -7,15 +7,11 @@ from rest_framework.exceptions import NotFound
 
 import insalan.tournament.serializers as serializers
 
-from ..models import Group, GroupMatch, MatchStatus, validate_match_data
+from ..models import GroupMatch, validate_match_data
 from ..manage import update_match_score
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
-from .permissions import ReadOnly, Patch
-
-from collections import Counter
 
 class GroupMatchScore(generics.GenericAPIView):
     """Update score of a group match"""
