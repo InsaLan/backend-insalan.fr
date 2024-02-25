@@ -5,6 +5,9 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 import insalan.tournament.serializers as serializers
 
 from ..models import SwissRound, SwissMatch, MatchStatus, validate_match_data
@@ -14,13 +17,58 @@ from .permissions import ReadOnly, Patch
 
 from collections import Counter
 
-class SwissMatchScore(generics.UpdateAPIView):
+class SwissMatchScore(generics.GenericAPIView):
     """Update score of a swiss match"""
 
     queryset = SwissMatch.objects.all().order_by("id")
     serializer_class = serializers.SwissMatchSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "score": openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    description=_("Score du match")
+                ),
+            },
+        ),
+        responses={
+            200: serializer_class,
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "team1_score": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Score de l'équipe 1")
+                    ),
+                    "team2_score": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Score de l'équipe 2")
+                    ),
+                }
+            ),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'êtes pas autorisé à modifier ce match")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Match introuvable")
+                    )
+                }
+            )
+        }
+    )
     def patch(self, request, *args, **kwargs):
         user = request.user
         data = request.data

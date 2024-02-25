@@ -12,6 +12,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 from insalan.user.models import User
 import insalan.tournament.serializers as serializers
 
@@ -24,6 +27,29 @@ class ManagerRegistration(generics.RetrieveAPIView):
     serializer_class = serializers.ManagerSerializer
     queryset = Manager.objects.all().order_by("id")
 
+    @swagger_auto_schema(
+        responses={
+            200: serializer_class,
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'avez pas la permission de voir cette inscription")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Inscription introuvable")
+                    )
+                }
+            )
+        }
+    )
     def delete(self, request, *args, **kwargs):
         """
         Delete a manager
@@ -58,6 +84,25 @@ class ManagerRegistration(generics.RetrieveAPIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @swagger_auto_schema(
+        responses={
+            200: serializer_class,
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Inscription introuvable")
+                    )
+                }
+            )
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        """
+        Get a manager
+        """
+        return super().get(request, *args, **kwargs)
 
 class ManagerRegistrationList(generics.ListCreateAPIView):
     """Show all manager registrations"""
@@ -66,6 +111,34 @@ class ManagerRegistrationList(generics.ListCreateAPIView):
     serializer_class = serializers.ManagerSerializer
     queryset = Manager.objects.all().order_by("id")
 
+    @swagger_auto_schema(
+        request_body=serializers.ManagerSerializer,
+        responses={
+            201: serializer_class,
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "team": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Équipe introuvable")
+                    ),
+                    "password": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Mot de passe invalide")
+                    ),
+                }
+            ),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'êtes pas autorisé à vous inscrire à ce tournoi")
+                    )
+                }
+            )
+        }
+    )
     def post(self, request, *args, **kwargs):
         user = request.user
         data = request.data
@@ -115,6 +188,40 @@ class ManagerRegistrationListId(generics.ListAPIView):
     def get_queryset(self):
         """Obtain the queryset fot this view"""
         return Manager.objects.filter(user_id=self.kwargs["user_id"])
+    
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "id": openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description=_("ID de l'inscription")
+                        ),
+                        "team": openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description=_("ID de l'équipe")
+                        ),
+                        "payment_status": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Statut de paiement")
+                        ),
+                        "ticket": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Ticket")
+                        )
+                    }
+                )
+            ),
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        """
+        Get all manager registrations of a user from their ID
+        """
+        return super().get(request, *args, **kwargs)
 
 
 class ManagerRegistrationListName(generics.ListAPIView):
@@ -131,3 +238,37 @@ class ManagerRegistrationListName(generics.ListAPIView):
         except User.DoesNotExist as exc:
             raise NotFound() from exc
         return Manager.objects.filter(user=user)
+    
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "id": openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description=_("ID de l'inscription")
+                        ),
+                        "team": openapi.Schema(
+                            type=openapi.TYPE_INTEGER,
+                            description=_("ID de l'équipe")
+                        ),
+                        "payment_status": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Statut de paiement")
+                        ),
+                        "ticket": openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description=_("Ticket")
+                        )
+                    }
+                )
+            ),
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        """
+        Get all manager registrations of a user from their username
+        """
+        return super().get(request, *args, **kwargs)

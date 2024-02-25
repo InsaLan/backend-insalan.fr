@@ -12,6 +12,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 from insalan.user.models import User
 import insalan.tournament.serializers as serializers
 
@@ -25,6 +28,67 @@ class PlayerRegistration(generics.RetrieveAPIView):
     serializer_class = serializers.PlayerSerializer
     queryset = Player.objects.all().order_by("id")
 
+    @swagger_auto_schema(
+        responses={
+            200: serializer_class,
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'avez pas la permission de voir cette inscription")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Inscription introuvable")
+                    )
+                }
+            )
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        """
+        Get a player
+        """
+        return super().get(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        responses={
+            200: serializer_class,
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Données invalides")
+                    )
+                }
+            ),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'avez pas la permission de voir cette inscription")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Inscription introuvable")
+                    )
+                }
+            )
+        }
+    )
     def patch(self, request, *args, **kwargs):
         """
         Patch a player
@@ -53,6 +117,28 @@ class PlayerRegistration(generics.RetrieveAPIView):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(
+        responses={
+            204: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Inscription supprimée")
+                    )
+                }
+            ),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'avez pas la permission de supprimer cette inscription")
+                    )
+                }
+            )
+        }
+    )
     def delete(self, request, *args, **kwargs):
         """
         Delete a player
@@ -95,6 +181,38 @@ class PlayerRegistrationList(generics.ListCreateAPIView):
     serializer_class = serializers.PlayerSerializer
     queryset = Player.objects.all().order_by("id")
 
+    @swagger_auto_schema(
+        request_body=serializers.PlayerSerializer,
+        responses={
+            201: serializer_class,
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "team": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Équipe invalide")
+                    ),
+                    "password": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Mot de passe invalide")
+                    ),
+                    "name_in_game": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Nom en jeu invalide")
+                    )
+                }
+            ),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'êtes pas autorisé à vous inscrire à ce tournoi")
+                    )
+                }
+            )
+        }
+    )
     def post(self, request, *args, **kwargs):
         user = request.user
         data = request.data

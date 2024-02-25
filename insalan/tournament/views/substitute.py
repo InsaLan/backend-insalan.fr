@@ -12,6 +12,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 from insalan.user.models import User
 import insalan.tournament.serializers as serializers
 
@@ -25,6 +28,67 @@ class SubstituteRegistration(generics.RetrieveAPIView):
     serializer_class = serializers.SubstituteSerializer
     queryset = Substitute.objects.all().order_by("id")
 
+    @swagger_auto_schema(
+        responses={
+            200: serializer_class,
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'avez pas la permission de voir cette inscription")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Inscription introuvable")
+                    )
+                }
+            )
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        """
+        Get a substitute
+        """
+        return super().get(request, *args, **kwargs)
+        
+    @swagger_auto_schema(
+        responses={
+            200: serializer_class,
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Données invalides")
+                    )
+                }
+            ),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'avez pas la permission de voir cette inscription")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Inscription introuvable")
+                    )
+                }
+            )
+        }
+    )
     def patch(self, request, *args, **kwargs):
         """
         Patch a substitute
@@ -53,6 +117,29 @@ class SubstituteRegistration(generics.RetrieveAPIView):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(
+        responses={
+            200: serializer_class,
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'avez pas la permission de supprimer cette inscription")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Inscription introuvable")
+                    )
+                }
+            )
+        }
+    )
     def delete(self, request, *args, **kwargs):
         """
         Delete a substitute
@@ -94,6 +181,54 @@ class SubstituteRegistrationList(generics.ListCreateAPIView):
     serializer_class = serializers.SubstituteSerializer
     queryset = Substitute.objects.all().order_by("id")
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "team": openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description=_("ID de l'équipe")
+                ),
+                "password": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Mot de passe de l'équipe")
+                ),
+                "name_in_game": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description=_("Pseudo en jeu")
+                ),
+            },
+        ),
+        responses={
+            200: serializer_class,
+            400: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "team": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("ID de l'équipe")
+                    ),
+                    "password": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Mot de passe de l'équipe")
+                    ),
+                    "name_in_game": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Pseudo en jeu")
+                    ),
+                }
+            ),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'êtes pas autorisé à vous inscrire à un tournoi")
+                    )
+                }
+            )
+        }
+    )
     def post(self, request, *args, **kwargs):
         user = request.user
         data = request.data
