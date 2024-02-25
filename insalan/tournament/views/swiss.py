@@ -1,5 +1,5 @@
 from django.utils.translation import gettext_lazy as _
-from django.core.exceptions import PermissionDenied, BadRequest
+from django.core.exceptions import PermissionDenied
 
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
@@ -10,12 +10,8 @@ from drf_yasg import openapi
 
 import insalan.tournament.serializers as serializers
 
-from ..models import SwissRound, SwissMatch, MatchStatus, validate_match_data
-from ..manage import update_match_score, update_next_knockout_match
-
-from .permissions import ReadOnly, Patch
-
-from collections import Counter
+from ..models import SwissMatch, validate_match_data
+from ..manage import update_match_score
 
 class SwissMatchScore(generics.GenericAPIView):
     """Update score of a swiss match"""

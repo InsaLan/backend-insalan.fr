@@ -1,9 +1,10 @@
+from typing import List, Dict
+import math
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
-from typing import List, Dict
-import math
 from insalan.user.models import User
 
 class MatchStatus(models.TextChoices):

@@ -9,7 +9,7 @@ from insalan.tickets.models import Ticket
 from insalan.user.models import User
 
 from .payement_status import PaymentStatus
-from . import team, validators, group, bracket, swiss, match
+from . import validators, group, bracket, swiss, match
 
 class Player(models.Model):
     """
