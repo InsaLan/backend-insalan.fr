@@ -38,31 +38,18 @@ point d'API.
 
 ## Le Fonctionnement
 
-Le point d'API utilisé est `/v1/langate/authenticate` en verbe `POST`. Le
-Langate peut choisir d'effectuer un `POST` vide, ou de fournir un objet au
-format JSON qui contient un seul champs. Par exemple:
+Le point d'API utilisé est `/v1/langate/authenticate` en verbe `POST`. Le Langate doit `POST` avec un objet au format JSON qui contient le nom d'utilisateur et le mot de passe. Par exemple:
 ```json
-{ "event_id": 7 }
+{
+  "username": "theUser",
+  "password": "thePassword",
+}
 ```
-
-Le champs `"event_id"` permet d'indiquer au site web le numéro de l'événement en
-cours pour lequel l'utilisateur⋅ice est enregistré. Comme il peut y avoir
-plusieurs événements en cours, et qu'un⋅e utilisateur⋅ice a le droit de
-s'inscrire une seule fois en tant que joueur⋅euse et une seule fois en tant que
-manager à chaque événement, il faut pouvoir discerner dans quel événement
-chercher sa place.
-
-Si aucune donnée n'est fournie mais qu'il n'y a qu'un seul événement en cours,
-alors le module cherchera dans cet événement. Si aucun évènement n'est en cours,
-le backend lancera une erreur de mauvaise requête (`HTTP 400`). Si plusieurs
-événements sont en cours, et que le Langate ne spécifie pas lequel utiliser,
-alors le site répondra qu'il ne sait pas où chercher (`HTTP 400`).
-
-En cas de succès, le backend commence à calculer la réponse.
+Le site web va alors faire une tentative de connexion avec ces informations. En cas de succès, la réponse sera un objet JSON qui contient les informations nécessaires pour créer un compte sur le Langate. En cas d'échec, la réponse sera un objet JSON qui contient une erreur.
 
 ### Réponse
 
-Le site web répond un objet JSON qui décrit:
+Le backend répond un objet JSON qui décrit:
  - Les informations sur l'utilisateur⋅ice (nom, prénom, email, etc) pour pouvoir
      créer son compte en local
  - Une erreur potentielle (`"err"`) si la place n'est pas payée ou qu'aucune
@@ -89,7 +76,9 @@ Voici la tête de l'objet JSON retourné:
   "user": {
     "username": "theUser",
     "name": "John Doe",
-    "email": "john@email.com"
+    "email": "john@email.com",
+    "is_staff": false,
+    "is_admin": false,
   },
   "err": "err_not_found",
   "tournament": [

@@ -63,7 +63,7 @@ Le protocol HTTP peut utiliser 7 verbes:
  1. `GET`: pour récupérer une ressource (document, entité, etc)
  2. `POST`: pour créer une ressource
  3. `PATCH`: pour mettre à jour des morceaux d'une ressource
- 4. `PUT`: pour ajouter des morceaux d'une ressource
+ 4. `PUT`: pour remplacer une ressource
  5. `HEAD`: pour envoyer des headers sans ressource
  6. `OPTIONS`: pour voir la liste des verbes utilisables sur un chemin
  7. `DELETE`: pour détruire une ressource

@@ -35,10 +35,10 @@ de donnée relationnelle.
 ### Gestion dans le contrôle de version
 
 Étant donnée que les migrations sont liées à un état de la base de donnée à un
-instant T, on considère qu'il ne faut pas commit les migrations (sauf
-éventuellement celles appliquées en production). À cause de cela, nous avons une
-règle dans le `.gitignore` du backend qui ignore tous les fichiers dans les
-dossiers `migrations` qui commencent pas un chiffre.
+instant T, on considère qu'il ne faut pas commit les migrations (sauf celles
+appliquées en production). À cause de cela, nous avons une règle dans le
+`.gitignore` du backend qui ignore tous les fichiers dans les dossiers
+`migrations` qui commencent pas un chiffre.
 
 Cependant, pour que Django puisse continuer de fonctionner, `migrations` doit
 être un sous-module de chaque application, **il faut donc conserver le fichier

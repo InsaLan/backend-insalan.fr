@@ -1,7 +1,7 @@
 # Endpoints
 
 Un endpoint d'application est la combinaison d'une URL pouvant contenir des
-paramètres, et une [./vues.md](vue) qui gère le traitement de la requête, avec
+paramètres, et une [vue](./vues.md) qui gère le traitement de la requête, avec
 potentiellement des paramètres.
 
 ## Déclaration dans le module
@@ -17,8 +17,8 @@ pour décrire chaque chemin. On retrouve dans la configuration:
  - Une vue associée pour effectuer le traitement
  - Un nom qui permet d'effectuer une recherche dans le code
 
-La prise de décision pour traiter une requête consiste à chercher un match exact sur
-les URLs proposés.
+La prise de décision pour traiter une requête consiste à chercher un match exact
+sur les URLs proposés.
 
 ### Paramètres du path
 
@@ -57,14 +57,20 @@ le tout sans avoir à écrire le chemin en dur.
 
 ## Documentation Via Swagger
 
-L'API est documentée (autant que possible) via un fichier au format
-[OpenAPI-compatible](https://www.openapis.org/) que l'on peut ouvrir dans
-l'outil [Swagger](https://editor.swagger.io/). Cela permet de voir:
+L'API est documentée (autant que possible) via une api
+[Swagger](http://api.beta.insalan.fr/v1/swagger). Cela permet de voir:
  - l'ensemble des chemins existants classés par catégorie
  - les méthodes disponibles
  - la liste des codes de retour possible et leur signification
  - la forme des payload attendus
  - la forme des payload retournés
+
+Il est important de maintenir cette documentation à jour. Pour cela, on utilise
+la librairie [`drf-yasg`](https://drf-yasg.readthedocs.io/en/stable/), qui
+permet de générer automatiquement la documentation à partir des vues et des
+serializers. Il faut parfois ajouter des annotations pour préciser les
+informations à afficher dans la documentation, mais c'est un effort qui vaut la
+peine.
 
 <!--
 vim: set spell spelllang=fr tw=80:

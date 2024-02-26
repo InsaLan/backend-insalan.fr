@@ -1,4 +1,4 @@
-# Via Docker
+# Docker de Développement
 
 Le dépôt d'[infra](https://github.com/InsaLan/infra-insalan.fr) contient des
 recettes de Docker compose pour pouvoir déployer une pile en local.
@@ -10,7 +10,7 @@ du système, pour pouvoir accéder au démon Docker.
 
 En allant dans le dossier de l'infra, après checkout des modules, lancer:
 ```shell
-docker compose -f docker-compose-beta.yaml build
+docker compose -f docker-compose-beta.yml build
 ```
 
 Cette commande construit nos images docker personnalisées avec le code du front,
@@ -18,7 +18,7 @@ du back, et les paquets nécessaires pour les lancer. Ensuite, on lance ces
 dockers:
 
 ```shell
-docker compose -f docker-compose-beta.yaml up -d
+docker compose -f docker-compose-beta.yml up -d
 ```
 
 Cette commande va lancer 5 choses:
