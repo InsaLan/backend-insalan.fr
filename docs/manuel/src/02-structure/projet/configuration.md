@@ -106,9 +106,8 @@ passes fréquemment utilisés.
 
 ## Traduction
 
-On configure tout ce qui est lié à la traduction dans la configuration du
-projet comme décrit
-[ici](../../03-existant/traductions.html#boilerplate-global).
+On configure tout ce qui est lié à la traduction dans la configuration du projet
+comme décrit [ici](../../03-existant/traductions.html#boilerplate-global).
 
 ## Contenus Statiques
 
@@ -146,15 +145,41 @@ pour les subjet lines, etc).
 
 On a pour cela:
 
-| Variable Django | Variable d'environnement | Utilisation |
-|-----------------|-----------------|-------------|
-| `EMAIL_HOST` | `MAIL_HOST` | Nom de domaine du serveur mail |
-| `EMAIL_HOST_PASSWORD` | `MAIL_PASS` | Mot de passe pour s'authentifier |
-| `EMAIL_HOST_USER` | `MAIL_FROM` | Compte à utiliser |
-| `DEFAULT_FROM_EMAIL` | `MAIL_FROM` | Adresse d'origine des mails |
-| `EMAIL_PORT` | `MAIL_PORT` | Port de connexion |
-| `EMAIL_USE_SSL` | `MAIL_SSL` | Indique qu'il faut chiffrer la communication avec le serveur |
-| `EMAIL_SUBJECT_PREFIX` | - | Préfixe des subjet lines des emails |
+| Variable | Utilisation |
+|-----------------|-------------|
+| `host` | Nom de domaine du serveur mail |
+| `pass` | Mot de passe pour s'authentifier |
+| `from` | Adresse d'origine des mails |
+| `port` | Port de connexion |
+| `ssl` | Indique qu'il faut chiffrer la communication avec le serveur |
+| `EMAIL_SUBJECT_PREFIX` | Préfixe des subjet lines des emails |
+
+Il est possible de configurer plusieurs serveurs de mail, notamment pour les
+différencier les mails tournois des mails de validation de compte. C'est pour
+cela que ces informations sont stockées dans un dictionnaire dans la variable
+`EMAIL_CONFIG` du fichier d'environnement :
+
+```json
+MAIL_AUTH='{
+    "contact": {
+        "from": "noreply@insalan.fr", 
+        "pass": "localhost",
+        "host": "localhost",
+        "port": 53,
+        "ssl": true
+    }, 
+    "tournament":{
+        "from":"noreply@insalan.fr", 
+        "pass":"localhost",
+        "host":"localhost",
+        "port": 53,
+        "ssl": true
+    }
+}'
+```
+
+La variable `EMAIL_SUBJECT_PREFIX` est quant à elle spécifiée dans le fichier de
+configuration du projet.
 
 <!--
 vim: set tw=80 spell spelllang=fr:

@@ -72,10 +72,13 @@ ce manuel est sous [Creative Commons BY-NC-SA 4.0](https://creativecommons.org/l
 
 L'équipe originale de développement qui a conduit à ce manuel était composée de:
  - Téo "Mahal" Nespoulet [il], président de l'InsaLan XVI
- - Paul "TheBloodMan" Gasnier [il], responsable SysRez-Dev de l'InsaLan XVIII
- - "Khagana" [il], responsable SysRez-Infra de l'InsaLan XVIII
+ - Paul "TheBloodMan" Gasnier [il], responsable SysRez-Infra de l'InsaLan XVIII
+ - "Khagana" [il], responsable SysRez-Dev de l'InsaLan XVIII
  - "somebody" [il], péon SysRez-Dev de l'InsaLan XVIII
  - Amélie "Lymkwi" Gonzalez [æl|elle], responsable SysRez de l'InsaLan XVI
  - Aurore "Lugrim" Poirier [ælle|elle], responsable Web de l'InsaLan XIV
+
+Ainsi que plus tard, pour prendre la relève :
+ - Gabriel "KwikKill" Blaisot [il], responsable SysRez-Dev de l'InsaLan XVIII
 
 <!-- vim: set cc=80 tw=80: -->
