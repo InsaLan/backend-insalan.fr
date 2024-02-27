@@ -10,6 +10,7 @@ from . import player as play
 from . import manager as manage
 from . import substitute as sub
 from . import match as Match
+from . import game
 
 def unique_event_registration_validator(user: User, event: "Event", player = None, manager = None, substitute = None):
     """Validate a unique registration per event"""
@@ -86,3 +87,8 @@ def validate_match_data(match: "Match", data):
             }
 
     return None
+
+def valid_name(game_param: "game", name: str):
+    name_validator = game_param.get_name_validator()
+
+    return name_validator(name)

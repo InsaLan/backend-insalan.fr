@@ -5,6 +5,7 @@ from django.core.validators import (
 )
 from django.utils.translation import gettext_lazy as _
 
+from .name_validator import get_choices, get_validator
 
 class Game(models.Model):
     """
@@ -47,6 +48,14 @@ class Game(models.Model):
         validators=[MinValueValidator(2)],
         default=2
     )
+    validators = models.CharField(
+        verbose_name=_("Validateurs de pseudo"),
+        max_length=42,
+        null=False,
+        blank=False,
+        default=get_choices()[0][1],
+        choices=get_choices(),
+    )
 
     def __str__(self) -> str:
         """Format this Game to a str"""
@@ -71,3 +80,7 @@ class Game(models.Model):
     def get_team_per_match(self) -> int:
         """Return the maximum number of teams in a match"""
         return self.team_per_match
+    
+    def get_name_validator(self):
+        """Return the validators of the game"""
+        return get_validator(self.validators)

@@ -12,7 +12,7 @@ from rest_framework import serializers
 from insalan.user.models import User
 
 from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, Group, GroupMatch, Bracket, KnockoutMatch, SwissRound, SwissMatch, Score
-from .models import unique_event_registration_validator, tournament_announced, max_players_per_team_reached, tournament_registration_full, max_substitue_per_team_reached
+from .models import unique_event_registration_validator, tournament_announced, max_players_per_team_reached, tournament_registration_full, max_substitue_per_team_reached, valid_name
 
 class ScoreSerializer(serializers.ModelSerializer):
 
@@ -188,6 +188,18 @@ class TeamSerializer(serializers.ModelSerializer):
         if len(data.get("substitutes_name_in_games", [])) != len(data.get("get_substitutes_id", [])):
             raise serializers.ValidationError(_("Il manque des name_in_games de remplaçant⋅e⋅s"))
 
+        # Validate the name in game
+        for name in data.get("players_name_in_games", []):
+            if not valid_name(data["tournament"].game, name):
+                raise serializers.ValidationError(
+                    _("Le pseudo en jeu n'est pas valide")
+                )
+        for name in data.get("substitutes_name_in_games", []):
+            if not valid_name(data["tournament"].game, name):
+                raise serializers.ValidationError(
+                    _("Le pseudo en jeu n'est pas valide")
+                )
+
         return data
 
 
@@ -299,6 +311,10 @@ class PlayerSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 _("Ce tournoi n'est pas encore annoncé")
             )
+        if not valid_name(data["team"].tournament.game, data["name_in_game"]):
+            raise serializers.ValidationError(
+                _("Le pseudo en jeu n'est pas valide")
+            )
 
         return data
 
@@ -379,6 +395,10 @@ class SubstituteSerializer(serializers.ModelSerializer):
         if max_substitue_per_team_reached(data["team"]):
             raise serializers.ValidationError(
                 _("Nombre maximum de remplaçant⋅e⋅s par équipe atteint")
+            )
+        if not valid_name(data["team"].tournament.game, data["name_in_game"]):
+            raise serializers.ValidationError(
+                _("Le pseudo en jeu n'est pas valide")
             )
 
         return data
