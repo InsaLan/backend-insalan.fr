@@ -37,9 +37,7 @@ class LeagueOfLegendsNameValidator:
         This method is used to validate the name of a LoL player
         """
         # Validate the format of the name
-        if not "#" in name:
-            return False
-        if name.count("#") > 1:
+        if name.count("#") != 1:
             return False
         gamename, tagline = name.split("#")
 
