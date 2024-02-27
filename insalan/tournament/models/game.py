@@ -53,7 +53,7 @@ class Game(models.Model):
         max_length=42,
         null=False,
         blank=False,
-        default=get_choices()[0][1],
+        default=get_choices()[0][0],
         choices=get_choices(),
     )
 
