@@ -113,7 +113,7 @@ class GameSerializer(serializers.ModelSerializer):
 
         model = Game
         read_only_fields = ("id",)
-        fields = "__all__"
+        fields = ("id", "name", "short_name", "players_per_team", "substitute_players_per_team", "team_per_match")
 
 
 class TournamentSerializer(serializers.ModelSerializer):
