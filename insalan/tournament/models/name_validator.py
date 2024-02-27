@@ -28,14 +28,14 @@ class LeagueOfLegendsNameValidator:
     short = "LoL"
     name = _("Validation League of Legends")
 
-    Account_endpoint = "https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{}/{}?api_key={}"
-    Summoner_endpoint = "https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{}?api_key={}"
-
     @staticmethod
     def is_valid(name: str):
         """
         This method is used to validate the name of a LoL player
         """
+        Account_endpoint = "https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{}/{}?api_key={}"
+        Summoner_endpoint = "https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{}?api_key={}"
+
         # Validate the format of the name
         if name.count("#") != 1:
             return False
@@ -43,7 +43,7 @@ class LeagueOfLegendsNameValidator:
 
         # Get the puuid associated with the account
         response = requests.get(
-            LeagueOfLegendsNameValidator.Account_endpoint.format(gamename, tagline, RIOT_API_KEY),
+            Account_endpoint.format(gamename, tagline, RIOT_API_KEY),
             timeout=5
         )
         if response.status_code != 200:
@@ -52,7 +52,7 @@ class LeagueOfLegendsNameValidator:
 
         # Get the league of legends account associated with the puuid
         response = requests.get(
-            LeagueOfLegendsNameValidator.Summoner_endpoint.format(puuid, RIOT_API_KEY),
+            Summoner_endpoint.format(puuid, RIOT_API_KEY),
             timeout=5
         )
         if response.status_code != 200:
