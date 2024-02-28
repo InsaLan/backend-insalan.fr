@@ -155,8 +155,8 @@ class TeamSerializer(serializers.ModelSerializer):
     players = serializers.ListField(required=False, source="get_players_id")
     managers = serializers.ListField(required=False, source="get_managers_id")
     substitutes = serializers.ListField(required=False, source="get_substitutes_id")
-    players_name_in_games = serializers.ListField(required=False, write_only=True)
-    substitutes_name_in_games = serializers.ListField(required=False, write_only=True)
+    players_names_in_game = serializers.ListField(required=False, write_only=True)
+    substitutes_names_in_game = serializers.ListField(required=False, write_only=True)
 
     class Meta:
         """Meta options of the team serializer"""
@@ -182,19 +182,19 @@ class TeamSerializer(serializers.ModelSerializer):
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
 
-        if len(data.get("players_name_in_games", [])) != len(data.get("get_players_id", [])):
+        if len(data.get("players_names_in_game", [])) != len(data.get("get_players_id", [])):
             raise serializers.ValidationError(_("Il manque des name_in_games de joueur⋅euses"))
 
-        if len(data.get("substitutes_name_in_games", [])) != len(data.get("get_substitutes_id", [])):
+        if len(data.get("substitutes_names_in_game", [])) != len(data.get("get_substitutes_id", [])):
             raise serializers.ValidationError(_("Il manque des name_in_games de remplaçant⋅e⋅s"))
 
         # Validate the name in game
-        for name in data.get("players_name_in_games", []):
+        for name in data.get("players_names_in_game", []):
             if not valid_name(data["tournament"].game, name):
                 raise serializers.ValidationError(
                     _("Le pseudo en jeu n'est pas valide")
                 )
-        for name in data.get("substitutes_name_in_games", []):
+        for name in data.get("substitutes_names_in_game", []):
             if not valid_name(data["tournament"].game, name):
                 raise serializers.ValidationError(
                     _("Le pseudo en jeu n'est pas valide")
@@ -210,13 +210,13 @@ class TeamSerializer(serializers.ModelSerializer):
         players = validated_data.pop("get_players_id", [])
         managers = validated_data.pop("get_managers_id", [])
         substitutes = validated_data.pop("get_substitutes_id", [])
-        players_name_in_games = validated_data.pop("players_name_in_games", [])
-        substitutes_name_in_games = validated_data.pop("substitutes_name_in_games", [])
+        players_names_in_game = validated_data.pop("players_names_in_game", [])
+        substitutes_names_in_game = validated_data.pop("substitutes_names_in_game", [])
 
         validated_data["password"] = make_password(validated_data["password"])
         team_obj = Team.objects.create(**validated_data)
 
-        for player, name_in_game in zip(players,players_name_in_games):
+        for player, name_in_game in zip(players,players_names_in_game):
             user_obj = User.objects.get(id=player)
             Player.objects.create(user=user_obj, team=team_obj,name_in_game=name_in_game)
 
@@ -224,7 +224,7 @@ class TeamSerializer(serializers.ModelSerializer):
             user_obj = User.objects.get(id=manager)
             Manager.objects.create(user=user_obj, team=team_obj)
 
-        for sub, name_in_game in zip(substitutes,substitutes_name_in_games):
+        for sub, name_in_game in zip(substitutes,substitutes_names_in_game):
             user_obj = User.objects.get(id=sub)
             Substitute.objects.create(user=user_obj, team=team_obj, name_in_game=name_in_game)
 
@@ -236,7 +236,7 @@ class TeamSerializer(serializers.ModelSerializer):
         # Catch the players and managers keywords
         if "get_players_id" in validated_data:
             # pylint: disable=unused-variable
-            players_name_in_games = validated_data.pop("players_name_in_games", [])
+            players_names_in_game = validated_data.pop("players_names_in_game", [])
             players = set(validated_data.pop("get_players_id", []))
 
             existing = set(instance.get_players_id())

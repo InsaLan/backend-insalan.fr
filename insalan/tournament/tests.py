@@ -2242,7 +2242,7 @@ class TournamentTeamEndpoints(TestCase):
                 "players": [
                     user.id,
                 ],
-                "players_name_in_games": [
+                "players_names_in_game": [
                     "pseudo",
                 ]
             },
@@ -2306,7 +2306,7 @@ class TournamentTeamEndpoints(TestCase):
                 "substitutes": [
                     user.id,
                 ],
-                "substitutes_name_in_games": [
+                "substitutes_names_in_game": [
                     "pseudo",
                 ]
             },
