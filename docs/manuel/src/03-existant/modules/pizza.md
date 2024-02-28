@@ -1,4 +1,4 @@
-# pizza
+# Pizza
 
 Vous sentez cette bonne odeur de fromage et de tomate ? C'est le module `pizza`
 qui arrive ! Ce module permet de gérer les commandes de pizza pour les
