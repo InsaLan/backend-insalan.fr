@@ -8,7 +8,7 @@ commander, de les annuler, etc.
 ## Pizzas
 
 Une pizza, c'est quoi ? Bah pour nous c'est juste un nom, une image, des
-ingrédients et des alergènes. C'est pas plus compliqué que ça. Et si vous êtes
+ingrédients et des allergènes. C'est pas plus compliqué que ça. Et si vous êtes
 pas content, vous pouvez toujours aller manger des crêpes de la team Bouffe.
 
 ## Créneaux
