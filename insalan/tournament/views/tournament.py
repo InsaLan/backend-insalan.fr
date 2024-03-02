@@ -266,6 +266,7 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
                         "payment_status": Substitute.objects.get(id=pid).payment_status if can_see_payment_status else None
                     } for pid in team_preser["substitutes"]
                 ]
+                team_preser["captain"] = Player.objects.get(id=team_preser["captain"]).as_user().username if team_preser["captain"] is not None else None
                 teams_serialized.append(team_preser)
             # deref groups
             group_serialized = []
