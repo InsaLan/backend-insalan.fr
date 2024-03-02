@@ -1208,7 +1208,7 @@ class TournamentFullDerefEndpoint(TestCase):
                     "substitutes": [
                         {"user": "test_user_four", "name_in_game": "substitute", "payment_status": None},
                     ],
-                    "captain": first.id,
+                    "captain": first.user.username,
                     "validated": team_one.validated,
                 }
             ],
