@@ -56,6 +56,10 @@ class Event(models.Model):
 
         verbose_name = _("Évènement")
         verbose_name_plural = _("Évènements")
+        indexes = [
+            models.Index(fields=["name"]),
+            models.Index(fields=["year", "month"]),
+        ]
 
     def __str__(self) -> str:
         """Format this Event to a str"""

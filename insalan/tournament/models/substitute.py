@@ -60,6 +60,11 @@ class Substitute(models.Model):
                 fields=["user", "team"], name="not_twice_same_substitute"
             )
         ]
+        indexes = [
+            models.Index(fields=["team"]),
+            models.Index(fields=["user"]),
+            models.Index(fields=["payment_status"]),
+        ]
 
     def __str__(self) -> str:
         """Format this substitute registration as a str"""

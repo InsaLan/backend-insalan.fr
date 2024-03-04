@@ -122,9 +122,9 @@ class TournamentSerializer(serializers.ModelSerializer):
     teams = serializers.ListField(required=False, read_only=True, source="get_teams_id")
     validated_teams = serializers.IntegerField(read_only=True, source="get_validated_teams")
     casters = CasterSerializer(many=True, source="get_casters")
-    groups = serializers.ListField(required=False,source="get_groups")
-    brackets = serializers.ListField(required=False,source="get_brackets")
-    swissRounds = serializers.ListField(required=False,source="get_swissRounds")
+    groups = serializers.ListField(required=False,source="get_groups_id")
+    brackets = serializers.ListField(required=False,source="get_brackets_id")
+    swissRounds = serializers.ListField(required=False,source="get_swissRounds_id")
 
     class Meta:
         """Meta options of the serializer"""
@@ -416,3 +416,92 @@ class SubstituteIdSerializer(serializers.ModelSerializer):
         """Turn a Django object into a serialized representation"""
         return instance.id
 
+class FullDerefSwissMatchSerializer(serializers.ModelSerializer):
+    """Serializer for a Swiss Match in a tournament"""
+
+    class Meta:
+        """Meta options for the serializer"""
+        model = SwissMatch
+        fields = "__all__"
+
+class FullDerefSwissRoundSerializer(serializers.ModelSerializer):
+    """Serializer for a Swiss Round in a tournament"""
+
+    class Meta:
+        """Meta options for the serializer"""
+        model = SwissRound
+        fields = "__all__"
+
+class FullDerefKnockoutMatchSerializer(serializers.ModelSerializer):
+    """Serializer for a knockout match in a tournament"""
+
+    class Meta:
+        """Meta options for the serializer"""
+        model = KnockoutMatch
+        fields = "__all__"
+
+class FullDerefBracketSerializer(serializers.ModelSerializer):
+    """Serializer for a bracket in a tournament"""
+
+    class Meta:
+        """Meta options for the serializer"""
+        model = Bracket
+        fields = "__all__"
+
+class FullDerefGroupMatchSerializer(serializers.ModelSerializer):
+    """Serializer for a group match in a tournament"""
+
+    class Meta:
+        """Meta options for the serializer"""
+        model = GroupMatch
+        fields = "__all__"
+
+class FullDerefGroupSerializer(serializers.ModelSerializer):
+    """Serializer for a group in a tournament"""
+
+    class Meta:
+        """Meta options for the serializer"""
+
+        model = Group
+        fields = "__all__"
+
+
+class FullDerefPlayerSerializer(serializers.ModelSerializer):
+    """Serializer for a Player Registration"""
+
+    class Meta:
+        """Meta options for the serializer"""
+
+        model = Player
+        fields = ("id", "name_in_game", "payment_status")
+
+class FullDerefManagerSerializer(serializers.ModelSerializer):
+    """Serializer for a Manager Registration"""
+
+    class Meta:
+        """Meta options for the serializer"""
+
+        model = Manager
+
+    def to_representation(self, instance):
+        """Remove all fields except id and is_announced when is_announced is False"""
+        return instance.user.username
+
+class FullDerefSubstituteSerializer(serializers.ModelSerializer):
+    """Serializer for a Substitute Registration"""
+
+    class Meta:
+        """Meta options for the serializer"""
+
+        model = Substitute
+        fields = ("id", "name_in_game", "payment_status")
+
+class FullDerefTeamSerializer(serializers.ModelSerializer):
+    """Serializer class for Teams"""
+
+    class Meta:
+        """Meta options of the team serializer"""
+
+        model = Team
+        read_only_fields = ("id",)
+        fields = ("id", "name", "validated", "captain")

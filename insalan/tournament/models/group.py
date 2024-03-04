@@ -34,6 +34,10 @@ class Group(models.Model):
                 name="unique_group_name_in_same_tournament"
             )
         ]
+        indexes = [
+            models.Index(fields=["tournament"])
+        ]
+        ordering = ["tournament","name"]
 
     def __str__(self) -> str:
         return f"{self.name} ({self.tournament.name}, {self.tournament.event})"
@@ -49,8 +53,8 @@ class Group(models.Model):
         return team.Team.objects.filter(pk__in=teams)
 
     def get_teams_id(self) -> List[int]:
-        return self.get_teams().values_list("id", flat=True)
-    
+        return Seeding.objects.filter(group=self).values_list("team", flat=True)
+
     def get_teams_seeding(self) -> List[Tuple["Team",int]]:
         return [(seeding.team,seeding.seeding) for seeding in Seeding.objects.filter(group=self)]
     
