@@ -1,3 +1,4 @@
+import math
 from django.core.exceptions import PermissionDenied, BadRequest
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
@@ -16,7 +17,7 @@ from insalan.tickets.models import Ticket
 from insalan.user.models import User
 import insalan.tournament.serializers as serializers
 
-from ..models import Player, Manager, Substitute, Event, Tournament, Game, Team, PaymentStatus, Group, Bracket, SwissRound, GroupMatch, KnockoutMatch, SwissMatch
+from ..models import Player, Manager, Substitute, Event, Tournament, Game, Team, PaymentStatus, Group, Bracket, SwissRound, GroupMatch, KnockoutMatch, SwissMatch, Seeding, Score, BracketType, BracketSet, MatchStatus, BestofType, SwissSeeding
 from .permissions import ReadOnly, Patch
 
 
@@ -42,120 +43,160 @@ class TournamentDetailsFull(APIView):
 
     def get(self, request, primary_key: int):
         """Handle the GET word"""
+        try:
+            tourney = Tournament.objects.select_related("event").get(id=primary_key)
+        except Tournament.DoesNotExist as exc:
+            raise NotFound(_("Tournament not found")) from exc
 
-        # Alright, let's try and get the object
-        tourneys = Tournament.objects.filter(id=primary_key)
-        if len(tourneys) == 0:
-            raise Http404
-        if len(tourneys) > 1:
-            return Response("", status=status.HTTP_400_BAD_REQUEST)
-        tourney = tourneys[0]
+        is_staff = request.user.is_staff
 
         tourney_serialized = serializers.TournamentSerializer(
             tourney, context={"request": request}
         ).data
+            # deref group matchs and scores
 
         if tourney_serialized["is_announced"]:
             # Dereference the event
-            event = tourney.event
             tourney_serialized["event"] = serializers.EventSerializer(
-                event, context={"request": request}
+                Event.objects.get(id=tourney_serialized["event"]), context={"request": request}
             ).data
+
             del tourney_serialized["event"]["tournaments"]
 
             # Dereference the game
             tourney_serialized["game"] = serializers.GameSerializer(
-                tourney.game, context={"request": request}
+                Game.objects.get(id=tourney_serialized["game"]), context={"request": request}
             ).data
 
+            # Dereferencselect_relatede the teams
+            tourney_serialized["teams"] = serializers.FullDerefTeamSerializer(
+                Team.objects.filter(tournament=tourney), context={"request": request}, many=True
+            ).data
+
+
+            # Prepare can_see_payment_status
             user_player = None
-            user_manager = None
             user_substitue = None
             if request.user.is_authenticated:
                 try:
                     user_player = Player.objects.get(user=request.user, team__tournament=tourney)
                 except Player.DoesNotExist:
-                    pass
-                try:
-                    user_manager = Manager.objects.get(user=request.user, team__tournament=tourney)
-                except Manager.DoesNotExist:
-                    pass
-                try:
-                    user_substitue = Substitute.objects.get(user=request.user, team__tournament=tourney)
-                except Substitute.DoesNotExist:
-                    pass
+                    try:
+                        user_substitue = Substitute.objects.get(user=request.user, team__tournament=tourney)
+                    except Substitute.DoesNotExist:
+                        pass
 
-            # Dereference the teams
-            teams_serialized = []
             for team in tourney_serialized["teams"]:
-                team_preser = serializers.TeamSerializer(
-                    Team.objects.get(id=team), context={"request": request}
+                # dereference players, managers and substitutes
+                team["players"] = serializers.FullDerefPlayerSerializer(
+                    Player.objects.filter(team=team["id"]),
+                    context={"request": request},
+                    many=True,
                 ).data
-                del team_preser["tournament"]
+                team["managers"] = serializers.FullDerefManagerSerializer(
+                    Manager.objects.filter(team=team["id"]),
+                    context={"request": request},
+                    many=True,
+                ).data
+                team["substitutes"] = serializers.FullDerefSubstituteSerializer(
+                    Substitute.objects.filter(team=team["id"]),
+                    context={"request": request},
+                    many=True,
+                ).data
 
                 can_see_payment_status: bool = (
-                    request.user.is_staff or
-                    user_player is not None and user_player.id in team_preser["players"] or
-                    user_manager is not None and user_manager.id in team_preser["managers"] or
-                    user_substitue is not None and user_substitue.id in team_preser["substitutes"]
+                    is_staff or
+                    user_player is not None and user_player.id in [x["id"] for x in team["players"]] or
+                    request.user.username in [x for x in team["managers"]] or
+                    user_substitue is not None and user_substitue.id in [x["id"] for x in team["substitutes"]]
                 )
-                # Dereference players/managers to name_in_game
-                team_preser["players"] = [
-                    {
-                        "user": Player.objects.get(id=pid).as_user().username,
-                        "name_in_game": Player.objects.get(id=pid).name_in_game,
-                        "payment_status": Player.objects.get(id=pid).payment_status if can_see_payment_status else None
-                    } for pid in team_preser["players"]
-                ]
-                team_preser["managers"] = [
-                    Manager.objects.get(id=pid).as_user().username for pid in team_preser["managers"]
-                ]
-                team_preser["substitutes"] = [
-                    {
-                        "user": Substitute.objects.get(id=pid).as_user().username,
-                        "name_in_game": Substitute.objects.get(id=pid).name_in_game,
-                        "payment_status": Substitute.objects.get(id=pid).payment_status if can_see_payment_status else None
-                    } for pid in team_preser["substitutes"]
-                ]
-                team_preser["captain"] = Player.objects.get(id=team_preser["captain"]).as_user().username if team_preser["captain"] is not None else None
-                teams_serialized.append(team_preser)
-            # deref groups
-            group_serialized = []
-            for group in tourney.get_groups():
-                group_data = serializers.GroupSerializer(Group.objects.get(pk=group), context={"request": request}).data
-                for match in group_data["matchs"]:
-                    del match["group"]
-                group_serialized.append(group_data)
-            # deref bracket
 
-            bracket_serialized = []
-            for bracket in tourney.get_brackets():
-                bracket_data = serializers.BracketSerializer(Bracket.objects.get(pk=bracket), context={"request": request}).data
-                for match in bracket_data["matchs"]:
-                    del match["bracket"]
+                # remove payment status if not allowed
+                for player in team["players"]:
+                    if team["captain"] is not None:
+                        if player["id"] == team["captain"]:
+                            team["captain"] = player["name_in_game"]
+                        if not can_see_payment_status:
+                            player["payment_status"] = None
+                    del player["id"]
 
-                bracket_serialized.append(bracket_data)
-            # deref swissRound 
-            swiss_serialized = []
-            for swissRound in tourney.get_swissRounds():
-                swiss_data = serializers.SwissRoundSerializer(SwissRound.objects.get(pk=swissRound), context={"request": request}).data
-                for match in swiss_data["matchs"]:
-                    del match["swiss"]
+                for substitute in team["substitutes"]:
+                    if not can_see_payment_status:
+                        substitute["payment_status"] = None
+                    del substitute["id"]
 
-                swiss_serialized.append(swiss_data)
+            # deref group matchs and scores
+            tourney_serialized["groups"] = serializers.FullDerefGroupSerializer(
+                Group.objects.filter(tournament=tourney), context={"request": request}, many=True
+            ).data
 
+            for group in tourney_serialized["groups"]:
+                group["teams"] = Seeding.objects.filter(group=group["id"]).values_list("team", flat=True)
+                
+                matches = GroupMatch.objects.filter(group=group["id"])
+                group["matchs"] = serializers.FullDerefGroupMatchSerializer(
+                   matches, context={"request": request}, many=True
+                ).data
 
-            tourney_serialized["groups"].clear()
-            tourney_serialized["brackets"].clear()
-            tourney_serialized["swissRounds"].clear()
-            tourney_serialized["teams"].clear()
-            tourney_serialized["teams"] = teams_serialized
-            tourney_serialized["groups"] = group_serialized
-            tourney_serialized["brackets"] = bracket_serialized
-            tourney_serialized["swissRounds"] = swiss_serialized
+                scores = Score.objects.filter(match__in=matches).values("team_id", "match", "score")
+
+                for match in group["matchs"]:
+                    match["scores"] = {score["team_id"]: score["score"] for score in scores if score["match"] == match["id"]}
+
+                group["scores"] = {team: sum(match["scores"][team] for match in group["matchs"] if team in match["scores"]) for team in group["teams"]}
+
+            # deref bracket matchs and scores
+            tourney_serialized["brackets"] = serializers.FullDerefBracketSerializer(
+                Bracket.objects.filter(tournament=tourney), context={"request": request}, many=True
+            ).data
+
+            for bracket in tourney_serialized["brackets"]:
+
+                matches = KnockoutMatch.objects.filter(bracket=bracket["id"])
+
+                bracket["matchs"] = serializers.FullDerefKnockoutMatchSerializer(
+                    matches, context={"request": request}, many=True
+                ).data
+
+                scores = Score.objects.filter(match__in=matches).values("team_id", "match", "score")
+                for match in bracket["matchs"]:
+                    match["scores"] = {score["team_id"]: score["score"] for score in scores if score["match"] == match["id"]}
+
+                bracket["depth"] = math.ceil(math.log2(bracket["team_count"]/tourney_serialized["game"]["team_per_match"])) + 1
+
+                bracket["teams"] = set(matches.values_list("teams", flat=True))
+
+                bracket["winner"] = None
+
+                if bracket["bracket_type"] == BracketType.SINGLE:
+                    final = KnockoutMatch.objects.filter(round_number=1,index_in_round=1,bracket=bracket["id"],bracket_set=BracketSet.WINNER,status=MatchStatus.COMPLETED)
+                elif bracket["bracket_type"] == BracketType.DOUBLE:
+                    final = KnockoutMatch.objects.filter(round_number=0,index_in_round=1,bracket=bracket["id"],bracket_set=BracketSet.WINNER,status=MatchStatus.COMPLETED)
+
+                if len(final) == 1:
+                    bracket["winner"] = final[0].get_winners_loosers()[0][0]
+
+                del bracket["team_count"]
+
+            # deref swiss matchs and scores
+            tourney_serialized["swissRounds"] = serializers.FullDerefSwissRoundSerializer(
+                SwissRound.objects.filter(tournament=tourney), context={"request": request}, many=True
+            ).data
+
+            for swiss in tourney_serialized["swissRounds"]:
+                matches = SwissMatch.objects.filter(swiss=swiss["id"])
+
+                swiss["matchs"] = serializers.FullDerefSwissMatchSerializer(
+                    matches, context={"request": request}, many=True
+                ).data
+
+                scores = Score.objects.filter(match__in=matches).values("team_id", "match", "score")
+                for match in swiss["matchs"]:
+                    match["scores"] = {score["team_id"]: score["score"] for score in scores if score["match"] == match["id"]}
+
+                swiss["teams"] = SwissSeeding.objects.filter(swiss=swiss["id"]).values_list("team", flat=True)
 
         return Response(tourney_serialized, status=status.HTTP_200_OK)
-
 
 class TournamentMe(APIView):
     """

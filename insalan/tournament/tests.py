@@ -1199,16 +1199,16 @@ class TournamentFullDerefEndpoint(TestCase):
                     "id": team_one.id,
                     "name": "Team One",
                     "players": [
-                        {"user": "test_user_one", "name_in_game": "playerone", "payment_status": None},
-                        {"user": "test_user_two", "name_in_game": "playertwo", "payment_status": None},
+                        {"name_in_game": "playerone", "payment_status": None},
+                        {"name_in_game": "playertwo", "payment_status": None},
                     ],
                     "managers": [
                         "test_user_three",
                     ],
                     "substitutes": [
-                        {"user": "test_user_four", "name_in_game": "substitute", "payment_status": None},
+                        {"name_in_game": "substitute", "payment_status": None},
                     ],
-                    "captain": first.user.username,
+                    "captain": first.name_in_game,
                     "validated": team_one.validated,
                 }
             ],

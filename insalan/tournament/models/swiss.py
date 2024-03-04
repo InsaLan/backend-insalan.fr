@@ -15,6 +15,9 @@ class SwissRound(models.Model):
 
 	class Meta:
 		verbose_name = _("Ronde Suisse")
+		indexes = [
+			models.Index(fields=["tournament"])
+		]
 	
 	def __str__(self) -> str:
 		return "Ronde Suisse" + f"({self.tournament})"

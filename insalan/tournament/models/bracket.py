@@ -43,6 +43,9 @@ class Bracket(models.Model):
     class Meta:
         verbose_name = _("Arbre de tournoi")
         verbose_name_plural = _("Arbres de tournoi")
+        indexes = [
+            models.Index(fields=["tournament"])
+        ]
 
     def __str__(self):
         return self.name

@@ -22,6 +22,10 @@ class Player(models.Model):
 
         verbose_name = _("Inscription d'un⋅e joueur⋅euse")
         verbose_name_plural = _("Inscription de joueur⋅euses")
+        indexes = [
+            models.Index(fields=["user"]),
+            models.Index(fields=["team"]),
+        ]
 
     user = models.ForeignKey(
         User,

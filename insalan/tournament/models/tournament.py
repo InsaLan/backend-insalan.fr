@@ -171,6 +171,10 @@ class Tournament(models.Model):
 
         verbose_name = _("Tournoi")
         verbose_name_plural = _("Tournois")
+        indexes = [
+            models.Index(fields=["event"]),
+            models.Index(fields=["game"]),
+        ]
 
     def save(self, *args, **kwargs):
         """
@@ -280,11 +284,20 @@ class Tournament(models.Model):
         """Return the list of casters for this tournament"""
         return caster.Caster.objects.filter(tournament=self)
 
-    def get_groups(self) -> List[int]:
+    def get_groups(self) -> List["Group"]:
+        return group.Group.objects.filter(tournament=self)
+
+    def get_groups_id(self) -> List[int]:
         return group.Group.objects.filter(tournament=self).values_list("id",flat=True)
 
-    def get_brackets(self) -> List[int]:
-        return bracket.Bracket.objects.filter(tournament=self).values_list("id",flat=True)
+    def get_brackets(self) -> List["Bracket"]:
+        return bracket.Bracket.objects.filter(tournament=self)
 
-    def get_swissRounds(self) -> List[int]:
+    def get_brackets_id(self) -> List[int]:
+        return bracket.Bracket.objects.filter(tournament=self).values_list("id",flat=True)
+    
+    def get_swissRounds(self) -> List["SwissRound"]:
+        return swiss.SwissRound.objects.filter(tournament=self)
+
+    def get_swissRounds_id(self) -> List[int]:
         return swiss.SwissRound.objects.filter(tournament=self).values_list("id",flat=True)
