@@ -17,6 +17,10 @@ class Game(models.Model):
 
         verbose_name = _("Jeu")
         verbose_name_plural = _("Jeux")
+        indexes = [
+            models.Index(fields=["name"]),
+            models.Index(fields=["short_name"]),
+        ]
 
     name = models.CharField(
         verbose_name=_("Nom du jeu"),

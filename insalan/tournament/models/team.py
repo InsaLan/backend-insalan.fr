@@ -68,6 +68,9 @@ class Team(models.Model):
                 fields=["tournament", "name"], name="no_name_conflict_in_tournament"
             )
         ]
+        indexes = [
+            models.Index(fields=["tournament"]),
+        ]
 
     def __str__(self) -> str:
         """Format this team to a str"""
@@ -111,6 +114,12 @@ class Team(models.Model):
         """
         return self.get_managers().values_list("id", flat=True)
 
+    def get_managers_user_name(self) -> List[str]:
+        """
+        Retrieve the user names of all managers
+        """
+        return [manager.as_user().username for manager in self.get_managers()]
+
     def get_substitutes(self) -> List["Substitute"]:
         """
         Retrieve all the substitutes in the database for that team
@@ -122,6 +131,14 @@ class Team(models.Model):
         Retrieve the user identifiers of all substitutes
         """
         return self.get_substitutes().values_list("id", flat=True)
+
+    def get_captain_name(self) -> str:
+        """
+        Retrieve the captain of the team
+        """
+        if self.captain is not None:
+            return self.captain.name_in_game
+        return None
 
     def get_password(self) -> str:
         """Return team password"""
