@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
+from insalan.tournament.models.validators import valid_name
 from insalan.user.models import User
 import insalan.tournament.serializers as serializers
 
@@ -102,9 +103,21 @@ class SubstituteRegistration(generics.RetrieveAPIView):
             }, status=status.HTTP_403_FORBIDDEN)
 
         if "name_in_game" in data:
-            substitute.name_in_game = data["name_in_game"]
+            if(valid_name(substitute.team.tournament.game, data["name_in_game"])):
+                substitute.name_in_game = data["name_in_game"]
+            else:
+                return Response(
+                    {"name_in_game": _("Pseudo invalide")},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-        substitute.save()
+        try:
+            substitute.save()
+        except Exception as exc:
+            return Response(
+                {"player": str(exc)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         serializer = serializers.SubstituteSerializer(substitute, context={"request": request})
 
