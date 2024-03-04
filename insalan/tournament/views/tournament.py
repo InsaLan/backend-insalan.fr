@@ -291,9 +291,9 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
                 scores = Score.objects.filter(match__in=matches).values("team_id", "match", "score")
 
                 for match in group["matchs"]:
-                    match["scores"] = {score["team_id"]: score["score"] for score in scores if score["match"] == match["id"]}
+                    match["score"] = {score["team_id"]: score["score"] for score in scores if score["match"] == match["id"]}
 
-                group["scores"] = {team: sum(match["scores"][team] for match in group["matchs"] if team in match["scores"]) for team in group["teams"]}
+                group["scores"] = {team: sum(match["score"][team] for match in group["matchs"] if team in match["score"]) for team in group["teams"]}
 
             # deref bracket matchs and scores
             tourney_serialized["brackets"] = serializers.FullDerefBracketSerializer(
@@ -310,7 +310,7 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
 
                 scores = Score.objects.filter(match__in=matches).values("team_id", "match", "score")
                 for match in bracket["matchs"]:
-                    match["scores"] = {score["team_id"]: score["score"] for score in scores if score["match"] == match["id"]}
+                    match["score"] = {score["team_id"]: score["score"] for score in scores if score["match"] == match["id"]}
 
                 bracket["depth"] = math.ceil(math.log2(bracket["team_count"]/tourney_serialized["game"]["team_per_match"])) + 1
 
