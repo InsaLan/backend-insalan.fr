@@ -268,12 +268,12 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
                             team["captain"] = player["name_in_game"]
                         if not can_see_payment_status:
                             player["payment_status"] = None
-                    del player["id"]
+                            del player["id"]
 
                 for substitute in team["substitutes"]:
                     if not can_see_payment_status:
                         substitute["payment_status"] = None
-                    del substitute["id"]
+                        del substitute["id"]
 
             # deref group matchs and scores
             tourney_serialized["groups"] = serializers.FullDerefGroupSerializer(
