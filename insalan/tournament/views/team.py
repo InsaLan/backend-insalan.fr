@@ -178,9 +178,24 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
 
         team.save()
 
-        serializer = serializers.TeamSerializer(team, context={"request": request})
+        serializer = serializers.TeamSerializer(team, context={"request": request}).data
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        players = []
+        for player in serializer["players"]:
+            players.append(Player.objects.get(id=player))
+        serializer["players"] = serializers.FullDerefPlayerSerializer(players, many=True, context={"request": request}).data
+
+        managers = []
+        for manager in serializer["managers"]:
+            managers.append(Manager.objects.get(id=manager))
+        serializer["managers"] = serializers.FullDerefManagerSerializer(managers, many=True, context={"request": request}).data
+
+        substitutes = []
+        for substitute in serializer["substitutes"]:
+            substitutes.append(Substitute.objects.get(id=substitute))
+        serializer["substitutes"] = serializers.FullDerefSubstituteSerializer(substitutes, many=True, context={"request": request}).data
+
+        return Response(serializer, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         responses={
