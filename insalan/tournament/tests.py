@@ -1145,9 +1145,9 @@ class TournamentFullDerefEndpoint(TestCase):
         )
         team_one = Team.objects.create(name="Team One", tournament=tourneyobj_one)
         first = Player.objects.create(user=uobj_one, team=team_one, name_in_game="playerone")
-        Player.objects.create(user=uobj_two, team=team_one, name_in_game="playertwo")
+        second = Player.objects.create(user=uobj_two, team=team_one, name_in_game="playertwo")
         Manager.objects.create(user=uobj_three, team=team_one)
-        Substitute.objects.create(user=uobj_four, team=team_one, name_in_game="substitute")
+        sub = Substitute.objects.create(user=uobj_four, team=team_one, name_in_game="substitute")
         team_one.save()
 
         request = self.client.get(
@@ -1243,6 +1243,10 @@ class TournamentFullDerefEndpoint(TestCase):
         model["teams"][0]["players"][0]["payment_status"] = PaymentStatus.NOT_PAID
         model["teams"][0]["players"][1]["payment_status"] = PaymentStatus.NOT_PAID
         model["teams"][0]["substitutes"][0]["payment_status"] = PaymentStatus.NOT_PAID
+
+        model["teams"][0]["players"][0]["id"] = first.id
+        model["teams"][0]["players"][1]["id"] = second.id
+        model["teams"][0]["substitutes"][0]["id"] = sub.id
 
         self.assertEqual(request.data["teams"], model["teams"])
         self.assertEqual(request.data, model)
