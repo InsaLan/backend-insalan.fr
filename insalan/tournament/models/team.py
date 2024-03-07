@@ -187,8 +187,15 @@ class Team(models.Model):
             )
 
     def save(self, *args, **kwargs):
-        if self.captain is None:
+        try:
+            if self.captain is None:
+                players = self.get_players()
+                if len(players) > 0:
+                    self.captain = players[0]
+        except player.Player.DoesNotExist:
             players = self.get_players()
             if len(players) > 0:
                 self.captain = players[0]
+            else:
+                self.captain = None
         super().save(*args, **kwargs)
