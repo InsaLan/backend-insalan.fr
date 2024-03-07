@@ -32,6 +32,29 @@ from insalan.tournament.manage import create_group_matchs, create_empty_knockout
 
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
 
+from insalan.admin import ADMIN_ORDERING
+ADMIN_ORDERING += [
+    ('tournament', [
+        'Event',
+        'Game',
+        'Tournament',
+        'Team',
+        'Player',
+        'Manager',
+        'Substitute',
+        'Caster',
+        'TournamentMailer',
+        'Group',
+        'GroupMatch',
+        'Bracket',
+        'BracketMatch',
+        'Knockout',
+        'KnockoutMatch',
+        'SwissRound',
+        'SwissMatch',
+    ]),
+]
+
 class EventAdmin(admin.ModelAdmin):
     """Admin handler for Events"""
 
