@@ -94,7 +94,10 @@ class SubstituteRegistration(generics.RetrieveAPIView):
             raise PermissionDenied()
 
         # get the substitute
-        substitute = Substitute.objects.get(id=kwargs["pk"])
+        try:
+            substitute = Substitute.objects.get(id=kwargs["pk"])
+        except Substitute.DoesNotExist as exc:
+            raise NotFound() from exc
 
         # check if the user is related to the substitute
         if substitute.as_user().id != user.id:
@@ -156,7 +159,10 @@ class SubstituteRegistration(generics.RetrieveAPIView):
             raise PermissionDenied()
 
         # get the substitute
-        substitute = Substitute.objects.get(id=kwargs["pk"])
+        try:
+            substitute = Substitute.objects.get(id=kwargs["pk"])
+        except Substitute.DoesNotExist as exc:
+            raise NotFound() from exc
 
         # check if the user is related to the substitute
         if substitute.as_user().id != user.id:

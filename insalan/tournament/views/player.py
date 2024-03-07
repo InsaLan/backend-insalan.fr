@@ -95,7 +95,10 @@ class PlayerRegistration(generics.RetrieveAPIView):
             raise PermissionDenied()
 
         # get the player
-        player = Player.objects.get(id=kwargs["pk"])
+        try:
+            player = Player.objects.get(id=kwargs["pk"])
+        except Player.DoesNotExist as exc:
+            raise NotFound() from exc
 
         # check if the user is related to the player
         if player.as_user().id != user.id:
@@ -156,7 +159,10 @@ class PlayerRegistration(generics.RetrieveAPIView):
             raise PermissionDenied()
 
         # get the player
-        player = Player.objects.get(id=kwargs["pk"])
+        try:
+            player = Player.objects.get(id=kwargs["pk"])
+        except Player.DoesNotExist as exc:
+            raise NotFound() from exc
 
         # check if the user is related to the player
         if player.as_user().id != user.id:

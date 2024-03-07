@@ -54,7 +54,10 @@ class ManagerRegistration(generics.RetrieveAPIView):
             raise PermissionDenied()
 
         # get the manager
-        manager = Manager.objects.get(id=kwargs["pk"])
+        try:
+            manager = Manager.objects.get(id=kwargs["pk"])
+        except Manager.DoesNotExist as exc:
+            raise NotFound() from exc
 
         # check if the user is related to the manager
         if manager.as_user().id != user.id:

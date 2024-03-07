@@ -111,7 +111,10 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
         data = request.data
 
         # get the team
-        team = Team.objects.get(id=kwargs["pk"])
+        try:
+            team = Team.objects.get(id=kwargs["pk"])
+        except Team.DoesNotExist:
+            raise NotFound()
 
         # check if the user is registered in the team
         player = Player.objects.filter(user=user, team=team)
