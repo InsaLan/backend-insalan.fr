@@ -17,6 +17,7 @@ import insalan.tournament.serializers as serializers
 from ..models import Player, Manager, Substitute, Event, Tournament, Game, Team, PaymentStatus, Group, Bracket, SwissRound, GroupMatch, KnockoutMatch, SwissMatch, Seeding, Score, BracketType, BracketSet, MatchStatus, BestofType, SwissSeeding
 from .permissions import ReadOnly, Patch
 
+from rest_framework.exceptions import NotFound
 
 class TournamentList(generics.ListCreateAPIView):
     """List all known tournaments"""
