@@ -296,6 +296,9 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
 
                 group["scores"] = {team: sum(match["score"][team] for match in group["matchs"] if team in match["score"]) for team in group["teams"]}
 
+                # order teams by score
+                group["teams"] = sorted(group["teams"], key=lambda x: group["scores"][x], reverse=True)
+
             # deref bracket matchs and scores
             tourney_serialized["brackets"] = serializers.FullDerefBracketSerializer(
                 Bracket.objects.filter(tournament=tourney), context={"request": request}, many=True
@@ -315,7 +318,7 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
 
                 bracket["depth"] = math.ceil(math.log2(bracket["team_count"]/tourney_serialized["game"]["team_per_match"])) + 1
 
-                bracket["teams"] = set(matches.values_list("teams", flat=True))
+                bracket["teams"] = set(matches.values_list("teams", flat=True).filter(teams__isnull=False))
 
                 bracket["winner"] = None
 
