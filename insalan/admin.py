@@ -4,8 +4,8 @@ from django.contrib import admin
 ADMIN_ORDERING = []
 
 # Creating a sort function
-def get_app_list(self, request):
-    app_dict = self._build_app_dict(request)
+def get_app_list(self, request, app_label=None):
+    app_dict = self._build_app_dict(request, app_label)
 
     ordering = []
     # For each app in the app list
@@ -16,11 +16,16 @@ def get_app_list(self, request):
             ordering.append((app_name, [x['object_name'] for x in app_data['models']]))
     ordering += ADMIN_ORDERING
 
+    app_list = []
     # For each app in the Ordering list
     for app_name, object_list in ordering:
+        if app_name not in app_dict:
+            continue
         app = app_dict[app_name]
         # Sort the models
         app['models'].sort(key=lambda x: object_list.index(x['object_name']))
-        yield app
+        app_list.append(app)
+
+    return app_list
 
 admin.AdminSite.get_app_list = get_app_list
