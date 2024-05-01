@@ -50,6 +50,7 @@ class UserManager(BaseUserManager):
         user.is_superuser = True
         user.is_staff = True
         user.is_active = True
+        user.user_permissions.add(Permission.objects.get(codename="email_active"))
         user.save()
 
         return user
