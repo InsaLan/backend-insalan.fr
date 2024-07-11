@@ -60,6 +60,11 @@ class TeamList(generics.ListCreateAPIView):
                 }
             )
 
+        if self.queryset.filter(name__exact=request.data["name"]).exists():
+            return Response({
+                "name": _("Ce nom d'équipe est déjà pris.")
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         return super().post(request, *args, **kwargs)
 
 
