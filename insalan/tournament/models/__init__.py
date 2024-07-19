@@ -12,5 +12,6 @@ from .swiss import SwissRound, SwissSeeding, SwissMatch
 from .team import Team
 from .tournament import Tournament, in_thirty_days
 from .mailer import TournamentMailer
+from .seating import Seating
 
 from .validators import *

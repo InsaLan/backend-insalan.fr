@@ -11,8 +11,13 @@ from rest_framework import serializers
 
 from insalan.user.models import User
 
-from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, Group, GroupMatch, Bracket, KnockoutMatch, SwissRound, SwissMatch, Score
-from .models import unique_event_registration_validator, tournament_announced, max_players_per_team_reached, tournament_registration_full, max_substitue_per_team_reached, valid_name
+from .models import (Event, Tournament, Game, Team, Player, Manager,
+                     Substitute, Caster, Group, GroupMatch, Bracket,
+                     KnockoutMatch, SwissRound, SwissMatch, Score, Seating)
+from .models import (unique_event_registration_validator, tournament_announced,
+                     max_players_per_team_reached,
+                     tournament_registration_full,
+                     max_substitue_per_team_reached, valid_name)
 
 class ScoreSerializer(serializers.ModelSerializer):
 
@@ -415,6 +420,15 @@ class SubstituteIdSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         """Turn a Django object into a serialized representation"""
         return instance.id
+    
+class SeatingSerializer(serializers.ModelSerializer):
+    """Serializer for a Seating"""
+
+    class Meta:
+        """Meta options for the serializer"""
+
+        model = Seating
+        fields = "__all__"
 
 class FullDerefSwissMatchSerializer(serializers.ModelSerializer):
     """Serializer for a Swiss Match in a tournament"""
