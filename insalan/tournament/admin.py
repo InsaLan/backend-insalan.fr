@@ -27,8 +27,14 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.utils.decorators import method_decorator
 
 from insalan.mailer import MailManager
-from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus, Group, GroupMatch, KnockoutMatch, Bracket, Seeding, MatchStatus, Score, SwissRound, SwissMatch, SwissSeeding, BestofType, BracketSet, TournamentMailer
-from insalan.tournament.manage import create_group_matchs, create_empty_knockout_matchs, create_swiss_matchs
+from .models import (Event, Tournament, Game, Team, Player, Manager,
+                     Substitute, Caster, PaymentStatus, Group, GroupMatch,
+                     KnockoutMatch, Bracket, Seeding, MatchStatus, Score,
+                     SwissRound, SwissMatch, SwissSeeding, BestofType,
+                     BracketSet, TournamentMailer, Seating)
+from insalan.tournament.manage import (create_group_matchs,
+                                       create_empty_knockout_matchs,
+                                       create_swiss_matchs)
 
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
 
@@ -39,6 +45,7 @@ ADMIN_ORDERING += [
         'Game',
         'Tournament',
         'Team',
+        'Seating',
         'Player',
         'Manager',
         'Substitute',
@@ -856,3 +863,15 @@ class SwissMatchAdmin(admin.ModelAdmin):
         self.message_user(request,_("Les matchs ont bien été lancés"))
 
 admin.site.register(SwissMatch, SwissMatchAdmin)
+
+
+class SeatingAdmin(admin.ModelAdmin):
+    """Admin handler for Seating"""
+
+    list_display = ("id", "event", "tournament", "team")
+    search_fields = ["event", "tournament", "team"]
+
+    list_filter = ["tournament", "tournament__event", "tournament__game"]
+
+
+admin.site.register(Seating, SeatingAdmin)

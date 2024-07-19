@@ -14,7 +14,11 @@ from insalan.tickets.models import Ticket
 from insalan.user.models import User
 import insalan.tournament.serializers as serializers
 
-from ..models import Player, Manager, Substitute, Event, Tournament, Game, Team, PaymentStatus, Group, Bracket, SwissRound, GroupMatch, KnockoutMatch, SwissMatch, Seeding, Score, BracketType, BracketSet, MatchStatus, BestofType, SwissSeeding
+from ..models import (Player, Manager, Substitute, Event, Tournament, Game,
+                      Team, PaymentStatus, Group, Bracket, SwissRound,
+                      GroupMatch, KnockoutMatch, SwissMatch, Seeding, Score,
+                      BracketType, BracketSet, MatchStatus, BestofType,
+                      SwissSeeding, Seating)
 from .permissions import ReadOnly, Patch
 
 from rest_framework.exceptions import NotFound
@@ -349,6 +353,10 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
                     match["score"] = {score["team_id"]: score["score"] for score in scores if score["match"] == match["id"]}
 
                 swiss["teams"] = SwissSeeding.objects.filter(swiss=swiss["id"]).values_list("team", flat=True)
+
+            tourney_serialized["seatings"] = serializers.SeatingSerializer(
+                Seating.objects.filter(tournament=tourney), context={"request": request}, many=True
+            ).data
 
         return Response(tourney_serialized, status=status.HTTP_200_OK)
 
