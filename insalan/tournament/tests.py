@@ -22,7 +22,7 @@ from insalan.tournament.models import (
     Tournament,
     Event,
     Game,
-    Seating,
+    SeatSlot,
 )
 from insalan.user.models import User
 
@@ -1151,14 +1151,11 @@ class TournamentFullDerefEndpoint(TestCase):
         sub = Substitute.objects.create(user=uobj_four, team=team_one, name_in_game="substitute")
         team_one.save()
         
-        seat_one = Seating.objects.create(
-            event=evobj,
-            x=1,
-            y=1,
+        seatslot_one = SeatSlot.objects.create(
             tournament=tourneyobj_one,
             team=team_one
         )
-        seat_one.save()
+        seatslot_one.save()
 
         request = self.client.get(
             reverse("tournament/details-full", args=[tourneyobj_one.id]), format="json"
@@ -1230,12 +1227,9 @@ class TournamentFullDerefEndpoint(TestCase):
             "groups" : [],
             "brackets" : [],
             "swissRounds" : [],
-            "seatings": [
+            "seatslots": [
                 {
-                    "id": seat_one.id,
-                    "x": 1,
-                    "y": 1,
-                    "event": evobj.id,
+                    "id": seatslot_one.id,
                     "tournament": tourneyobj_one.id,
                     "team": team_one.id
                 }

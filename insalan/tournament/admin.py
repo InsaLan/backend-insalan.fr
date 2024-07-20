@@ -31,7 +31,7 @@ from .models import (Event, Tournament, Game, Team, Player, Manager,
                      Substitute, Caster, PaymentStatus, Group, GroupMatch,
                      KnockoutMatch, Bracket, Seeding, MatchStatus, Score,
                      SwissRound, SwissMatch, SwissSeeding, BestofType,
-                     BracketSet, TournamentMailer, Seating)
+                    BracketSet, TournamentMailer, Seat, SeatSlot)
 from insalan.tournament.manage import (create_group_matchs,
                                        create_empty_knockout_matchs,
                                        create_swiss_matchs)
@@ -45,7 +45,8 @@ ADMIN_ORDERING += [
         'Game',
         'Tournament',
         'Team',
-        'Seating',
+        'Seat',
+        'SeatSlot',
         'Player',
         'Manager',
         'Substitute',
@@ -865,13 +866,23 @@ class SwissMatchAdmin(admin.ModelAdmin):
 admin.site.register(SwissMatch, SwissMatchAdmin)
 
 
-class SeatingAdmin(admin.ModelAdmin):
+# TODO: better admin for seating
+class SeatAdmin(admin.ModelAdmin):
     """Admin handler for Seating"""
 
-    list_display = ("id", "event", "tournament", "team")
-    search_fields = ["event", "tournament", "team"]
+    list_display = ("id", "slot", "x", "y")
+    search_fields = ["event", "slot"]
 
-    list_filter = ["tournament", "tournament__event", "tournament__game"]
+    list_filter = ["event"]
 
 
-admin.site.register(Seating, SeatingAdmin)
+admin.site.register(Seat, SeatAdmin)
+
+class SeatSlotAdmin(admin.ModelAdmin):
+    """Admin handler for SeatSlot"""
+    list_display = ("id", "tournament", "team")
+    search_fields = ["tournament", "team"]
+    list_filter = ["tournament"]
+
+admin.site.register(SeatSlot, SeatSlotAdmin)
+

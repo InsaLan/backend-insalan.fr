@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
-class Seating(models.Model):
+class Seat(models.Model):
     """
     Represents a single seat
     """
@@ -13,6 +13,13 @@ class Seating(models.Model):
         blank=False,
         on_delete=models.CASCADE,
         verbose_name=_("Évènement"),
+    )
+    slot = models.ForeignKey(
+        "SeatSlot",
+        null=False,
+        blank=False,
+        on_delete=models.CASCADE,
+        verbose_name=_("Slot"),
     )
     x = models.IntegerField(
         null=False,
@@ -25,21 +32,6 @@ class Seating(models.Model):
         verbose_name=_("Position verticale"),
     )
 
-    tournament = models.ForeignKey(
-        "Tournament",
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        verbose_name=_("Tournoi"),
-    )
-    team = models.ForeignKey(
-        "Team",
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        verbose_name=_("Équipe"),
-    )
-
     class Meta:
         """Meta Options"""
 
@@ -50,3 +42,6 @@ class Seating(models.Model):
                 fields=["event", "x", "y"], name="one_seat_per_position_per_event"
             )
         ]
+
+    def __str__(self):
+        return f"{self.event} - {self.slot} - ({self.x}, {self.y})"
