@@ -13,7 +13,8 @@ from insalan.user.models import User
 
 from .models import (Event, Tournament, Game, Team, Player, Manager,
                      Substitute, Caster, Group, GroupMatch, Bracket,
-                     KnockoutMatch, SwissRound, SwissMatch, Score, Seating)
+                     KnockoutMatch, SwissRound, SwissMatch, Score, Seat, 
+                     SeatSlot)
 from .models import (unique_event_registration_validator, tournament_announced,
                      max_players_per_team_reached,
                      tournament_registration_full,
@@ -421,13 +422,13 @@ class SubstituteIdSerializer(serializers.ModelSerializer):
         """Turn a Django object into a serialized representation"""
         return instance.id
     
-class SeatingSerializer(serializers.ModelSerializer):
+class SeatSlotSerializer(serializers.ModelSerializer):
     """Serializer for a Seating"""
 
     class Meta:
         """Meta options for the serializer"""
 
-        model = Seating
+        model = SeatSlot
         fields = "__all__"
 
 class FullDerefSwissMatchSerializer(serializers.ModelSerializer):
