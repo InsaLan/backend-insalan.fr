@@ -423,12 +423,20 @@ class SubstituteIdSerializer(serializers.ModelSerializer):
         return instance.id
     
 class SeatSlotSerializer(serializers.ModelSerializer):
-    """Serializer for a Seating"""
+    """Serializer for a SeatSlot"""
 
     class Meta:
         """Meta options for the serializer"""
 
         model = SeatSlot
+        fields = "__all__"
+
+class SeatSerializer(serializers.ModelSerializer):
+    """Serializer for a Seat"""
+
+    class Meta:
+        """Meta options for the serializer"""
+        model = Seat
         fields = "__all__"
 
 class FullDerefSwissMatchSerializer(serializers.ModelSerializer):
