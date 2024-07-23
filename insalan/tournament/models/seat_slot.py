@@ -6,6 +6,7 @@ class SeatSlot(models.Model):
     """
     Represents a single seat
     """
+
     tournament = models.ForeignKey(
         "Tournament",
         null=False,
@@ -19,6 +20,10 @@ class SeatSlot(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         verbose_name=_("Équipe"),
+    )
+    seats = models.ManyToManyField(
+        "Seat",
+        verbose_name=_("Place"),
     )
 
     class Meta:

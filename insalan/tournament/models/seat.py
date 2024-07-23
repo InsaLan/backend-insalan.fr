@@ -14,13 +14,6 @@ class Seat(models.Model):
         on_delete=models.CASCADE,
         verbose_name=_("Évènement"),
     )
-    slot = models.ForeignKey(
-        "SeatSlot",
-        null=False,
-        blank=False,
-        on_delete=models.CASCADE,
-        verbose_name=_("Slot"),
-    )
     x = models.IntegerField(
         null=False,
         blank=False,
@@ -44,4 +37,4 @@ class Seat(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.event} - {self.slot} - ({self.x}, {self.y})"
+        return f"{self.event} - ({self.x}, {self.y})"

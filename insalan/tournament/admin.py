@@ -870,9 +870,8 @@ admin.site.register(SwissMatch, SwissMatchAdmin)
 class SeatAdmin(admin.ModelAdmin):
     """Admin handler for Seating"""
 
-    list_display = ("id", "slot", "x", "y")
-    search_fields = ["event", "slot"]
-
+    list_display = ("id", "event", "x", "y")
+    search_fields = ["event"]
     list_filter = ["event"]
 
 

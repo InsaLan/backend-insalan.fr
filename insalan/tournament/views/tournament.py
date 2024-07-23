@@ -18,7 +18,7 @@ from ..models import (Player, Manager, Substitute, Event, Tournament, Game,
                       Team, PaymentStatus, Group, Bracket, SwissRound,
                       GroupMatch, KnockoutMatch, SwissMatch, Seeding, Score,
                       BracketType, BracketSet, MatchStatus, BestofType,
-                      SwissSeeding, SeatSlot)
+                      SwissSeeding, SeatSlot, Seat)
 from .permissions import ReadOnly, Patch
 
 from rest_framework.exceptions import NotFound
@@ -354,9 +354,16 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
 
                 swiss["teams"] = SwissSeeding.objects.filter(swiss=swiss["id"]).values_list("team", flat=True)
 
+
+            # deref seat slots
             tourney_serialized["seatslots"] = serializers.SeatSlotSerializer(
                 SeatSlot.objects.filter(tournament=tourney), context={"request": request}, many=True
             ).data
+
+            for seatslot in tourney_serialized["seatslots"]:
+                seatslot["seats"] =  serializers.SeatSerializer(
+                    Seat.objects.filter(id__in=seatslot["seats"]), context={"request": request}, many=True
+                ).data
 
         return Response(tourney_serialized, status=status.HTTP_200_OK)
 
