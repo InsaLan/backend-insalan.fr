@@ -163,6 +163,7 @@ class TeamSerializer(serializers.ModelSerializer):
     substitutes = serializers.ListField(required=False, source="get_substitutes_id")
     players_names_in_game = serializers.ListField(required=False, write_only=True)
     substitutes_names_in_game = serializers.ListField(required=False, write_only=True)
+    seat_slot = serializers.IntegerField(required=False, source="get_seat_slot_id")
 
     class Meta:
         """Meta options of the team serializer"""

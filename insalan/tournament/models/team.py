@@ -13,6 +13,7 @@ from . import player
 from . import manager
 from . import substitute
 from . import group, bracket, swiss
+from . import seat_slot
 
 from . import validators
 from . import payement_status as ps
@@ -57,6 +58,14 @@ class Team(models.Model):
         verbose_name=_("Capitaine"),
         related_name="team_captain",
     )
+    seat_slot = models.OneToOneField(
+        "SeatSlot",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        verbose_name=_("Slot"),
+    )
+
 
     class Meta:
         """Meta Options"""
@@ -155,6 +164,18 @@ class Team(models.Model):
 
     def get_matchs(self) -> List[Union[List["GroupMatch"],List["KnockoutMatch"],List["SwissMatch"]]]:
         return self.get_group_matchs(), self.get_knockout_matchs(), self.get_swiss_matchs()
+
+    def get_seat_slot(self) -> Optional["SeatSlot"]:
+        return seat_slot.SeatSlot.objects.filter(team=self).first()
+
+    def get_seat_slot_id(self) -> Optional[int]:
+        """
+        Retrieve the seat slot identifier of the team
+        """
+        seat_slot = self.get_seat_slot()
+        if seat_slot is not None:
+            return seat_slot.id
+        return None
 
     def refresh_validation(self):
         """Refreshes the validation state of a tournament"""

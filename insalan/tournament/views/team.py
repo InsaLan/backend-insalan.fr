@@ -12,7 +12,7 @@ from insalan.settings import EMAIL_AUTH
 from insalan.mailer import MailManager
 import insalan.tournament.serializers as serializers
 
-from ..models import Player, Manager, Substitute, Team, PaymentStatus
+from ..models import Player, Manager, Substitute, Team, PaymentStatus, SeatSlot
 from .permissions import ReadOnly, Patch
 
 
@@ -183,6 +183,33 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
                 if substitute.as_user().id != user.id and substitute.payment_status == PaymentStatus.NOT_PAID:
                     MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"]).send_kick_mail(substitute.as_user(), team.name)
                     substitute.delete()
+
+        if "seat_slot" in data:
+            try:
+                seat_slot = SeatSlot.objects.get(id=data["seat_slot"])
+            except SeatSlot.DoesNotExist:
+                return Response({
+                    "seat_slot": _("Slot invalide.")
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            if seat_slot.tournament != team.tournament:
+                return Response({
+                    "seat_slot": _("Slot appartient à un autre tournoi.")
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            if hasattr(seat_slot, "team") and seat_slot.team != team:
+                return Response({
+                    "seat_slot": _("Slot déjà utilisé.")
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            if seat_slot.seats.count() < team.tournament.game.players_per_team:
+                return Response({
+                    "seat_slot": _("Slot trop petit.")
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
+
+            team.seat_slot = seat_slot
+
 
         team.save()
 
