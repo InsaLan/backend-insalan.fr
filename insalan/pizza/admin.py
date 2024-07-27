@@ -1,9 +1,12 @@
+"""This module contains the admin configuration for the Pizza app."""
+
 from django.contrib import admin
 from django.http import HttpResponse
 
 from .models import Pizza, TimeSlot, Order, PizzaOrder, PizzaExport, PaymentMethod
 
 class PizzaAdmin(admin.ModelAdmin):
+    """Admin class for the Pizza model"""
     list_display = ("id", "name", "ingredients")
     search_fields = ["name", "ingredients", "allergens"]
 
@@ -11,6 +14,7 @@ admin.site.register(Pizza, PizzaAdmin)
 
 
 class TimeSlotAdmin(admin.ModelAdmin):
+    """Admin class for the TimeSlot model"""
     list_display = ("id", "delivery_time", "end", "pizza_max")
     search_fields = ["delivery_time", "end"]
 
@@ -18,10 +22,12 @@ admin.site.register(TimeSlot, TimeSlotAdmin)
 
 
 class PizzaOrderInline(admin.TabularInline):
+    """Admin class for the PizzaOrder model"""
     model = PizzaOrder
     extra = 1
 
 class OrderAdmin(admin.ModelAdmin):
+    """Admin class for the Order model"""
     list_display = ("id", "get_username", "time_slot", "created_at")
     search_fields = ["user", "time_slot__delivery_time"]
     inlines = [PizzaOrderInline]
@@ -56,6 +62,7 @@ class OrderAdmin(admin.ModelAdmin):
 admin.site.register(Order, OrderAdmin)
 
 class ExportAdmin(admin.ModelAdmin):
+    """Admin class for the Export model"""
     list_display = ("id", "time_slot", "created_at")
     search_fields = ["time_slot"]
 

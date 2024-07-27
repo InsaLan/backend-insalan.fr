@@ -6,6 +6,8 @@ The tests cover the following functionalities:
 
 """
 
+from datetime import timedelta
+
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -13,9 +15,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from insalan.pizza.models import Pizza, TimeSlot, Order, PizzaOrder, PizzaExport
-from insalan.pizza.serializers import PizzaSerializer, PizzaIdSerializer
 from insalan.user.models import User
-from datetime import timedelta
 
 
 class PizzaEndpointsTestCase(TestCase):
