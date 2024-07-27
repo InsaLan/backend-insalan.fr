@@ -14,10 +14,11 @@ from rest_framework.serializers import Serializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-import insalan.pizza.serializers as serializers
+from insalan.pizza import serializers
 from .models import Pizza, TimeSlot, Order, PizzaExport
 
 class ReadOnly(permissions.BasePermission):
+    """Read-Only permissions"""
     def has_permission(self, request, _view):
         return request.method in permissions.SAFE_METHODS
 
@@ -468,7 +469,9 @@ class NextTimeSlot(generics.ListAPIView):
 
     def get(self, request, *args, **kwargs):
         # select incoming timeslot and currents timeslot in the same day
-        timeslot = TimeSlot.objects.filter(delivery_time__gte=timezone.now().date()).order_by("delivery_time")
+        timeslot = TimeSlot.objects.filter(
+            delivery_time__gte=timezone.now().date()
+        ).order_by("delivery_time")
 
         serializers_data = []
         for ts in timeslot:
@@ -593,13 +596,14 @@ class OrderDetail(generics.RetrieveUpdateDestroyAPIView):
             order.delivery_date = timezone.now()
             order.save()
             return Response({"detail": _("Modified.")}, status=200)
-        elif "delivered" in data and data["delivered"] is False:
+
+        if "delivered" in data and data["delivered"] is False:
             order.delivered = False
             order.delivery_date = None
             order.save()
             return Response({"detail": _("Modified.")}, status=200)
-        else:
-            return Response({"detail": _("Bad request.")}, status=400)
+
+        return Response({"detail": _("Bad request.")}, status=400)
 
     @swagger_auto_schema(
         responses={

@@ -1,5 +1,5 @@
 """ URLs for pizza
-- /pizza/pizza: 
+- /pizza/pizza:
    - GET: return pizza list id
    - POST: create a pizza (admin only)
 - /pizza/pizza/full: list pizza available with their infos
@@ -34,7 +34,8 @@ urlpatterns = [
    path("pizza/<int:pk>/", views.PizzaDetail.as_view(), name="pizza/detail"),
    path("pizza/search/",views.PizzaSearch.as_view(), name="pizza/fuzzy-find"),
    path("pizza/by-timeslot/", views.PizzaListByTimeSlot.as_view(), name="pizza/list/by-timeslot"),
-   path("pizza/by-timeslot/<int:pk>", views.PizzaListByGivenTimeSlot.as_view(), name="pizza/list/by-timeslot-id"),
+   path("pizza/by-timeslot/<int:pk>", views.PizzaListByGivenTimeSlot.as_view(),
+        name="pizza/list/by-timeslot-id"),
    path("timeslot/", views.TimeSlotList.as_view(), name="timeslot/list"),
    path("timeslot/full/", views.TimeSlotListFull.as_view(), name="timeslot/list/full"),
    path("timeslot/<int:pk>/", views.TimeSlotDetail.as_view(), name="timeslot/detail"),

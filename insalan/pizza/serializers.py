@@ -1,8 +1,10 @@
 """ Serializers for pizza models"""
+
+from typing import List
+
 from rest_framework import serializers
 
 from .models import Pizza, Order, TimeSlot, PizzaOrder, PizzaExport, PaymentMethod
-from typing import List
 
 class PizzaSerializer(serializers.ModelSerializer):
     """Serializer for a pizza model"""
@@ -27,7 +29,8 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         read_only_fields = ("id", )
-        fields = ("id", "user", "time_slot", "pizza", "payment_method", "price", "paid", "created_at", "delivered", "delivery_date")
+        fields = ("id", "user", "time_slot", "pizza", "payment_method", "price", "paid",
+                  "created_at", "delivered", "delivery_date")
 
 class CreateOrderSerializer(serializers.ModelSerializer):
     """ Serializer for an order"""
@@ -53,9 +56,13 @@ class CreateOrderSerializer(serializers.ModelSerializer):
         elif price_type == "staff":
             price = TimeSlot.objects.get(id=validated_data["time_slot"].id).staff_price * len(pizza)
         elif price_type == "player":
-            price = TimeSlot.objects.get(id=validated_data["time_slot"].id).player_price * len(pizza)
+            price = TimeSlot.objects.get(
+                id=validated_data["time_slot"].id
+            ).player_price * len(pizza)
         else:
-            price = TimeSlot.objects.get(id=validated_data["time_slot"].id).external_price * len(pizza)
+            price = TimeSlot.objects.get(
+                id=validated_data["time_slot"].id
+            ).external_price * len(pizza)
         validated_data["price"] = price
         order = Order.objects.create(**validated_data)
         for p in pizza:
@@ -75,7 +82,7 @@ class OrderIdSerializer(serializers.ModelSerializer):
         """
         model = Order
         fields = ("id", )
-    
+
     def to_representation(self, instance):
         """Turn a Django object into a serialized representation"""
         return instance.id
@@ -112,8 +119,14 @@ class PizzaByTimeSlotSerializer(serializers.ModelSerializer):
     def get_pizza(self, obj):
         result = {}
         # for each pizza type in the timeslot, count the number of pizza ordered
-        for pizza in PizzaOrder.objects.filter(order__time_slot__id=obj.id).values("pizza__id").distinct():
-            result[pizza["pizza__id"]] = PizzaOrder.objects.filter(order__time_slot__id=obj.id, pizza__id=pizza["pizza__id"]).count()
+        pizzas = PizzaOrder.objects.filter(
+            order__time_slot__id=obj.id
+        ).values("pizza__id").distinct()
+        for pizza in pizzas:
+            result[pizza["pizza__id"]] = PizzaOrder.objects.filter(
+                order__time_slot__id=obj.id,
+                pizza__id=pizza["pizza__id"]
+            ).count()
         return result
 
 class PizzaExportSerializer(serializers.ModelSerializer):

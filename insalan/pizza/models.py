@@ -3,14 +3,15 @@ This module contains the Django models for the pizza ordering system.
 
 It includes the following models:
 - Pizza: Represents a pizza with its name, price, ingredients, image, and availability.
-- TimeSlot: Represents a time slot for ordering pizzas, including delivery time, end time, and maximum number of pizzas.
-- Order: Represents a pizza order, including the user, time slot, pizzas, payment method, price, and delivery status.
+- TimeSlot: Represents a time slot for ordering pizzas, including delivery time, end time, and
+  maximum number of pizzas.
+- Order: Represents a pizza order, including the user, time slot, pizzas, payment method, price,
+  and delivery status.
 """
 from typing import List
 
 from django.core.validators import FileExtensionValidator
 from django.db import models
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
 
@@ -216,6 +217,7 @@ class TimeSlot(models.Model):
         return Order.objects.filter(time_slot=self).values_list("id", flat=True).order_by("-id")
 
 class PizzaOrder(models.Model):
+    """Pizza order model"""
     order = models.ForeignKey('Order', on_delete=models.CASCADE)
     pizza = models.ForeignKey('pizza.Pizza', on_delete=models.CASCADE)
 
