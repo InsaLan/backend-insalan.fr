@@ -879,9 +879,11 @@ admin.site.register(Seat, SeatAdmin)
 
 class SeatSlotAdmin(admin.ModelAdmin):
     """Admin handler for SeatSlot"""
-    list_display = ("id", "tournament", "team")
-    search_fields = ["tournament", "team"]
-    list_filter = ["tournament"]
+    list_display = ("id", "get_seats")
+
+    @admin.display(description="Seats")
+    def get_seats(self, obj):
+        return ", ".join([f"({seat.x}, {seat.y})" for seat in obj.seats.all()])
 
 admin.site.register(SeatSlot, SeatSlotAdmin)
 

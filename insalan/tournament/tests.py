@@ -1247,7 +1247,6 @@ class TournamentFullDerefEndpoint(TestCase):
                 {
                     "id": seatslot_one.id,
                     "tournament": tourneyobj_one.id,
-                    "team": team_one.id,
                     "seats": [
                         {
                             "id": seat_one.id,
