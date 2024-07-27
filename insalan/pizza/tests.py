@@ -25,7 +25,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.admin_user = User.objects.create(
             username="admin", email="admin@example.com", is_staff=True
         )
-        
+
         self.pizza1 = Pizza.objects.create(name="Test Pizza")
         self.pizza2 = Pizza.objects.create(name="Test Pizza 2")
 
@@ -57,7 +57,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(len(response.data), 2)
         self.assertEqual(response.data[0], self.pizza1.id)
         self.assertEqual(response.data[1], self.pizza2.id)
-    
+
     def test_pizza_post(self):
         """Test the pizza post endpoint"""
         client = APIClient()
@@ -137,6 +137,125 @@ class PizzaEndpointsTestCase(TestCase):
             reverse("pizza/list/by-timeslot-id", kwargs={"pk": 999})
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_pizza_put(self) -> None:
+        """Test the pizza put endpoint"""
+        client = APIClient()
+        client.force_login(user=self.admin_user)
+        pizza_id: int = self.pizza1.id
+        response = client.put(reverse(
+            "pizza/detail",
+            kwargs={"pk": pizza_id}
+        ), {"name": "New Pizza Name"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {
+            "id": pizza_id,
+            "name": "New Pizza Name",
+            "ingredients": None,
+            "allergens": None,
+            "image": None
+        })
+
+    def test_pizza_put_unauthorized(self) -> None:
+        """Test the pizza put endpoint with unauthorized user"""
+        client = APIClient()
+        pizza_id: int = self.pizza1.id
+        response = client.put(reverse(
+            "pizza/detail",
+            kwargs={"pk": pizza_id}
+        ), {"name": "New Pizza Name"})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data, {
+            "detail": "Informations d'authentification non fournies."
+        })
+        self.assertEqual(Pizza.objects.get(id=pizza_id).name, "Test Pizza")
+
+    def test_pizza_put_not_found(self) -> None:
+        "Test the pizza put endpoint with wrong id"""
+        client = APIClient()
+        client.force_login(user=self.admin_user)
+        response = client.put(reverse(
+            "pizza/detail",
+            kwargs={"pk": 999}
+        ), {"name": "New Pizza Name"})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data, {
+            "detail": "Pas trouvé."
+        })
+
+    def test_pizza_patch(self) -> None:
+        """Test the pizza patch endpoint"""
+        client = APIClient()
+        client.force_login(user=self.admin_user)
+        pizza_id: int = self.pizza1.id
+        response = client.patch(reverse(
+            "pizza/detail",
+            kwargs={"pk": pizza_id}
+        ), {"name": "New Pizza Name"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {
+            "id": pizza_id,
+            "name": "New Pizza Name",
+            "ingredients": None,
+            "allergens": None,
+            "image": None
+        })
+
+    def test_pizza_patch_unauthorized(self) -> None:
+        """Test the pizza patch endpoint with unauthorized user"""
+        client = APIClient()
+        pizza_id: int = self.pizza1.id
+        response = client.patch(reverse(
+            "pizza/detail",
+            kwargs={"pk": pizza_id}
+        ), {"name": "New Pizza Name"})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data, {
+            "detail": "Informations d'authentification non fournies."
+        })
+        self.assertEqual(Pizza.objects.get(id=pizza_id).name, "Test Pizza")
+
+    def test_pizza_patch_not_found(self) -> None:
+        "Test the pizza patch endpoint with wrong id"""
+        client = APIClient()
+        client.force_login(user=self.admin_user)
+        response = client.patch(reverse(
+            "pizza/detail",
+            kwargs={"pk": 999}
+        ), {"name": "New Pizza Name"})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data, {
+            "detail": "Pas trouvé."
+        })
+
+    def test_pizza_delete(self) -> None:
+        """Test the pizza delete endpoint"""
+        client = APIClient()
+        client.force_login(user=self.admin_user)
+        response = client.delete(
+            reverse("pizza/detail", kwargs={"pk": self.pizza1.id})
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Pizza.objects.count(), 1)
+
+    def test_pizza_delete_unauthorized(self) -> None:
+        """Test the pizza delete endpoint with unauthorized user"""
+        client = APIClient()
+        response = client.delete(
+            reverse("pizza/detail", kwargs={"pk": self.pizza1.id})
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(Pizza.objects.count(), 2)
+
+    def test_pizza_delete_not_found(self) -> None:
+        """Test the pizza delete endpoint with wrong id"""
+        client = APIClient()
+        client.force_login(user=self.admin_user)
+        response = client.delete(
+            reverse("pizza/detail", kwargs={"pk": 999})
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(Pizza.objects.count(), 2)
 
     def test_timeslot_list(self):
         """Test the timeslot list endpoint"""
@@ -307,7 +426,7 @@ class PizzaEndpointsTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(Order.objects.count(), 1)
-    
+
     def test_order_post_not_found(self):
         """Test the order post endpoint with wrong id"""
         client = APIClient()
