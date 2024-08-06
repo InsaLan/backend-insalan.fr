@@ -192,19 +192,19 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
                     "seat_slot": _("Slot invalide.")
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            if seat_slot.tournament != team.tournament:
+            if seat_slot.tournament.id != team.tournament.id:
                 return Response({
                     "seat_slot": _("Slot appartient à un autre tournoi.")
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            if hasattr(seat_slot, "team") and seat_slot.team != team:
+            if hasattr(seat_slot, "team") and seat_slot.team.id != team.id:
                 return Response({
                     "seat_slot": _("Slot déjà utilisé.")
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            if seat_slot.seats.count() < team.tournament.game.players_per_team:
+            if seat_slot.seats.count() != team.tournament.game.players_per_team:
                 return Response({
-                    "seat_slot": _("Slot trop petit.")
+                    "seat_slot": _("Slot inadapté au tournoi.")
                 }, status=status.HTTP_400_BAD_REQUEST)
         
 

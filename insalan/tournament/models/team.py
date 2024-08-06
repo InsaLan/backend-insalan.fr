@@ -165,16 +165,12 @@ class Team(models.Model):
     def get_matchs(self) -> List[Union[List["GroupMatch"],List["KnockoutMatch"],List["SwissMatch"]]]:
         return self.get_group_matchs(), self.get_knockout_matchs(), self.get_swiss_matchs()
 
-    def get_seat_slot(self) -> Optional["SeatSlot"]:
-        return seat_slot.SeatSlot.objects.filter(team=self).first()
-
     def get_seat_slot_id(self) -> Optional[int]:
         """
         Retrieve the seat slot identifier of the team
         """
-        seat_slot = self.get_seat_slot()
-        if seat_slot is not None:
-            return seat_slot.id
+        if self.seat_slot is not None:
+            return self.seat_slot.id
         return None
 
     def refresh_validation(self):
