@@ -263,6 +263,7 @@ class ValidatedFilter(admin.SimpleListFilter):
             return queryset.filter(validated=self.value())
         return queryset
 
+# TODO: seatslot validation in team admin
 class TeamAdmin(admin.ModelAdmin):
     """Admin handler for Team"""
 
@@ -877,9 +878,29 @@ class SeatAdmin(admin.ModelAdmin):
 
 admin.site.register(Seat, SeatAdmin)
 
+class SeatSlotForm(forms.ModelForm):
+    class Meta:
+        model = SeatSlot
+        fields = ['tournament', 'seats']
+
+    def clean(self):
+        """
+        Ensure that the number of seats is consistent with the tournament
+        """
+        seats = self.cleaned_data.get('seats')
+        tournament = self.cleaned_data.get('tournament')
+        if seats and tournament:
+            if seats.count() != tournament.game.players_per_team:
+                raise ValidationError(
+                _("Le nombre de places est incorrect pour ce tournoi")
+                )
+        return self.cleaned_data
+
+
 class SeatSlotAdmin(admin.ModelAdmin):
     """Admin handler for SeatSlot"""
     list_display = ("id", "get_seats")
+    form = SeatSlotForm
 
     @admin.display(description="Seats")
     def get_seats(self, obj):
