@@ -159,6 +159,31 @@ class TeamForm(forms.ModelForm):
                 "content_type"
             )
 
+    def clean(self):
+        """
+        validate seat slot
+        """
+        seat_slot = self.cleaned_data.get("seat_slot")
+        tournament = self.cleaned_data.get("tournament")
+        team_id = self.instance.id
+
+        if seat_slot.tournament.id != tournament.id:
+            raise ValidationError(
+                _("Ce slot appartient à un autre tournoi.")
+            )
+
+        if hasattr(seat_slot, "team") and seat_slot.team.id != team_id:
+            raise ValidationError(
+                _("Slot déjà utilisé.")
+            )
+
+        if seat_slot.seats.count() != tournament.game.players_per_team:
+            raise ValidationError(
+                _("Slot inadapté au tournoi.")
+            )
+
+        return self.cleaned_data
+
 class TeamCreationForm(forms.ModelForm):
     """
     A form that creates a team, from the given username, tournament, validation and password.
@@ -883,17 +908,38 @@ class SeatSlotForm(forms.ModelForm):
         model = SeatSlot
         fields = ['tournament', 'seats']
 
+    # TODO: tests, also validate in endpoint
     def clean(self):
         """
-        Ensure that the number of seats is consistent with the tournament
+        Validation for seat slot
         """
         seats = self.cleaned_data.get('seats')
         tournament = self.cleaned_data.get('tournament')
+
+        # Ensure that the number of seats is consistent with the tournament
         if seats and tournament:
             if seats.count() != tournament.game.players_per_team:
                 raise ValidationError(
                 _("Le nombre de places est incorrect pour ce tournoi")
                 )
+
+        # Ensure that the seats are all in the same event
+        if seats:
+            event = seats.first().event
+            if not all([seat.event.id == event.id for seat in seats]):
+                raise ValidationError(
+                _("Les places doivent être dans le même événement")
+                )
+        
+        # Ensure that all seats are not part of another slot
+        if seats:
+            other_slots = SeatSlot.objects.exclude(id=self.instance.id)
+            other_seats = {seat for slot in other_slots for seat in slot.seats.all()}
+            if other_seats.intersection(seats):
+                raise ValidationError(
+                _("Les places ne peuvent pas être partagés entre plusieurs slots")
+                )
+
         return self.cleaned_data
 
 
