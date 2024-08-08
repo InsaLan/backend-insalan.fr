@@ -96,17 +96,4 @@ urlpatterns = [
         views.SwissMatchScore.as_view(),
         name="swiss/match/score"
     ),
-    path(
-        "seat/",
-        views.SeatCreationList.as_view(),
-        name="seat/list"
-    ),
-    path("seatslot/",
-        views.SeatSlotList.as_view(),
-        name="seatslot/list"
-    ),
-    path("seatslot/<int:pk>/",
-         views.SeatSlotDetails.as_view(), 
-         name="seatslot/details"
-    ),
 ]
