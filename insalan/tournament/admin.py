@@ -288,7 +288,6 @@ class ValidatedFilter(admin.SimpleListFilter):
             return queryset.filter(validated=self.value())
         return queryset
 
-# TODO: seatslot validation in team admin
 class TeamAdmin(admin.ModelAdmin):
     """Admin handler for Team"""
 
@@ -908,7 +907,6 @@ class SeatSlotForm(forms.ModelForm):
         model = SeatSlot
         fields = ['tournament', 'seats']
 
-    # TODO: also validate in endpoint
     def clean(self):
         """
         Validation for seat slot
