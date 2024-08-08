@@ -1,6 +1,7 @@
 const gridSize = 25; // size of each grid cell
 const pickedColor = "blue";
 const notPickedColor = "white";
+let currentSeats = [];
 
 function drawGrid() {
   const canvas = document.getElementById("seatCanvas");
@@ -26,61 +27,16 @@ function drawGrid() {
   }
 }
 
-function getPixelColor(ctx, gridX, gridY) {
-  // get the color of the top-left pixel of the clicked cell
-  const imageData = ctx.getImageData(gridX * gridSize + 2, gridY * gridSize + 2, 1, 1);
-  return imageData.data;
-}
-
 function placePixel(ctx, gridX, gridY, color) {
-  // offsets to keep grid lines
   ctx.fillStyle = color;
+  // offsets to keep grid lines
   ctx.fillRect(gridX * gridSize + 1, gridY * gridSize + 1, gridSize - 2, gridSize - 2);
-}
 
-function cssColorToRGBA(color) {
-  // create a temporary div
-  var div = document.createElement("div");
-  div.style.color = color;
-  document.body.appendChild(div);
-
-  // get the computed color value
-  var computedColor = window.getComputedStyle(div).color;
-
-  // remove the div after getting the computed color
-  document.body.removeChild(div);
-
-  // convert the computed color to RGBA
-  var rgba = computedColor.replace(/rgba?\(([^)]+)\)/, '$1').split(',').map(function (num) {
-    return parseInt(num, 10);
-  });
-
-  // if the color was in RGB format, add an alpha value of 255
-  if (rgba.length === 3) {
-    rgba.push(255);
+  if (color === pickedColor) {
+    currentSeats.push([gridX, gridY]);
+  } else if (color === notPickedColor) {
+    currentSeats = currentSeats.filter(seat => seat[0] !== gridX || seat[1] !== gridY);
   }
-
-  return rgba;
-}
-
-function getPixelsFromCanvas(canvas) {
-  let maxGridX = canvas.width / gridSize;
-  let maxGridY = canvas.height / gridSize;
-  let ctx = canvas.getContext("2d");
-  let picked = cssColorToRGBA(pickedColor)
-
-  let res = [];
-  for (let x = 0; x < maxGridX; x++) {
-    for (let y = 0; y < maxGridY; y++) {
-      let pixelColor = Array.from(getPixelColor(ctx, x, y));
-
-      if (pixelColor.every((v, i) => v == picked[i])) {
-        res.push([x, y]);
-      }
-    }
-  }
-
-  return res;
 }
 
 window.onload = function () {
@@ -94,8 +50,7 @@ window.onload = function () {
   form.appendChild(canvasInput);
 
   form.addEventListener("submit", event => {
-    let pixels = getPixelsFromCanvas(canvas);
-    pixels = JSON.stringify(pixels);
+    pixels = JSON.stringify(currentSeats);
     canvasInput.setAttribute("value", pixels);
   });
 
@@ -105,6 +60,7 @@ window.onload = function () {
   // get old seats
   let oldSeats = document.getElementById("id_oldseats").value;
   JSON.parse(oldSeats).forEach(seat => {
+    currentSeats.push(seat)
     placePixel(ctx, seat[0], seat[1], pickedColor);
   });
 
@@ -159,22 +115,11 @@ window.onload = function () {
 
     ctx.putImageData(data.oldState, 0, 0);
 
-    let pixelColor = Array.from(getPixelColor(ctx, gridX, gridY));
-    let picked = cssColorToRGBA(pickedColor)
-
-    let color;
     // javascript is cursed
-    if (pixelColor.every((v, i) => v == picked[i])) {
-      // if it is, fill the cell with white
-      color = notPickedColor;
-    } else {
-      // if it's not, fill the cell with blue
-      color = pickedColor;
-    }
+    let picked = currentSeats.some(seat => seat[0] === gridX && seat[1] === gridY);
+    let color = picked ? notPickedColor : pickedColor;
 
     placePixel(ctx, gridX, gridY, color);
-    // offsets to keep grid lines
-    ctx.fillRect(gridX * gridSize + 1, gridY * gridSize + 1, gridSize - 2, gridSize - 2);
 
     // save the current state of the canvas
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
