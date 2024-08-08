@@ -908,7 +908,7 @@ class SeatSlotForm(forms.ModelForm):
         model = SeatSlot
         fields = ['tournament', 'seats']
 
-    # TODO: tests, also validate in endpoint
+    # TODO: also validate in endpoint
     def clean(self):
         """
         Validation for seat slot
