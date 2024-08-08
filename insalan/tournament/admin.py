@@ -5,6 +5,7 @@
 # pylint: disable=R0903
 
 from typing import Any
+import json
 from django.contrib.auth import password_validation
 from django.contrib import admin, messages
 from django.db.models.query import QuerySet
@@ -63,11 +64,72 @@ ADMIN_ORDERING += [
     ]),
 ]
 
+class SeatCanvasWidget(forms.Widget):
+    """
+    Custom widget for the seat canvas
+    """
+    def render(self, name, value, attrs=None, renderer=None):
+        return '<canvas id="seatCanvas" width="500" height="500" ></canvas>'
+
+class SeatCanvas(forms.Field):
+    """
+    Custom field for the seat canvas
+    """
+    widget = SeatCanvasWidget
+
+    def clean(self, value):
+        value = json.loads(value)
+        return value
+
+class EventForm(forms.ModelForm):
+    """
+    Custom form for the Event model
+    """
+    seats = SeatCanvas()
+    oldseats = forms.JSONField(widget=forms.HiddenInput, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        seats = Seat.objects.filter(event=self.instance)
+        self.fields["oldseats"].initial = [(seat.x, seat.y) for seat in seats]
+
+    def clean(self) -> dict[str, Any] | None:
+        seats = self.cleaned_data.get("seats")
+
+        if seats:
+            old_seats = Seat.objects.filter(event=self.instance)
+            to_delete = [seat for seat in old_seats if [seat.x, seat.y] not in seats]
+            to_create = [(x, y) for (x, y) in seats if (x, y) not in [(seat.x, seat.y) for seat in old_seats]]
+
+            for seat in to_delete:
+                seat.delete()
+            for (x, y) in to_create:
+                seat = Seat.objects.create(event=self.instance, x=x, y=y)
+                seat.save()
+
+        return self.cleaned_data
+
+    class Meta:
+        """
+        Meta class for the form
+        """
+        model = Event
+        fields = "__all__"
+
 class EventAdmin(admin.ModelAdmin):
     """Admin handler for Events"""
 
+    form = EventForm
+
     list_display = ("id", "name", "description", "year", "month", "ongoing")
     search_fields = ["name", "year", "month", "ongoing"]
+    
+    class Media:
+        css = {
+            'all': ('css/event_admin.css',)
+        }
+        js = ('js/event_admin.js',)
 
 
 admin.site.register(Event, EventAdmin)
@@ -892,7 +954,6 @@ class SwissMatchAdmin(admin.ModelAdmin):
 admin.site.register(SwissMatch, SwissMatchAdmin)
 
 
-# TODO: better admin for seating
 class SeatAdmin(admin.ModelAdmin):
     """Admin handler for Seating"""
 
@@ -908,7 +969,6 @@ class SeatSlotForm(forms.ModelForm):
         model = SeatSlot
         fields = ['tournament', 'seats']
 
-    # TODO: also validate in endpoint
     def clean(self):
         """
         Validation for seat slot
