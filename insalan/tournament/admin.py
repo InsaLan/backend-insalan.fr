@@ -350,7 +350,6 @@ class ValidatedFilter(admin.SimpleListFilter):
             return queryset.filter(validated=self.value())
         return queryset
 
-# TODO: seatslot validation in team admin
 class TeamAdmin(admin.ModelAdmin):
     """Admin handler for Team"""
 
