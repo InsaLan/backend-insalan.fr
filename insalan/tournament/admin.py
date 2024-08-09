@@ -71,7 +71,7 @@ class SeatCanvasWidget(forms.Widget):
     def render(self, name, value, attrs=None, renderer=None):
         return (
             '<input id="id_seats" type="hidden" name="seats" value="" />'
-            '<canvas id="seat_canvas" width="1000" height="1000" />'
+            '<canvas id="seat_canvas" width="900" height="900" />'
         )
 
 class SeatCanvas(forms.Field):
@@ -96,7 +96,7 @@ class EventForm(forms.ModelForm):
 
         seats = Seat.objects.filter(event=self.instance)
         data = {
-            "cellSize": 20,
+            "cellSize": 25,
             "pickedColor": "brown",  # css colors
             "oldSeats": [(seat.x, seat.y) for seat in seats]
         }

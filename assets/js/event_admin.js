@@ -1,7 +1,7 @@
 (function () {
   // parameters
-  let cellSize = 25;
-  let pickedColor = "blue";
+  let cellSize;
+  let pickedColor;
 
   // variables
   let currentSeats = [];
@@ -11,6 +11,10 @@
 
   let isMouseDown = false;
   let mouseDragIsPlacingSeats = false;
+
+  ////////////////////////////////////////////////// 
+  // Helper functions
+  ////////////////////////////////////////////////// 
 
   function isSeat(gridX, gridY) {
     return currentSeats.some(seat => seat[0] === gridX && seat[1] === gridY);
@@ -23,10 +27,25 @@
   function addSeat(gridX, gridY) {
     if (!isSeat(gridX, gridY)) {
       currentSeats.push([gridX, gridY]);
+      enlargeCanvasIfNecessary(gridX, gridY);
     }
   }
 
-  function drawGrid() {
+  function enlargeCanvasIfNecessary(gridX, gridY) {
+    let xDelta = gridX - canvas.width / cellSize + 2;
+    if (xDelta > 0) {
+      canvas.width += xDelta * cellSize;
+    }
+
+    let yDelta = gridY - canvas.height / cellSize + 2;
+    if (yDelta > 0) {
+      canvas.height += yDelta * cellSize;
+    }
+  }
+
+  function redrawCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     const gridCount = canvas.width / cellSize; // number of grid cells
 
     ctx.strokeStyle = 'black'; // color of the grid lines
@@ -45,13 +64,6 @@
       ctx.lineTo(canvas.width, i * cellSize);
       ctx.stroke();
     }
-  }
-
-  function redrawCanvas() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    drawGrid();
-
     ctx.fillStyle = pickedColor;
     for (let seat of currentSeats) {
       let x = seat[0];
@@ -59,6 +71,10 @@
       ctx.fillRect(x * cellSize + 1, y * cellSize + 1, cellSize - 2, cellSize - 2);
     }
   }
+
+  ////////////////////////////////////////////////// 
+  // Event handlers
+  ////////////////////////////////////////////////// 
 
   function handleMouseMove(event) {
     const bounding = canvas.getBoundingClientRect();
@@ -118,34 +134,38 @@
     isMouseDown = false;
   }
 
-  window.onload = function () {
-    // set up form submission hook
-    let form = document.getElementById("event_form");
-    let seats_input = document.getElementById("id_seats");
+  ////////////////////////////////////////////////// 
+  // Entry point
+  ////////////////////////////////////////////////// 
 
-    form.addEventListener("submit", event => {
+  window.onload = function () {
+    // get the canvas and context
+    canvas = document.getElementById("seat_canvas");
+    ctx = canvas.getContext("2d");
+
+    // set up form submission hook
+    let seats_input = document.getElementById("id_seats");
+    document.getElementById("event_form").addEventListener("submit", event => {
       pixels = JSON.stringify(currentSeats);
       seats_input.setAttribute("value", pixels);
     });
 
-    canvas = document.getElementById("seat_canvas");
-    ctx = canvas.getContext("2d");
-
     // get params from the hidden input
     let params = JSON.parse(document.getElementById("id_canvas_params").value)
-
     cellSize = params.cellSize;
     pickedColor = params.pickedColor;
 
     // draw old seats
     params.oldSeats.forEach(seat => {
-      currentSeats.push(seat);
+      addSeat(seat[0], seat[1]);
     });
 
-    redrawCanvas();
-
+    // main
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('mousedown', handleMouseDown)
     canvas.addEventListener('mouseup', handleMouseUp);
+
+    redrawCanvas();
+
   }
 })();
