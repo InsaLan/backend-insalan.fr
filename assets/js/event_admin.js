@@ -31,6 +31,11 @@
     }
   }
 
+  function initCtx() {
+    ctx = canvas.getContext("2d");
+    ctx.font = "bold 11px sans-serif";
+  }
+
   function enlargeCanvasIfNecessary(gridX, gridY) {
     let xDelta = gridX - canvas.width / cellSize + 2;
     if (xDelta > 0) {
@@ -41,12 +46,23 @@
     if (yDelta > 0) {
       canvas.height += yDelta * cellSize;
     }
+
+    initCtx();
+  }
+
+  function drawText(text, x, y) {
+    let textX = x * cellSize + 1 + cellSize / 8;
+    let textY = y * cellSize + 1 + cellSize / 1.5;
+    let maxWidth = cellSize - cellSize / 8 - 2;
+    ctx.fillText(text, textX, textY, maxWidth)
   }
 
   function redrawCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const gridCount = canvas.width / cellSize; // number of grid cells
+    let largestDimension = (canvas.width >= canvas.height) ? canvas.width : canvas.height;
+
+    const gridCount = largestDimension / cellSize; // number of grid cells
 
     ctx.strokeStyle = 'black'; // color of the grid lines
 
@@ -64,6 +80,17 @@
       ctx.lineTo(canvas.width, i * cellSize);
       ctx.stroke();
     }
+
+
+    ctx.fillStyle = "black";
+    // draw numbers on borders
+    for (let x = 1; x <= gridCount; x++) {
+      drawText(x, x, 0)
+    }
+    for (let y = 1; y <= gridCount; y++) {
+      drawText(y, 0, y)
+    }
+
     ctx.fillStyle = pickedColor;
     for (let seat of currentSeats) {
       let x = seat[0];
@@ -141,7 +168,7 @@
   window.onload = function () {
     // get the canvas and context
     canvas = document.getElementById("seat_canvas");
-    ctx = canvas.getContext("2d");
+    initCtx();
 
     // set up form submission hook
     let seats_input = document.getElementById("id_seats");
