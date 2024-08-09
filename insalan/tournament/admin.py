@@ -69,7 +69,10 @@ class SeatCanvasWidget(forms.Widget):
     Custom widget for the seat canvas
     """
     def render(self, name, value, attrs=None, renderer=None):
-        return '<canvas id="seatCanvas" width="500" height="500" ></canvas>'
+        return (
+            '<input id="id_seats" type="hidden" name="seats" value="" />'
+            '<canvas id="seat_canvas" width="1000" height="1000" />'
+        )
 
 class SeatCanvas(forms.Field):
     """
@@ -86,18 +89,24 @@ class EventForm(forms.ModelForm):
     Custom form for the Event model
     """
     seats = SeatCanvas()
-    oldseats = forms.JSONField(widget=forms.HiddenInput, required=False)
+    canvas_params = forms.JSONField(widget=forms.HiddenInput, required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         seats = Seat.objects.filter(event=self.instance)
-        self.fields["oldseats"].initial = [(seat.x, seat.y) for seat in seats]
+        data = {
+            "cellSize": 20,
+            "pickedColor": "brown",  # css colors
+            "notPickedColor": "white",
+            "oldSeats": [(seat.x, seat.y) for seat in seats]
+        }
+        self.fields["canvas_params"].initial = data
 
     def clean(self) -> dict[str, Any] | None:
         seats = self.cleaned_data.get("seats")
 
-        if seats:
+        if seats is not None:
             old_seats = Seat.objects.filter(event=self.instance)
             to_delete = [seat for seat in old_seats if [seat.x, seat.y] not in seats]
             to_create = [(x, y) for (x, y) in seats if (x, y) not in [(seat.x, seat.y) for seat in old_seats]]
