@@ -98,7 +98,6 @@ class EventForm(forms.ModelForm):
         data = {
             "cellSize": 20,
             "pickedColor": "brown",  # css colors
-            "notPickedColor": "white",
             "oldSeats": [(seat.x, seat.y) for seat in seats]
         }
         self.fields["canvas_params"].initial = data
