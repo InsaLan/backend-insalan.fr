@@ -135,9 +135,12 @@ class EventAdmin(admin.ModelAdmin):
     
     class Media:
         css = {
-            'all': ('css/event_admin.css',)
+            'all': ('css/seat_canvas.css',)
         }
-        js = ('js/event_admin.js',)
+        js = (
+            'js/seat_canvas.js',
+            'js/event_seat_canvas.js',
+        )
 
 
 admin.site.register(Event, EventAdmin)
