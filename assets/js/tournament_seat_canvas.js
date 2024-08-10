@@ -109,10 +109,12 @@
   };
 
   class SeatSlotCanvas extends SeatCanvas {
-    constructor(canvasElem, slotSelection, cellSize, eventColor, eventSeats) {
+    constructor(canvasElem, slotSelection, errorElem, cellSize, eventColor, eventSeats, seatsPerSlot) {
       super(canvasElem, cellSize, eventColor, eventSeats);
 
       this.slotSelection = slotSelection;
+      this.errorElem = errorElem;
+      this.seatsPerSlot = seatsPerSlot;
 
       // slot id -> index in the selection widget
       this.selectionIndexes = {};
@@ -209,6 +211,21 @@
         let optionElem = this.slotSelection.options[this.selectionIndexes[slot]];
         optionElem.text = this.getSlotText(slot);
       }
+      this.validateSlots();
+    }
+
+    validateSlots() {
+      let errors = [];
+      for (let slot of Object.keys(this.slots)) {
+        if (this.slots[slot].length !== this.seatsPerSlot) {
+          errors.push("Slot " + slot.toString() + " has " + this.slots[slot].length + " seats, expected " + this.seatsPerSlot);
+        }
+      }
+      if (errors.length > 0) {
+        this.errorElem.textContent = errors.join("\r\n");
+      } else {
+        this.errorElem.textContent = "";
+      }
     }
 
     redrawCanvas() {
@@ -235,6 +252,7 @@
       this.selectionIndexes[newSlot] = this.slotSelection.options.length;
       this.slotSelection.add(this.createSlotOption(newSlot));
       this.redrawSlotSelection();
+      this.currentSlot = newSlot;
     }
 
     handleRemoveSlotButton() {
@@ -277,8 +295,9 @@
     let canvas = document.getElementById("seat_canvas");
 
     let slotSelection = document.getElementById("id_slot_selection");
+    let errorElem = document.getElementById("id_slot_selection_error");
 
-    let seatCanvas = new SeatSlotCanvas(canvas, slotSelection, params.cellSize, params.pickedColor, params.eventSeats);
+    let seatCanvas = new SeatSlotCanvas(canvas, slotSelection, errorElem, params.cellSize, params.pickedColor, params.eventSeats, params.seatsPerSlot);
 
     // set up form submission hook
     let seatsInput = document.getElementById("id_seat_slots");

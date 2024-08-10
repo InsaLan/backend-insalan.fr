@@ -4,42 +4,70 @@
 # "Too few public methods"
 # pylint: disable=R0903
 
-from typing import Any
 import json
-from django.contrib.auth import password_validation
-from django.contrib import admin, messages
-from django.db.models.query import QuerySet
-from django.db.models.fields.related import ForeignKey
-from django.forms.models import ModelChoiceField
-from django.http.request import HttpRequest
-from django.utils.translation import gettext as _
+from typing import Any
+
 from django import forms
-from django.contrib.auth.hashers import make_password
-from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from django.http import Http404, HttpResponseRedirect
-from django.urls import path, reverse, resolve
-from django.utils.html import escape
-from django.contrib.auth.forms import AdminPasswordChangeForm, UsernameField
+from django.contrib import admin, messages
 from django.contrib.admin.options import IS_POPUP_VAR
+from django.contrib.auth import password_validation
+from django.contrib.auth.forms import (
+    AdminPasswordChangeForm,
+    ReadOnlyPasswordHashField,
+    UsernameField,
+)
+from django.contrib.auth.hashers import make_password
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db.models.fields.related import ForeignKey
+from django.db.models.query import QuerySet
+from django.forms.models import ModelChoiceField
+from django.http import Http404, HttpResponseRedirect
+from django.http.request import HttpRequest
 from django.template.response import TemplateResponse
-from django.core.exceptions import ValidationError
-from django.core.exceptions import PermissionDenied
-from django.views.decorators.debug import sensitive_post_parameters
+from django.urls import path, resolve, reverse
 from django.utils.decorators import method_decorator
+from django.utils.html import escape
+from django.utils.translation import gettext as _
+from django.views.decorators.debug import sensitive_post_parameters
 
 from insalan.mailer import MailManager
-from .models import (Event, Tournament, Game, Team, Player, Manager,
-                     Substitute, Caster, PaymentStatus, Group, GroupMatch,
-                     KnockoutMatch, Bracket, Seeding, MatchStatus, Score,
-                     SwissRound, SwissMatch, SwissSeeding, BestofType,
-                    BracketSet, TournamentMailer, Seat, SeatSlot)
-from insalan.tournament.manage import (create_group_matchs,
-                                       create_empty_knockout_matchs,
-                                       create_swiss_matchs)
+from insalan.tournament.manage import (
+    create_empty_knockout_matchs,
+    create_group_matchs,
+    create_swiss_matchs,
+)
+
+from .models import (
+    BestofType,
+    Bracket,
+    BracketSet,
+    Caster,
+    Event,
+    Game,
+    Group,
+    GroupMatch,
+    KnockoutMatch,
+    Manager,
+    MatchStatus,
+    PaymentStatus,
+    Player,
+    Score,
+    Seat,
+    SeatSlot,
+    Seeding,
+    Substitute,
+    SwissMatch,
+    SwissRound,
+    SwissSeeding,
+    Team,
+    Tournament,
+    TournamentMailer,
+)
 
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
 
 from insalan.admin import ADMIN_ORDERING
+
 ADMIN_ORDERING += [
     ('tournament', [
         'Event',
@@ -196,6 +224,7 @@ class SeatSlotSelection(forms.Widget):
                 '<div style="display: flex; flex-direction: column; justify-content: center;" >'
                     '<input type="button" id="id_slot_selection_create" value="Créer un slot" />'
                     '<input type="button" id="id_slot_selection_delete" value="Supprimer le slot" />'
+                    '<span id="id_slot_selection_error" style="color: red; white-space: pre-wrap;"></span>'
                 '</div>'
                 '<select id="id_slot_selection" name="slot_selection" multiple />'
             '</div>'
@@ -220,6 +249,7 @@ class TournamentForm(forms.ModelForm):
             "cellSize": 25,
             "pickedColor": "lightgray",  # css colors
             "eventSeats": [(seat.x, seat.y) for seat in seats],
+            "seatsPerSlot": self.instance.game.players_per_team,  # for client side validation
             "seatSlots": {
                 slot.id: [(seat.x, seat.y) for seat in slot.seats.all()]
                 for slot in seat_slots
@@ -230,13 +260,28 @@ class TournamentForm(forms.ModelForm):
     def clean(self) -> dict[str, Any] | None:
         seat_slots = self.cleaned_data.get("seat_slots")
 
-        # TODO: validation
-
         if seat_slots is not None:
+            # validation
+            for seats in seat_slots.values():
+                # Ensure that the number of seats is consistent with the tournament
+                if len(seats) != self.instance.game.players_per_team:
+                    raise ValidationError(
+                    _("Le nombre de places est incorrect pour ce tournoi")
+                    )
+
+            # Ensure that every used seat is used only once
+            # shouldn't happen, but just in case
+            all_seats = [tuple(seat) for seats in seat_slots.values() for seat in seats]
+            if len(all_seats) != len(set(all_seats)):
+                raise ValidationError(
+                _("Les places ne peuvent pas être partagés entre plusieurs slots")
+                )
+
+            # modification
             old_slots = SeatSlot.objects.filter(tournament=self.instance)
             to_delete = old_slots.exclude(id__in=[int(ss_id) for ss_id in seat_slots])
             to_create = [seats for slot, seats in seat_slots.items() if int(slot) not in [slot.id for slot in old_slots]]
-            
+
             # check remaining slots for modification
             remaining_slots = old_slots.difference(to_delete)
 
