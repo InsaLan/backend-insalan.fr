@@ -122,20 +122,23 @@
       this.slotColors = {};
     }
 
-    isInSlot(slotSeats, gridX, gridY) {
+    // is a seat in the given slot
+    isInSeats(slotSeats, gridX, gridY) {
       return slotSeats.some(seat => seat[0] === gridX && seat[1] === gridY);
     }
 
-    // is seat *in current slot*
+    // is a seat in current slot
     isSeat(gridX, gridY) {
       let slotSeats = this.slots[this.currentSlot];
-      return this.isInSlot(slotSeats, gridX, gridY);
+      return this.isInSeats(slotSeats, gridX, gridY);
     }
 
+    // not used by any slot
     isFreeSeat(gridX, gridY) {
-      return Object.keys(this.slots).every(slot => !this.isInSlot(this.slots[slot], gridX, gridY));
+      return Object.keys(this.slots).every(slot => !this.isInSeats(this.slots[slot], gridX, gridY));
     }
 
+    // is a seat in the event seats
     isEventSeat(gridX, gridY) {
       return super.isSeat(gridX, gridY);
     }
@@ -158,31 +161,29 @@
 
       let slotSeats = this.slots[this.currentSlot];
       // if it's part of the current slot, remove it
-      if (this.isInSlot(slotSeats, gridX, gridY)) {
+      if (this.isInSeats(slotSeats, gridX, gridY)) {
         this.slots[this.currentSlot] = this.slots[this.currentSlot].filter(seat => seat[0] !== gridX || seat[1] !== gridY);
       }
     }
 
-    getPickedColor() {
-      if (this.currentSlot === null) {
+    getPickedColor(slot) {
+      if (slot === undefined || slot === null) {
         return this.pickedColor;
       }
 
-      if (this.slotColors[this.currentSlot] === undefined) {
+      if (this.slotColors[slot] === undefined) {
         // pick color not used by any slot
         let usedColors = Object.values(this.slotColors);
         let availableColors = Object.values(CSS_COLOR_NAMES).filter(color => !usedColors.includes(color));
         let pickedColor = availableColors[0];
-        this.slotColors[this.currentSlot] = pickedColor;
+        this.slotColors[slot] = pickedColor;
       }
-      return this.slotColors[this.currentSlot];
+      return this.slotColors[slot];
     }
 
     redrawSlots() {
       for (let slot of Object.keys(this.slots)) {
-        this.currentSlot = slot;
-
-        this.ctx.fillStyle = this.getPickedColor();
+        this.ctx.fillStyle = this.getPickedColor(slot);
         for (let seat of this.slots[slot]) {
           let x = seat[0];
           let y = seat[1];
@@ -195,29 +196,30 @@
       return "Slot " + slot.toString() + " " + JSON.stringify(this.slots[slot])
     }
 
+    createSlotOption(slot) {
+      let optionElem = document.createElement("option");
+      optionElem.value = slot;
+      optionElem.text = this.getSlotText(slot);
+      optionElem.style.color = this.getPickedColor(slot);
+      return optionElem;
+    }
+
     redrawSlotSelection() {
       for (let slot of Object.keys(this.slots)) {
-        let optionIndex = this.selectionIndexes[slot];
-        let optionElem = this.slotSelection.options[optionIndex];
+        let optionElem = this.slotSelection.options[this.selectionIndexes[slot]];
         optionElem.text = this.getSlotText(slot);
       }
     }
 
     redrawCanvas() {
-      let currentSlot = this.currentSlot;
-      this.currentSlot = null;
       super.redrawCanvas();
       this.redrawSlots();
       this.redrawSlotSelection();
-      this.currentSlot = currentSlot;
     }
 
     initSlotSelection() {
       for (let [index, slot] of Object.keys(this.slots).entries()) {
-        let optionElem = document.createElement("option");
-        optionElem.value = slot;
-        optionElem.text = this.getSlotText(slot);
-        this.slotSelection.add(optionElem);
+        this.slotSelection.add(this.createSlotOption(slot));
         this.selectionIndexes[slot] = index;
       }
       this.slotSelection.addEventListener("change", event => {
@@ -230,14 +232,8 @@
       // django discards it later so it's fine
       let newSlot = Math.max(...Object.keys(this.slots).map(Number), 0) + 1;
       this.slots[newSlot] = [];
-
       this.selectionIndexes[newSlot] = this.slotSelection.options.length;
-
-      let optionElem = document.createElement("option");
-      optionElem.value = newSlot
-      optionElem.text = this.getSlotText(newSlot);
-      this.slotSelection.add(optionElem);
-
+      this.slotSelection.add(this.createSlotOption(newSlot));
       this.redrawSlotSelection();
     }
 
@@ -246,10 +242,10 @@
       if (slot === null) {
         return;
       }
-      let index = this.selectionIndexes[slot];
-      this.slotSelection.remove(index);
       let idx = this.selectionIndexes[slot];
+      this.slotSelection.remove(idx);
       delete this.slots[slot];
+      delete this.slotColors[slot];
 
       // subtract 1 from indexes greater than the removed one
       for (let [slot, index] of Object.entries(this.selectionIndexes)) {
@@ -266,9 +262,7 @@
       super.init();
       this.slots = seatSlots;
       this.initSlotSelection();
-      let currentSlot = this.currentSlot;
       this.redrawSlots();
-      this.currentSlot = currentSlot;
 
       document.getElementById("id_slot_selection_create").addEventListener("click", this.handleAddSlotButton.bind(this));
       document.getElementById("id_slot_selection_delete").addEventListener("click", this.handleRemoveSlotButton.bind(this));
@@ -283,7 +277,6 @@
     let canvas = document.getElementById("seat_canvas");
 
     let slotSelection = document.getElementById("id_slot_selection");
-
 
     let seatCanvas = new SeatSlotCanvas(canvas, slotSelection, params.cellSize, params.pickedColor, params.eventSeats);
 
