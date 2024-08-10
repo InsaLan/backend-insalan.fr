@@ -69,8 +69,9 @@ class SeatCanvasWidget(forms.Widget):
     Custom widget for the seat canvas
     """
     def render(self, name, value, attrs=None, renderer=None):
+        id = attrs["id"] if attrs else "id_" + name
         return (
-            '<input id="id_seats" type="hidden" name="seats" value="" />'
+            f'<input id="{id}" type="hidden" name="{name}" value="" />'
             '<canvas id="seat_canvas" width="900" height="900" />'
         )
 
@@ -191,7 +192,13 @@ class SeatSlotSelection(forms.Widget):
     """
     def render(self, name, value, attrs=None, renderer=None):
         return (
-            '<select id="id_slot_selection" name="slot_selection">'
+            '<div style="display: flex; flex-direction: row;" >'
+                '<div style="display: flex; flex-direction: column; justify-content: center;" >'
+                    '<input type="button" id="id_slot_selection_create" value="Créer un slot" />'
+                    '<input type="button" id="id_slot_selection_delete" value="Supprimer le slot" />'
+                '</div>'
+                '<select id="id_slot_selection" name="slot_selection" multiple />'
+            '</div>'
         )
 
 
@@ -200,7 +207,7 @@ class TournamentForm(forms.ModelForm):
     Custom form for the Tournament model
     """
     seat_slots = SeatCanvas()
-    slot_selection = forms.MultipleChoiceField(required=False)
+    slot_selection = forms.Field(widget=SeatSlotSelection(), required=False)
     canvas_params = forms.JSONField(widget=forms.HiddenInput, required=False)
 
     def __init__(self, *args, **kwargs):
@@ -220,22 +227,30 @@ class TournamentForm(forms.ModelForm):
         }
         self.fields["canvas_params"].initial = data
 
-        # self.fields["slot_selection"].choices = [(i, slot.id) for i, slot in enumerate(seat_slots)]
-
     def clean(self) -> dict[str, Any] | None:
         seat_slots = self.cleaned_data.get("seat_slots")
 
+        # TODO: validation
+
         if seat_slots is not None:
-            raise ValidationError(str(seat_slots))
-            # old_seats = Seat.objects.filter(event=self.instance)
-            # to_delete = [seat for seat in old_seats if [seat.x, seat.y] not in seat_slots]
-            # to_create = [(x, y) for (x, y) in seat_slots if (x, y) not in [(seat.x, seat.y) for seat in old_seats]]
-            #
-            # for seat in to_delete:
-            #     seat.delete()
-            # for (x, y) in to_create:
-            #     seat = Seat.objects.create(event=self.instance, x=x, y=y)
-            #     seat.save()
+            old_slots = SeatSlot.objects.filter(tournament=self.instance)
+            to_delete = old_slots.exclude(id__in=[int(ss_id) for ss_id in seat_slots])
+            to_create = [seats for slot, seats in seat_slots.items() if int(slot) not in [slot.id for slot in old_slots]]
+            
+            # check remaining slots for modification
+            remaining_slots = old_slots.difference(to_delete)
+
+            for slot in to_delete:
+                slot.delete()
+            for seat_coords in to_create:
+                slot = SeatSlot.objects.create(tournament=self.instance)
+                seats = [Seat.objects.get(event=self.instance.event, x=x, y=y) for x, y in seat_coords]
+                slot.seats.set(seats)
+                slot.save()
+            for slot in remaining_slots:
+                seats = [Seat.objects.get(event=self.instance.event, x=x, y=y) for x, y in seat_slots[str(slot.id)]]
+                slot.seats.set(seats)
+                slot.save()
 
         return self.cleaned_data
 
