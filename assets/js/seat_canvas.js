@@ -65,6 +65,10 @@ class SeatCanvas {
     this.ctx.fillText(text, textX, textY, maxWidth)
   }
 
+  getPickedColor() {
+    return this.pickedColor
+  }
+
   redrawCanvas() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -98,7 +102,7 @@ class SeatCanvas {
       this.drawText(y, 0, y)
     }
 
-    this.ctx.fillStyle = this.pickedColor;
+    this.ctx.fillStyle = this.getPickedColor();
     for (let seat of this.currentSeats) {
       let x = seat[0];
       let y = seat[1];
@@ -170,18 +174,23 @@ class SeatCanvas {
   // Entry point
   ////////////////////////////////////////////////// 
 
-  init() {
-    this.initCtx();
-
-    // draw old seats
-    this.oldSeats.forEach(seat => {
-      this.addSeat(seat[0], seat[1]);
-    });
-
+  addEventListeners() {
     this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
     this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this))
     this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
+  }
 
+  addSeats(seats) {
+    seats.forEach(seat => {
+      this.currentSeats.push([seat[0], seat[1]]);
+      this.enlargeCanvasIfNecessary(seat[0], seat[1]);
+    });
+  }
+
+  init() {
+    this.initCtx();
+    this.addSeats(this.oldSeats);
+    this.addEventListeners();
     this.redrawCanvas();
   }
 }
