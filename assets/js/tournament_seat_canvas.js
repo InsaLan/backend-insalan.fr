@@ -114,6 +114,9 @@
 
       this.slotSelection = slotSelection;
 
+      // slot id -> index in the selection widget
+      this.selectionIndexes = {};
+
       this.currentSlot = null;
       this.slots = {};
       this.slotColors = {};
@@ -188,21 +191,30 @@
       }
     }
 
+    redrawSlotSelection() {
+      for (let slot of Object.keys(this.slots)) {
+        let optionIndex = this.selectionIndexes[slot];
+        let optionElem = this.slotSelection.options[optionIndex];
+        optionElem.text = "Slot " + slot.toString() + " " + JSON.stringify(this.slots[slot]);
+      }
+    }
+
     redrawCanvas() {
       let currentSlot = this.currentSlot;
       this.currentSlot = null;
       super.redrawCanvas();
       this.redrawSlots();
+      this.redrawSlotSelection();
       this.currentSlot = currentSlot;
     }
 
     initSlotSelection() {
-      for (let slot of Object.keys(this.slots)) {
-
+      for (let [index, slot] of Object.keys(this.slots).entries()) {
         let optionElem = document.createElement("option");
         optionElem.value = slot;
-        optionElem.text = slot.toString() + " " + this.slots[slot].toString();
+        optionElem.text = "Slot " + slot.toString() + " " + JSON.stringify(this.slots[slot]);
         this.slotSelection.add(optionElem);
+        this.selectionIndexes[slot] = index;
       }
       this.slotSelection.addEventListener("change", event => {
         this.currentSlot = Number(event.target.value);
@@ -212,12 +224,6 @@
     init(seatSlots) {
       super.init();
       this.slots = seatSlots;
-
-      // console.log(this.slotSelection);
-      // this.slotSelection.add(optionElem);
-      // console.log(this.slotSelection);
-
-
       this.initSlotSelection();
       this.redrawSlots();
     }
