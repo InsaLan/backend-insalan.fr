@@ -191,11 +191,15 @@
       }
     }
 
+    getSlotText(slot) {
+      return "Slot " + slot.toString() + " " + JSON.stringify(this.slots[slot])
+    }
+
     redrawSlotSelection() {
       for (let slot of Object.keys(this.slots)) {
         let optionIndex = this.selectionIndexes[slot];
         let optionElem = this.slotSelection.options[optionIndex];
-        optionElem.text = "Slot " + slot.toString() + " " + JSON.stringify(this.slots[slot]);
+        optionElem.text = this.getSlotText(slot);
       }
     }
 
@@ -212,7 +216,7 @@
       for (let [index, slot] of Object.keys(this.slots).entries()) {
         let optionElem = document.createElement("option");
         optionElem.value = slot;
-        optionElem.text = "Slot " + slot.toString() + " " + JSON.stringify(this.slots[slot]);
+        optionElem.text = this.getSlotText(slot);
         this.slotSelection.add(optionElem);
         this.selectionIndexes[slot] = index;
       }
@@ -221,13 +225,57 @@
       });
     }
 
+    handleAddSlotButton() {
+      // guess an unused slot number, lol
+      // django discards it later so it's fine
+      let newSlot = Math.max(...Object.keys(this.slots).map(Number), 0) + 1;
+      this.slots[newSlot] = [];
+
+      this.selectionIndexes[newSlot] = this.slotSelection.options.length;
+
+      let optionElem = document.createElement("option");
+      optionElem.value = newSlot
+      optionElem.text = this.getSlotText(newSlot);
+      this.slotSelection.add(optionElem);
+
+      this.redrawSlotSelection();
+    }
+
+    handleRemoveSlotButton() {
+      let slot = this.currentSlot;
+      if (slot === null) {
+        return;
+      }
+      let index = this.selectionIndexes[slot];
+      this.slotSelection.remove(index);
+      let idx = this.selectionIndexes[slot];
+      delete this.slots[slot];
+
+      // subtract 1 from indexes greater than the removed one
+      for (let [slot, index] of Object.entries(this.selectionIndexes)) {
+        if (index > idx) {
+          this.selectionIndexes[slot] -= 1;
+        }
+      }
+
+      this.currentSlot = null;
+      this.redrawCanvas();
+    }
+
     init(seatSlots) {
       super.init();
       this.slots = seatSlots;
       this.initSlotSelection();
+      let currentSlot = this.currentSlot;
       this.redrawSlots();
+      this.currentSlot = currentSlot;
+
+      document.getElementById("id_slot_selection_create").addEventListener("click", this.handleAddSlotButton.bind(this));
+      document.getElementById("id_slot_selection_delete").addEventListener("click", this.handleRemoveSlotButton.bind(this));
     }
   }
+
+
 
   window.addEventListener('load', () => {
     // read parameters from the hidden input field
@@ -235,6 +283,7 @@
     let canvas = document.getElementById("seat_canvas");
 
     let slotSelection = document.getElementById("id_slot_selection");
+
 
     let seatCanvas = new SeatSlotCanvas(canvas, slotSelection, params.cellSize, params.pickedColor, params.eventSeats);
 
