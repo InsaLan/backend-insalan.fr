@@ -273,9 +273,10 @@ class TournamentForm(forms.ModelForm):
                     )
 
             # Ensure that every used seat is used only once
-            # shouldn't happen, but just in case
-            all_seats = [tuple(seat) for seats in seat_slots.values() for seat in seats]
-            if len(all_seats) != len(set(all_seats)):
+            other_tournament_slots = SeatSlot.objects.exclude(tournament=self.instance)
+            unavailable_seats = set((seat.x, seat.y) for slot in other_tournament_slots for seat in slot.seats.all())
+            all_seats = set(tuple(seat) for seats in seat_slots.values() for seat in seats)
+            if unavailable_seats.intersection(all_seats):
                 raise ValidationError(
                 _("Les places ne peuvent pas être partagés entre plusieurs slots")
                 )
