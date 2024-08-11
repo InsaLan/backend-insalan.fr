@@ -48,6 +48,7 @@ class AbstractSeatCanvas {  // it's OOP-in' time
   initCtx() {
     this.ctx = this.canvas.getContext("2d");
     this.ctx.font = "bold 11px sans-serif";
+    this.ctx.lineWidth = 2; // width of the outline
   }
 
   enlargeCanvasIfNecessary(gridX, gridY) {
@@ -70,7 +71,6 @@ class AbstractSeatCanvas {  // it's OOP-in' time
   ////////////////////////////////////////////////// 
   drawOutline(x, y) {
     this.ctx.strokeStyle = 'red'; // color of the outline
-    this.ctx.lineWidth = 2; // width of the outline
     this.ctx.strokeRect(x * this.cellSize, y * this.cellSize, this.cellSize, this.cellSize);
   }
 
@@ -208,7 +208,9 @@ class AbstractSeatCanvas {  // it's OOP-in' time
     this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
   }
 
-  initSeats() { }
+  initSeats() {
+    // override
+  }
 
   init() {
     this.initCtx();
