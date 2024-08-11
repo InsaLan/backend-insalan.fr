@@ -108,69 +108,22 @@
     YellowGreen: '#9ACD32',
   };
 
-  class SeatSlotCanvas extends SeatCanvas {
-    constructor(canvasElem, slotSelection, errorElem, cellSize, eventColor, eventSeats, seatsPerSlot) {
-      super(canvasElem, cellSize, eventColor, eventSeats);
-
-      this.slotSelection = slotSelection;
+  class SlotSelection {
+    constructor(selectElem, errorElem, params) {
+      this.selectElem = selectElem;
       this.errorElem = errorElem;
-      this.seatsPerSlot = seatsPerSlot;
 
       // slot id -> index in the selection widget
       this.selectionIndexes = {};
-
-      this.currentSlot = null;
-      this.slots = {};
       this.slotColors = {};
+
+      this.slots = params.seatSlots;
+      this.seatsPerSlot = params.seatsPerSlot;
     }
 
-    // is a seat in the given slot
-    isInSeats(slotSeats, gridX, gridY) {
-      return slotSeats.some(seat => seat[0] === gridX && seat[1] === gridY);
-    }
-
-    // is a seat in current slot
-    isSeat(gridX, gridY) {
-      let slotSeats = this.slots[this.currentSlot];
-      return this.isInSeats(slotSeats, gridX, gridY);
-    }
-
-    // not used by any slot
-    isFreeSeat(gridX, gridY) {
-      return Object.keys(this.slots).every(slot => !this.isInSeats(this.slots[slot], gridX, gridY));
-    }
-
-    // is a seat in the event seats
-    isEventSeat(gridX, gridY) {
-      return super.isSeat(gridX, gridY);
-    }
-
-    addSeat(gridX, gridY) {
-      if (this.currentSlot === null) {
-        return;
-      }
-
-      // it's a seat, add it to the current slot
-      if (this.isEventSeat(gridX, gridY) && this.isFreeSeat(gridX, gridY)) {
-        this.slots[this.currentSlot].push([gridX, gridY]);
-      }
-    }
-
-    removeSeat(gridX, gridY) {
-      if (this.currentSlot === null) {
-        return;
-      }
-
-      let slotSeats = this.slots[this.currentSlot];
-      // if it's part of the current slot, remove it
-      if (this.isInSeats(slotSeats, gridX, gridY)) {
-        this.slots[this.currentSlot] = this.slots[this.currentSlot].filter(seat => seat[0] !== gridX || seat[1] !== gridY);
-      }
-    }
-
-    getPickedColor(slot) {
+    getSlotColor(slot) {
       if (slot === undefined || slot === null) {
-        return this.pickedColor;
+        throw new Error("slot is required");
       }
 
       if (this.slotColors[slot] === undefined) {
@@ -183,14 +136,11 @@
       return this.slotColors[slot];
     }
 
-    redrawSlots() {
-      for (let slot of Object.keys(this.slots)) {
-        this.ctx.fillStyle = this.getPickedColor(slot);
-        for (let seat of this.slots[slot]) {
-          let x = seat[0];
-          let y = seat[1];
-          this.ctx.fillRect(x * this.cellSize + 1, y * this.cellSize + 1, this.cellSize - 2, this.cellSize - 2);
-        }
+
+    initSlotSelection() {
+      for (let [index, slot] of Object.keys(this.slots).entries()) {
+        this.selectElem.add(this.createSlotOption(slot));
+        this.selectionIndexes[slot] = index;
       }
     }
 
@@ -202,13 +152,13 @@
       let optionElem = document.createElement("option");
       optionElem.value = slot;
       optionElem.text = this.getSlotText(slot);
-      optionElem.style.color = this.getPickedColor(slot);
+      optionElem.style.color = this.getSlotColor(slot);
       return optionElem;
     }
 
     redrawSlotSelection() {
       for (let slot of Object.keys(this.slots)) {
-        let optionElem = this.slotSelection.options[this.selectionIndexes[slot]];
+        let optionElem = this.selectElem.options[this.selectionIndexes[slot]];
         optionElem.text = this.getSlotText(slot);
       }
       this.validateSlots();
@@ -228,40 +178,31 @@
       }
     }
 
-    redrawCanvas() {
-      super.redrawCanvas();
-      this.redrawSlots();
-      this.redrawSlotSelection();
-    }
-
-    initSlotSelection() {
-      for (let [index, slot] of Object.keys(this.slots).entries()) {
-        this.slotSelection.add(this.createSlotOption(slot));
-        this.selectionIndexes[slot] = index;
-      }
-      this.slotSelection.addEventListener("change", event => {
-        this.currentSlot = Number(event.target.value);
-      });
+    triggerEvent(eventType, slot) {
+      let event = new Event(eventType);
+      event.slot = slot;
+      this.selectElem.dispatchEvent(event);
     }
 
     handleAddSlotButton() {
       // guess an unused slot number, lol
       // django discards it later so it's fine
       let newSlot = Math.max(...Object.keys(this.slots).map(Number), 0) + 1;
+      this.selectionIndexes[newSlot] = this.selectElem.options.length;
       this.slots[newSlot] = [];
-      this.selectionIndexes[newSlot] = this.slotSelection.options.length;
-      this.slotSelection.add(this.createSlotOption(newSlot));
+      this.selectElem.add(this.createSlotOption(newSlot));
       this.redrawSlotSelection();
-      this.currentSlot = newSlot;
+      this.selectElem.value = newSlot;
+      this.triggerEvent("select", newSlot);
     }
 
     handleRemoveSlotButton() {
-      let slot = this.currentSlot;
-      if (slot === null) {
+      let slot = this.selectElem.value;
+      if (slot === null || slot === "" || slot === undefined) {
         return;
       }
       let idx = this.selectionIndexes[slot];
-      this.slotSelection.remove(idx);
+      this.selectElem.remove(idx);
       delete this.slots[slot];
       delete this.slotColors[slot];
 
@@ -271,42 +212,137 @@
           this.selectionIndexes[slot] -= 1;
         }
       }
+      delete this.selectionIndexes[slot];
 
-      this.currentSlot = null;
-      this.redrawCanvas();
+      let prevSlot = Object.keys(this.slots).find(slot => this.selectionIndexes[slot] === idx - 1);
+      this.selectElem.value = prevSlot;
+      this.triggerEvent("select", prevSlot);
     }
 
-    init(seatSlots) {
-      super.init();
-      this.slots = seatSlots;
-      this.initSlotSelection();
-      this.redrawSlots();
-
+    addEventListeners() {
       document.getElementById("id_slot_selection_create").addEventListener("click", this.handleAddSlotButton.bind(this));
       document.getElementById("id_slot_selection_delete").addEventListener("click", this.handleRemoveSlotButton.bind(this));
+      this.selectElem.addEventListener("change", event => {
+        this.triggerEvent("select", Number(event.target.value));
+      });
     }
   }
 
+  class SeatSlotCanvas extends AbstractSeatCanvas {
+    constructor(canvasElem, slotSelection, params) {
+      super(canvasElem, params.cellSize);
 
+      this.slotSelection = slotSelection;
+
+      this.eventSeatColor = params.pickedColor;
+      this.eventSeats = params.eventSeats;
+      this.unavailableSeats = params.unavailableSeats;  // seats used by other tournaments in same event
+
+      this.currentSlot = null;
+    }
+
+    isOccupied(gridX, gridY) {
+      // must be in event seats
+      if (!this.isOccupiedIn(this.eventSeats, gridX, gridY)) {
+        return true;
+      }
+
+      // check unavailable seats
+      if (this.isOccupiedIn(this.unavailableSeats, gridX, gridY)) {
+        return true;
+      }
+
+      // check all slots
+      for (let seats of Object.values(this.slotSelection.slots)) {
+        if (this.isOccupiedIn(seats, gridX, gridY)) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    onDragCell(event, gridX, gridY) {
+      if (this.currentSlot === null) {
+        return;
+      }
+      let seats = this.slotSelection.slots[this.currentSlot]
+
+      if (this.mouseDragStartedOnOccupiedCell) {
+        if (!this.isOccupied(gridX, gridY)) {
+          this.addSeat(seats, gridX, gridY);
+        }
+      } else {
+        if (this.isOccupiedIn(seats, gridX, gridY)) {
+          this.removeSeat(seats, gridX, gridY);
+        }
+      }
+    }
+
+    onClickCell(event, gridX, gridY) {
+      if (this.currentSlot === null) {
+        return;
+      }
+      let seats = this.slotSelection.slots[this.currentSlot]
+
+      if (this.isOccupiedIn(seats, gridX, gridY)) {
+        this.removeSeat(seats, gridX, gridY);
+      } else if (!this.isOccupied(gridX, gridY)) {
+        this.addSeat(seats, gridX, gridY);
+      }
+    }
+
+    redrawSeats() {
+      this.redrawSeatArray(this.eventSeats, this.eventSeatColor);
+      this.redrawSeatArray(this.unavailableSeats, "black");
+
+      for (let [slot, seats] of Object.entries(this.slotSelection.slots)) {
+        this.redrawSeatArray(seats, this.slotSelection.getSlotColor(slot));
+      }
+    }
+
+    initSeats() {
+      let maxX = Math.max(...this.eventSeats.map(seat => seat[0]), 0);
+      let maxY = Math.max(...this.eventSeats.map(seat => seat[1]), 0);
+      this.enlargeCanvasIfNecessary(maxX, maxY);
+
+      this.slotSelection.initSlotSelection();
+    }
+
+    redrawCanvas() {
+      super.redrawCanvas();
+      this.slotSelection.redrawSlotSelection();
+    }
+
+    addEventListeners() {
+      super.addEventListeners();
+      this.slotSelection.addEventListeners();
+      this.slotSelection.selectElem.addEventListener("select", event => {
+        this.currentSlot = event.slot;
+        this.redrawCanvas();
+      });
+    }
+  }
 
   window.addEventListener('load', () => {
     // read parameters from the hidden input field
     let params = JSON.parse(document.getElementById("id_canvas_params").value)
     let canvas = document.getElementById("seat_canvas");
 
-    let slotSelection = document.getElementById("id_slot_selection");
+    let selectElem = document.getElementById("id_slot_selection");
     let errorElem = document.getElementById("id_slot_selection_error");
 
-    let seatCanvas = new SeatSlotCanvas(canvas, slotSelection, errorElem, params.cellSize, params.pickedColor, params.eventSeats, params.seatsPerSlot);
+    let slotSelection = new SlotSelection(selectElem, errorElem, params);
+    let seatCanvas = new SeatSlotCanvas(canvas, slotSelection, params);
 
     // set up form submission hook
     let seatsInput = document.getElementById("id_seat_slots");
     let form = document.getElementById("tournament_form");
     form.addEventListener("submit", event => {
-      let seats = JSON.stringify(seatCanvas.slots);
+      let seats = JSON.stringify(slotSelection.slots);
       seatsInput.setAttribute("value", seats);
     });
 
-    seatCanvas.init(params.seatSlots);
+    seatCanvas.init();
   });
 })();

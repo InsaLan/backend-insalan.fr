@@ -245,10 +245,13 @@ class TournamentForm(forms.ModelForm):
         seats = Seat.objects.filter(event=self.instance.event)
         seat_slots = SeatSlot.objects.filter(tournament=self.instance)
 
+        other_tournament_slots = SeatSlot.objects.exclude(tournament=self.instance)
+
         data = {
             "cellSize": 25,
             "pickedColor": "lightgray",  # css colors
             "eventSeats": [(seat.x, seat.y) for seat in seats],
+            "unavailableSeats": [(seat.x, seat.y) for slot in other_tournament_slots for seat in slot.seats.all()],
             "seatsPerSlot": self.instance.game.players_per_team,  # for client side validation
             "seatSlots": {
                 slot.id: [(seat.x, seat.y) for seat in slot.seats.all()]

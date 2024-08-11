@@ -1,39 +1,46 @@
-class SeatCanvas {
-  constructor(canvasElem, cellSize, pickedColor, oldSeats) {
+class AbstractSeatCanvas {  // it's OOP-in' time
+  constructor(canvasElem, cellSize) {
     // parameters
     this.canvas = canvasElem;
     this.cellSize = cellSize
-    this.pickedColor = pickedColor;
-    this.oldSeats = oldSeats;
 
     // variables
-    this.currentSeats = [];
     this.lastHoveredCell = null;
     this.ctx = null;
 
     this.isMouseDown = false;
-    this.mouseDragIsPlacingSeats = false;
+    this.mouseDragStartedOnOccupiedCell = false;
   }
 
   ////////////////////////////////////////////////// 
   // Helper functions
   ////////////////////////////////////////////////// 
-  isSeat(gridX, gridY) {
-    return this.currentSeats.some(seat => seat[0] === gridX && seat[1] === gridY);
+
+  isOccupied(gridX, gridY) {
+    // override in subclass, for all seat arrays, call isOccupiedIn
+    throw new Error("isOccupied must be implemented by subclass");
   }
 
-  removeSeat(gridX, gridY) {
-    this.currentSeats = this.currentSeats.filter(seat => seat[0] !== gridX || seat[1] !== gridY);
+  isOccupiedIn(seats, gridX, gridY) {
+    return seats.some(seat => seat[0] === gridX && seat[1] === gridY);
   }
 
-  addSeat(gridX, gridY) {
+  removeSeat(seats, gridX, gridY) {
+    // modify in-place, cuz passed by reference
+    let idx = seats.findIndex(seat => seat[0] === gridX && seat[1] === gridY);
+    if (idx !== -1) {
+      seats.splice(idx, 1);
+    }
+  }
+
+  addSeat(seats, gridX, gridY) {
     // exclude top and left borders
     if (gridX === 0 || gridY === 0) {
       return;
     }
 
-    if (!this.isSeat(gridX, gridY)) {
-      this.currentSeats.push([gridX, gridY]);
+    if (!this.isOccupied(gridX, gridY)) {
+      seats.push([gridX, gridY]);
       this.enlargeCanvasIfNecessary(gridX, gridY);
     }
   }
@@ -58,6 +65,15 @@ class SeatCanvas {
     this.initCtx();
   }
 
+  ////////////////////////////////////////////////// 
+  // Drawing functions
+  ////////////////////////////////////////////////// 
+  drawOutline(x, y) {
+    this.ctx.strokeStyle = 'red'; // color of the outline
+    this.ctx.lineWidth = 2; // width of the outline
+    this.ctx.strokeRect(x * this.cellSize, y * this.cellSize, this.cellSize, this.cellSize);
+  }
+
   drawText(text, x, y) {
     let textX = x * this.cellSize + 1 + this.cellSize / 8;
     let textY = y * this.cellSize + 1 + this.cellSize / 1.5;
@@ -65,11 +81,7 @@ class SeatCanvas {
     this.ctx.fillText(text, textX, textY, maxWidth)
   }
 
-  getPickedColor() {
-    return this.pickedColor
-  }
-
-  redrawCanvas() {
+  redrawGrid() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     let largestDimension = (this.canvas.width >= this.canvas.height) ? this.canvas.width : this.canvas.height;
@@ -97,21 +109,46 @@ class SeatCanvas {
     // draw numbers on borders
     for (let x = 1; x <= gridCount; x++) {
       this.drawText(x, x, 0)
+      this.drawText(x, 0, x)
     }
-    for (let y = 1; y <= gridCount; y++) {
-      this.drawText(y, 0, y)
-    }
+  }
 
-    this.ctx.fillStyle = this.getPickedColor();
-    for (let seat of this.currentSeats) {
-      let x = seat[0];
-      let y = seat[1];
+  redrawSeatArray(seats, color) {
+    for (let [x, y] of seats) {
+      this.ctx.fillStyle = color;
       this.ctx.fillRect(x * this.cellSize + 1, y * this.cellSize + 1, this.cellSize - 2, this.cellSize - 2);
     }
   }
 
+  redrawSeats() {
+    // call redrawSeatArray here
+    throw new Error("redrawSeats must be implemented by subclass");
+  }
+
+  redrawCanvas() {
+    this.redrawGrid();
+    this.redrawSeats();
+  }
+
   ////////////////////////////////////////////////// 
-  // Event handlers
+  // Spicy event handlers
+  ////////////////////////////////////////////////// 
+
+  onDragCell(event, gridX, gridY) {
+    // override in subclass
+  }
+
+  onHoverCell(event, gridX, gridY) {
+    // override in subclass
+    this.drawOutline(gridX, gridY);
+  }
+
+  onClickCell(event, gridX, gridY) {
+    // override in subclass
+  }
+
+  ////////////////////////////////////////////////// 
+  // Basic event handlers
   ////////////////////////////////////////////////// 
   handleMouseMove(event) {
     const bounding = this.canvas.getBoundingClientRect();
@@ -122,25 +159,17 @@ class SeatCanvas {
     const gridX = Math.floor(x / this.cellSize);
     const gridY = Math.floor(y / this.cellSize);
 
-    // if the mouse has moved to a new cell, redraw
+    // if the mouse has moved to a new cell
     if (this.lastHoveredCell === null || gridX !== this.lastHoveredCell.x || gridY !== this.lastHoveredCell.y) {
       this.lastHoveredCell = { x: gridX, y: gridY };
 
       if (this.isMouseDown) {
-        if (this.mouseDragIsPlacingSeats) {
-          this.addSeat(gridX, gridY);
-        } else {
-          this.removeSeat(gridX, gridY);
-        }
+        this.onDragCell(event, gridX, gridY);
         this.redrawCanvas();
       }
       else {
         this.redrawCanvas();
-
-        // draw the outline on the current cell
-        this.ctx.strokeStyle = 'red'; // color of the outline
-        this.ctx.lineWidth = 2; // width of the outline
-        this.ctx.strokeRect(gridX * this.cellSize, gridY * this.cellSize, this.cellSize, this.cellSize);
+        this.onHoverCell(event, gridX, gridY);
       }
     }
   }
@@ -156,12 +185,12 @@ class SeatCanvas {
     const gridX = Math.floor(x / this.cellSize);
     const gridY = Math.floor(y / this.cellSize);
 
-    if (this.isSeat(gridX, gridY)) {
-      this.removeSeat(gridX, gridY);
-      this.mouseDragIsPlacingSeats = false;
+    this.onClickCell(event, gridX, gridY);
+
+    if (!this.isOccupied(gridX, gridY)) {
+      this.mouseDragStartedOnOccupiedCell = false;
     } else {
-      this.addSeat(gridX, gridY);
-      this.mouseDragIsPlacingSeats = true;
+      this.mouseDragStartedOnOccupiedCell = true;
     }
     this.redrawCanvas();
   }
@@ -173,24 +202,18 @@ class SeatCanvas {
   ////////////////////////////////////////////////// 
   // Entry point
   ////////////////////////////////////////////////// 
-
   addEventListeners() {
     this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
     this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this))
     this.canvas.addEventListener('mouseup', this.handleMouseUp.bind(this));
   }
 
-  addSeats(seats) {
-    seats.forEach(seat => {
-      this.currentSeats.push([seat[0], seat[1]]);
-      this.enlargeCanvasIfNecessary(seat[0], seat[1]);
-    });
-  }
+  initSeats() { }
 
   init() {
     this.initCtx();
-    this.addSeats(this.oldSeats);
     this.addEventListeners();
+    this.initSeats();
     this.redrawCanvas();
   }
 }
