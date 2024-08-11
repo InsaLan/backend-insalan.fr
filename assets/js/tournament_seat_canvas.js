@@ -152,14 +152,24 @@
       let optionElem = document.createElement("option");
       optionElem.value = slot;
       optionElem.text = this.getSlotText(slot);
-      optionElem.style.color = this.getSlotColor(slot);
       return optionElem;
+    }
+
+    redrawColoredBlock(optionElem, color) {
+      // apparently this *NEEDS* to be done each draw.
+      // cursed but it works
+      let div = document.createElement("span");
+      div.style.display = "inline-block";
+      div.textContent = "██";
+      div.style.color = color;
+      optionElem.insertBefore(div, optionElem.firstChild);
     }
 
     redrawSlotSelection() {
       for (let slot of Object.keys(this.slots)) {
         let optionElem = this.selectElem.options[this.selectionIndexes[slot]];
         optionElem.text = this.getSlotText(slot);
+        this.redrawColoredBlock(optionElem, this.getSlotColor(slot));
       }
       this.validateSlots();
     }
