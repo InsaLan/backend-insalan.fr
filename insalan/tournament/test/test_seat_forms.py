@@ -121,7 +121,7 @@ class SeatsFieldTestCase(TestCase):
         for key in expected:
             self.assertEqual(form.fields["canvas_params"].initial[key], expected[key])
 
-    def test_tournament_form_raises_error_if_wrong_nb_seats_in_slot(self):
+    def test_tournament_form_invalid_if_wrong_nb_seats_in_slot(self):
         seat = Seat.objects.create(event=self.evobj, x=10, y=10)
         slots = {
             slot.id: [(seat.x, seat.y) for seat in slot.seats.all()]
@@ -135,7 +135,7 @@ class SeatsFieldTestCase(TestCase):
         )
         self.assertFalse(form.is_valid())
 
-    def test_tournament_raises_error_if_seat_used_more_than_once(self):
+    def test_tournament_form_invalid_if_seat_used_more_than_once(self):
         seat = self.seats[0]
         slots = {
             slot.id: [(seat.x, seat.y) for seat in slot.seats.all()]
