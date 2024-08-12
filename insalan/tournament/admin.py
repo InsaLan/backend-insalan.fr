@@ -303,6 +303,13 @@ class TournamentForm(forms.ModelForm):
 
         return self.cleaned_data
 
+    class Meta:
+        """
+        Meta class for the form
+        """
+        model = Tournament
+        fields = "__all__"
+
 
 class TournamentAdmin(admin.ModelAdmin):
     """Admin handler for Tournaments"""
