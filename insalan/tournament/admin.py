@@ -317,9 +317,15 @@ class TournamentAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "event", "game", "is_announced", "cashprizes", "get_occupancy")
     search_fields = ["name", "event__name", "game__name"]
 
-    form = TournamentForm
-
     list_filter = (EventTournamentFilter,GameTournamentFilter)
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        """
+        Use TournamentForm only for editing an existing tournament.
+        """
+        if obj is not None:
+            kwargs["form"] = TournamentForm
+        return super().get_form(request, obj, change, **kwargs)
 
     def get_occupancy(self, obj):
         """
