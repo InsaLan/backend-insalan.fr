@@ -110,6 +110,8 @@ class SeatCanvas(forms.Field):
     widget = SeatCanvasWidget
 
     def clean(self, value):
+        if value is None:
+            return None
         value = json.loads(value)
         return value
 
@@ -174,9 +176,29 @@ class EventAdmin(admin.ModelAdmin):
 
 admin.site.register(Event, EventAdmin)
 
+class GameForm(forms.ModelForm):
+    """
+    Custom form for the Game model
+    """
+    def clean(self) -> dict[str, Any] | None:
+        # if players_per_team changed, reset associated seat_slots
+        new_players_per_team = self.cleaned_data.get("players_per_team")
+        if new_players_per_team is not None and new_players_per_team != self.instance.players_per_team:
+            tournaments = Tournament.objects.filter(game=self.instance)
+            seat_slots = SeatSlot.objects.filter(tournament__in=tournaments)
+            seat_slots.delete()
+
+    class Meta:
+        """
+        Meta class for the form
+        """
+        model = Game
+        fields = "__all__"
+
 
 class GameAdmin(admin.ModelAdmin):
     """Admin handler for Games"""
+    form = GameForm
 
     list_display = ("id", "name", "players_per_team")
     search_fields = ["name"]
@@ -245,7 +267,7 @@ class TournamentForm(forms.ModelForm):
         seats = Seat.objects.filter(event=self.instance.event)
         seat_slots = SeatSlot.objects.filter(tournament=self.instance)
 
-        other_tournament_slots = SeatSlot.objects.exclude(tournament=self.instance)
+        other_tournament_slots = SeatSlot.objects.exclude(tournament=self.instance).filter(tournament__event=self.instance.event)
 
         data = {
             "cellSize": 25,
@@ -261,6 +283,16 @@ class TournamentForm(forms.ModelForm):
         self.fields["canvas_params"].initial = data
 
     def clean(self) -> dict[str, Any] | None:
+        # if event changed, reset seat_slots
+        new_event = self.cleaned_data.get("event")
+        if new_event is not None and new_event != self.instance.event:
+            self.cleaned_data["seat_slots"] = {}
+
+        # if game changed, reset seat_slots if different number of players
+        new_game = self.cleaned_data.get("game")
+        if new_game is not None and new_game.players_per_team != self.instance.game.players_per_team:
+            self.cleaned_data["seat_slots"] = {}
+
         seat_slots = self.cleaned_data.get("seat_slots")
 
         if seat_slots is not None:

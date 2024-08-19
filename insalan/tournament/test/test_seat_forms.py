@@ -1,5 +1,4 @@
 import json
-from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from insalan.tournament.models import (
@@ -10,7 +9,7 @@ from insalan.tournament.models import (
     SeatSlot,
 )
 
-from insalan.tournament.admin import EventForm, TournamentForm
+from insalan.tournament.admin import EventForm, TournamentForm, GameForm
 
 
 class SeatsFieldTestCase(TestCase):
@@ -71,6 +70,38 @@ class SeatsFieldTestCase(TestCase):
         for slot, seats in zip(self.slots2, seats2_groups):
             slot.seats.set(seats)
 
+        # another event with seats/slots
+        evobj2 = Event.objects.create(
+            name="Test Event 2",
+            description="This is a test",
+            year=2022,
+            month=12,
+            ongoing=False,
+        )
+        seats2 = [
+            Seat.objects.create(event=evobj2, x=x, y=y)
+            for x in range(10, 30, 4)
+            for y in range(10, 30, 4)
+        ]
+
+        tournament2 = Tournament.objects.create(
+            name="Tourney 2", game=self.game_one, event=evobj2
+        )
+
+        slots2 = [
+            SeatSlot.objects.create(tournament=tournament2)
+            for _ in range(len(seats2[:: self.game_one.players_per_team]))
+        ]
+
+        for slot, seats in zip(
+            slots2,
+            [
+                seats2[i : i + self.game_one.players_per_team]
+                for i in range(0, len(seats2), self.game_one.players_per_team)
+            ],
+        ):
+            slot.seats.set(seats)
+
     def test_event_form_sends_data_to_frontend(self):
         form = EventForm(instance=self.evobj)
         self.assertEqual(
@@ -105,6 +136,7 @@ class SeatsFieldTestCase(TestCase):
         self.assertEqual(set(Seat.objects.filter(event=self.evobj)), set(self.seats))
 
     def test_tournament_form_sends_data_to_frontend(self):
+        # form should only send data for its own event
         form = TournamentForm(instance=self.tournament)
 
         expected = {
@@ -120,6 +152,54 @@ class SeatsFieldTestCase(TestCase):
         }
         for key in expected:
             self.assertEqual(form.fields["canvas_params"].initial[key], expected[key])
+
+    def test_tournament_resets_slots_if_event_changed(self):
+        evobj2 = Event.objects.create(
+            name="Test Event 2",
+            description="This is a test",
+            year=2022,
+            month=12,
+            ongoing=False,
+        )
+
+        self.assertTrue(SeatSlot.objects.filter(tournament=self.tournament).exists())
+
+        form = TournamentForm(
+            instance=self.tournament,
+            data={"event": evobj2.id},
+        )
+        form.full_clean()
+        form.clean()
+
+        self.assertFalse(SeatSlot.objects.filter(tournament=self.tournament).exists())
+
+    def test_tournament_resets_slots_if_game_changed_new_nb_players(self):
+        game = Game.objects.create(name="Test Game", players_per_team=4)
+
+        self.assertTrue(SeatSlot.objects.filter(tournament=self.tournament).exists())
+
+        form = TournamentForm(
+            instance=self.tournament,
+            data={"game": game.id},
+        )
+        form.full_clean()
+        form.clean()
+
+        self.assertFalse(SeatSlot.objects.filter(tournament=self.tournament).exists())
+
+    def test_tournament_keeps_slots_if_game_changed_same_nb_players(self):
+        game = Game.objects.create(name="Test Game", players_per_team=5)
+
+        self.assertTrue(SeatSlot.objects.filter(tournament=self.tournament).exists())
+
+        form = TournamentForm(
+            instance=self.tournament,
+            data={"game": game.id},
+        )
+        form.full_clean()
+        form.clean()
+
+        self.assertTrue(SeatSlot.objects.filter(tournament=self.tournament).exists())
 
     def test_tournament_form_invalid_if_wrong_nb_seats_in_slot(self):
         seat = Seat.objects.create(event=self.evobj, x=10, y=10)
@@ -149,7 +229,7 @@ class SeatsFieldTestCase(TestCase):
         )
         self.assertFalse(form.is_valid())
 
-    def test_tournament_deletes_removed_slots(self):
+    def test_tournament_form_deletes_removed_slots(self):
         slots = {
             slot.id: [(seat.x, seat.y) for seat in slot.seats.all()]
             for slot in self.slots1
@@ -168,7 +248,7 @@ class SeatsFieldTestCase(TestCase):
             set(self.slots1[1:]),
         )
 
-    def test_tournament_adds_new_slots(self):
+    def test_tournament_form_adds_new_slots(self):
         slots = {
             slot.id: [(seat.x, seat.y) for seat in slot.seats.all()]
             for slot in self.slots1
@@ -196,7 +276,7 @@ class SeatsFieldTestCase(TestCase):
             set(self.available_seats[:5]),
         )
 
-    def test_tournament_modifies_edited_slots(self):
+    def test_tournament_form_modifies_edited_slots(self):
         slots = {
             slot.id: [(seat.x, seat.y) for seat in slot.seats.all()]
             for slot in self.slots1
@@ -224,3 +304,16 @@ class SeatsFieldTestCase(TestCase):
             set(slot.seats.all()),
             set(self.available_seats[:5]),
         )
+
+    def test_game_form_resets_slots_if_players_per_team_changed(self):
+        self.assertTrue(SeatSlot.objects.filter(tournament=self.tournament).exists())
+
+        form = GameForm(
+            instance=self.game_one,
+            data={"players_per_team": 4},
+        )
+
+        form.full_clean()
+        form.clean()
+
+        self.assertFalse(SeatSlot.objects.filter(tournament=self.tournament).exists())
