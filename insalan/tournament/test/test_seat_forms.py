@@ -1,15 +1,17 @@
 import json
+from django.forms import ValidationError
 from django.test import TestCase
 
 from insalan.tournament.models import (
     Event,
     Tournament,
     Game,
+    Team,
     Seat,
     SeatSlot,
 )
 
-from insalan.tournament.admin import EventForm, TournamentForm, GameForm
+from insalan.tournament.admin import EventForm, TournamentForm, GameForm, TeamForm
 
 
 class SeatsFieldTestCase(TestCase):
@@ -54,6 +56,8 @@ class SeatsFieldTestCase(TestCase):
             SeatSlot.objects.create(tournament=self.tournament_two)
             for _ in range(len(seats2[:: self.game_two.players_per_team]))
         ]
+
+        self.team = Team.objects.create(tournament=self.tournament, name="Test Team")
 
         seats1_groups = [
             seats1[i : i + self.game_one.players_per_team]
@@ -317,3 +321,66 @@ class SeatsFieldTestCase(TestCase):
         form.clean()
 
         self.assertFalse(SeatSlot.objects.filter(tournament=self.tournament).exists())
+
+    def test_team_form_sets_seat_slot(self):
+        self.assertIsNone(self.team.seat_slot)
+
+        form = TeamForm(
+            instance=self.team,
+            data={"seat_slot": self.slots1[0].id},
+        )
+        form.full_clean()
+        form.clean()
+
+        self.assertEqual(self.team.seat_slot.id, self.slots1[0].id)
+
+    def test_team_form_ignores_seat_slot_if_wrong_tournament(self):
+        self.assertIsNone(self.team.seat_slot)
+
+        form = TeamForm(
+            instance=self.team,
+            data={"seat_slot": self.slots2[0].id},
+        )
+        form.full_clean()
+        form.clean()
+
+        # here, the slot object is not found because the query set for that
+        # field is filtered for that specific tournament. it seems the passed
+        # value is silently discarded
+        self.assertIsNone(self.team.seat_slot)
+
+    def test_team_form_ignores_seat_slot_if_slot_taken(self):
+        self.assertIsNone(self.team.seat_slot)
+
+        slot = SeatSlot.objects.create(tournament=self.tournament)
+        slot.seats.set(self.slots1[0].seats.all())
+
+        team2 = Team.objects.create(
+            tournament=self.tournament, name="Test Team 2", seat_slot=slot
+        )
+        team2.save()
+
+        form = TeamForm(
+            instance=self.team,
+            data={"seat_slot": slot.id},
+        )
+        form.full_clean()
+        form.clean()
+
+        # here, the slot object is not found because the query set for that
+        # field is filtered to include only unused slots. it seems the passed
+        # value is silently discarded
+        self.assertIsNone(self.team.seat_slot)
+
+    def test_team_form_invalid_if_wrong_nb_seats_in_slot(self):
+        self.assertIsNone(self.team.seat_slot)
+
+        slot = SeatSlot.objects.create(tournament=self.tournament)
+        slot.seats.set(self.slots1[0].seats.all()[:4])
+
+        form = TeamForm(
+            instance=self.team,
+            data={"seat_slot": slot.id},
+        )
+
+        self.assertFalse(form.is_valid())

@@ -407,28 +407,32 @@ class TeamForm(forms.ModelForm):
                 "content_type"
             )
 
+        seat_slot = self.fields.get("seat_slot")
+        if (seat_slot and self.instance.tournament):
+            seat_slot.queryset = seat_slot.queryset.filter(
+                tournament=self.instance.tournament
+            ).filter(
+                team=None
+            )
+
     def clean(self):
         """
         validate seat slot
         """
         seat_slot = self.cleaned_data.get("seat_slot")
-        tournament = self.cleaned_data.get("tournament")
-        team_id = self.instance.id
+        tournament = self.cleaned_data.get("tournament") or self.instance.tournament
 
-        if seat_slot.tournament.id != tournament.id:
-            raise ValidationError(
-                _("Ce slot appartient à un autre tournoi.")
-            )
+        if seat_slot is not None:
+            # filters mean if it's not the same tournament, seat_slot is None => impossible
+            if seat_slot.tournament.id != tournament.id:
+                raise ValidationError(_("Ce slot appartient à un autre tournoi."))
 
-        if hasattr(seat_slot, "team") and seat_slot.team.id != team_id:
-            raise ValidationError(
-                _("Slot déjà utilisé.")
-            )
+            # filters mean if it's used, seat_slot is None => impossible
+            if hasattr(seat_slot, "team") and seat_slot.team.id != self.instance.id:
+                raise ValidationError(_("Slot déjà utilisé."))
 
-        if seat_slot.seats.count() != tournament.game.players_per_team:
-            raise ValidationError(
-                _("Slot inadapté au tournoi.")
-            )
+            if seat_slot.seats.count() != tournament.game.players_per_team:
+                raise ValidationError(_("Slot inadapté au tournoi."))
 
         return self.cleaned_data
 
