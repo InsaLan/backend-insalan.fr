@@ -346,7 +346,7 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
 
                 scores = Score.objects.filter(match__in=matches).values("team_id", "match", "score")
                 for match in swiss["matchs"]:
-                    match["scores"] = {score["team_id"]: score["score"] for score in scores if score["match"] == match["id"]}
+                    match["score"] = {score["team_id"]: score["score"] for score in scores if score["match"] == match["id"]}
 
                 swiss["teams"] = SwissSeeding.objects.filter(swiss=swiss["id"]).values_list("team", flat=True)
 
