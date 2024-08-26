@@ -90,5 +90,6 @@ def validate_match_data(match: "Match", data):
 
 def valid_name(game_param: "game", name: str):
     name_validator = game_param.get_name_validator()
-
+    if name_validator is None:
+        return True
     return name_validator(name)
