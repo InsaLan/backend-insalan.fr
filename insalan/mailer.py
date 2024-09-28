@@ -48,7 +48,7 @@ class UserMailer:
             Permission.objects.get(codename="email_active")
         )
         token = EmailConfirmationTokenGenerator().make_token(user_object)
-        user = user_object.username
+        user = user_object.pk
 
         connection = get_connection(
             host=self.mail_host,
@@ -76,7 +76,7 @@ class UserMailer:
         Send a password reset token.
         """
         token = default_token_generator.make_token(user_object)
-        user = user_object.username
+        user = user_object.pk
 
         connection = get_connection(
             fail_silently=False,
