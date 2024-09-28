@@ -312,7 +312,7 @@ class UserEndToEndTestCase(TestCase):
             ".*https?://[^ ]*/(?P<user_pk>[^ /]*)/(?P<token>[^ /]*)",
             mail.outbox[0].body,
         )
-        
+
         match_user_pk = match["user_pk"]
         token = match["token"]
 
@@ -322,7 +322,7 @@ class UserEndToEndTestCase(TestCase):
         self.assertEqual(request.status_code, 200)
 
         self.assertTrue(User.objects.get(username=data["username"]).is_email_active())
-    
+
     def test_can_confirm_email_only_once(self):
         """
         Test that an user can confirm their email only once
