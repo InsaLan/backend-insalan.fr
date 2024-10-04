@@ -18,6 +18,8 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
+from PIL import Image
 
 from insalan.user.models import User
 
@@ -35,9 +37,17 @@ def create_test_img(file_name: str = "test.png") -> SimpleUploadedFile:
     """
     Create a test image file.
     """
-    test_img = io.BytesIO(b"test image")
+    # Create an image using Pillow
+    image = Image.new('RGB', (100, 100), color = (73, 109, 137))
+
+    # Save the image to a BytesIO object
+    test_img = io.BytesIO()
+    image.save(test_img, format='PNG')
+    test_img.seek(0)
     test_img.name = file_name
-    return SimpleUploadedFile(test_img.name, test_img.getvalue())
+
+    # Return the SimpleUploadedFile object
+    return SimpleUploadedFile(test_img.name, test_img.getvalue(), content_type='image/png')
 
 
 class UserTestCase(TestCase):

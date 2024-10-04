@@ -12,6 +12,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
 
 from . import team, caster, group, bracket, swiss
+from insalan.components.image_field import ImageField
 
 def in_thirty_days():
     """Return now + 30 days"""
@@ -51,13 +52,13 @@ class Tournament(models.Model):
         default=in_thirty_days,
         null=False,
     )
-    logo: models.FileField = models.FileField(
+    logo: models.FileField = ImageField(
         verbose_name=_("Logo"),
         blank=True,
         null=True,
         upload_to="tournament-icons",
         validators=[
-            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp"])
+            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp", "avif"])
         ],
     )
     # Tournament player slot prices

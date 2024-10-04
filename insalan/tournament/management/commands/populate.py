@@ -95,7 +95,7 @@ class Command(BaseCommand):
         test_img.name = (
             generate_garbage(randint(5, 20))
             + "."
-            + choice(["png", "jpg", "jpeg", "svg", "webp"])
+            + choice(["png", "jpg", "jpeg", "svg", "webp", "avif"])
         )
         return SimpleUploadedFile(test_img.name, test_img.getvalue())
 

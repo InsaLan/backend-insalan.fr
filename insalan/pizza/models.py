@@ -15,6 +15,8 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
 
+from insalan.components.image_field import ImageField
+
 class PaymentMethod(models.TextChoices):
     """
     Payment method choices
@@ -52,11 +54,11 @@ class Pizza(models.Model):
         blank=True,
         null=True,
     )
-    image: models.FileField = models.FileField(
+    image: models.FileField = ImageField(
         verbose_name=_("Image"),
         upload_to="pizzas",
         validators=[
-            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp"])
+            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp", "avif"])
         ],
         null=True,
         blank=True,
