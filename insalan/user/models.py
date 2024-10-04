@@ -11,6 +11,8 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import FileExtensionValidator
 
+from insalan.components.image_field import ImageField
+
 class UserManager(BaseUserManager):
     """
     Managers the User objects (kind of like a serializer but not quite that)
@@ -75,7 +77,7 @@ class User(AbstractUser, PermissionsMixin):
     USERNAME_FIELD = "username"
     EMAIL_FIELD = "email"
 
-    image = models.FileField(
+    image = ImageField(
         verbose_name=_("photo de profil"),
         blank=True,
         null=True,

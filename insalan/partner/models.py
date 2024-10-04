@@ -4,6 +4,8 @@ from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from insalan.components.image_field import ImageField
+
 class Partner(models.Model):
     class PartnerType(models.TextChoices):
         """There are two types of sponsors"""
@@ -22,7 +24,7 @@ class Partner(models.Model):
         max_length=200, verbose_name=_("Nom du partenaire/sponsor")
     )
     url: models.URLField = models.URLField(verbose_name=_("URL"))
-    logo: models.FileField = models.FileField(
+    logo: models.FileField = ImageField(
         verbose_name=_("Logo"),
         upload_to="partners",
         validators=[
