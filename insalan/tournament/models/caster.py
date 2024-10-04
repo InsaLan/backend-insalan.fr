@@ -2,6 +2,8 @@ from django.db import models
 from django.core.validators import FileExtensionValidator
 from django.utils.translation import gettext_lazy as _
 
+from insalan.components.image_field import ImageField
+
 class Caster(models.Model):
     """
     A Caster is someone that can cast a tournament.
@@ -12,7 +14,7 @@ class Caster(models.Model):
         blank=False,
         verbose_name=_("Nom du casteur")
     )
-    image = models.FileField(
+    image = ImageField(
         verbose_name=_("Photo de profil"),
         blank=True,
         null=True,

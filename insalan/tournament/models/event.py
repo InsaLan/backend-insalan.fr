@@ -10,6 +10,8 @@ from django.utils.translation import gettext_lazy as _
 
 from . import tournament
 
+from insalan.components.image_field import ImageField
+
 class Event(models.Model):
     """
     An Event is any single event that is characterized by the following:
@@ -41,7 +43,7 @@ class Event(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(12)],
     )
     ongoing = models.BooleanField(verbose_name=_("En cours"), default=False)
-    logo: models.FileField = models.FileField(
+    logo: models.FileField = ImageField(
         verbose_name=_("Logo"),
         blank=True,
         null=True,
