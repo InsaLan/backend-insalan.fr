@@ -16,6 +16,8 @@ class ImageField(models.ImageField):
 
     def pre_save(self, model_instance, add):
         file = super().pre_save(model_instance, add)
+        if not file:
+            return file
         if self.convert_to_webp:
             try:
                 img = Image.open(file)
