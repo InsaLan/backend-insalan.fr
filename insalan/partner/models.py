@@ -28,7 +28,7 @@ class Partner(models.Model):
         verbose_name=_("Logo"),
         upload_to="partners",
         validators=[
-            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp"])
+            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp", "avif"])
         ],
     )
     partner_type: models.CharField = models.CharField(

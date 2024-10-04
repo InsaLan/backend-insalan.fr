@@ -58,7 +58,7 @@ class Pizza(models.Model):
         verbose_name=_("Image"),
         upload_to="pizzas",
         validators=[
-            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp"])
+            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp", "avif"])
         ],
         null=True,
         blank=True,

@@ -49,7 +49,7 @@ class Event(models.Model):
         null=True,
         upload_to="event-icons",
         validators=[
-            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp"])
+            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp", "avif"])
         ],
     )
 
