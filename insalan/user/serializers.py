@@ -45,7 +45,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     image = serializers.FileField(
         required=False,
         validators=[
-            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp"])
+            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp", "avif"])
         ],
     )
     name = serializers.CharField(write_only=True, required=False, allow_blank=True) #If this field is filled, something bad happened (bot), purposely ambiguous nament

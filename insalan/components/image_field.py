@@ -4,6 +4,7 @@ from io import BytesIO
 from django.core.exceptions import ValidationError
 from django.db import models
 from PIL import Image
+import pillow_avif
 
 class ImageField(models.ImageField):
     """
@@ -21,7 +22,7 @@ class ImageField(models.ImageField):
         if self.convert_to_webp:
             try:
                 img = Image.open(file)
-                if img.format != "WEBP":
+                if img.format not in ["WEBP", "AVIF"]:
                     buffer = BytesIO()
                     img.save(buffer, format="WEBP")
                     buffer.seek(0)

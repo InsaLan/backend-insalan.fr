@@ -83,7 +83,7 @@ class User(AbstractUser, PermissionsMixin):
         null=True,
         upload_to="profile-pictures",
         validators=[
-            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp"])
+            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp", "avif"])
         ],
     )
 

@@ -58,7 +58,7 @@ class Tournament(models.Model):
         null=True,
         upload_to="tournament-icons",
         validators=[
-            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp"])
+            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp", "avif"])
         ],
     )
     # Tournament player slot prices
