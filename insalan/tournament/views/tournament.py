@@ -217,6 +217,16 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
             ).data
 
             del tourney_serialized["event"]["tournaments"]
+            
+            # Add the seats
+            tourney_serialized["event"]["seats"] = []
+            
+            seats = Seat.objects.filter(event=tourney_serialized["event"]["id"])
+            for seat in seats:
+                # Only add X and Y coord
+                tourney_serialized["event"]["seats"].append(
+                    (seat.x, seat.y)
+                )
 
             # Dereference the game
             tourney_serialized["game"] = serializers.GameSerializer(
@@ -279,6 +289,13 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
                     if not can_see_payment_status:
                         substitute["payment_status"] = None
                         del substitute["id"]
+                        
+                # Add teamslot id or null
+                team_slot = SeatSlot.objects.filter(team=team["id"])
+                if team_slot.exists():
+                    team["teamslot"] = team_slot[0].id
+                else:
+                    team["teamslot"] = None
 
             # deref group matchs and scores
             tourney_serialized["groups"] = serializers.FullDerefGroupSerializer(

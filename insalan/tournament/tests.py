@@ -1187,6 +1187,16 @@ class TournamentFullDerefEndpoint(TestCase):
                 "month": 12,
                 "ongoing": False,
                 "logo": None,
+                "seats": [
+                    (
+                        seat_one.x,
+                        seat_one.y,
+                    ),
+                    (
+                        seat_two.x,
+                        seat_two.y,
+                    )
+                ]
             },
             "game": {
                 "id": game_obj.id,
@@ -1233,6 +1243,7 @@ class TournamentFullDerefEndpoint(TestCase):
                     ],
                     "captain": first.name_in_game,
                     "validated": team_one.validated,
+                    "teamslot": None,
                 }
             ],
             "logo": None,
