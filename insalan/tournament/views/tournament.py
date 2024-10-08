@@ -290,12 +290,12 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
                         substitute["payment_status"] = None
                         del substitute["id"]
                         
-                # Add teamslot id or null
+                # Add seat_slot id or null
                 team_slot = SeatSlot.objects.filter(team=team["id"])
                 if team_slot.exists():
-                    team["teamslot"] = team_slot[0].id
+                    team["seat_slot"] = team_slot[0].id
                 else:
-                    team["teamslot"] = None
+                    team["seat_slot"] = None
 
             # deref group matchs and scores
             tourney_serialized["groups"] = serializers.FullDerefGroupSerializer(
