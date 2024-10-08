@@ -437,6 +437,70 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Order.objects.count(), 1)
 
+    def test_order_post_twice(self) -> None:
+        """Test send to the order post endpoint an order twice"""
+        client = APIClient()
+        client.force_login(user=self.admin_user)
+        response = client.post(
+            reverse("order/list"),
+            {
+                "user": "user1",
+                "time_slot": self.time_slot.id,
+                "pizza": [self.pizza1.id],
+                'type': 'staff',
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        order_id: int = response.data["id"]
+        self.assertEqual(Order.objects.count(), 2)
+        response = client.post(
+            reverse("order/list"),
+            {
+                "user": "user1",
+                "time_slot": self.time_slot.id,
+                "pizza": [self.pizza1.id],
+                'type': 'staff',
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Order.objects.count(), 2)
+        response = client.post(
+            reverse("order/list"),
+            {
+                "user": "user1",
+                "time_slot": self.time_slot.id,
+                "pizza": [self.pizza2.id],
+                'type': 'staff',
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Order.objects.count(), 3)
+        response = client.post(
+            reverse("order/list"),
+            {
+                "user": "user2",
+                "time_slot": self.time_slot.id,
+                "pizza": [self.pizza1.id],
+                'type': 'staff',
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Order.objects.count(), 4)
+        order = Order.objects.get(pk=order_id)
+        order.created_at = timezone.now() - timedelta(minutes=30)
+        order.save()
+        response = client.post(
+            reverse("order/list"),
+            {
+                "user": "user1",
+                "time_slot": self.time_slot.id,
+                "pizza": [self.pizza1.id],
+                'type': 'staff',
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Order.objects.count(), 5)
+
     def test_order_list_full(self):
         """Test the order list full endpoint"""
         client = APIClient()
