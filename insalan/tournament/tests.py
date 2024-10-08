@@ -1243,7 +1243,7 @@ class TournamentFullDerefEndpoint(TestCase):
                     ],
                     "captain": first.name_in_game,
                     "validated": team_one.validated,
-                    "teamslot": None,
+                    "seat_slot": None,
                 }
             ],
             "logo": None,
