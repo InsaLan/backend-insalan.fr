@@ -8,12 +8,12 @@ It includes the following models:
 - Order: Represents a pizza order, including the user, time slot, pizzas, payment method, price,
   and delivery status.
 """
-from typing import List
 
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
+
 
 class PaymentMethod(models.TextChoices):
     """
@@ -210,7 +210,7 @@ class TimeSlot(models.Model):
         if need_save:
             self.save()
 
-    def get_orders_id(self) -> List[int]:
+    def get_orders_id(self) -> list[int]:
         """
         retrieve orders associated to a timeslot with their id
         """
@@ -282,11 +282,11 @@ class Order(models.Model):
         auto_now_add=True,
     )
 
-    def get_pizza_ids(self) -> List[int]:
-        """
-        retrieve pizza associated to an order with their id
-        """
-        return PizzaOrder.objects.filter(order=self)
+    def get_pizza_ids(self) -> list[int]:
+        """Retrieve pizza associated to an order with their id."""
+        return [pizza_order.pizza.id
+                for pizza_order in PizzaOrder.objects.filter(order=self)]
+
     def __str__(self) -> str:
         return f"{self.user} - {self.time_slot}"
 
@@ -329,13 +329,13 @@ class PizzaExport(models.Model):
     def __str__(self) -> str:
         return f"{self.time_slot}"
 
-    def get_orders_id(self) -> List[int]:
+    def get_orders_id(self) -> list[int]:
         """
         retrieve orders associated to a timeslot with their id
         """
         return self.orders.all().values_list("id", flat=True)
 
-    def get_orders(self) -> List[Order]:
+    def get_orders(self) -> list[Order]:
         """
         retrieve orders associated to a timeslot
         """

@@ -3,10 +3,13 @@
     WORK IN PROGRESS:
     - missing tests
 """
+
+from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.serializers import Serializer
@@ -511,10 +514,12 @@ class OrderList(generics.ListCreateAPIView):
         }
     )
     def post(self, request, *args, **kwargs):
-        """
-        Create an order
-        """
-        return super().post(request, *args, **kwargs)
+        """Create an order."""
+        try:
+            return super().post(request, *args, **kwargs)
+        except ValidationError as err:
+            return JsonResponse({"err": str(err)},
+                                status=status.HTTP_400_BAD_REQUEST)
 
 class OrderListFull(generics.ListAPIView):
     """List all orders"""
