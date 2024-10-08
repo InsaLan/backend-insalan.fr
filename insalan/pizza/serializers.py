@@ -1,10 +1,17 @@
 """ Serializers for pizza models"""
 
+from datetime import timedelta
 from typing import List
 
+from django.core.exceptions import ValidationError
+from django.utils import timezone
 from rest_framework import serializers
 
 from .models import Pizza, Order, TimeSlot, PizzaOrder, PizzaExport, PaymentMethod
+
+
+DUPLICATED_ORDER_DELTA_TIME: int = 5  # minutes
+
 
 class PizzaSerializer(serializers.ModelSerializer):
     """Serializer for a pizza model"""
@@ -64,6 +71,18 @@ class CreateOrderSerializer(serializers.ModelSerializer):
                 id=validated_data["time_slot"].id
             ).external_price * len(pizza)
         validated_data["price"] = price
+
+        # check if the order is a duplicate
+        for order in Order.objects.filter(
+            user=validated_data.get("user"),
+            time_slot=validated_data["time_slot"].id,
+            payment_method=payment_method,
+            price=price,
+            created_at__gt=timezone.now() - timedelta(minutes=DUPLICATED_ORDER_DELTA_TIME)
+        ):
+            if sorted(order.get_pizza_ids()) == sorted(pizza):
+                raise ValidationError("duplicated order")
+
         order = Order.objects.create(**validated_data)
         for p in pizza:
             PizzaOrder.objects.create(order=order, pizza=Pizza.objects.get(id=p))
