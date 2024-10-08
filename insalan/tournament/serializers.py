@@ -11,8 +11,14 @@ from rest_framework import serializers
 
 from insalan.user.models import User
 
-from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, Group, GroupMatch, Bracket, KnockoutMatch, SwissRound, SwissMatch, Score
-from .models import unique_event_registration_validator, tournament_announced, max_players_per_team_reached, tournament_registration_full, max_substitue_per_team_reached, valid_name
+from .models import (Event, Tournament, Game, Team, Player, Manager,
+                     Substitute, Caster, Group, GroupMatch, Bracket,
+                     KnockoutMatch, SwissRound, SwissMatch, Score, Seat, 
+                     SeatSlot)
+from .models import (unique_event_registration_validator, tournament_announced,
+                     max_players_per_team_reached,
+                     tournament_registration_full,
+                     max_substitue_per_team_reached, valid_name)
 
 class ScoreSerializer(serializers.ModelSerializer):
 
@@ -157,6 +163,7 @@ class TeamSerializer(serializers.ModelSerializer):
     substitutes = serializers.ListField(required=False, source="get_substitutes_id")
     players_names_in_game = serializers.ListField(required=False, write_only=True)
     substitutes_names_in_game = serializers.ListField(required=False, write_only=True)
+    seat_slot = serializers.IntegerField(required=False, source="get_seat_slot_id")
 
     class Meta:
         """Meta options of the team serializer"""
@@ -415,6 +422,23 @@ class SubstituteIdSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         """Turn a Django object into a serialized representation"""
         return instance.id
+    
+class SeatSlotSerializer(serializers.ModelSerializer):
+    """Serializer for a SeatSlot"""
+
+    class Meta:
+        """Meta options for the serializer"""
+
+        model = SeatSlot
+        fields = "__all__"
+
+class SeatSerializer(serializers.ModelSerializer):
+    """Serializer for a Seat"""
+
+    class Meta:
+        """Meta options for the serializer"""
+        model = Seat
+        fields = "__all__"
 
 class FullDerefSwissMatchSerializer(serializers.ModelSerializer):
     """Serializer for a Swiss Match in a tournament"""

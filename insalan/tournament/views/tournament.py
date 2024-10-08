@@ -14,7 +14,11 @@ from insalan.tickets.models import Ticket
 from insalan.user.models import User
 import insalan.tournament.serializers as serializers
 
-from ..models import Player, Manager, Substitute, Event, Tournament, Game, Team, PaymentStatus, Group, Bracket, SwissRound, GroupMatch, KnockoutMatch, SwissMatch, Seeding, Score, BracketType, BracketSet, MatchStatus, BestofType, SwissSeeding
+from ..models import (Player, Manager, Substitute, Event, Tournament, Game,
+                      Team, PaymentStatus, Group, Bracket, SwissRound,
+                      GroupMatch, KnockoutMatch, SwissMatch, Seeding, Score,
+                      BracketType, BracketSet, MatchStatus, BestofType,
+                      SwissSeeding, SeatSlot, Seat)
 from .permissions import ReadOnly, Patch
 
 from rest_framework.exceptions import NotFound
@@ -213,6 +217,16 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
             ).data
 
             del tourney_serialized["event"]["tournaments"]
+            
+            # Add the seats
+            tourney_serialized["event"]["seats"] = []
+            
+            seats = Seat.objects.filter(event=tourney_serialized["event"]["id"])
+            for seat in seats:
+                # Only add X and Y coord
+                tourney_serialized["event"]["seats"].append(
+                    (seat.x, seat.y)
+                )
 
             # Dereference the game
             tourney_serialized["game"] = serializers.GameSerializer(
@@ -275,6 +289,13 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
                     if not can_see_payment_status:
                         substitute["payment_status"] = None
                         del substitute["id"]
+                        
+                # Add seat_slot id or null
+                team_slot = SeatSlot.objects.filter(team=team["id"])
+                if team_slot.exists():
+                    team["seat_slot"] = team_slot[0].id
+                else:
+                    team["seat_slot"] = None
 
             # deref group matchs and scores
             tourney_serialized["groups"] = serializers.FullDerefGroupSerializer(
@@ -349,6 +370,17 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
                     match["score"] = {score["team_id"]: score["score"] for score in scores if score["match"] == match["id"]}
 
                 swiss["teams"] = SwissSeeding.objects.filter(swiss=swiss["id"]).values_list("team", flat=True)
+
+
+            # deref seat slots
+            tourney_serialized["seatslots"] = serializers.SeatSlotSerializer(
+                SeatSlot.objects.filter(tournament=tourney), context={"request": request}, many=True
+            ).data
+
+            for seatslot in tourney_serialized["seatslots"]:
+                seatslot["seats"] =  serializers.SeatSerializer(
+                    Seat.objects.filter(id__in=seatslot["seats"]), context={"request": request}, many=True
+                ).data
 
         return Response(tourney_serialized, status=status.HTTP_200_OK)
 

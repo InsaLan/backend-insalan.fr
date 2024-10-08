@@ -22,6 +22,8 @@ from insalan.tournament.models import (
     Tournament,
     Event,
     Game,
+    SeatSlot,
+    Seat
 )
 from insalan.user.models import User
 
@@ -1150,6 +1152,27 @@ class TournamentFullDerefEndpoint(TestCase):
         sub = Substitute.objects.create(user=uobj_four, team=team_one, name_in_game="substitute")
         team_one.save()
 
+        seat_one = Seat.objects.create(
+            event=evobj,
+            x=1,
+            y=1,
+        )
+        seat_one.save()
+
+        seat_two = Seat.objects.create(
+            event=evobj,
+            x=2,
+            y=1,
+        )
+        seat_two.save()
+
+        seatslot_one = SeatSlot.objects.create(
+            tournament=tourneyobj_one,
+            team=team_one
+        )
+        seatslot_one.seats.set([seat_one, seat_two])
+        seatslot_one.save()
+
         request = self.client.get(
             reverse("tournament/details-full", args=[tourneyobj_one.id]), format="json"
         )
@@ -1164,6 +1187,16 @@ class TournamentFullDerefEndpoint(TestCase):
                 "month": 12,
                 "ongoing": False,
                 "logo": None,
+                "seats": [
+                    (
+                        seat_one.x,
+                        seat_one.y,
+                    ),
+                    (
+                        seat_two.x,
+                        seat_two.y,
+                    )
+                ]
             },
             "game": {
                 "id": game_obj.id,
@@ -1210,6 +1243,7 @@ class TournamentFullDerefEndpoint(TestCase):
                     ],
                     "captain": first.name_in_game,
                     "validated": team_one.validated,
+                    "seat_slot": None,
                 }
             ],
             "logo": None,
@@ -1219,7 +1253,27 @@ class TournamentFullDerefEndpoint(TestCase):
             "planning": "",
             "groups" : [],
             "brackets" : [],
-            "swissRounds" : []
+            "swissRounds" : [],
+            "seatslots": [
+                {
+                    "id": seatslot_one.id,
+                    "tournament": tourneyobj_one.id,
+                    "seats": [
+                        {
+                            "id": seat_one.id,
+                            "x": seat_one.x,
+                            "y": seat_one.y,
+                            "event": evobj.id
+                        },
+                        {
+                            "id": seat_two.id,
+                            "x": seat_two.x,
+                            "y": seat_two.y,
+                            "event": evobj.id
+                        },
+                    ]
+                }
+            ]
         }
 
         self.assertEqual(request.data["teams"], model["teams"])
@@ -2537,6 +2591,121 @@ class TournamentTeamEndpoints(TestCase):
         )
 
         self.assertEqual(request.status_code, 403)
+
+    def test_can_patch_seat_slot(self):
+        user: User = User.objects.get(username="validemail")
+
+        self.client.force_login(user=user)
+
+        event = Event.objects.get(name="InsaLan Test")
+
+        game2 = Game.objects.create(name="Test Game 2", short_name="TFG2", players_per_team=3)
+        trnm2 = Tournament.objects.create(
+            game=game2,
+            event=event,
+            maxTeam=16,
+            is_announced=True
+        )
+
+        seat_slot = SeatSlot.objects.create(tournament=trnm2)
+        seat_slot.seats.set([
+            Seat.objects.create(event=event, x=1, y=1),
+            Seat.objects.create(event=event, x=1, y=2),
+            Seat.objects.create(event=event, x=1, y=3),
+        ])
+
+        team = Team.objects.create(name="Nom d'équipe 1", tournament=trnm2, password=make_password("password"))
+
+        player = Player.objects.create(team=team, user=user, name_in_game="pseudo")
+
+        # patch data
+        data = {
+            "seat_slot": seat_slot.id,
+        }
+
+        # patch request
+        request = self.client.patch(
+            f"/v1/tournament/team/{team.id}/",
+            data,
+            content_type="application/json",
+        )
+
+        self.assertEqual(request.status_code, 200)
+
+        # check that the team has been updated
+        team = Team.objects.get(id=team.id)
+        self.assertEqual(team.seat_slot, seat_slot)
+
+    def test_cant_patch_seat_slot(self):
+        user: User = User.objects.get(username="validemail")
+
+        self.client.force_login(user=user)
+
+        event = Event.objects.get(name="InsaLan Test")
+
+        game2 = Game.objects.create(name="Test Game 2", short_name="TFG2", players_per_team=3)
+        trnm2 = Tournament.objects.create(
+            game=game2,
+            event=event,
+            maxTeam=16,
+            is_announced=True
+        )
+
+        seat_slot2 = SeatSlot.objects.create(tournament=trnm2)
+        seat_slot2.seats.set([
+            Seat.objects.create(event=event, x=1, y=1),
+            Seat.objects.create(event=event, x=1, y=2),
+            Seat.objects.create(event=event, x=1, y=3),
+        ])
+
+        team = Team.objects.create(name="Nom d'équipe 1", tournament=trnm2, password=make_password("password"))
+
+        player = Player.objects.create(team=team, user=user, name_in_game="pseudo")
+
+        # invalid slot
+        request = self.client.patch(
+            f"/v1/tournament/team/{team.id}/",
+            {
+                "seat_slot": 0,
+            },
+            content_type="application/json",
+        )
+        self.assertEqual(request.status_code, 400)
+
+        # invalid tournament
+        trnm = event.get_tournaments()[0]
+        seat_slot = SeatSlot.objects.create(tournament=trnm)
+        seat_slot.seats.set([
+            Seat.objects.create(event=event, x=2, y=1),
+            Seat.objects.create(event=event, x=2, y=2),
+            Seat.objects.create(event=event, x=2, y=3),
+        ])
+        request = self.client.patch(
+            f"/v1/tournament/team/{team.id}/",
+            {
+                "seat_slot": seat_slot.id,
+            },
+            content_type="application/json",
+        )
+        self.assertEqual(request.status_code, 400)
+
+        # slot already occupied
+        team2 = Team.objects.create(
+            name="Nom d'équipe 2", 
+            tournament=trnm2,
+            password=make_password("password"), 
+            seat_slot=seat_slot2
+        )
+        request = self.client.patch(
+            f"/v1/tournament/team/{team.id}/",
+            {
+                "seat_slot": seat_slot2.id,
+            },
+            content_type="application/json",
+        )
+        self.assertEqual(request.status_code, 400)
+
+
 
     def test_can_join_a_team_with_a_valid_email(self):
         """Try to join an existing team with a valid email"""

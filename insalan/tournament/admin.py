@@ -4,41 +4,78 @@
 # "Too few public methods"
 # pylint: disable=R0903
 
+import json
 from typing import Any
-from django.contrib.auth import password_validation
-from django.contrib import admin, messages
-from django.db.models.query import QuerySet
-from django.db.models.fields.related import ForeignKey
-from django.forms.models import ModelChoiceField
-from django.http.request import HttpRequest
-from django.utils.translation import gettext as _
+
 from django import forms
-from django.contrib.auth.hashers import make_password
-from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from django.http import Http404, HttpResponseRedirect
-from django.urls import path, reverse, resolve
-from django.utils.html import escape
-from django.contrib.auth.forms import AdminPasswordChangeForm, UsernameField
+from django.contrib import admin, messages
 from django.contrib.admin.options import IS_POPUP_VAR
+from django.contrib.auth import password_validation
+from django.contrib.auth.forms import (
+    AdminPasswordChangeForm,
+    ReadOnlyPasswordHashField,
+    UsernameField,
+)
+from django.contrib.auth.hashers import make_password
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db.models.fields.related import ForeignKey
+from django.db.models.query import QuerySet
+from django.forms.models import ModelChoiceField
+from django.http import Http404, HttpResponseRedirect
+from django.http.request import HttpRequest
 from django.template.response import TemplateResponse
-from django.core.exceptions import ValidationError
-from django.core.exceptions import PermissionDenied
-from django.views.decorators.debug import sensitive_post_parameters
+from django.urls import path, resolve, reverse
 from django.utils.decorators import method_decorator
+from django.utils.html import escape
+from django.utils.translation import gettext as _
+from django.views.decorators.debug import sensitive_post_parameters
 
 from insalan.mailer import MailManager
-from .models import Event, Tournament, Game, Team, Player, Manager, Substitute, Caster, PaymentStatus, Group, GroupMatch, KnockoutMatch, Bracket, Seeding, MatchStatus, Score, SwissRound, SwissMatch, SwissSeeding, BestofType, BracketSet, TournamentMailer
-from insalan.tournament.manage import create_group_matchs, create_empty_knockout_matchs, create_swiss_matchs
+from insalan.tournament.manage import (
+    create_empty_knockout_matchs,
+    create_group_matchs,
+    create_swiss_matchs,
+)
+
+from .models import (
+    BestofType,
+    Bracket,
+    BracketSet,
+    Caster,
+    Event,
+    Game,
+    Group,
+    GroupMatch,
+    KnockoutMatch,
+    Manager,
+    MatchStatus,
+    PaymentStatus,
+    Player,
+    Score,
+    Seat,
+    SeatSlot,
+    Seeding,
+    Substitute,
+    SwissMatch,
+    SwissRound,
+    SwissSeeding,
+    Team,
+    Tournament,
+    TournamentMailer,
+)
 
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
 
 from insalan.admin import ADMIN_ORDERING
+
 ADMIN_ORDERING += [
     ('tournament', [
         'Event',
         'Game',
         'Tournament',
         'Team',
+        'Seat',
+        'SeatSlot',
         'Player',
         'Manager',
         'Substitute',
@@ -55,18 +92,113 @@ ADMIN_ORDERING += [
     ]),
 ]
 
+class SeatCanvasWidget(forms.Widget):
+    """
+    Custom widget for the seat canvas
+    """
+    def render(self, name, value, attrs=None, renderer=None):
+        id = attrs["id"] if attrs else "id_" + name
+        return (
+            f'<input id="{id}" type="hidden" name="{name}" value="" />'
+            '<canvas id="seat_canvas" width="900" height="900" />'
+        )
+
+class SeatCanvas(forms.Field):
+    """
+    Custom field for the seat canvas
+    """
+    widget = SeatCanvasWidget
+
+    def clean(self, value):
+        if value is None:
+            return None
+        value = json.loads(value)
+        return value
+
+class EventForm(forms.ModelForm):
+    """
+    Custom form for the Event model
+    """
+    seats = SeatCanvas()
+    canvas_params = forms.JSONField(widget=forms.HiddenInput, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        seats = Seat.objects.filter(event=self.instance)
+        data = {
+            "cellSize": 25,
+            "pickedColor": "brown",  # css colors
+            "oldSeats": [(seat.x, seat.y) for seat in seats]
+        }
+        self.fields["canvas_params"].initial = data
+
+    def clean(self) -> dict[str, Any] | None:
+        seats = self.cleaned_data.get("seats")
+
+        if seats is not None:
+            old_seats = Seat.objects.filter(event=self.instance)
+            to_delete = [seat for seat in old_seats if [seat.x, seat.y] not in seats]
+            to_create = [(x, y) for (x, y) in seats if (x, y) not in [(seat.x, seat.y) for seat in old_seats]]
+
+            for seat in to_delete:
+                seat.delete()
+            for (x, y) in to_create:
+                seat = Seat.objects.create(event=self.instance, x=x, y=y)
+                seat.save()
+
+        return self.cleaned_data
+
+    class Meta:
+        """
+        Meta class for the form
+        """
+        model = Event
+        fields = "__all__"
+
 class EventAdmin(admin.ModelAdmin):
     """Admin handler for Events"""
 
+    form = EventForm
+
     list_display = ("id", "name", "description", "year", "month", "ongoing")
     search_fields = ["name", "year", "month", "ongoing"]
+    
+    class Media:
+        css = {
+            'all': ('css/seat_canvas.css',)
+        }
+        js = (
+            'js/seat_canvas.js',
+            'js/event_seat_canvas.js',
+        )
 
 
 admin.site.register(Event, EventAdmin)
 
+class GameForm(forms.ModelForm):
+    """
+    Custom form for the Game model
+    """
+    def clean(self) -> dict[str, Any] | None:
+        # if players_per_team changed, reset associated seat_slots
+        new_players_per_team = self.cleaned_data.get("players_per_team")
+        if new_players_per_team is not None and new_players_per_team != self.instance.players_per_team:
+            tournaments = Tournament.objects.filter(game=self.instance)
+            seat_slots = SeatSlot.objects.filter(tournament__in=tournaments)
+            seat_slots.delete()
+
+    class Meta:
+        """
+        Meta class for the form
+        """
+        model = Game
+        fields = "__all__"
+
 
 class GameAdmin(admin.ModelAdmin):
     """Admin handler for Games"""
+    form = GameForm
 
     list_display = ("id", "name", "players_per_team")
     search_fields = ["name"]
@@ -104,6 +236,113 @@ class GameTournamentFilter(admin.SimpleListFilter):
             return queryset.filter(game__id=self.value())
         return queryset
 
+class SeatSlotSelection(forms.Widget):
+    """
+    Custom widget for listing seat slots and allowing selection
+    """
+    def render(self, name, value, attrs=None, renderer=None):
+        return (
+            '<div style="display: flex; flex-direction: row;" >'
+                '<div style="display: flex; flex-direction: column; justify-content: center;" >'
+                    '<input type="button" id="id_slot_selection_create" value="Créer un slot" />'
+                    '<input type="button" id="id_slot_selection_delete" value="Supprimer le slot" />'
+                    '<span id="id_slot_selection_error" style="color: red; white-space: pre-wrap;"></span>'
+                '</div>'
+                '<select id="id_slot_selection" name="slot_selection" multiple />'
+            '</div>'
+        )
+
+
+class TournamentForm(forms.ModelForm):
+    """
+    Custom form for the Tournament model
+    """
+    seat_slots = SeatCanvas()
+    slot_selection = forms.Field(widget=SeatSlotSelection(), required=False)
+    canvas_params = forms.JSONField(widget=forms.HiddenInput, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        seats = Seat.objects.filter(event=self.instance.event)
+        seat_slots = SeatSlot.objects.filter(tournament=self.instance)
+
+        other_tournament_slots = SeatSlot.objects.exclude(tournament=self.instance).filter(tournament__event=self.instance.event)
+
+        data = {
+            "cellSize": 25,
+            "pickedColor": "lightgray",  # css colors
+            "eventSeats": [(seat.x, seat.y) for seat in seats],
+            "unavailableSeats": [(seat.x, seat.y) for slot in other_tournament_slots for seat in slot.seats.all()],
+            "seatsPerSlot": self.instance.game.players_per_team,  # for client side validation
+            "seatSlots": {
+                slot.id: [(seat.x, seat.y) for seat in slot.seats.all()]
+                for slot in seat_slots
+            }
+        }
+        self.fields["canvas_params"].initial = data
+
+    def clean(self) -> dict[str, Any] | None:
+        # if event changed, reset seat_slots
+        new_event = self.cleaned_data.get("event")
+        if new_event is not None and new_event != self.instance.event:
+            self.cleaned_data["seat_slots"] = {}
+
+        # if game changed, reset seat_slots if different number of players
+        new_game = self.cleaned_data.get("game")
+        if new_game is not None and new_game.players_per_team != self.instance.game.players_per_team:
+            self.cleaned_data["seat_slots"] = {}
+
+        seat_slots = self.cleaned_data.get("seat_slots")
+
+        if seat_slots is not None:
+            # validation
+            for seats in seat_slots.values():
+                # Ensure that the number of seats is consistent with the tournament
+                if len(seats) != self.instance.game.players_per_team:
+                    raise ValidationError(
+                    _("Le nombre de places est incorrect pour ce tournoi")
+                    )
+
+            # Ensure that every used seat is used only once
+            other_tournament_slots = SeatSlot.objects.exclude(tournament=self.instance)
+            unavailable_seats = set((seat.x, seat.y) for slot in other_tournament_slots for seat in slot.seats.all())
+            all_seats = set(tuple(seat) for seats in seat_slots.values() for seat in seats)
+            if unavailable_seats.intersection(all_seats):
+                raise ValidationError(
+                _("Les places ne peuvent pas être partagés entre plusieurs slots")
+                )
+
+            # modification
+            old_slots = SeatSlot.objects.filter(tournament=self.instance)
+            to_delete = old_slots.exclude(id__in=[int(ss_id) for ss_id in seat_slots])
+            to_create = [seats for slot, seats in seat_slots.items() if int(slot) not in [slot.id for slot in old_slots]]
+
+            # check remaining slots for modification
+            remaining_slots = old_slots.difference(to_delete)
+
+            for slot in to_delete:
+                slot.delete()
+            for seat_coords in to_create:
+                slot = SeatSlot.objects.create(tournament=self.instance)
+                seats = [Seat.objects.get(event=self.instance.event, x=x, y=y) for x, y in seat_coords]
+                slot.seats.set(seats)
+                slot.save()
+            for slot in remaining_slots:
+                seats = [Seat.objects.get(event=self.instance.event, x=x, y=y) for x, y in seat_slots[str(slot.id)]]
+                slot.seats.set(seats)
+                slot.save()
+
+        return self.cleaned_data
+
+    class Meta:
+        """
+        Meta class for the form
+        """
+        model = Tournament
+        fields = "__all__"
+
+
 class TournamentAdmin(admin.ModelAdmin):
     """Admin handler for Tournaments"""
 
@@ -112,6 +351,14 @@ class TournamentAdmin(admin.ModelAdmin):
 
     list_filter = (EventTournamentFilter,GameTournamentFilter)
 
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        """
+        Use TournamentForm only for editing an existing tournament.
+        """
+        if obj is not None:
+            kwargs["form"] = TournamentForm
+        return super().get_form(request, obj, change, **kwargs)
+
     def get_occupancy(self, obj):
         """
         Returns the occupancy of the tournament
@@ -119,6 +366,15 @@ class TournamentAdmin(admin.ModelAdmin):
         return str(Team.objects.filter(tournament=obj, validated=True).count()) + " / " + str(obj.maxTeam)
 
     get_occupancy.short_description = 'Remplissage'
+
+    class Media:
+        css = {
+            'all': ('css/seat_canvas.css',)
+        }
+        js = (
+            'js/seat_canvas.js',
+            'js/tournament_seat_canvas.js',
+        )
 
 admin.site.register(Tournament, TournamentAdmin)
 
@@ -150,6 +406,35 @@ class TeamForm(forms.ModelForm):
             user_permissions.queryset = user_permissions.queryset.select_related(
                 "content_type"
             )
+
+        seat_slot = self.fields.get("seat_slot")
+        if (seat_slot and self.instance.tournament):
+            seat_slot.queryset = seat_slot.queryset.filter(
+                tournament=self.instance.tournament
+            ).filter(
+                team=None
+            )
+
+    def clean(self):
+        """
+        validate seat slot
+        """
+        seat_slot = self.cleaned_data.get("seat_slot")
+        tournament = self.cleaned_data.get("tournament") or self.instance.tournament
+
+        if seat_slot is not None:
+            # filters mean if it's not the same tournament, seat_slot is None => impossible
+            if seat_slot.tournament.id != tournament.id:
+                raise ValidationError(_("Ce slot appartient à un autre tournoi."))
+
+            # filters mean if it's used, seat_slot is None => impossible
+            if hasattr(seat_slot, "team") and seat_slot.team.id != self.instance.id:
+                raise ValidationError(_("Slot déjà utilisé."))
+
+            if seat_slot.seats.count() != tournament.game.players_per_team:
+                raise ValidationError(_("Slot inadapté au tournoi."))
+
+        return self.cleaned_data
 
 class TeamCreationForm(forms.ModelForm):
     """
@@ -856,3 +1141,65 @@ class SwissMatchAdmin(admin.ModelAdmin):
         self.message_user(request,_("Les matchs ont bien été lancés"))
 
 admin.site.register(SwissMatch, SwissMatchAdmin)
+
+
+class SeatAdmin(admin.ModelAdmin):
+    """Admin handler for Seating"""
+
+    list_display = ("id", "event", "x", "y")
+    search_fields = ["event"]
+    list_filter = ["event"]
+
+
+admin.site.register(Seat, SeatAdmin)
+
+class SeatSlotForm(forms.ModelForm):
+    class Meta:
+        model = SeatSlot
+        fields = ['tournament', 'seats']
+
+    def clean(self):
+        """
+        Validation for seat slot
+        """
+        seats = self.cleaned_data.get('seats')
+        tournament = self.cleaned_data.get('tournament')
+
+        # Ensure that the number of seats is consistent with the tournament
+        if seats and tournament:
+            if seats.count() != tournament.game.players_per_team:
+                raise ValidationError(
+                _("Le nombre de places est incorrect pour ce tournoi")
+                )
+
+        # Ensure that the seats are all in the same event
+        if seats:
+            event = seats.first().event
+            if not all([seat.event.id == event.id for seat in seats]):
+                raise ValidationError(
+                _("Les places doivent être dans le même événement")
+                )
+        
+        # Ensure that all seats are not part of another slot
+        if seats:
+            other_slots = SeatSlot.objects.exclude(id=self.instance.id)
+            other_seats = {seat for slot in other_slots for seat in slot.seats.all()}
+            if other_seats.intersection(seats):
+                raise ValidationError(
+                _("Les places ne peuvent pas être partagés entre plusieurs slots")
+                )
+
+        return self.cleaned_data
+
+
+class SeatSlotAdmin(admin.ModelAdmin):
+    """Admin handler for SeatSlot"""
+    list_display = ("id", "get_seats")
+    form = SeatSlotForm
+
+    @admin.display(description="Seats")
+    def get_seats(self, obj):
+        return ", ".join([f"({seat.x}, {seat.y})" for seat in obj.seats.all()])
+
+admin.site.register(SeatSlot, SeatSlotAdmin)
+
