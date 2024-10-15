@@ -10,7 +10,7 @@ from rest_framework import serializers
 from .models import Pizza, Order, TimeSlot, PizzaOrder, PizzaExport, PaymentMethod
 
 
-DUPLICATED_ORDER_DELTA_TIME: int = 5  # minutes
+DUPLICATED_ORDER_DELTA_TIME: int = 1  # minutes
 
 
 class PizzaSerializer(serializers.ModelSerializer):
