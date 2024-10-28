@@ -769,3 +769,38 @@ class ExportOrder(generics.ListCreateAPIView):
 
         # return the export (using get)
         return self.get(request, *args, **kwargs)
+
+class ExportOrderDelete(generics.DestroyAPIView):
+    """Delete an export by its id."""
+
+    pagination_class = None
+    queryset = PizzaExport.objects.all()
+    permission_classes = [permissions.IsAdminUser | ReadOnly]
+    serializer_class = serializers.PizzaExportSerializer
+
+    @swagger_auto_schema(
+        responses={
+            204: openapi.Response(description=_("Export supprimé.")),
+            403: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "detail": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Vous n'êtes pas autorisé à supprimer cet export.")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "detail": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Export non trouvé.")
+                    )
+                }
+            )
+        }
+    )
+    def delete(self, request, *args, **kwargs):
+        """Delete an export."""
+        return super().delete(request, *args, **kwargs)
