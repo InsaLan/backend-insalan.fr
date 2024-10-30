@@ -11,8 +11,8 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
 
-from . import team, caster, group, bracket, swiss
 from insalan.components.image_field import ImageField
+from . import team, caster, group, bracket, swiss
 
 def in_thirty_days():
     """Return now + 30 days"""
@@ -297,7 +297,7 @@ class Tournament(models.Model):
 
     def get_brackets_id(self) -> List[int]:
         return bracket.Bracket.objects.filter(tournament=self).values_list("id",flat=True)
-    
+
     def get_swissRounds(self) -> List["SwissRound"]:
         return swiss.SwissRound.objects.filter(tournament=self)
 

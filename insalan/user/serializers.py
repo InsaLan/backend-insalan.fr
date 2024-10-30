@@ -10,10 +10,10 @@ from django.core.validators import FileExtensionValidator
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from .models import User
 from insalan.mailer import MailManager
 from insalan.settings import EMAIL_AUTH
 
+from .models import User
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for an User"""

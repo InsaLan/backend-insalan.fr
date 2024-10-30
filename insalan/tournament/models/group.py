@@ -57,7 +57,7 @@ class Group(models.Model):
 
     def get_teams_seeding(self) -> List[Tuple["Team",int]]:
         return [(seeding.team,seeding.seeding) for seeding in Seeding.objects.filter(group=self)]
-    
+
     def get_sorted_teams(self) -> List["Team"]:
         teams = self.get_teams_seeding()
         teams.sort(key=lambda e: e[1])
@@ -65,7 +65,7 @@ class Group(models.Model):
 
     def get_round_count(self) -> int:
         return self.round_count
-    
+
     def get_leaderboard(self) -> Dict["Team",int]:
         leaderboard = {}
 
@@ -78,7 +78,7 @@ class Group(models.Model):
 
     def get_scores(self) -> Dict[int,int]:
         leaderboard = self.get_leaderboard()
-        
+
         return {team.id : score for team, score in leaderboard.items()}
 
     def get_matchs(self) -> List["GroupMatch"]:

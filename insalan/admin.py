@@ -23,7 +23,7 @@ def get_app_list(self, request, app_label=None):
             continue
         app = app_dict[app_name]
         # Sort the models
-        app['models'].sort(key=lambda x: object_list.index(x['object_name']))
+        app['models'].sort(key=lambda x, object_list=object_list: object_list.index(x['object_name']))
         app_list.append(app)
 
     return app_list

@@ -1,9 +1,10 @@
+import math
+from typing import List
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
-import math
 
-from typing import List
 
 from . import match, team
 

@@ -6,14 +6,10 @@ from django.core.validators import MinLengthValidator
 
 from django.utils.translation import gettext_lazy as _
 
-from insalan.tickets.models import Ticket
-from insalan.user.models import User
-
 from . import player
 from . import manager
 from . import substitute
 from . import group, bracket, swiss
-from . import seat_slot
 
 from . import validators
 from . import payement_status as ps

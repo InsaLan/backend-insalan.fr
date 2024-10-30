@@ -422,7 +422,7 @@ class SubstituteIdSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         """Turn a Django object into a serialized representation"""
         return instance.id
-    
+
 class SeatSlotSerializer(serializers.ModelSerializer):
     """Serializer for a SeatSlot"""
 

@@ -53,7 +53,7 @@ class EventDetails(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = serializers.EventSerializer
     queryset = Event.objects.all().order_by("id")
     permission_classes = [permissions.IsAdminUser | ReadOnly]
-    
+
     @swagger_auto_schema(
         request_body=serializers.EventSerializer,
         responses={
@@ -90,7 +90,7 @@ class EventDetails(generics.RetrieveUpdateDestroyAPIView):
     def put(self, request, *args, **kwargs):
         """Update an event"""
         return super().put(request, *args, **kwargs)
-    
+
     @swagger_auto_schema(
         responses={
             204: openapi.Schema(
@@ -125,7 +125,7 @@ class EventDetails(generics.RetrieveUpdateDestroyAPIView):
     def delete(self, request, *args, **kwargs):
         """Delete an event"""
         return super().delete(request, *args, **kwargs)
-    
+
     @swagger_auto_schema(
         responses={
             200: serializer_class,

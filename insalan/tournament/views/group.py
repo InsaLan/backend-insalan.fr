@@ -5,13 +5,13 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 import insalan.tournament.serializers as serializers
 
 from ..models import GroupMatch, validate_match_data
 from ..manage import update_match_score
-
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 
 class GroupMatchScore(generics.GenericAPIView):
     """Update score of a group match"""
@@ -75,18 +75,21 @@ class GroupMatchScore(generics.GenericAPIView):
 
         try:
             match = GroupMatch.objects.get(pk=kwargs["match_id"],group=kwargs["group_id"])
-        except:
-            raise NotFound()
+        except GroupMatch.DoesNotExist as e:
+            raise NotFound() from e
 
         if not match.is_user_in_match(user):
             raise PermissionDenied()
 
         error_response = validate_match_data(match, data)
-        if error_response != None:
+        if error_response is not None:
             return Response({k: _(v) for k,v in error_response.items()},status=status.HTTP_400_BAD_REQUEST)
 
         update_match_score(match,data)
 
         serializer = serializers.GroupMatchSerializer(match, context={"request": request})
 
-        return Response(status=status.HTTP_200_OK)
+        return Response(
+            status=status.HTTP_200_OK,
+            data=serializer.data
+        )
