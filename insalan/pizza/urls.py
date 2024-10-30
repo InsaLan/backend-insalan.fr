@@ -44,4 +44,5 @@ urlpatterns = [
    path("order/", views.OrderList.as_view(), name="order/list"),
    path("order/full/", views.OrderListFull.as_view(), name="order/list/full"),
    path("order/<int:pk>/", views.OrderDetail.as_view(), name="order/detail"),
+   path("export/<int:pk>/", views.ExportOrderDelete.as_view(), name="export/delete"),
 ]
