@@ -107,7 +107,7 @@ class PlayerRegistration(generics.RetrieveAPIView):
             }, status=status.HTTP_403_FORBIDDEN)
 
         if "name_in_game" in data:
-            if(valid_name(player.team.tournament.game, data["name_in_game"])):
+            if valid_name(player.team.tournament.game, data["name_in_game"]):
                 player.name_in_game = data["name_in_game"]
             else:
                 return Response(
@@ -122,7 +122,7 @@ class PlayerRegistration(generics.RetrieveAPIView):
                 {"player": str(exc)},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         serializer = serializers.PlayerSerializer(player, context={"request": request})
 
         return Response(serializer.data, status=status.HTTP_200_OK)

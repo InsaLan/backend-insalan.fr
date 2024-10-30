@@ -2,11 +2,9 @@
 
 from decimal import Decimal
 from io import BytesIO
-from types import NoneType
 
 from django.db.utils import IntegrityError
-from django.contrib.auth.models import Permission
-from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, TransactionTestCase

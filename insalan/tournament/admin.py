@@ -36,6 +36,7 @@ from insalan.tournament.manage import (
     create_group_matchs,
     create_swiss_matchs,
 )
+from insalan.admin import ADMIN_ORDERING
 
 from .models import (
     BestofType,
@@ -66,8 +67,6 @@ from .models import (
 
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
 
-from insalan.admin import ADMIN_ORDERING
-
 ADMIN_ORDERING += [
     ('tournament', [
         'Event',
@@ -97,9 +96,9 @@ class SeatCanvasWidget(forms.Widget):
     Custom widget for the seat canvas
     """
     def render(self, name, value, attrs=None, renderer=None):
-        id = attrs["id"] if attrs else "id_" + name
+        element_id = attrs["id"] if attrs else "id_" + name
         return (
-            f'<input id="{id}" type="hidden" name="{name}" value="" />'
+            f'<input id="{element_id}" type="hidden" name="{name}" value="" />'
             '<canvas id="seat_canvas" width="900" height="900" />'
         )
 
@@ -163,7 +162,7 @@ class EventAdmin(admin.ModelAdmin):
 
     list_display = ("id", "name", "description", "year", "month", "ongoing")
     search_fields = ["name", "year", "month", "ongoing"]
-    
+
     class Media:
         css = {
             'all': ('css/seat_canvas.css',)
@@ -594,9 +593,9 @@ class TeamAdmin(admin.ModelAdmin):
     change_password_form = AdminPasswordChangeForm
 
     @sensitive_post_parameters_m
-    def team_change_password(self, request, id, form_url=""):
+    def team_change_password(self, request, team_id, form_url=""):
         """Change the password of a team"""
-        team = Team.objects.get(pk=id)
+        team = Team.objects.get(pk=team_id)
         if not self.has_change_permission(request, team):
             raise PermissionDenied
         if team is None:
@@ -903,9 +902,9 @@ class GroupAdmin(admin.ModelAdmin):
         for group in queryset:
             matchs_status = GroupMatch.objects.filter(group=group).values_list("status", flat=True)
             if MatchStatus.ONGOING in matchs_status or MatchStatus.COMPLETED in matchs_status:
-               self.message_user(request,_("Impossible de créer les matchs, des matchs existent déjà et sont en cours ou terminés."),messages.ERROR)
-               return
- 
+                self.message_user(request,_("Impossible de créer les matchs, des matchs existent déjà et sont en cours ou terminés."),messages.ERROR)
+                return
+
             create_group_matchs(group)
             self.message_user(request,_("Matchs créés avec succes"))
 
@@ -1024,6 +1023,7 @@ class BracketAdmin(admin.ModelAdmin):
     @admin.action(description=_("Remplir les matchs"))
     def fill_knockout_matchs_action(self,request,queryset):
         for bracket in queryset:
+            # TODO: Fix this
             # fill_knockout_matchs(bracket)
             pass
 
@@ -1087,7 +1087,7 @@ class SwissRoundAdmin(admin.ModelAdmin):
     search_fields = ["tournament"]
     inlines = [SwissSeedingInline]
     actions = ["create_swiss_matchs_action"]
-    
+
     list_filter = ["tournament","tournament__game","tournament__event"]
 
     @admin.action(description=_("Créer les matchs du système suisse"))
@@ -1179,7 +1179,7 @@ class SeatSlotForm(forms.ModelForm):
                 raise ValidationError(
                 _("Les places doivent être dans le même événement")
                 )
-        
+
         # Ensure that all seats are not part of another slot
         if seats:
             other_slots = SeatSlot.objects.exclude(id=self.instance.id)
@@ -1202,4 +1202,3 @@ class SeatSlotAdmin(admin.ModelAdmin):
         return ", ".join([f"({seat.x}, {seat.y})" for seat in obj.seats.all()])
 
 admin.site.register(SeatSlot, SeatSlotAdmin)
-

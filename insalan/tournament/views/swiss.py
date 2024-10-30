@@ -71,18 +71,21 @@ class SwissMatchScore(generics.GenericAPIView):
 
         try:
             match = SwissMatch.objects.get(pk=kwargs["match_id"],swiss=kwargs["swiss_id"])
-        except:
-            raise NotFound()
+        except SwissMatch.DoesNotExist as e:
+            raise NotFound() from e
 
         if not match.is_user_in_match(user):
             raise PermissionDenied()
 
         error_response = validate_match_data(match, data)
-        if error_response != None:
+        if error_response is not None:
             return Response({k: _(v) for k,v in error_response.items()},status=status.HTTP_400_BAD_REQUEST)
 
         update_match_score(match,data)
 
         serializer = serializers.SwissMatchSerializer(match, context={"request": request})
 
-        return Response(status=status.HTTP_200_OK)
+        return Response(
+            status=status.HTTP_200_OK,
+            data=serializer.data
+        )

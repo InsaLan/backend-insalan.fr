@@ -16,9 +16,9 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.utils.decorators import method_decorator
 from insalan.tournament.models import Player, Manager, Substitute
 
-from .models import User
 from insalan.mailer import MailManager
 from insalan.settings import EMAIL_AUTH
+from .models import User
 
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
 
@@ -144,11 +144,11 @@ class CustomUserAdmin(UserAdmin):
         ] + super().get_urls()
 
     @sensitive_post_parameters_m
-    def resend_email(self, request, id, form_url=""):
+    def resend_email(self, request, user_id, form_url=""):
         """
         Resend the email to the user
         """
-        user = User.objects.get(pk=id)
+        user = User.objects.get(pk=user_id)
         if not self.has_change_permission(request, user):
             raise PermissionDenied
         if user is None:
@@ -156,7 +156,7 @@ class CustomUserAdmin(UserAdmin):
                 _("%(name)s object with primary key %(key)r does not exist.")
                 % {
                     "name": self.opts.verbose_name,
-                    "key": escape(id),
+                    "key": escape(user_id),
                 }
             )
         if user.has_perm("email_active"):

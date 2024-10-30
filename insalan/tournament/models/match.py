@@ -62,7 +62,7 @@ class Match(models.Model):
             models.Index(fields=["round_number"]),
             models.Index(fields=["index_in_round"]),
         ]
-    
+
     def get_team_count(self) -> int:
         return len(self.get_teams())
 
@@ -89,7 +89,7 @@ class Match(models.Model):
         """Minimum score for a team to be considered a winner"""
         if self.bo_type == BestofType.RANKING:
             return math.ceil(self.get_team_count()/2)
-        
+
         return math.ceil(self.get_total_max_score()/2)
 
     def is_user_in_match(self, user: User) -> bool:
@@ -98,7 +98,7 @@ class Match(models.Model):
             for player in team.get_players():
                 if player.as_user() == user:
                     return True
-        
+
         return False
 
     def get_scores(self) -> Dict[int,int]:
@@ -120,7 +120,7 @@ class Match(models.Model):
 
         for team in self.get_teams_id():
             if self.bo_type == BestofType.RANKING and scores[team] <= self.get_winning_score():
-                    winners.append((team,scores[team]))
+                winners.append((team,scores[team]))
             elif self.bo_type != BestofType.RANKING and scores[team] >= self.get_winning_score():
                 winners.append((team,scores[team]))
             else:

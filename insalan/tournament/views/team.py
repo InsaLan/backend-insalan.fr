@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.hashers import make_password
 
 from rest_framework import generics, permissions, status
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
 from drf_yasg.utils import swagger_auto_schema
@@ -118,8 +119,8 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
         # get the team
         try:
             team = Team.objects.get(id=kwargs["pk"])
-        except Team.DoesNotExist:
-            raise NotFound()
+        except Team.DoesNotExist as exc:
+            raise NotFound() from exc
 
         # check if the user is registered in the team
         player = Player.objects.filter(user=user, team=team)
@@ -206,7 +207,6 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
                 return Response({
                     "seat_slot": _("Slot inadapté au tournoi.")
                 }, status=status.HTTP_400_BAD_REQUEST)
-        
 
             team.seat_slot = seat_slot
 

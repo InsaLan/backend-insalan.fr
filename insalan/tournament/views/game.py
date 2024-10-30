@@ -123,7 +123,7 @@ class GameDetails(generics.RetrieveUpdateDestroyAPIView):
     def delete(self, request, *args, **kwargs):
         """Delete a game"""
         return super().delete(request, *args, **kwargs)
-    
+
     @swagger_auto_schema(
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,

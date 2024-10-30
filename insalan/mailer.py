@@ -1,17 +1,18 @@
 import logging
 import sys
 from django.contrib.auth.models import Permission
-from django.core.mail import EmailMessage, get_connection, send_mail
+from django.core.mail import EmailMessage, get_connection
 from django.contrib.auth.tokens import (
     PasswordResetTokenGenerator,
     default_token_generator,
 )
 from django.utils.translation import gettext_lazy as _
 
+from apscheduler.schedulers.background import BackgroundScheduler
+
 import insalan.settings
 from insalan.user.models import User
 from insalan.tickets.models import TicketManager
-from apscheduler.schedulers.background import BackgroundScheduler
 
 class EmailConfirmationTokenGenerator(PasswordResetTokenGenerator):
     """
