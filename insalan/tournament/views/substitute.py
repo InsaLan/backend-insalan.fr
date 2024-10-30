@@ -50,7 +50,7 @@ class SubstituteRegistration(generics.RetrieveAPIView):
         Get a substitute
         """
         return super().get(request, *args, **kwargs)
-        
+
     @swagger_auto_schema(
         responses={
             200: serializer_class,

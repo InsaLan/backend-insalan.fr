@@ -3,8 +3,10 @@ NameValidator class
 """
 from django.utils.translation import gettext_lazy as _
 from django.db import models
-from insalan.settings import RIOT_API_KEY
+
 import requests
+
+from insalan.settings import RIOT_API_KEY
 
 class EmptyNameValidator:
     """

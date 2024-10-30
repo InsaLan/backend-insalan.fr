@@ -76,14 +76,14 @@ class BracketMatchScore(generics.GenericAPIView):
 
         try:
             match = KnockoutMatch.objects.get(pk=kwargs["match_id"],bracket=kwargs["bracket_id"])
-        except:
-            raise NotFound()
+        except KnockoutMatch.DoesNotExist as e:
+            raise NotFound() from e
 
         if not match.is_user_in_match(user):
             raise PermissionDenied()
 
         error_response = validate_match_data(match, data)
-        if error_response != None:
+        if error_response is not None:
             return Response({k: _(v) for k,v in error_response.items()},status=status.HTTP_400_BAD_REQUEST)
 
         update_match_score(match,data)
@@ -93,4 +93,7 @@ class BracketMatchScore(generics.GenericAPIView):
 
         serializer = serializers.KnockoutMatchSerializer(match, context={"request": request})
 
-        return Response(status=status.HTTP_200_OK)
+        return Response(
+            status=status.HTTP_200_OK,
+            data=serializer.data
+        )

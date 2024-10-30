@@ -6,11 +6,8 @@ import logging
 
 import requests
 
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from django.http import JsonResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -47,7 +44,7 @@ class ProductList(generics.ListAPIView):
         Get all products
         """
         return super().get(request, *args, **kwargs)
-    
+
 
 class ProductDetails(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -68,7 +65,7 @@ class ProductDetails(generics.RetrieveUpdateDestroyAPIView):
         Get a product
         """
         return super().get(request, *args, **kwargs)
-    
+
     @swagger_auto_schema(
         request_body=serializers.ProductSerializer,
         responses={

@@ -185,7 +185,7 @@ class ManagerRegistrationListId(generics.ListAPIView):
     def get_queryset(self):
         """Obtain the queryset fot this view"""
         return Manager.objects.filter(user_id=self.kwargs["user_id"])
-    
+
     @swagger_auto_schema(
         responses={
             200: openapi.Schema(
@@ -235,7 +235,7 @@ class ManagerRegistrationListName(generics.ListAPIView):
         except User.DoesNotExist as exc:
             raise NotFound() from exc
         return Manager.objects.filter(user=user)
-    
+
     @swagger_auto_schema(
         responses={
             200: openapi.Schema(

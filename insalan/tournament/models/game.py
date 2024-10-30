@@ -84,7 +84,7 @@ class Game(models.Model):
     def get_team_per_match(self) -> int:
         """Return the maximum number of teams in a match"""
         return self.team_per_match
-    
+
     def get_name_validator(self):
         """Return the validators of the game"""
         return get_validator(self.validators)

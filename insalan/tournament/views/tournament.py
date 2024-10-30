@@ -1,6 +1,5 @@
 import math
-from django.core.exceptions import PermissionDenied, BadRequest
-from django.http import Http404
+from django.core.exceptions import PermissionDenied
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import generics, permissions, status
@@ -10,18 +9,18 @@ from rest_framework.authentication import SessionAuthentication
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
+from rest_framework.exceptions import NotFound
+
 from insalan.tickets.models import Ticket
 from insalan.user.models import User
 import insalan.tournament.serializers as serializers
 
 from ..models import (Player, Manager, Substitute, Event, Tournament, Game,
-                      Team, PaymentStatus, Group, Bracket, SwissRound,
+                      Team, Group, Bracket, SwissRound,
                       GroupMatch, KnockoutMatch, SwissMatch, Seeding, Score,
-                      BracketType, BracketSet, MatchStatus, BestofType,
+                      BracketType, BracketSet, MatchStatus,
                       SwissSeeding, SeatSlot, Seat)
-from .permissions import ReadOnly, Patch
-
-from rest_framework.exceptions import NotFound
+from .permissions import ReadOnly
 
 class TournamentList(generics.ListCreateAPIView):
     """List all known tournaments"""
@@ -83,7 +82,7 @@ class TournamentDetails(generics.RetrieveUpdateDestroyAPIView):
     def get(self, request, *args, **kwargs):
         """Get a tournament"""
         return super().get(request, *args, **kwargs)
-    
+
     @swagger_auto_schema(
         responses={
             200: serializer_class,
@@ -119,7 +118,7 @@ class TournamentDetails(generics.RetrieveUpdateDestroyAPIView):
     def patch(self, request, *args, **kwargs):
         """Patch a tournament"""
         return super().patch(request, *args, **kwargs)
-    
+
     @swagger_auto_schema(
         responses={
             204: openapi.Schema(
@@ -154,7 +153,7 @@ class TournamentDetails(generics.RetrieveUpdateDestroyAPIView):
     def delete(self, request, *args, **kwargs):
         """Delete a tournament"""
         return super().delete(request, *args, **kwargs)
-    
+
     @swagger_auto_schema(
         responses={
             200: serializer_class,
@@ -217,10 +216,10 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
             ).data
 
             del tourney_serialized["event"]["tournaments"]
-            
+
             # Add the seats
             tourney_serialized["event"]["seats"] = []
-            
+
             seats = Seat.objects.filter(event=tourney_serialized["event"]["id"])
             for seat in seats:
                 # Only add X and Y coord
@@ -289,7 +288,7 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
                     if not can_see_payment_status:
                         substitute["payment_status"] = None
                         del substitute["id"]
-                        
+
                 # Add seat_slot id or null
                 team_slot = SeatSlot.objects.filter(team=team["id"])
                 if team_slot.exists():
@@ -304,7 +303,7 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
 
             for group in tourney_serialized["groups"]:
                 group["teams"] = Seeding.objects.filter(group=group["id"]).values_list("team", flat=True)
-                
+
                 matches = GroupMatch.objects.filter(group=group["id"])
                 group["matchs"] = serializers.FullDerefGroupMatchSerializer(
                    matches, context={"request": request}, many=True
@@ -318,7 +317,7 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
                 group["scores"] = {team: sum(match["score"][team] for match in group["matchs"] if team in match["score"]) for team in group["teams"]}
 
                 # order teams by score
-                group["teams"] = sorted(group["teams"], key=lambda x: group["scores"][x], reverse=True)
+                group["teams"] = sorted(group["teams"], key=lambda x, scores=group["scores"]: scores[x], reverse=True)
 
             # deref bracket matchs and scores
             tourney_serialized["brackets"] = serializers.FullDerefBracketSerializer(
@@ -342,6 +341,7 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
                 bracket["teams"] = set(matches.values_list("teams", flat=True).filter(teams__isnull=False))
 
                 bracket["winner"] = None
+                final = []
 
                 if bracket["bracket_type"] == BracketType.SINGLE:
                     final = KnockoutMatch.objects.filter(round_number=1,index_in_round=1,bracket=bracket["id"],bracket_set=BracketSet.WINNER,status=MatchStatus.COMPLETED)
@@ -543,17 +543,17 @@ class TournamentMe(generics.RetrieveAPIView):
             ongoing_matchs += player.get_ongoing_match()
 
         if len(ongoing_matchs) > 0:
-            if type(ongoing_matchs[0]) == GroupMatch:
+            if isinstance(ongoing_matchs[0], GroupMatch):
                 ongoing_match = serializers.GroupMatchSerializer(ongoing_matchs[0],context={"request": request}).data
                 ongoing_match["match_type"] = {"type": "group", "id": ongoing_match["group"]}
                 del ongoing_match["group"]
 
-            if type(ongoing_matchs[0]) == KnockoutMatch:
+            if isinstance(ongoing_matchs[0], KnockoutMatch):
                 ongoing_match = serializers.KnockoutMatchSerializer(ongoing_matchs[0],context={"request": request}).data
                 ongoing_match["match_type"] = {"type": "bracket", "id": ongoing_match["bracket"]}
                 del ongoing_match["bracket"]
 
-            if type(ongoing_matchs[0]) == SwissMatch:
+            if isinstance(ongoing_matchs[0], SwissMatch):
                 ongoing_match = serializers.SwissMatchSerializer(ongoing_matchs[0],context={"request": request}).data
                 ongoing_match["match_type"] = {"type": "swiss", "id": ongoing_match["swiss"]}
                 del ongoing_match["swiss"]

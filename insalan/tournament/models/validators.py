@@ -25,13 +25,13 @@ def player_manager_user_unique_validator(user: User):
     tournament
     """
     p_regs = {
-        (obj.user, obj.team.tournament) for obj in player.Player.objects.filter(user=user)
+        (obj.user, obj.team.tournament) for obj in play.Player.objects.filter(user=user)
     }
     m_regs = {
-        (obj.user, obj.team.tournament) for obj in manager.Manager.objects.filter(user=user)
+        (obj.user, obj.team.tournament) for obj in manage.Manager.objects.filter(user=user)
     }
     s_regs = {
-        (obj.user, obj.team.tournament) for obj in substitute.Substitute.objects.filter(user=user)
+        (obj.user, obj.team.tournament) for obj in sub.Substitute.objects.filter(user=user)
     }
     if len(m_regs.intersection(p_regs)) > 0 or len(s_regs.intersection(p_regs)) > 0 or len(s_regs.intersection(m_regs)) > 0:
         raise ValidationError(

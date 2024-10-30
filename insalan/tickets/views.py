@@ -22,9 +22,9 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 from insalan.tournament.models import Team, Player, Substitute, Manager, PaymentStatus
 from insalan.user.models import User
-from .models import Ticket, TicketManager
 from insalan.mailer import MailManager
 from insalan.settings import EMAIL_AUTH
+from .models import Ticket, TicketManager
 
 @swagger_auto_schema(
     method='get',
@@ -441,7 +441,7 @@ def unpaid(request: HttpRequest) -> JsonResponse:
     """
     # Get all the registrations that are not paid
     players = Player.objects.filter(
-        team__validated=True, 
+        team__validated=True,
         team__tournament__event__ongoing=True
     ).exclude(payment_status=PaymentStatus.PAID)
     substitutes = Substitute.objects.filter(

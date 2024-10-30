@@ -25,4 +25,3 @@ class SeatSlot(models.Model):
 
         verbose_name = _("Slot")
         verbose_name_plural = _("Slots")
-
