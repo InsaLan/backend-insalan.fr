@@ -108,6 +108,7 @@ class EventSerializer(serializers.ModelSerializer):
             "ongoing",
             "tournaments",
             "logo",
+            "poster",
         ]
 
 
