@@ -1,5 +1,5 @@
 [MAIN]
-ignore-paths=.*/migrations 
+ignore-paths=.*/migrations
 
 disable=
     too-many-arguments,
@@ -12,3 +12,6 @@ disable=
     too-many-lines,
     cyclic-import,
     protected-access
+
+load-plugins=pylint_django
+django-settings-module=insalan.settings
