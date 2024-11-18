@@ -1185,6 +1185,7 @@ class TournamentFullDerefEndpoint(TestCase):
                 "month": 12,
                 "ongoing": False,
                 "logo": None,
+                "poster": None,
                 "seats": [
                     (
                         seat_one.x,
@@ -1467,6 +1468,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
                 }
             ],
             "logo": None,
+            "poster": None,
         }
         self.assertEqual(request.data, model)
 
@@ -1531,6 +1533,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
                 }
             ],
             "logo": None,
+            "poster": None,
         }
         self.assertEqual(request.data, model)
 

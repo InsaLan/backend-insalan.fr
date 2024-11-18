@@ -52,6 +52,15 @@ class Event(models.Model):
             FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp", "avif"])
         ],
     )
+    poster: models.FileField = ImageField(
+        verbose_name=_("Affiche"),
+        blank=True,
+        null=True,
+        upload_to="event-posters",
+        validators=[
+            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp", "avif"])
+        ],
+    )
 
     class Meta:
         """Meta options"""
