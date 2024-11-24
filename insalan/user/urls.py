@@ -14,7 +14,7 @@ urlpatterns = [
     ),
     path("get-csrf/", views.get_csrf, name="get-csrf"),
     path(
-        "confirm/<int:pk>/<str:token>",
+        "confirm/<int:pk>/<str:token>/",
         views.EmailConfirmView.as_view(),
         name="confirm-email",
     ),

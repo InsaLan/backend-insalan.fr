@@ -8,21 +8,21 @@ urlpatterns = [
     path("event/ongoing/", views.OngoingEventList.as_view(), name="event/ongoing"),
     path("event/<int:pk>/", views.EventDetails.as_view(), name="event/details"),
     path(
-        "event/<int:primary_key>/tournaments",
+        "event/<int:primary_key>/tournaments/",
         views.EventDetailsSomeDeref.as_view(),
         name="event/details-tournaments",
     ),
-    path("event/year/<int:year>", views.EventByYear.as_view(), name="event/by-year"),
+    path("event/year/<int:year>/", views.EventByYear.as_view(), name="event/by-year"),
     path("game/", views.GameList.as_view(), name="game/list"),
     path("game/<int:pk>/", views.GameDetails.as_view(), name="game/details"),
     path("tournament/", views.TournamentList.as_view(), name="tournament/list"),
     path(
         "tournament/<int:pk>/",
         views.TournamentDetails.as_view(),
-        name="tournament/details",
+        name="tournament/details/",
     ),
     path(
-        "tournament/<int:primary_key>/full",
+        "tournament/<int:primary_key>/full/",
         views.TournamentDetailsFull.as_view(),
         name="tournament/details-full",
     ),
@@ -76,7 +76,7 @@ urlpatterns = [
     #     name="group/list"
     # ),
     path(
-        "group/<int:group_id>/match/<int:match_id>",
+        "group/<int:group_id>/match/<int:match_id>/",
         views.GroupMatchScore.as_view(),
         name="group/match/score"
     ),
@@ -84,7 +84,7 @@ urlpatterns = [
     #     "bracket/"
     # ),
     path(
-        "bracket/<int:bracket_id>/match/<int:match_id>",
+        "bracket/<int:bracket_id>/match/<int:match_id>/",
         views.BracketMatchScore.as_view(),
         name="bracket/match/score"
     ),
@@ -92,7 +92,7 @@ urlpatterns = [
     #     "match/"
     # ),
     path(
-        "swiss/<int:swiss_id>/match/<int:match_id>",
+        "swiss/<int:swiss_id>/match/<int:match_id>/",
         views.SwissMatchScore.as_view(),
         name="swiss/match/score"
     ),

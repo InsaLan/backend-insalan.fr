@@ -34,7 +34,7 @@ urlpatterns = [
    path("pizza/<int:pk>/", views.PizzaDetail.as_view(), name="pizza/detail"),
    path("pizza/search/",views.PizzaSearch.as_view(), name="pizza/fuzzy-find"),
    path("pizza/by-timeslot/", views.PizzaListByTimeSlot.as_view(), name="pizza/list/by-timeslot"),
-   path("pizza/by-timeslot/<int:pk>", views.PizzaListByGivenTimeSlot.as_view(),
+   path("pizza/by-timeslot/<int:pk>/", views.PizzaListByGivenTimeSlot.as_view(),
         name="pizza/list/by-timeslot-id"),
    path("timeslot/", views.TimeSlotList.as_view(), name="timeslot/list"),
    path("timeslot/full/", views.TimeSlotListFull.as_view(), name="timeslot/list/full"),
