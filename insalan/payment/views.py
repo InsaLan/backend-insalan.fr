@@ -19,7 +19,7 @@ from drf_yasg import openapi
 import insalan.settings as app_settings
 import insalan.payment.serializers as serializers
 
-from .models import Transaction, TransactionStatus, Product, Payment
+from .models import Transaction, TransactionStatus, Product, Payment, Discount
 from .tokens import Token
 
 logger = logging.getLogger(__name__)
@@ -424,10 +424,21 @@ class PayView(generics.CreateAPIView):
                     {"err": _("Préconditions de paiement non remplies")},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            
+            amount = transaction_obj.amount
+            
+            # If the user has a discount for some products, apply them
+            for product in transaction_obj.products.all():
+                discounts = Discount.objects.filter(user=payer, product=product)
+                if discounts.exists():
+                    discount = discounts.first()
+                    amount = transaction_obj.amount - discount.discount
+                    # Add the discount to the transaction object
+                    transaction_obj.discounts.add(discount)
 
             # helloasso intent
             helloasso_amount = int(
-                transaction_obj.amount * 100
+                amount * 100
             )  # helloasso reads prices in cents
             intent_body = {
                 "totalAmount": helloasso_amount,

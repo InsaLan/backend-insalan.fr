@@ -85,6 +85,12 @@ class Product(models.Model):
         """Returns whether or not the product can be bought now"""
         return self.available_from <= timezone.now() <= self.available_until
 
+    def __str__(self):
+        """
+        Return the name of the product
+        """
+        return str(self.name)
+
 
 class Payment(models.Model):
     """
@@ -160,6 +166,11 @@ class Transaction(models.Model):
         max_digits=5,
         decimal_places=2,
         verbose_name=_("Montant"),
+    )
+    discounts = models.ManyToManyField(
+        "Discount",
+        blank=True,
+        verbose_name=_("Réductions")
     )
 
     @staticmethod
@@ -326,6 +337,10 @@ class Transaction(models.Model):
 
         self.payment_status = TransactionStatus.SUCCEEDED
         self.last_modification_date = timezone.make_aware(datetime.now())
+        # For each discount, mark it as used
+        for discount in self.discounts.all():
+            discount.use()
+        
         self.save()
         logger.info("Transaction %s succeeded", self.id)
         self.run_success_hooks()
@@ -378,3 +393,47 @@ class ProductCount(models.Model):
         null=True,
     )
     count = models.IntegerField(default=1, editable=True, verbose_name=_("Quantité"))
+
+
+class Discount(models.Model):
+    """
+    A discount is a temporary reduction of the price of a product
+    
+    A discount is tied to a user, a product and can be used only once
+    """
+
+    class Meta:
+        """Meta information"""
+
+        verbose_name = _("Réduction")
+        verbose_name_plural = _("Réductions")
+
+    id: int
+    user = models.ForeignKey(
+        User, null=True, on_delete=models.SET_NULL, verbose_name=_("Utilisateur")
+    )
+    product = models.ForeignKey(
+        Product, null=True, on_delete=models.SET_NULL, verbose_name=_("Produit")
+    )
+    discount = models.DecimalField(
+        null=False, max_digits=5, decimal_places=2, verbose_name=_("Réduction")
+    )
+    reason = models.CharField(max_length=200, verbose_name=_("Motif"))
+    creation_date = models.DateTimeField(
+        verbose_name=_("Date de création"),
+        editable=False,
+        default=timezone.now
+    )
+    used = models.BooleanField(default=False, verbose_name=_("Utilisé"))
+    used_date = models.DateTimeField(
+        verbose_name=_("Date d'utilisation"),
+        editable=False,
+        null=True,
+        blank=True
+    )
+
+    def use(self):
+        """Use the discount"""
+        self.used = True
+        self.used_date = timezone.make_aware(datetime.now())
+        self.save()
