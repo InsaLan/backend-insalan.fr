@@ -309,7 +309,7 @@ class UserEndToEndTestCase(TestCase):
 
         self.assertFalse(User.objects.get(username=data["username"]).is_email_active())
         match = re.match(
-            ".*https?://[^ ]*/(?P<user_pk>[^ /]*)/(?P<token>[^ /]*)",
+            ".*https?://[^ ]*/(?P<user_pk>[^ /]*)/(?P<token>[^ /]*)/",
             mail.outbox[0].body,
         )
 
@@ -318,7 +318,7 @@ class UserEndToEndTestCase(TestCase):
 
         self.assertEqual(match_user_pk, user_pk)
 
-        request = self.client.get(f"/v1/user/confirm/{match_user_pk}/{token}")
+        request = self.client.get(f"/v1/user/confirm/{match_user_pk}/{token}/")
         self.assertEqual(request.status_code, 200)
 
         self.assertTrue(User.objects.get(username=data["username"]).is_email_active())
@@ -339,17 +339,17 @@ class UserEndToEndTestCase(TestCase):
         self.client.post("/v1/user/register/", data, format="json")
         user_pk = User.objects.get(username=data["username"]).pk
         match = re.match(
-            ".*https?://[^ ]*/(?P<user_pk>[^ /]*)/(?P<token>[^ /]*)",
+            ".*https?://[^ ]*/(?P<user_pk>[^ /]*)/(?P<token>[^ /]*)/",
             mail.outbox[0].body,
         )
 
         match_user_pk = match["user_pk"]
         token = match["token"]
 
-        request = self.client.get(f"/v1/user/confirm/{match_user_pk}/{token}")
+        request = self.client.get(f"/v1/user/confirm/{match_user_pk}/{token}/")
         self.assertEqual(request.status_code, 200)
 
-        request = self.client.get(f"/v1/user/confirm/{match_user_pk}/{token}")
+        request = self.client.get(f"/v1/user/confirm/{match_user_pk}/{token}/")
         self.assertEqual(request.status_code, 400)
 
     def test_confirmation_email_is_token_checked(self):
@@ -367,7 +367,7 @@ class UserEndToEndTestCase(TestCase):
 
         self.client.post("/v1/user/register/", data, format="json")
         match = re.match(
-            ".*https?://[^ ]*/(?P<username>[^ /]*)/(?P<token>[^ /]*)",
+            ".*https?://[^ ]*/(?P<username>[^ /]*)/(?P<token>[^ /]*)/",
             mail.outbox[0].body,
         )
 
@@ -377,7 +377,7 @@ class UserEndToEndTestCase(TestCase):
         token[-1] = "x"
         token = "".join(token)
 
-        request = self.client.get(f"/v1/user/confirm/{username}/{token}")
+        request = self.client.get(f"/v1/user/confirm/{username}/{token}/")
 
         self.assertEqual(request.status_code, 400)
 
@@ -551,7 +551,7 @@ class UserEndToEndTestCase(TestCase):
 
         match = re.search(
             # "https?://[^ ]*/password-reset/ask[^ ]*",
-            ".*https?://[^ ]*/(?P<user_pk>[^ &]*)/(?P<token>[^ /]*)",
+            ".*https?://[^ ]*/(?P<user_pk>[^ &]*)/(?P<token>[^ /]*)/",
             mail.outbox[0].body,
         )
 
@@ -599,7 +599,7 @@ class UserEndToEndTestCase(TestCase):
 
         match = re.search(
             # "https?://[^ ]*/password-reset/ask[^ ]*",
-            ".*https?://[^ ]*/(?P<user_pk>[^ &]*)/(?P<token>[^ /]*)",
+            ".*https?://[^ ]*/(?P<user_pk>[^ &]*)/(?P<token>[^ /]*)/",
             mail.outbox[0].body,
         )
 
@@ -642,7 +642,7 @@ class UserEndToEndTestCase(TestCase):
         self.client.post("/v1/user/password-reset/ask/", data, format="json")
 
         match = re.search(
-            ".*https?://[^ ]*/(?P<username>[^ &]*)/(?P<token>[^ /]*)",
+            ".*https?://[^ ]*/(?P<username>[^ &]*)/(?P<token>[^ /]*)/",
             mail.outbox[0].body,
         )
 

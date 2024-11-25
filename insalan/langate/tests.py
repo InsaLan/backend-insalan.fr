@@ -73,7 +73,7 @@ class EndpointTests(TestCase):
         """
         Tests that the API endpoint refuses to give information without auth
         """
-        request = self.client.post("/v1/langate/authenticate", format="json")
+        request = self.client.post("/v1/langate/authenticate/", format="json")
         self.assertEqual(request.status_code, 400)
 
     def test_authenticated_user(self):
@@ -91,7 +91,7 @@ class EndpointTests(TestCase):
             "username": "limefox",
             "password": "bad_pass"
         }
-        reply = self.client.post('/v1/langate/authenticate', data)
+        reply = self.client.post('/v1/langate/authenticate/', data)
         self.assertEqual(reply.status_code, 404)
 
         ser = reply.data
@@ -124,7 +124,7 @@ class EndpointTests(TestCase):
             "username": "limefox",
             "password": "bad_pass"
         }
-        reply = self.client.post('/v1/langate/authenticate', data)
+        reply = self.client.post('/v1/langate/authenticate/', data)
         # No ongoing event triggers a 500
         self.assertEqual(reply.status_code, 500)
 
@@ -151,7 +151,7 @@ class EndpointTests(TestCase):
             "username": "limefox",
             "password": "bad_pass"
         }
-        reply = self.client.post('/v1/langate/authenticate', data)
+        reply = self.client.post('/v1/langate/authenticate/', data)
         self.assertEqual(reply.status_code, 200)
 
         ser = reply.data
@@ -189,7 +189,7 @@ class EndpointTests(TestCase):
             "username": "limefox",
             "password": "bad_pass"
         }
-        reply = self.client.post('/v1/langate/authenticate', data)
+        reply = self.client.post('/v1/langate/authenticate/', data)
         self.assertEqual(reply.status_code, 200)
 
         ser = reply.data
@@ -227,7 +227,7 @@ class EndpointTests(TestCase):
             "username": "limefox",
             "password": "bad_pass"
         }
-        reply = self.client.post('/v1/langate/authenticate', data)
+        reply = self.client.post('/v1/langate/authenticate/', data)
         self.assertEqual(reply.status_code, 200)
 
         ser = reply.data
@@ -266,7 +266,7 @@ class EndpointTests(TestCase):
             "username": "limefox",
             "password": "bad_pass"
         }
-        reply = self.client.post('/v1/langate/authenticate', data)
+        reply = self.client.post('/v1/langate/authenticate/', data)
         self.assertEqual(reply.status_code, 200)
 
         ser = reply.data
@@ -312,7 +312,7 @@ class EndpointTests(TestCase):
             "username": "limefox",
             "password": "bad_pass"
         }
-        reply = self.client.post('/v1/langate/authenticate', data)
+        reply = self.client.post('/v1/langate/authenticate/', data)
         self.assertEqual(reply.status_code, 200)
 
         ser = reply.data

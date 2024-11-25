@@ -62,7 +62,7 @@ class UserMailer:
         email = EmailMessage(
             insalan.settings.EMAIL_SUBJECT_PREFIX + _("Confirmez votre courriel"),
             _("Confirmez votre adresse de courriel en cliquant sur ") +
-            f"{insalan.settings.PROTOCOL}://{insalan.settings.WEBSITE_HOST}/verification/{user}/{token}",
+            f"{insalan.settings.PROTOCOL}://{insalan.settings.WEBSITE_HOST}/verification/{user}/{token}/",
             self.mail_from,
             [user_object.email],
             connection=connection,
@@ -94,7 +94,7 @@ class UserMailer:
                 "pour votre compte. Si vous êtes à l'origine de cette demande, "
                 "vous pouvez cliquer sur le lien suivant: "
             ) +
-            f"{insalan.settings.PROTOCOL}://{insalan.settings.WEBSITE_HOST}/reset-password/{user}/{token}",
+            f"{insalan.settings.PROTOCOL}://{insalan.settings.WEBSITE_HOST}/reset-password/{user}/{token}/",
             self.mail_from,
             [user_object.email],
             connection=connection,

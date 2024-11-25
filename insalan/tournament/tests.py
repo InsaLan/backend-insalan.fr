@@ -1101,7 +1101,7 @@ class TournamentFullDerefEndpoint(TestCase):
         not_used = max(candidates) + 1
 
         request = self.client.get(
-            f"/v1/tournament/tournament/{not_used}/full", format="sjon"
+            f"/v1/tournament/tournament/{not_used}/full/", format="sjon"
         )
         self.assertEqual(request.status_code, 404)
 
@@ -1395,7 +1395,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
         """Test what happens when events are in the database but we query an empty year"""
         self.create_multiple_events()
 
-        request = self.client.get("/v1/tournament/event/year/2020", format="json")
+        request = self.client.get("/v1/tournament/event/year/2020/", format="json")
 
         self.assertEqual(request.status_code, 200)
         self.assertEqual(len(request.data), 0)
@@ -1404,7 +1404,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
         """Test what happens when one event is found"""
         self.create_multiple_events()
 
-        request = self.client.get("/v1/tournament/event/year/2018", format="json")
+        request = self.client.get("/v1/tournament/event/year/2018/", format="json")
 
         self.assertEqual(request.status_code, 200)
         self.assertEqual(len(request.data), 1)
@@ -1413,7 +1413,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
         """Test what happens when multiple events are found"""
         self.create_multiple_events()
 
-        request = self.client.get("/v1/tournament/event/year/2019", format="json")
+        request = self.client.get("/v1/tournament/event/year/2019/", format="json")
         self.assertEqual(request.status_code, 200)
         self.assertEqual(len(request.data), 2)
 
@@ -1421,7 +1421,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
         """Test that if you put anything but a year it's not recognized"""
         self.create_multiple_events()
 
-        request = self.client.get("/v1/tournament/event/year/00d1686a", format="json")
+        request = self.client.get("/v1/tournament/event/year/00d1686a/", format="json")
         self.assertEqual(request.status_code, 404)
 
     def test_deref_not_found(self):
@@ -1431,7 +1431,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
             not_assigned_list = [1]
         not_assigned = max(not_assigned_list) + 1
         request = self.client.get(
-            f"/v1/tournament/event/{not_assigned}/tournaments", format="json"
+            f"/v1/tournament/event/{not_assigned}/tournaments/", format="json"
         )
 
         self.assertEqual(request.status_code, 404)
@@ -1449,7 +1449,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
         )
 
         request = self.client.get(
-            f"/v1/tournament/event/{evobj.id}/tournaments", format="json"
+            f"/v1/tournament/event/{evobj.id}/tournaments/", format="json"
         )
 
         self.assertEqual(request.status_code, 200)
@@ -1485,7 +1485,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
         )
 
         request = self.client.get(
-            f"/v1/tournament/event/{evobj.id}/tournaments", format="json"
+            f"/v1/tournament/event/{evobj.id}/tournaments/", format="json"
         )
 
         self.assertEqual(request.status_code, 200)
