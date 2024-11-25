@@ -195,7 +195,7 @@ class Tournament(models.Model):
         if self.player_online_product is None:
             prod = Product.objects.create(
                 price=self.player_price_online,
-                name=_(f"Place {self.name} Joueur en ligne"),
+                name=_(f"Place {self.name} Joueur en ligne - {self.event.name}"),
                 desc=_(f"Inscription au tournoi {self.name} joueur"),
                 category=ProductCategory.REGISTRATION_PLAYER,
                 associated_tournament=self,
@@ -212,7 +212,7 @@ class Tournament(models.Model):
         if self.manager_online_product is None:
             prod = Product.objects.create(
                 price=self.manager_price_online,
-                name=_(f"Place {self.name} manager en ligne"),
+                name=_(f"Place {self.name} manager en ligne - {self.event.name}"),
                 desc=_(f"Inscription au tournoi {self.name} manager"),
                 category=ProductCategory.REGISTRATION_MANAGER,
                 associated_tournament=self,
@@ -229,7 +229,7 @@ class Tournament(models.Model):
         if self.substitute_online_product is None:
             prod = Product.objects.create(
                 price=self.substitute_price_online,
-                name=_(f"Place {self.name} remplaçant en ligne"),
+                name=_(f"Place {self.name} remplaçant en ligne - {self.event.name}"),
                 desc=_(f"Inscription au tournoi {self.name} remplaçant"),
                 category=ProductCategory.REGISTRATION_SUBSTITUTE,
                 associated_tournament=self,
