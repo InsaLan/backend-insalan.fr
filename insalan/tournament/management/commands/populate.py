@@ -22,6 +22,7 @@ from insalan.tournament.models import (
     Team,
     Player,
     Manager,
+    Substitute,
     PaymentStatus,
 )
 from insalan.user.models import User
@@ -111,7 +112,8 @@ class Command(BaseCommand):
                     description=generate_garbage(randint(2, 127)),
                     year=randint(2003, 2024),
                     month=randint(1, 13),
-                    ongoing=randint(0, 100) < 20,
+                    ongoing=randint(0, 100) < 50,
+                    logo=self.generate_logo(),
                 )
             )
             print(events[-1])
@@ -144,6 +146,15 @@ class Command(BaseCommand):
                     game=Game.objects.get(id=game_id),
                     name="tourney_" + generate_garbage(randint(18, 26)),
                     rules=generate_garbage(randint(40000, 45000)),
+                    maxTeam=randint(1, 10),
+                    logo=self.generate_logo(),
+                    is_announced=randint(0, 100) < 50,
+                    player_price_online=randint(0, 50),
+                    player_price_onsite=randint(0, 50),
+                    manager_price_online=randint(0, 50),
+                    manager_price_onsite=randint(0, 50),
+                    substitute_price_online=randint(0, 50),
+                    substitute_price_onsite=randint(0, 50),
                 )
                 print(tourney)
 
@@ -154,7 +165,12 @@ class Command(BaseCommand):
             return
         user = User.objects.get(id=user_id)
         team = Team.objects.create(tournament=tourney, name="sp_" + user.username[5:17])
-        Player.objects.create(team=team, user=user, payment_status=payment_random())
+        Player.objects.create(
+            team=team,
+            user=user,
+            payment_status=payment_random(),
+            name_in_game=generate_garbage(randint(5, 15)),
+        )
         print(f"\r    [{team}] \u2713", end="\r")
 
     def generate_games(self):
@@ -167,6 +183,7 @@ class Command(BaseCommand):
                 Game.objects.create(
                     name=f"Game {randint(0, 127)}",
                     short_name=f"G{randint(0, 99)}",
+                    players_per_team=randint(1, 10),
                 )
             )
             print(games[-1])
@@ -189,6 +206,7 @@ class Command(BaseCommand):
                 user=User.objects.get(id=user_id),
                 team=team,
                 payment_status=payment_random(),
+                name_in_game=generate_garbage(randint(5, 15)),
             )
             print(".", end="", flush=True)
 
@@ -201,6 +219,19 @@ class Command(BaseCommand):
                 user=User.objects.get(id=user_id),
                 team=team,
                 payment_status=payment_random(),
+            )
+            print(".", end="", flush=True)
+
+        for _ in range(choice([0, 1, 1, 2])):
+            # Regiter a substitute
+            user_id = pull_id(pool_of_users)
+            if user_id is None:
+                break
+            Substitute.objects.create(
+                user=User.objects.get(id=user_id),
+                team=team,
+                payment_status=payment_random(),
+                name_in_game=generate_garbage(randint(5, 15)),
             )
             print(".", end="", flush=True)
         print(f"\r    [{team}] \u2713    ")
