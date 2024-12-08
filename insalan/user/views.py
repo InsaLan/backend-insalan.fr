@@ -365,7 +365,7 @@ class ResetPassword(APIView):
             properties={
                 "user": openapi.Schema(
                     type=openapi.TYPE_STRING,
-                    description=_("Nom d'utilisateur")
+                    description=_("Id d'utilisateur")
                 ),
                 "token": openapi.Schema(
                     type=openapi.TYPE_STRING,
@@ -421,7 +421,7 @@ class ResetPassword(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
-            user_object: User = User.object.get(username=data["user"])
+            user_object: User = User.object.get(pk=data["user"])
             if default_token_generator.check_token(user_object, data["token"]):
                 if data["password"] == data["password_confirm"]:
                     try:

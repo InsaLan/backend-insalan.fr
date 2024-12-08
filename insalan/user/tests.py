@@ -557,10 +557,10 @@ class UserEndToEndTestCase(TestCase):
 
         user_pk = match["user_pk"]
         token = match["token"]
-        username = User.objects.get(id=user_pk).username
+        username = User.objects.get(pk=user_pk).username
 
         data = {
-            "user": username,
+            "user": user_pk,
             "token": token,
             "password": "UwU*nuzzles*621!",
             "password_confirm": "UwU*nuzzles*621!",
@@ -605,10 +605,9 @@ class UserEndToEndTestCase(TestCase):
 
         user_pk = match["user_pk"]
         token = match["token"]
-        username = User.objects.get(id=user_pk).username
 
         data = {
-            "user": username,
+            "user": user_pk,
             "token": token,
             "password": "UwU*nuzzles*621!",
             "password_confirm": "UwU*nuzzles*621!",
@@ -620,7 +619,7 @@ class UserEndToEndTestCase(TestCase):
         self.assertEqual(request.status_code, 200)
 
         data = {
-            "user": username,
+            "user": user_pk,
             "token": token,
             "password": "UwU*nuzzles*926!",
             "password_confirm": "UwU*nuzzles*926!",
@@ -642,18 +641,18 @@ class UserEndToEndTestCase(TestCase):
         self.client.post("/v1/user/password-reset/ask/", data, format="json")
 
         match = re.search(
-            ".*https?://[^ ]*/(?P<username>[^ &]*)/(?P<token>[^ /]*)/",
+            ".*https?://[^ ]*/(?P<user_pk>[^ &]*)/(?P<token>[^ /]*)/",
             mail.outbox[0].body,
         )
 
-        username = match["username"]
+        user_pk = match["user_pk"]
         token = match["token"]
         token = list(token)
         token[-1] = "x"
         token = "".join(token)
 
         data = {
-            "user": username,
+            "user": user_pk,
             "token": token,
             "password": "UwU*nuzzles*621!",
             "password_confirm": "UwU*nuzzles*621!",
