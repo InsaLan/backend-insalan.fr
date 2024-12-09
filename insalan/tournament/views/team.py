@@ -186,6 +186,10 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
                     substitute.delete()
 
         if "seat_slot" in data:
+            if not team.validated:
+                return Response({
+                    "seat_slot": _("Équipe non validée.")
+                }, status=status.HTTP_400_BAD_REQUEST)
             try:
                 seat_slot = SeatSlot.objects.get(id=data["seat_slot"])
             except SeatSlot.DoesNotExist:
