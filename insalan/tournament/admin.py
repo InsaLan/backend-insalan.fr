@@ -585,7 +585,7 @@ class TeamAdmin(admin.ModelAdmin):
     def get_urls(self):
         return [
             path(
-                "<id>/password/",
+                "<team_id>/password/",
                 self.admin_site.admin_view(self.team_change_password),
                 name="auth_team_password_change",
             ),
@@ -593,7 +593,7 @@ class TeamAdmin(admin.ModelAdmin):
     change_password_form = AdminPasswordChangeForm
 
     @sensitive_post_parameters_m
-    def team_change_password(self, request, team_id, form_url=""):
+    def team_change_password(self, request, team_id, form_url="", *args, **kwargs):
         """Change the password of a team"""
         team = Team.objects.get(pk=team_id)
         if not self.has_change_permission(request, team):
