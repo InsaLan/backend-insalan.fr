@@ -424,17 +424,19 @@ class PayView(generics.CreateAPIView):
                     {"err": _("Préconditions de paiement non remplies")},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            
+
             amount = transaction_obj.amount
-            
+
             # If the user has a discount for some products, apply them
             for product in transaction_obj.products.all():
                 discounts = Discount.objects.filter(user=payer, product=product, used=False)
-                if discounts.exists():
-                    discount = discounts.first()
-                    amount = transaction_obj.amount - discount.discount
-                    # Add the discount to the transaction object
-                    transaction_obj.discounts.add(discount)
+                for discount in discounts:
+                    # Check if the discount is applicable
+                    if amount >= discount.discount:
+                        amount -= discount.discount
+
+                        # Add the discount to the transaction object
+                        transaction_obj.discounts.add(discount)
 
             # helloasso intent
             helloasso_amount = int(
