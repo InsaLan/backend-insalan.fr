@@ -340,7 +340,7 @@ class Transaction(models.Model):
         # For each discount, mark it as used
         for discount in self.discounts.all():
             discount.use()
-        
+
         self.save()
         logger.info("Transaction %s succeeded", self.id)
         self.run_success_hooks()
@@ -394,6 +394,10 @@ class ProductCount(models.Model):
     )
     count = models.IntegerField(default=1, editable=True, verbose_name=_("Quantité"))
 
+# Discount
+
+class DiscountAlreadyUsedError(Exception):
+    """Error raised when trying to use an already used discount"""
 
 class Discount(models.Model):
     """
@@ -434,6 +438,8 @@ class Discount(models.Model):
 
     def use(self):
         """Use the discount"""
+        if self.used:
+            raise DiscountAlreadyUsedError("Discount already used")
         self.used = True
         self.used_date = timezone.make_aware(datetime.now())
         self.save()

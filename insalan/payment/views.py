@@ -429,7 +429,7 @@ class PayView(generics.CreateAPIView):
             
             # If the user has a discount for some products, apply them
             for product in transaction_obj.products.all():
-                discounts = Discount.objects.filter(user=payer, product=product)
+                discounts = Discount.objects.filter(user=payer, product=product, used=False)
                 if discounts.exists():
                     discount = discounts.first()
                     amount = transaction_obj.amount - discount.discount
