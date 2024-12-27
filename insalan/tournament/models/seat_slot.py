@@ -20,6 +20,9 @@ class SeatSlot(models.Model):
         verbose_name=_("Place"),
     )
 
+    def __str__(self):
+        return f"SeatSlot {self.id} for {self.tournament.name}"
+
     class Meta:
         """Meta Options"""
 

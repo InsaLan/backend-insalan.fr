@@ -29,6 +29,7 @@ from django.utils.decorators import method_decorator
 from django.utils.html import escape
 from django.utils.translation import gettext as _
 from django.views.decorators.debug import sensitive_post_parameters
+from django.db.models import Q
 
 from insalan.mailer import MailManager
 from insalan.tournament.manage import (
@@ -411,7 +412,7 @@ class TeamForm(forms.ModelForm):
             seat_slot.queryset = seat_slot.queryset.filter(
                 tournament=self.instance.tournament
             ).filter(
-                team=None
+                Q(team=None) | Q(team=self.instance)
             )
 
     def clean(self):
