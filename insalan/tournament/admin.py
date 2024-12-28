@@ -36,6 +36,7 @@ from insalan.tournament.manage import (
     create_empty_knockout_matchs,
     create_group_matchs,
     create_swiss_matchs,
+    launch_match,
 )
 from insalan.admin import ADMIN_ORDERING
 
@@ -48,6 +49,7 @@ from .models import (
     Game,
     Group,
     GroupMatch,
+    GroupTiebreakScore,
     KnockoutMatch,
     Manager,
     MatchStatus,
@@ -89,6 +91,7 @@ ADMIN_ORDERING += [
         'KnockoutMatch',
         'SwissRound',
         'SwissMatch',
+        'GroupTiebreakScore'
     ]),
 ]
 
@@ -952,15 +955,7 @@ class GroupMatchAdmin(admin.ModelAdmin):
                             self.message_user(request,_(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"), messages.ERROR)
                             return
 
-                if len(match.get_teams()) == 1:
-                    match.status = MatchStatus.COMPLETED
-                    score = Score.objects.get(team=match.get_teams()[0],match=match)
-                    score.score = match.get_winning_score()
-                    score.save()
-                else:
-                    match.status = MatchStatus.ONGOING
-
-                match.save()
+                launch_match(match)
         self.message_user(request,_("Les matchs ont bien été lancés"))
 
 
@@ -1069,15 +1064,7 @@ class KnockoutMatchAdmin(admin.ModelAdmin):
                             self.message_user(request,_(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"), messages.ERROR)
                             return
 
-                if len(match.get_teams()) == 1:
-                    match.status = MatchStatus.COMPLETED
-                    score = Score.objects.get(team=match.get_teams()[0],match=match)
-                    score.score = match.get_winning_score()
-                    score.save()
-                else:
-                    match.status = MatchStatus.ONGOING
-
-                match.save()
+                launch_match(match)
         self.message_user(request,_("Les matchs ont bien été lancés"))
 
 
@@ -1143,15 +1130,7 @@ class SwissMatchAdmin(admin.ModelAdmin):
                             self.message_user(request,_(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"), messages.ERROR)
                             return
 
-                if len(match.get_teams()) == 1:
-                    match.status = MatchStatus.COMPLETED
-                    score = Score.objects.get(team=match.get_teams()[0],match=match)
-                    score.score = match.get_winning_score()
-                    score.save()
-                else:
-                    match.status = MatchStatus.ONGOING
-
-                match.save()
+                launch_match(match)
         self.message_user(request,_("Les matchs ont bien été lancés"))
 
 admin.site.register(SwissMatch, SwissMatchAdmin)
