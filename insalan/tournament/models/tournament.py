@@ -160,6 +160,13 @@ class Tournament(models.Model):
         verbose_name=_("Description du tournoi"),
         max_length=300,
     )
+    description_bottom = models.CharField(
+        null=False,
+        blank=True,
+        default='',
+        verbose_name=_("Description du tournoi en bas de page"),
+        max_length=300,
+    )
     planning = models.CharField(
         null=False,
         blank=True,
