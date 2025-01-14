@@ -1248,6 +1248,7 @@ class TournamentFullDerefEndpoint(TestCase):
             "logo": None,
             "validated_teams": 0,
             "description": "",
+            "description_bottom": "",
             "casters": [],
             "planning": "",
             "groups" : [],
@@ -1525,6 +1526,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
                     "substitute_online_product": tourney.substitute_online_product.id,
                     "player_online_product": tourney.player_online_product.id,
                     "description": "",
+                    "description_bottom": "",
                     "casters": [],
                     "planning": "",
                     "groups" : [],
@@ -2736,9 +2738,9 @@ class TournamentTeamEndpoints(TestCase):
 
         # slot already occupied
         team2 = Team.objects.create(
-            name="Nom d'équipe 2", 
+            name="Nom d'équipe 2",
             tournament=trnm2,
-            password=make_password("password"), 
+            password=make_password("password"),
             seat_slot=seat_slot2
         )
         request = self.client.patch(
