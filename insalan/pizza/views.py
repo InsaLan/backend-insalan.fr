@@ -775,13 +775,62 @@ class ExportOrder(generics.ListCreateAPIView):
         # return the export (using get)
         return self.get(request, *args, **kwargs)
 
-class ExportOrderDelete(generics.DestroyAPIView):
+class ExportOrderDetails(generics.RetrieveDestroyAPIView):
     """Delete an export by its id."""
 
     pagination_class = None
     queryset = PizzaExport.objects.all()
-    permission_classes = [permissions.IsAdminUser | ReadOnly]
+    permission_classes = [permissions.IsAdminUser]
     serializer_class = serializers.PizzaExportSerializer
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "id": openapi.Schema(
+                        type=openapi.TYPE_INTEGER,
+                        description=_("Identifiant de l'export")
+                    ),
+                    "orders": openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        description=_("Commandes exportées")
+                    ),
+                    "created_at": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Date d'export")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Timeslot non trouvé")
+                    )
+                }
+            )
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        """Get an export by its id."""
+        if not PizzaExport.objects.filter(id=self.kwargs["pk"]).exists():
+            return Response({"detail": _("Not found.")}, status=404)
+        export = PizzaExport.objects.get(id=self.kwargs["pk"])
+        serializer = serializers.PizzaExportSerializer(export).data
+
+        pizza_count = {}
+        for order in serializer["orders"]:
+            order = Order.objects.get(id=order)
+            for pizza in order.pizza.all():
+                if pizza.name not in pizza_count:
+                    pizza_count[pizza.name] = 1
+                else:
+                    pizza_count[pizza.name] += 1
+
+        serializer["orders"] = pizza_count
+        return Response(serializer)
 
     @swagger_auto_schema(
         responses={
