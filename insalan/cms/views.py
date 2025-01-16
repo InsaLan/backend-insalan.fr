@@ -2,6 +2,7 @@
 This module contains views for handling content and constants in the CMS (Content Management System) of the Insalan website.
 """
 from rest_framework import generics
+from rest_framework.response import Response
 
 from insalan.cms import serializers
 
@@ -64,3 +65,26 @@ class FileFetch(generics.ListAPIView):
 
     def get_queryset(self):
         return File.objects.filter(name=self.kwargs["name"])
+
+class FullList(generics.ListAPIView):
+    """
+    Get all constants, content and files
+    """
+    pagination_class = None
+    queryset = Constant.objects.all()
+    serializer_class = serializers.ConstantSerializer
+
+    def get(self, request, *args, **kwargs):
+        constants = Constant.objects.all()
+        content = Content.objects.all()
+        files = File.objects.all()
+
+        constants_serializer = serializers.ConstantSerializer(constants, many=True)
+        content_serializer = serializers.ContentSerializer(content, many=True)
+        files_serializer = serializers.FileSerializer(files, many=True)
+
+        return Response({
+            "constants": constants_serializer.data,
+            "content": content_serializer.data,
+            "files": files_serializer.data
+        })

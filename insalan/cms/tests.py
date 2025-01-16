@@ -128,3 +128,23 @@ class FileFetchTests(APITestCase):
             file_data['file'] = file_data['file'].replace('http://testserver', '')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [serializer.data])
+
+class FullListTestCase(APITestCase):
+    def setUp(self):
+        self.url = reverse('full/list')
+        self.constant = Constant.objects.create(name="Test Constant", value="Test Value")
+        self.content = Content.objects.create(name="Test Content", content="Test Content")
+        self.file = File.objects.create(name="Test File", file="test_file.txt")
+
+    def test_full_list(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("constants", response.data)
+        self.assertIn("content", response.data)
+        self.assertIn("files", response.data)
+        self.assertEqual(len(response.data["constants"]), 1)
+        self.assertEqual(len(response.data["content"]), 1)
+        self.assertEqual(len(response.data["files"]), 1)
+        self.assertEqual(response.data["constants"][0]["name"], self.constant.name)
+        self.assertEqual(response.data["content"][0]["name"], self.content.name)
+        self.assertEqual(response.data["files"][0]["name"], self.file.name)
