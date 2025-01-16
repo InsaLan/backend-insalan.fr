@@ -85,6 +85,6 @@ class FullList(generics.ListAPIView):
 
         return Response({
             "constants": constants_serializer.data,
-            "content": content_serializer.data,
+            "contents": content_serializer.data,
             "files": files_serializer.data
         })
