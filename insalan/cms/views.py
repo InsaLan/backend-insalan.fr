@@ -81,7 +81,7 @@ class FullList(generics.ListAPIView):
 
         constants_serializer = serializers.ConstantSerializer(constants, many=True)
         content_serializer = serializers.ContentSerializer(content, many=True)
-        files_serializer = serializers.FileSerializer(files, many=True)
+        files_serializer = serializers.FileSerializer(files, many=True, context={'request': request})
 
         return Response({
             "constants": constants_serializer.data,
