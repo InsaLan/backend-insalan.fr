@@ -6,7 +6,7 @@ It includes serializers for Content and Constant models.
 
 from rest_framework import serializers
 
-from .models import Content, Constant
+from .models import Content, Constant, File
 
 
 class ContentSerializer(serializers.ModelSerializer):
@@ -29,3 +29,13 @@ class ConstantSerializer(serializers.ModelSerializer):
         """
         model = Constant
         fields = ["name", "value"]
+
+class FileSerializer(serializers.ModelSerializer):
+    """Serializer for a file in the cms"""
+
+    class Meta:
+        """
+        Meta class for the FileSerializer.
+        """
+        model = File
+        fields = ["name", "file"]

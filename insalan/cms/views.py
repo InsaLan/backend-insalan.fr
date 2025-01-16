@@ -5,7 +5,7 @@ from rest_framework import generics
 
 from insalan.cms import serializers
 
-from .models import Constant, Content
+from .models import Constant, Content, File
 
 
 class ContentList(generics.ListAPIView):
@@ -46,3 +46,21 @@ class ConstantFetch(generics.ListAPIView):
 
     def get_queryset(self):
         return Constant.objects.filter(name=self.kwargs["name"])
+
+class FileList(generics.ListAPIView):
+    """
+    Get all files
+    """
+    pagination_class = None
+    queryset = File.objects.all()
+    serializer_class = serializers.FileSerializer
+
+class FileFetch(generics.ListAPIView):
+    """
+    Get a file by name
+    """
+    pagination_class = None
+    serializer_class = serializers.FileSerializer
+
+    def get_queryset(self):
+        return File.objects.filter(name=self.kwargs["name"])

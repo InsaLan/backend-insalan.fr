@@ -10,9 +10,13 @@ Each test case verifies the functionality and behavior of the respective model.
 from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.core.exceptions import ValidationError
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from rest_framework.test import APITestCase
+from rest_framework import status
 
-from insalan.cms.models import Constant, Content
+from insalan.cms.serializers import FileSerializer
+from insalan.cms.models import Constant, Content, File
 
 
 class ContentTestCase(TestCase):
@@ -64,3 +68,63 @@ class ConstantTestCase(TestCase):
         with self.assertRaises(IntegrityError):
             Constant.objects.create(name="const", value="1")
             Constant.objects.create(name="const", value="2")
+
+class FileModelTestCase(TestCase):
+    """
+    Test the File model
+    """
+
+    def setUp(self):
+        self.file = File.objects.create(
+            name="Test File",
+            file="test_file.txt"
+        )
+
+    def test_file_creation(self):
+        """
+        Test that a File object is created successfully
+        """
+        self.assertEqual(self.file.name, "Test File")
+        self.assertEqual(self.file.file, "test_file.txt")
+
+    def test_file_str_method(self):
+        """
+        Test the __str__ method of the File model
+        """
+        self.assertEqual(str(self.file), "[File] Test File")
+
+    def test_file_upload_path(self):
+        """
+        Test the upload path of the file
+        """
+        self.assertTrue(self.file.file.url.startswith("/v1/media/"))
+
+class FileFetchTests(APITestCase):
+    """
+    Test case for the FileFetch view.
+    """
+    def setUp(self):
+        self.file1 = File.objects.create(name="file1", file="test_file.txt")
+        self.file2 = File.objects.create(name="file2", file="test_file.txt")
+        
+    def test_get_all_files(self):
+        """Test that we can get all files"""
+        url = reverse('file/list')
+        response = self.client.get(url)
+        files = File.objects.all()
+        serializer = FileSerializer(files, many=True)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for file_data in response.data:
+            file_data['file'] = file_data['file'].replace('http://testserver', '')
+        self.assertEqual(response.data, serializer.data)
+
+    def test_get_file_by_name(self):
+        """Test that we can get a file by its name"""
+        url = reverse('file/name', kwargs={'name': self.file1.name})
+        response = self.client.get(url)
+        file = File.objects.get(name=self.file1.name)
+        serializer = FileSerializer(file)
+        for file_data in response.data:
+            file_data['file'] = file_data['file'].replace('http://testserver', '')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [serializer.data])

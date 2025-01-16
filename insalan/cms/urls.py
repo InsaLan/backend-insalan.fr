@@ -19,4 +19,6 @@ urlpatterns = [
     path(
         "content/<str:name>/", views.ContentFetch.as_view(), name="content/section"
     ),
+    path("file/", views.FileList.as_view(), name="file/list"),
+    path("file/<str:name>/", views.FileFetch.as_view(), name="file/name"),
 ]

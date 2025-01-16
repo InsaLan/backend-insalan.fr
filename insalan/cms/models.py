@@ -146,3 +146,26 @@ class Constant(models.Model):
 
     def __str__(self) -> str:
         return f"[Constant] {self.name}"
+
+class File(models.Model):
+    """
+    Represents a file to be placed on website pages.
+    """
+
+    name = models.CharField(
+        max_length=100, verbose_name=_("Nom du fichier")
+    )
+    file = models.FileField(
+        verbose_name=_("Fichier"),
+        upload_to="files/",
+    )
+
+    class Meta:
+        """
+        Meta class for the File model.
+        """
+        verbose_name = _("Fichier")
+        verbose_name_plural = _("Fichiers")
+
+    def __str__(self) -> str:
+        return f"[File] {self.name}"
