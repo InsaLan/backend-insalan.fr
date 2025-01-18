@@ -10,7 +10,7 @@ from drf_yasg import openapi
 
 import insalan.tournament.serializers as serializers
 
-from ..models import Group, validate_match_data
+from ..models import Group, validate_match_data, GroupMatch, MatchStatus
 from ..manage import update_match_score
 from .permissions import ReadOnly
 
@@ -31,6 +31,23 @@ class GroupList(generics.ListCreateAPIView):
         saved_groups = groups.save()
 
         return Response(self.get_serializer(saved_groups, many=multiple).data, status=status.HTTP_201_CREATED)
+
+class GroupDetails(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Group.objects.all().order_by("id")
+    serializer_class = serializers.GroupSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def delete(self, request, *args, **kwargs):
+        group = self.get_object()
+
+        if GroupMatch.objects.filter(group=group).exclude(status=MatchStatus.SCHEDULED).exists():
+            return Response({
+                "error": _("Impossible de supprimé la poule. Des matchs sont déjà en cours ou terminés")
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        group.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class GroupMatchScore(generics.UpdateAPIView):
     """Update score of a group match"""
