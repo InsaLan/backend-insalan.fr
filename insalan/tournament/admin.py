@@ -478,7 +478,7 @@ class TeamCreationForm(forms.ModelForm):
         Meta options for the form
         """
         model = Team
-        fields = ("name", "tournament", "validated")
+        fields = ("name", "tournament", "validated", "seed")
         field_classes = {"name": UsernameField}
 
     def __init__(self, *args, **kwargs):

@@ -28,6 +28,7 @@ urlpatterns = [
     ),
     path("me/", views.TournamentMe.as_view(), name="tournament/me"),
     path("team/", views.TeamList.as_view(), name="team/list"),
+    path("team/seeding", views.AdminTeamSeeding.as_view(), name="team/seeding"),
     path("team/<int:pk>/", views.TeamDetails.as_view(), name="team/details"),
     path("team/<int:pk>/matchs", views.TeamMatchs.as_view(), name="team/matchs"),
     path("player/", views.PlayerRegistrationList.as_view(), name="player/list"),

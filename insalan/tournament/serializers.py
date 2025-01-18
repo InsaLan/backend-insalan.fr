@@ -531,3 +531,24 @@ class FullDerefTeamSerializer(serializers.ModelSerializer):
         model = Team
         read_only_fields = ("id",)
         fields = ("id", "name", "validated", "captain")
+class TeamSeedListSerializer(serializers.ListSerializer):
+    def update(self, teams, validated_data):
+        data_mapping = {item["id"]: item for item in validated_data}
+
+        ret = []
+        for team_id, seed in data_mapping.items():
+            try:
+                team = teams.get(id=team_id)
+                ret.append(self.child.update(team, seed))
+            except:
+                pass
+
+        return ret
+
+class TeamSeedingSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField()
+    
+    class Meta:
+        model = Team
+        fields = ["id", "seed"]
+        list_serializer_class = TeamSeedListSerializer

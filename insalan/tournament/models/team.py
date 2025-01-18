@@ -61,6 +61,12 @@ class Team(models.Model):
         on_delete=models.SET_NULL,
         verbose_name=_("Slot"),
     )
+    seed = models.PositiveIntegerField(
+        verbose_name=_("Seed"),
+        null=False,
+        blank=False,
+        default=0,
+    )
 
 
     class Meta:
