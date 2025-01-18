@@ -14,7 +14,7 @@ from insalan.user.models import User
 from .models import (Event, Tournament, Game, Team, Player, Manager,
                      Substitute, Caster, Group, GroupMatch, Bracket,
                      KnockoutMatch, SwissRound, SwissMatch, Score, Seat, 
-                     SeatSlot)
+                     SeatSlot, GroupTiebreakScore)
 from .models import (unique_event_registration_validator, tournament_announced,
                      max_players_per_team_reached,
                      tournament_registration_full,
@@ -39,6 +39,7 @@ class GroupSerializer(serializers.ModelSerializer):
     teams = serializers.ListField(required=False,source="get_teams_id")
     matchs = GroupMatchSerializer(required=False,many=True,source="get_matchs")
     scores = serializers.DictField(required=False,source="get_leaderboard")
+    tiebreak_scores = serializers.DictField(required=False,source="get_tiebreaks")
     round_count = serializers.IntegerField(source="get_round_count")
 
     class Meta:
@@ -46,6 +47,29 @@ class GroupSerializer(serializers.ModelSerializer):
 
         model = Group
         fields = "__all__"
+
+    def validate_tiebreak_scores(self, value: dict[str, int]):
+        validated_data = value.copy()
+
+        for team in value.keys():
+            try:
+                Team.objects.get(pk=team)
+            except:
+                del validated_data[team]
+
+        return validated_data
+
+    def update(self, instance, validated_data):
+        tiebreak_scores: dict[str, int] = validated_data.pop("get_tiebreaks", {})
+
+        for team_id, score in tiebreak_scores.items():
+            team = Team.objects.get(pk=team_id)
+            tiebreak_score, _ = GroupTiebreakScore.objects.update_or_create(team=team, group=instance, defaults={"score": score})
+            tiebreak_score.save()
+        
+        super().update(instance, validated_data)
+
+        return instance
 
 class KnockoutMatchSerializer(serializers.ModelSerializer):
     score = serializers.DictField(required=True,source="get_scores")
