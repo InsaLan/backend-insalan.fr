@@ -71,11 +71,11 @@ urlpatterns = [
         views.SubstituteRegistrationListName.as_view(),
         name="substitute/listFromUsername",
     ),
-    # path(
-    #     "group/",
-    #     views.GroupList.as_view(),
-    #     name="group/list"
-    # ),
+    path(
+        "group/",
+        views.GroupList.as_view(),
+        name="group/list"
+    ),
     path(
         "group/<int:group_id>/match/<int:match_id>/",
         views.GroupMatchScore.as_view(),

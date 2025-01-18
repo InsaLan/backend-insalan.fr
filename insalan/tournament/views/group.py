@@ -1,19 +1,38 @@
 from django.utils.translation import gettext_lazy as _
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import BadRequest
 
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, PermissionDenied
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 import insalan.tournament.serializers as serializers
 
-from ..models import GroupMatch, validate_match_data
+from ..models import Group, validate_match_data
 from ..manage import update_match_score
+from .permissions import ReadOnly
 
-class GroupMatchScore(generics.GenericAPIView):
+class GroupList(generics.ListCreateAPIView):
+    queryset = Group.objects.all().order_by("id")
+    serializer_class = serializers.GroupSerializer
+    permission_classes = [permissions.IsAdminUser | ReadOnly]
+
+    def post(self, request):
+        data = request.data
+
+        multiple = isinstance(data, list)
+
+        groups = self.get_serializer(self.get_queryset(), data=request.data, many=multiple)
+
+        groups.is_valid(raise_exception=True)
+
+        saved_groups = groups.save()
+
+        return Response(self.get_serializer(saved_groups, many=multiple).data, status=status.HTTP_201_CREATED)
+
+class GroupMatchScore(generics.UpdateAPIView):
     """Update score of a group match"""
 
     queryset = GroupMatch.objects.all().order_by("id")
