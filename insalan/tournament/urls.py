@@ -77,6 +77,11 @@ urlpatterns = [
         name="group/list"
     ),
     path(
+        "group/<int:pk>/",
+        views.GroupDetails.as_view(),
+        name="group/details"
+    ),
+    path(
         "group/<int:group_id>/match/<int:match_id>/",
         views.GroupMatchScore.as_view(),
         name="group/match/score"
