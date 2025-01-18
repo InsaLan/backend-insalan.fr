@@ -78,6 +78,9 @@ class Group(models.Model):
     def get_matchs(self) -> List["GroupMatch"]:
         return GroupMatch.objects.filter(group=self)
 
+    def get_tiebreaks(self) -> Dict[int,int]:
+        return {tiebreak.team.id: tiebreak.score for tiebreak in GroupTiebreakScore.objects.filter(group=self)}
+
 
 class Seeding(models.Model):
     group = models.ForeignKey(
@@ -104,6 +107,23 @@ class GroupMatch(match.Match):
 
     def get_tournament(self):
         return self.group.tournament
+
+class GroupTiebreakScore(models.Model):
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.CASCADE,
+    )
+    team = models.OneToOneField(
+        "Team",
+        on_delete=models.CASCADE,
+    )
+    score = models.PositiveIntegerField(
+        default=0,
+        verbose_name=_("Score de tiebreak")
+    )
+
+    class Meta:
+        verbose_name = _("Score de tiebreak d'une équipe dans une poule")
 
 # class GroupMatchScore(models.Model):
 #     score = models.IntegerField()
