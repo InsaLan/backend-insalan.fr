@@ -116,6 +116,30 @@ class GenerateGroupMatchsSerializer(serializers.Serializer):
 
         return data
 
+class GroupMatchsLaunchSerializer(serializers.Serializer):
+    tournament = serializers.PrimaryKeyRelatedField(queryset=Tournament.objects.all())
+    round = serializers.IntegerField(required=False)
+    matchs = serializers.PrimaryKeyRelatedField(queryset=GroupMatch.objects.all(), many=True, required=False)
+
+    def validate(self, data):
+        round = data.pop("round", 0)
+        matchs = data.pop("matchs", [])
+
+        if round:
+            if GroupMatch.objects.filter(round_number__lt=round, group__tournament=data["tournament"]).exclude(status=MatchStatus.COMPLETED).exists():
+                raise serializers.ValidationError(_("Des matchs des round précédent sont encore en cours ou ne sont pas terminés."))
+
+            scheduled_matchs = GroupMatch.objects.filter(round_number=round, group__tournament=data["tournament"], status=MatchStatus.SCHEDULED)
+
+            if not scheduled_matchs.exists():
+                raise serializers.ValidationError(_("Tous les matchs sont déjà en cours ou bien terminés."))
+
+            data["matchs"] = scheduled_matchs
+        else:
+            pass
+
+        return data
+
 class KnockoutMatchSerializer(serializers.ModelSerializer):
     score = serializers.DictField(required=True,source="get_scores")
 
