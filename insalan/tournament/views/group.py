@@ -10,8 +10,8 @@ from drf_yasg import openapi
 
 import insalan.tournament.serializers as serializers
 
-from ..models import Group, validate_match_data, GroupMatch, MatchStatus
-from ..manage import update_match_score
+from ..models import Group, validate_match_data, GroupMatch, MatchStatus, Tournament
+from ..manage import update_match_score, generate_groups
 from .permissions import ReadOnly
 
 class GroupList(generics.ListCreateAPIView):
@@ -47,6 +47,39 @@ class GroupDetails(generics.RetrieveUpdateDestroyAPIView):
 
         group.delete()
 
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class GenerateGroups(generics.CreateAPIView):
+    serializer_class = serializers.GenerateGroupsSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, *args, **kwargs):
+        if kwargs["pk"] != request.data["tournament"]:
+            raise BadRequest()
+
+        data = self.get_serializer(data=request.data)
+        data.is_valid(raise_exception=True)
+
+        generate_groups(**data.validated_data)
+
+        serialized_data = serializers.GroupField(data.validated_data["tournament"].group_set.all(), many=True).data
+        
+        return Response(serialized_data, status=status.HTTP_201_CREATED)
+
+class DeleteGroups(generics.DestroyAPIView):
+    queryset = Tournament.objects.all()
+    permission_classes = [permissions.IsAdminUser]
+
+    def delete(self, request, *args, **kwargs):
+        tournament = self.get_object()
+
+        if GroupMatch.objects.filter(group__tournament=tournament).exclude(status=MatchStatus.SCHEDULED).exists():
+            return Response({
+                "error": _("Impossible de supprimer les poules. Des matchs sont en cours ou déjà terminés")
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        tournament.group_set.all().delete()
+        
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class GroupMatchScore(generics.UpdateAPIView):

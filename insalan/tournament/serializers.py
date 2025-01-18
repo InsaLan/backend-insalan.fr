@@ -71,6 +71,34 @@ class GroupSerializer(serializers.ModelSerializer):
 
         return instance
 
+class GenerateGroupsSerializer(serializers.Serializer):
+    tournament = serializers.PrimaryKeyRelatedField(queryset=Tournament.objects.all())
+    count = serializers.IntegerField(min_value=1)
+    team_per_group = serializers.IntegerField(min_value=2)
+    names = serializers.ListField()
+    use_seeding = serializers.BooleanField()
+
+    def validate(self, data):
+        tournament: Tournament = data["tournament"]
+
+        if tournament.group_set.exists():
+            raise serializers.ValidationError(_("Des poules existent déjà."))
+
+        count: int = data["count"]
+        team_per_group: int = data["team_per_group"]
+        validated_teams = tournament.get_validated_teams()
+
+        if len(data["names"]) != count:
+            raise serializers.ValidationError(_(f"Le nombre de noms de poules ({len(data['names'])}) ne correspond pas au nombre de poules demandées ({count})."))
+
+        if count*2 > validated_teams or (count-1)*team_per_group >= validated_teams:
+            raise serializers.ValidationError(_(f"{count} poules de {team_per_group} équipes permet d'accueillir entre {count*2} et {count*team_per_group} équipes, or il n'y a que {tournament.get_validated_teams()} équipes inscritent à ce tournoi. Veuillez revoir le nombre de poules et/ou le nombre d'équipes par poule."))
+
+        if count*team_per_group > tournament.maxTeam:
+            raise serializers.ValidationError(_(f"{count} poules de {team_per_group} équipes permet d'accueillir {count*team_per_group} équipes au maximum, or il peut y avoir au plus {tournament.maxTeam} équipes inscrites. Veuillez revoir le nombre de poules et/ou le nombre d'équipes par poule."))
+
+        return data
+
 class KnockoutMatchSerializer(serializers.ModelSerializer):
     score = serializers.DictField(required=True,source="get_scores")
 
