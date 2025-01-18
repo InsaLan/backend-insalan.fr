@@ -99,6 +99,23 @@ class GenerateGroupsSerializer(serializers.Serializer):
 
         return data
 
+class GenerateGroupMatchsSerializer(serializers.Serializer):
+    tournament = serializers.PrimaryKeyRelatedField(queryset=Tournament.objects.all().prefetch_related("group_set"))
+    groups = serializers.PrimaryKeyRelatedField(queryset=Group.objects.all().prefetch_related("groupmatch_set"), many=True)
+
+    def validate(self, data):
+        tournament: Tournament = data["tournament"]
+        groups: List[Group] = data["groups"]
+
+        if not all([tournament.group_set.contains(group) for group in groups]):
+            raise serializers.ValidationError(_("Certaines poules ne font pas parti de ce tournoi ou il manque des poules dans la liste."))
+
+        for group in groups:
+            if group.groupmatch_set.filter(status__in=[MatchStatus.ONGOING, MatchStatus.COMPLETED]).exists():
+                raise serializers.ValidationError(_("Impossible de créer les matchs, des matchs existent déjà et sont en cours ou terminés."))
+
+        return data
+
 class KnockoutMatchSerializer(serializers.ModelSerializer):
     score = serializers.DictField(required=True,source="get_scores")
 
