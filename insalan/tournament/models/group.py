@@ -1,4 +1,5 @@
 from typing import List, Dict, Tuple
+from operator import itemgetter
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -16,7 +17,7 @@ class Group(models.Model):
         verbose_name=_("Tournoi"),
         on_delete=models.CASCADE
     )
-    round_count = models.IntegerField(
+    round_count = models.PositiveIntegerField(
         verbose_name=_("Nombre de rounds"),
         default=1
     )
@@ -49,37 +50,30 @@ class Group(models.Model):
         return self.tournament
 
     def get_teams(self) -> List["Team"]:
-        teams = Seeding.objects.filter(group=self).values_list("team", flat=True)
-        return team.Team.objects.filter(pk__in=teams)
+        return team.Team.objects.filter(pk__in=self.get_teams_id())
 
     def get_teams_id(self) -> List[int]:
         return Seeding.objects.filter(group=self).values_list("team", flat=True)
 
-    def get_teams_seeding(self) -> List[Tuple["Team",int]]:
-        return [(seeding.team,seeding.seeding) for seeding in Seeding.objects.filter(group=self)]
-
+    def get_teams_seeding(self) -> Dict["Team",int]:
+        return {seeding.team: seeding.seeding for seeding in Seeding.objects.filter(group=self)}
+    
     def get_sorted_teams(self) -> List["Team"]:
-        teams = self.get_teams_seeding()
-        teams.sort(key=lambda e: e[1])
+        teams = sorted(self.get_teams_seeding().items(), key=itemgetter(1))
         return [team[0] for team in teams]
 
     def get_round_count(self) -> int:
-        return self.round_count
+        return len(self.get_teams_id()) - 1
 
-    def get_leaderboard(self) -> Dict["Team",int]:
+    def get_leaderboard(self) -> Dict[int,int]:
         leaderboard = {}
 
-        for team in self.get_teams():
+        for team in self.get_teams_id():
             group_matchs = GroupMatch.objects.filter(teams=team,group=self)
             score = sum(match.Score.objects.filter(team=team,match__in=group_matchs).values_list("score",flat=True))
             leaderboard[team] = score
 
-        return leaderboard
-
-    def get_scores(self) -> Dict[int,int]:
-        leaderboard = self.get_leaderboard()
-
-        return {team.id : score for team, score in leaderboard.items()}
+        return dict(sorted(leaderboard.items(), key=itemgetter(1), reverse=True))
 
     def get_matchs(self) -> List["GroupMatch"]:
         return GroupMatch.objects.filter(group=self)
