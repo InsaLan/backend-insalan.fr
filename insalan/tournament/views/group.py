@@ -11,7 +11,8 @@ from drf_yasg import openapi
 import insalan.tournament.serializers as serializers
 
 from ..models import Group, validate_match_data, GroupMatch, MatchStatus, Tournament
-from ..manage import update_match_score, generate_groups, create_group_matchs
+from ..manage import update_match_score, generate_groups, create_group_matchs, launch_match
+
 from .permissions import ReadOnly
 
 class GroupList(generics.ListCreateAPIView):
@@ -117,6 +118,25 @@ class DeleteGroupMatchs(generics.DestroyAPIView):
         matchs.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class GroupMatchsLaunch(generics.UpdateAPIView):
+    serializer_class = serializers.GroupMatchsLaunchSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def patch(self, request, *args, **kwargs):
+        if kwargs["pk"] != request.data["tournament"]:
+            raise BadRequest()
+
+        data = self.get_serializer(data=request.data)
+        data.is_valid(raise_exception=True)
+
+        matchs = []
+
+        for match in data.validated_data["matchs"]:
+            launch_match(match)
+            matchs.append(match.id)
+
+        return Response(matchs)
 
 class GroupMatchScore(generics.UpdateAPIView):
     """Update score of a group match"""
