@@ -26,6 +26,7 @@ class Team(models.Model):
         blank=False,
         on_delete=models.CASCADE,
         verbose_name=_("Tournoi"),
+        related_name="teams"
     )
     name = models.CharField(
         max_length=42,
