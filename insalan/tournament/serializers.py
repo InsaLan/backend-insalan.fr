@@ -259,7 +259,7 @@ class TeamSerializer(serializers.ModelSerializer):
     substitutes = serializers.ListField(required=False, source="get_substitutes_id")
     players_names_in_game = serializers.ListField(required=False, write_only=True)
     substitutes_names_in_game = serializers.ListField(required=False, write_only=True)
-    seat_slot = serializers.IntegerField(required=False, source="get_seat_slot_id")
+    # seat_slot = serializers.IntegerField(required=False, source="get_seat_slot_id")
 
     class Meta:
         """Meta options of the team serializer"""
@@ -723,6 +723,7 @@ class FullDerefTournamentSerializer(serializers.ModelSerializer):
         if value.is_announced:
             return super().to_representation(value)
         return {"id": value.id, "is_announced": False}
+
 class TeamSeedListSerializer(serializers.ListSerializer):
     def update(self, teams, validated_data):
         data_mapping = {item["id"]: item for item in validated_data}
