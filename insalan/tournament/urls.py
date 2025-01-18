@@ -22,7 +22,7 @@ urlpatterns = [
         name="tournament/details/",
     ),
     path(
-        "tournament/<int:primary_key>/full/",
+        "tournament/<int:pk>/full/",
         views.TournamentDetailsFull.as_view(),
         name="tournament/details-full",
     ),

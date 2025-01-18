@@ -37,8 +37,9 @@ class GroupSerializer(serializers.ModelSerializer):
     """Serializer for a group in a tournament"""
 
     teams = serializers.ListField(required=False,source="get_teams_id")
-    matchs = GroupMatchSerializer(many=True,source="get_matchs")
-    scores = serializers.DictField(required=False,source="get_scores")
+    matchs = GroupMatchSerializer(required=False,many=True,source="get_matchs")
+    scores = serializers.DictField(required=False,source="get_leaderboard")
+    round_count = serializers.IntegerField(source="get_round_count")
 
     class Meta:
         """Meta options for the serializer"""
@@ -531,6 +532,104 @@ class FullDerefTeamSerializer(serializers.ModelSerializer):
         model = Team
         read_only_fields = ("id",)
         fields = ("id", "name", "validated", "captain")
+
+class FullDerefTeamSerializer2(serializers.ModelSerializer):
+    """Serializer class for Teams"""
+
+    players = FullDerefPlayerSerializer(many=True,source="player_set")
+    substitutes = FullDerefSubstituteSerializer(many=True,source="substitute_set")
+    managers = FullDerefManagerSerializer(many=True,source="manager_set",read_only=True)
+    captain = serializers.SlugRelatedField(slug_field="name_in_game",read_only=True)
+
+    class Meta:
+        """Meta options of the team serializer"""
+
+        model = Team
+        read_only_fields = ("id",)
+        exclude = ["tournament", "password"]
+
+class GroupField(serializers.ModelSerializer):
+    """Serializer for a group in a tournament"""
+
+    teams = serializers.ListField(required=False,source="get_teams_id")
+    matchs = GroupMatchSerializer(many=True,source="get_matchs")
+    scores = serializers.DictField(required=False,source="get_leaderboard")
+    tiebreak_scores = serializers.DictField(required=False,source="get_tiebreaks")
+    round_count = serializers.IntegerField(source="get_round_count")
+    # seeding = serializers.DictField(source="get_teams_seeding")
+
+    class Meta:
+        """Meta options for the serializer"""
+
+        model = Group
+        exclude = ["tournament"]
+
+class BracketField(serializers.ModelSerializer):
+    teams = serializers.ListField(source="get_teams_id")
+    matchs = KnockoutMatchSerializer(many=True,source="get_matchs")
+    winner = serializers.IntegerField(source="get_winner")
+    depth = serializers.IntegerField(required=False,source="get_depth")
+
+    class Meta:
+        model = Bracket
+        exclude = ["team_count", "tournament"]
+
+class SwissRoundField(serializers.ModelSerializer):
+    teams = serializers.ListField(source="get_teams_id")
+    matchs = SwissMatchSerializer(many=True,source="get_matchs")
+
+    class Meta:
+        model = SwissRound
+        exclude = ["tournament"]
+
+class FullDerefEventSeatField(serializers.RelatedField):
+    def to_representation(self, value):
+        return (value.x, value.y)
+
+class FullDerefSeatSerializer(serializers.ModelSerializer):
+    """Serializer for a Seat"""
+
+    class Meta:
+        """Meta options for the serializer"""
+        model = Seat
+        exclude = ["event"]
+
+class FullDerefSeatSlotSerializer(serializers.ModelSerializer):
+    """Serializer for a SeatSlot"""
+    seats = FullDerefSeatSerializer(many=True)
+
+    class Meta:
+        """Meta options for the serializer"""
+
+        model = SeatSlot
+        exclude = ["tournament"]
+
+class FullDerefEventSerializer(serializers.ModelSerializer):
+    seats = FullDerefEventSeatField(many=True,source="seat_set",read_only=True)
+
+    class Meta:
+        model = Event
+        fields = "__all__"
+
+class FullDerefTournamentSerializer(serializers.ModelSerializer):
+    validated_teams = serializers.IntegerField(read_only=True, source="get_validated_teams")
+    casters = CasterSerializer(many=True, source="get_casters")
+    teams = FullDerefTeamSerializer2(many=True)
+    groups = GroupField(many=True,source="group_set")
+    brackets = BracketField(many=True,source="bracket_set")
+    swissRounds = SwissRoundField(many=True,source="swissround_set")
+    event = FullDerefEventSerializer()
+    game = GameSerializer()
+    seatslots = FullDerefSeatSlotSerializer(many=True,source="seatslot_set")
+
+    class Meta:
+        model = Tournament
+        fields = "__all__"
+
+    def to_representation(self, value):
+        if value.is_announced:
+            return super().to_representation(value)
+        return {"id": value.id, "is_announced": False}
 class TeamSeedListSerializer(serializers.ListSerializer):
     def update(self, teams, validated_data):
         data_mapping = {item["id"]: item for item in validated_data}
