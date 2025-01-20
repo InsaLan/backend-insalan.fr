@@ -14,7 +14,7 @@ from insalan.user.models import User
 from .models import (Event, Tournament, Game, Team, Player, Manager,
                      Substitute, Caster, Group, GroupMatch, Bracket,
                      KnockoutMatch, SwissRound, SwissMatch, Score, Seat, 
-                     SeatSlot, GroupTiebreakScore)
+                     SeatSlot, GroupTiebreakScore, MatchStatus)
 from .models import (unique_event_registration_validator, tournament_announced,
                      max_players_per_team_reached,
                      tournament_registration_full,
