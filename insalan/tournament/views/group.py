@@ -136,7 +136,7 @@ class GroupMatchsLaunch(generics.UpdateAPIView):
             launch_match(match)
             matchs.append(match.id)
 
-        return Response(matchs)
+        return Response({ "matchs": matchs, "warning": data.validated_data["warning"] },status=status.HTTP_200_OK)
 
 class GroupMatchScore(generics.UpdateAPIView):
     """Update score of a group match"""
