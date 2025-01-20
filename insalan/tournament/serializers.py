@@ -124,6 +124,7 @@ class GroupMatchsLaunchSerializer(serializers.Serializer):
     def validate(self, data):
         round = data.pop("round", 0)
         matchs = data.pop("matchs", [])
+        data["warning"] = False
 
         if round:
             if GroupMatch.objects.filter(round_number__lt=round, group__tournament=data["tournament"]).exclude(status=MatchStatus.COMPLETED).exists():
@@ -136,7 +137,15 @@ class GroupMatchsLaunchSerializer(serializers.Serializer):
 
             data["matchs"] = scheduled_matchs
         else:
-            pass
+            data["matchs"] = []
+
+            for match in matchs:
+                ongoing_teams_matchs = GroupMatch.objects.filter(teams__in=match.teams.all()).exclude(pk=match.pk).filter(status=MatchStatus.ONGOING)
+
+                if not ongoing_teams_matchs.exists():
+                    data["matchs"].append(match)
+                else:
+                    data["warning"] = True
 
         return data
 
