@@ -109,6 +109,7 @@ class EventSerializer(serializers.ModelSerializer):
             "tournaments",
             "logo",
             "poster",
+            "planning_file",
         ]
 
 

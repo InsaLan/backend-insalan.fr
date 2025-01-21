@@ -69,13 +69,6 @@ class Content(models.Model):
     content = models.TextField(
         verbose_name=_("Contenu"), validators=[constant_definition_validator]
     )
-    planning = models.BooleanField(
-        default=False,
-        verbose_name=_("Est-ce que ce contenu est un planning exporté depuis un gsheet ?"),
-        help_text=_(
-            "Si oui, les couleurs seront modifiées pour correspondre au site web."
-        ),
-    )
 
     class Meta:
         """
@@ -86,66 +79,6 @@ class Content(models.Model):
 
     def __str__(self) -> str:
         return f"[Content] {self.name}"
-
-    def save(self, *args, **kwargs):
-        """
-        Override the save method to ensure that the content is valid.
-
-        /!\ ------------------------------------ /!\
-        TODO : This code is a temporary method to have working plannings on the website.
-
-        It should be removed for the XIX edition of the InsaLan and replaced by a
-        better solution. The best solution would be to use a calendar file (e.g: ics)
-        and format it through the front. 
-
-        /!\ ------------------------------------ /!\
-        """
-        # Apply some operations on the content to make it look better
-        if self.planning:
-            # Remove the first line of the content (meta tag is not needed)
-            if self.content.startswith("<meta"):
-                self.content = "\n".join(self.content.split("\n")[1:])
-            # Replace background color and text color to match the website
-            self.content = self.content.replace(
-                "background-color:#f3f3f3", 
-                "background-color:#434343"
-            )
-            self.content = self.content.replace("color:#555555", "color:#000000")
-            self.content = self.content.replace(";color:#434343;", ";color:#f3f3f3;")
-            self.content = self.content.replace("background-color:#ffffff;", "")
-            # Replace border color
-            self.content = re.sub(
-                r"border-right:1px SOLID #[a-f0-9]*",
-                "border-right:1px SOLID #000000",
-                self.content
-            )
-
-            # Remove the letters in the table headers
-            letters = string.ascii_uppercase
-            for i in letters:
-                # If we haven't reached the end of the columns
-                if f">{i}<" in self.content:
-                    # Remove the letter
-                    self.content = self.content.replace(
-                        f">{i}<", "><"
-                    )
-                else:
-                    break
-
-            # Remove the numbers in the table headers
-            number = 1
-            while True:
-                # If we haven't reached the end of the rows
-                if f">{number}<" in self.content:
-                    # Remove the number
-                    self.content = self.content.replace(
-                        f">{number}<", "><"
-                    )
-                else:
-                    break
-                number += 1
-
-        super().save(*args, **kwargs)
 
 
 class Constant(models.Model):
