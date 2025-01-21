@@ -666,6 +666,52 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["orders"][self.order.pizza.all()[0].name], 1)
 
+class TestExportOrderGet(TestCase):
+    """Test the export get view."""
+
+    def setUp(self) -> None:
+        self.admin_user = User.objects.create(
+            username="admin", email="admin@example.com", is_staff=True
+        )
+
+        self.time_slot = TimeSlot.objects.create(
+            start=timezone.now(),
+            end=timezone.now() + timedelta(hours=1),
+            delivery_time=timezone.now() + timedelta(hours=2),
+            pizza_max=100,
+            player_price=10,
+            staff_price=5,
+            external_price=15,
+        )
+
+        self.export = PizzaExport.objects.create(time_slot=self.time_slot)
+        
+    def test_export_get(self) -> None:
+        """Test the export get endpoint."""
+        client = APIClient()
+        client.force_login(user=self.admin_user)
+        response = client.get(
+            reverse("export/detail", kwargs={"pk": self.export.id})
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], self.export.id)
+        
+    def test_export_get_unauthorized(self) -> None:
+        """Test the export get endpoint with unauthorized user."""
+        client = APIClient()
+        response = client.get(
+            reverse("export/detail", kwargs={"pk": self.export.id})
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        
+    def test_export_get_not_found(self) -> None:
+        """Test the export get endpoint with wrong id."""
+        client = APIClient()
+        client.force_login(user=self.admin_user)
+        response = client.get(
+            reverse("export/detail", kwargs={"pk": 999})
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 class TestExportOrderDelete(TestCase):
     """Test the export delete view."""
@@ -692,7 +738,7 @@ class TestExportOrderDelete(TestCase):
         client = APIClient()
         client.force_login(user=self.admin_user)
         response = client.delete(
-            reverse("export/delete", kwargs={"pk": self.export.id})
+            reverse("export/detail", kwargs={"pk": self.export.id})
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(PizzaExport.objects.count(), 0)
@@ -701,7 +747,7 @@ class TestExportOrderDelete(TestCase):
         """Test the export delete endpoint with unauthorized user."""
         client = APIClient()
         response = client.delete(
-            reverse("export/delete", kwargs={"pk": self.export.id})
+            reverse("export/detail", kwargs={"pk": self.export.id})
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(PizzaExport.objects.count(), 1)
