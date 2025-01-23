@@ -116,17 +116,29 @@ class SeatsFieldTestCase(TestCase):
     def test_event_form_doesnt_modify_if_no_changes(self):
         form = EventForm(
             instance=self.evobj,
-            data={"seats": json.dumps([(seat.x, seat.y) for seat in self.seats])},
+            data={
+                "name": "Test Event",
+                "year": 2021,
+                "month": 12,
+                "seats": json.dumps([(seat.x, seat.y) for seat in self.seats])
+            },
         )
         form.full_clean()
+        form.save()
         self.assertEqual(set(Seat.objects.filter(event=self.evobj)), set(self.seats))
 
     def test_event_form_deletes_removed_seats(self):
         form = EventForm(
             instance=self.evobj,
-            data={"seats": json.dumps([(seat.x, seat.y) for seat in self.seats[5:]])},
+            data={
+                "name": "Test Event",
+                "year": 2021,
+                "month": 12,
+                "seats": json.dumps([(seat.x, seat.y) for seat in self.seats[5:]])
+            },
         )
         form.full_clean()
+        form.save()
         self.assertEqual(
             set(Seat.objects.filter(event=self.evobj)), set(self.seats[5:])
         )
@@ -134,8 +146,14 @@ class SeatsFieldTestCase(TestCase):
     def test_event_form_creates_added_seats(self):
         ls = [(seat.x, seat.y) for seat in self.seats]
         ls += [(x, 7) for x in range(1, 7)]
-        form = EventForm(instance=self.evobj, data={"seats": json.dumps(ls)})
+        form = EventForm(instance=self.evobj, data={
+            "name": "Test Event",
+            "year": 2021,
+            "month": 12,
+            "seats": json.dumps(ls)
+        })
         form.full_clean()
+        form.save()
         self.seats += [Seat.objects.get(event=self.evobj, x=x, y=y) for (x, y) in ls]
         self.assertEqual(set(Seat.objects.filter(event=self.evobj)), set(self.seats))
 
