@@ -133,21 +133,34 @@ class EventForm(forms.ModelForm):
         }
         self.fields["canvas_params"].initial = data
 
-    def clean(self) -> dict[str, Any] | None:
+    def save(self, commit: bool = True):
+        """Override the save method to save seats related with the event."""
+        if not self.instance.pk:
+            # Force saving the instance otherwise the seats cannot be created
+            # at the same time as the event.
+            instance = super().save(commit=False)
+            instance.save()
+        else:
+            instance = super().save(commit=commit)
+
         seats = self.cleaned_data.get("seats")
 
         if seats is not None:
-            old_seats = Seat.objects.filter(event=self.instance)
+            old_seats = Seat.objects.filter(event=instance)
             to_delete = [seat for seat in old_seats if [seat.x, seat.y] not in seats]
-            to_create = [(x, y) for (x, y) in seats if (x, y) not in [(seat.x, seat.y) for seat in old_seats]]
+            to_create = [
+                (x, y)
+                for (x, y) in seats
+                if (x, y) not in [(seat.x, seat.y) for seat in old_seats]
+            ]
 
             for seat in to_delete:
                 seat.delete()
             for (x, y) in to_create:
-                seat = Seat.objects.create(event=self.instance, x=x, y=y)
+                seat = Seat.objects.create(event=instance, x=x, y=y)
                 seat.save()
 
-        return self.cleaned_data
+        return instance
 
     class Meta:
         """
@@ -854,7 +867,7 @@ class BracketMatchFilter(admin.SimpleListFilter):
                 lookup["W3"] = "Quart de finale winner"
             else:
                 lookup["W" + str(depth+1)] = f"1/{2**depth}ème winner"
-        
+
         for tour,round_number in enumerate(range(2*(max_depth-1),1,-1)):
             lookup["L" + str(round_number)] = f"Tour {tour+1} looser"
         return lookup.items()
