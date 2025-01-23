@@ -2,6 +2,7 @@ class AbstractSeatCanvas {  // it's OOP-in' time
   constructor(canvasElem, cellSize) {
     // parameters
     this.canvas = canvasElem;
+    this.canvas.parentElement.style.overflowX = 'scroll';
     this.cellSize = cellSize
 
     // variables
@@ -12,9 +13,9 @@ class AbstractSeatCanvas {  // it's OOP-in' time
     this.mouseDragStartedOnOccupiedCell = false;
   }
 
-  ////////////////////////////////////////////////// 
+  //////////////////////////////////////////////////
   // Helper functions
-  ////////////////////////////////////////////////// 
+  //////////////////////////////////////////////////
 
   isOccupied(gridX, gridY) {
     // override in subclass, for all seat arrays, call isOccupiedIn
@@ -66,9 +67,9 @@ class AbstractSeatCanvas {  // it's OOP-in' time
     this.initCtx();
   }
 
-  ////////////////////////////////////////////////// 
+  //////////////////////////////////////////////////
   // Drawing functions
-  ////////////////////////////////////////////////// 
+  //////////////////////////////////////////////////
   drawOutline(x, y) {
     this.ctx.strokeStyle = 'red'; // color of the outline
     this.ctx.strokeRect(x * this.cellSize, y * this.cellSize, this.cellSize, this.cellSize);
@@ -130,9 +131,9 @@ class AbstractSeatCanvas {  // it's OOP-in' time
     this.redrawSeats();
   }
 
-  ////////////////////////////////////////////////// 
+  //////////////////////////////////////////////////
   // Spicy event handlers
-  ////////////////////////////////////////////////// 
+  //////////////////////////////////////////////////
 
   onDragCell(event, gridX, gridY) {
     // override in subclass
@@ -147,9 +148,9 @@ class AbstractSeatCanvas {  // it's OOP-in' time
     // override in subclass
   }
 
-  ////////////////////////////////////////////////// 
+  //////////////////////////////////////////////////
   // Basic event handlers
-  ////////////////////////////////////////////////// 
+  //////////////////////////////////////////////////
   handleMouseMove(event) {
     const bounding = this.canvas.getBoundingClientRect();
     const x = event.clientX - bounding.left;
@@ -199,9 +200,9 @@ class AbstractSeatCanvas {  // it's OOP-in' time
     this.isMouseDown = false;
   }
 
-  ////////////////////////////////////////////////// 
+  //////////////////////////////////////////////////
   // Entry point
-  ////////////////////////////////////////////////// 
+  //////////////////////////////////////////////////
   addEventListeners() {
     this.canvas.addEventListener('mousemove', this.handleMouseMove.bind(this));
     this.canvas.addEventListener('mousedown', this.handleMouseDown.bind(this))
