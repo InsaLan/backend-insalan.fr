@@ -181,6 +181,11 @@ class SwissRoundSerializer(serializers.ModelSerializer):
         model = SwissRound
         fields = "__all__"
 
+class GenerateSwissRoundsSerializer(serializers.Serializer):
+    tournament = serializers.PrimaryKeyRelatedField(queryset=Tournament.objects.all())
+    min_score = serializers.IntegerField(min_value=1)
+    use_seeding = serializers.BooleanField()
+
 class CasterSerializer(serializers.ModelSerializer):
     """Serializer for a tournament Caster"""
 

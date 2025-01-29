@@ -10,8 +10,41 @@ from drf_yasg import openapi
 
 import insalan.tournament.serializers as serializers
 
-from ..models import SwissMatch, validate_match_data
-from ..manage import update_match_score
+from ..models import MatchStatus, Tournament, SwissMatch, SwissRound, validate_match_data
+from ..manage import update_match_score, generate_swiss_round
+
+class GenerateSwissRound(generics.CreateAPIView):
+    queryset = Tournament.objects.all()
+    serializer_class = serializers.GenerateSwissRoundsSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, pk, *args, **kwargs):
+        request.data["tournament"] = pk
+
+        data = self.get_serializer(data=request.data)
+        data.is_valid(raise_exception=True)
+
+        generate_swiss_round(**data.validated_data)
+
+        serialized_data = serializers.SwissRoundField(data.validated_data["tournament"].swissround_set.all(), many=True).data
+
+        return Response(serialized_data, status=status.HTTP_201_CREATED)
+
+class DeleteSwissRounds(generics.DestroyAPIView):
+    queryset = Tournament.objects.all()
+    permission_classes = [permissions.IsAdminUser]
+
+    def delete(self, request, *args, **kwargs):
+        tournament = self.get_object()
+
+        if SwissMatch.objects.filter(swiss__tournament=tournament).exclude(status=MatchStatus.SCHEDULED).exists():
+            return Response({
+                "error": _("Impossible de supprimer les rondes suisses. Des matchs sont en cours ou déjà terminés.")
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        tournament.swissround_set.all().delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class SwissMatchScore(generics.GenericAPIView):
     """Update score of a swiss match"""
