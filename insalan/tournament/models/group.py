@@ -91,7 +91,9 @@ class Seeding(models.Model):
         "Team",
         on_delete=models.CASCADE,
     )
-    seeding = models.IntegerField()
+    seeding = models.PositiveIntegerField(
+        default=0
+    )
 
 
 class GroupMatch(match.Match):

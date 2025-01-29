@@ -1,5 +1,6 @@
-from ..models import SwissRound, SwissMatch
+from ..models import Team, Tournament, SwissRound, SwissMatch, SwissSeeding
 import math
+
 
 def create_swiss_matchs(swiss: SwissRound):
     teams = swiss.get_sorted_teams()
@@ -30,3 +31,18 @@ def create_swiss_matchs(swiss: SwissRound):
             matchs.append(SwissMatch.objects.create(round_number=round_idx+1,index_in_round=match_idx+1,swiss=swiss))
 
         nb_matchs = math.ceil(nb_matchs/2)
+
+def generate_swiss_round(tournament: Tournament, min_score: int, use_seeding: bool):
+    teams = tournament.teams.filter(validated=True)
+    swiss = SwissRound.objects.create(tournament=tournament, min_score=min_score)
+
+    if use_seeding:
+        for team in teams:
+            if team != None:
+                SwissSeeding.objects.create(swiss=swiss, seeding=team.seed, team=team)
+    else:
+        for team in teams:
+            if team != None:
+                SwissSeeding.objects.create(swiss=swiss, seeding=0, team=team)
+
+    create_swiss_matchs(swiss)
