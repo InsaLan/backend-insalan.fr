@@ -61,6 +61,11 @@ urlpatterns = [
         views.DeleteSwissRounds.as_view(),
         name="delete/tournament/swiss",
     ),
+    path(
+        "tournament/<int:pk>/swiss/matchs/launch/",
+        views.SwissMatchsLaunch.as_view(),
+        name="launch/tournament/swiss/matchs"
+    ),
     path("me/", views.TournamentMe.as_view(), name="tournament/me"),
     path("team/", views.TeamList.as_view(), name="team/list"),
     path("team/seeding", views.AdminTeamSeeding.as_view(), name="team/seeding"),

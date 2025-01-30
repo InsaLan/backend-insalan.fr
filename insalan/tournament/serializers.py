@@ -116,10 +116,23 @@ class GenerateGroupMatchsSerializer(serializers.Serializer):
 
         return data
 
-class GroupMatchsLaunchSerializer(serializers.Serializer):
+class LaunchMatchsSerializer(serializers.Serializer):
     tournament = serializers.PrimaryKeyRelatedField(queryset=Tournament.objects.all())
     round = serializers.IntegerField(required=False)
-    matchs = serializers.PrimaryKeyRelatedField(queryset=GroupMatch.objects.all(), many=True, required=False)
+
+    def __init__(self, *args, **kwargs):
+        match_type = kwargs.pop("type", "")
+
+        if match_type == "group":
+            self.match_class = GroupMatch
+        elif match_type == "swiss":
+            self.match_class = SwissMatch
+        elif match_type == "bracket":
+            self.match_class = KnockoutMatch
+
+        super().__init__(*args, **kwargs)
+
+        self.fields["matchs"] = serializers.PrimaryKeyRelatedField(queryset=self.match_class.objects.all(), many=True, required=False)
 
     def validate(self, data):
         round = data.pop("round", 0)
@@ -127,10 +140,10 @@ class GroupMatchsLaunchSerializer(serializers.Serializer):
         data["warning"] = False
 
         if round:
-            if GroupMatch.objects.filter(round_number__lt=round, group__tournament=data["tournament"]).exclude(status=MatchStatus.COMPLETED).exists():
+            if self.match_class.objects.filter(round_number__lt=round, group__tournament=data["tournament"]).exclude(status=MatchStatus.COMPLETED).exists():
                 raise serializers.ValidationError(_("Des matchs des round précédent sont encore en cours ou ne sont pas terminés."))
 
-            scheduled_matchs = GroupMatch.objects.filter(round_number=round, group__tournament=data["tournament"], status=MatchStatus.SCHEDULED)
+            scheduled_matchs = self.match_class.objects.filter(round_number=round, group__tournament=data["tournament"], status=MatchStatus.SCHEDULED)
 
             if not scheduled_matchs.exists():
                 raise serializers.ValidationError(_("Tous les matchs sont déjà en cours ou bien terminés."))
@@ -140,7 +153,7 @@ class GroupMatchsLaunchSerializer(serializers.Serializer):
             data["matchs"] = []
 
             for match in matchs:
-                ongoing_teams_matchs = GroupMatch.objects.filter(teams__in=match.teams.all()).exclude(pk=match.pk).filter(status=MatchStatus.ONGOING)
+                ongoing_teams_matchs = self.match_class.objects.filter(teams__in=match.teams.all()).exclude(pk=match.pk).filter(status=MatchStatus.ONGOING)
 
                 if not ongoing_teams_matchs.exists():
                     data["matchs"].append(match)
