@@ -13,10 +13,13 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path("full/", views.FullList.as_view(), name="full/list"),
     path("constant/", views.ConstantList.as_view(), name="constant/list"),
     path("constant/<str:name>/", views.ConstantFetch.as_view(), name="constant/name"),
     path("content/", views.ContentList.as_view(), name="content/list"),
     path(
         "content/<str:name>/", views.ContentFetch.as_view(), name="content/section"
     ),
+    path("file/", views.FileList.as_view(), name="file/list"),
+    path("file/<str:name>/", views.FileFetch.as_view(), name="file/name"),
 ]

@@ -17,6 +17,7 @@ def constant_definition_validator(content: str):
     """
     Validator to ensure that any used constant in content is defined.
     """
+    # validate that all constants used in the content are defined
     regex = re.compile(r"\${(?P<name>[^{}]*)}")
     constant_list = set(
         re.findall(regex, content)
@@ -33,6 +34,26 @@ def constant_definition_validator(content: str):
         raise ValidationError(
             _(
                 f"Des constantes non définies sont utilisées: {', '.join(sorted(excess_constants))}"
+            )
+        )
+
+    # validate that all files used in the content are defined
+    regex = re.compile(r"\$<(?P<name>[^{}]*)>")
+    file_list = set(
+        re.findall(regex, content)
+    )  # get the file names in the content
+    p_files = set(
+        file.name for file in File.objects.all()
+    )  # retrieve every file names
+
+    excess_files = file_list - p_files.intersection(
+        file_list
+    )  # Get the files in the content but not defined
+
+    if len(excess_files) > 0:
+        raise ValidationError(
+            _(
+                f"Des fichiers non définis sont utilisés: {', '.join(sorted(excess_files))}"
             )
         )
 
@@ -146,3 +167,26 @@ class Constant(models.Model):
 
     def __str__(self) -> str:
         return f"[Constant] {self.name}"
+
+class File(models.Model):
+    """
+    Represents a file to be placed on website pages.
+    """
+
+    name = models.CharField(
+        max_length=100, verbose_name=_("Nom du fichier")
+    )
+    file = models.FileField(
+        verbose_name=_("Fichier"),
+        upload_to="files/",
+    )
+
+    class Meta:
+        """
+        Meta class for the File model.
+        """
+        verbose_name = _("Fichier")
+        verbose_name_plural = _("Fichiers")
+
+    def __str__(self) -> str:
+        return f"[File] {self.name}"
