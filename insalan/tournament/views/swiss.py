@@ -1,9 +1,9 @@
 from django.utils.translation import gettext_lazy as _
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import BadRequest
 
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, PermissionDenied
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -11,7 +11,7 @@ from drf_yasg import openapi
 import insalan.tournament.serializers as serializers
 
 from ..models import MatchStatus, Tournament, SwissMatch, SwissRound, validate_match_data
-from ..manage import update_match_score, generate_swiss_round
+from ..manage import update_match_score, generate_swiss_round, launch_match
 
 class GenerateSwissRound(generics.CreateAPIView):
     queryset = Tournament.objects.all()
@@ -45,6 +45,27 @@ class DeleteSwissRounds(generics.DestroyAPIView):
         tournament.swissround_set.all().delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class SwissMatchsLaunch(generics.UpdateAPIView):
+    serializer_class = serializers.LaunchMatchsSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def patch(self, request, *args, **kwargs):
+        if kwargs["pk"] != request.data["tournament"]:
+            raise BadRequest()
+
+        data = self.get_serializer(data=request.data, type="swiss")
+        data.is_valid(raise_exception=True)
+
+        matchs = []
+
+        for match in data.validated_data["matchs"]:
+            launch_match(match)
+            matchs.append(match.id)
+
+        return Response({
+            "matchs": matchs, "warning": data.validated_data["warning"]
+        }, status=status.HTTP_200_OK)
 
 class SwissMatchScore(generics.GenericAPIView):
     """Update score of a swiss match"""

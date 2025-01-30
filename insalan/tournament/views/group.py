@@ -120,14 +120,14 @@ class DeleteGroupMatchs(generics.DestroyAPIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class GroupMatchsLaunch(generics.UpdateAPIView):
-    serializer_class = serializers.GroupMatchsLaunchSerializer
+    serializer_class = serializers.LaunchMatchsSerializer
     permission_classes = [permissions.IsAdminUser]
 
     def patch(self, request, *args, **kwargs):
         if kwargs["pk"] != request.data["tournament"]:
             raise BadRequest()
 
-        data = self.get_serializer(data=request.data)
+        data = self.get_serializer(data=request.data, type="group")
         data.is_valid(raise_exception=True)
 
         matchs = []
