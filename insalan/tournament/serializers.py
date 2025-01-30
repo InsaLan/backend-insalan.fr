@@ -426,7 +426,7 @@ class PlayerSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def validate(self, data):
-        event = Event.objects.get(tournament__team=data["team"])
+        event = data["team"].tournament.event
         if not unique_event_registration_validator(data["user"],event):
             raise serializers.ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
@@ -473,7 +473,7 @@ class ManagerSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def validate(self, data):
-        event = Event.objects.get(tournament__team=data["team"])
+        event = data["team"].tournament.event
         if not unique_event_registration_validator(data["user"],event):
             raise serializers.ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
@@ -511,7 +511,7 @@ class SubstituteSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def validate(self, data):
-        event = Event.objects.get(tournament__team=data["team"])
+        event = data["team"].tournament.event
         if not unique_event_registration_validator(data["user"],event):
             raise serializers.ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
