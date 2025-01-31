@@ -121,13 +121,13 @@ class LaunchMatchsSerializer(serializers.Serializer):
     round = serializers.IntegerField(required=False)
 
     def __init__(self, *args, **kwargs):
-        match_type = kwargs.pop("type", "")
+        self.match_type = kwargs.pop("type", "")
 
-        if match_type == "group":
+        if self.match_type == "group":
             self.match_class = GroupMatch
-        elif match_type == "swiss":
+        elif self.match_type == "swiss":
             self.match_class = SwissMatch
-        elif match_type == "bracket":
+        elif self.match_type == "bracket":
             self.match_class = KnockoutMatch
 
         super().__init__(*args, **kwargs)
@@ -140,10 +140,11 @@ class LaunchMatchsSerializer(serializers.Serializer):
         data["warning"] = False
 
         if round:
-            if self.match_class.objects.filter(round_number__lt=round, group__tournament=data["tournament"]).exclude(status=MatchStatus.COMPLETED).exists():
+            tournament = {f"{self.match_type}__tournament": data["tournament"]}
+            if self.match_class.objects.filter(round_number__lt=round, **tournament).exclude(status=MatchStatus.COMPLETED).exists():
                 raise serializers.ValidationError(_("Des matchs des round précédent sont encore en cours ou ne sont pas terminés."))
 
-            scheduled_matchs = self.match_class.objects.filter(round_number=round, group__tournament=data["tournament"], status=MatchStatus.SCHEDULED)
+            scheduled_matchs = self.match_class.objects.filter(round_number=round, **tournament, status=MatchStatus.SCHEDULED)
 
             if not scheduled_matchs.exists():
                 raise serializers.ValidationError(_("Tous les matchs sont déjà en cours ou bien terminés."))
