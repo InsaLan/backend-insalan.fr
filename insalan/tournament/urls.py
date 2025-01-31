@@ -22,12 +22,53 @@ urlpatterns = [
         name="tournament/details/",
     ),
     path(
-        "tournament/<int:primary_key>/full/",
+        "tournament/<int:pk>/full/",
         views.TournamentDetailsFull.as_view(),
         name="tournament/details-full",
     ),
+    path(
+        "tournament/<int:pk>/group/generate/",
+        views.GenerateGroups.as_view(),
+        name="generate/tournament/groups",
+    ),
+    path(
+        "tournament/<int:pk>/group/delete/",
+        views.DeleteGroups.as_view(),
+        name="delete/tournament/groups",
+    ),
+    path(
+        "tournament/<int:pk>/group/matchs/generate/",
+        views.GenerateGroupMatchs.as_view(),
+        name="generate/tournament/group/matchs"
+    ),
+    path(
+        "tournament/<int:pk>/group/matchs/delete/",
+        views.DeleteGroupMatchs.as_view(),
+        name="delete/tournament/group/matchs"
+    ),
+    path(
+        "tournament/<int:pk>/group/matchs/launch/",
+        views.GroupMatchsLaunch.as_view(),
+        name="launch/tournament/group/matchs"
+    ),
+    path(
+        "tournament/<int:pk>/swiss/generate/",
+        views.GenerateSwissRound.as_view(),
+        name="generate/tournament/swiss",
+    ),
+    path(
+        "tournament/<int:pk>/swiss/delete/",
+        views.DeleteSwissRounds.as_view(),
+        name="delete/tournament/swiss",
+    ),
+    path(
+        "tournament/<int:pk>/swiss/matchs/launch/",
+        views.SwissMatchsLaunch.as_view(),
+        name="launch/tournament/swiss/matchs"
+    ),
     path("me/", views.TournamentMe.as_view(), name="tournament/me"),
     path("team/", views.TeamList.as_view(), name="team/list"),
+    path("team/seeding", views.AdminTeamSeeding.as_view(), name="team/seeding"),
     path("team/<int:pk>/", views.TeamDetails.as_view(), name="team/details"),
     path("team/<int:pk>/matchs", views.TeamMatchs.as_view(), name="team/matchs"),
     path("player/", views.PlayerRegistrationList.as_view(), name="player/list"),
@@ -70,11 +111,16 @@ urlpatterns = [
         views.SubstituteRegistrationListName.as_view(),
         name="substitute/listFromUsername",
     ),
-    # path(
-    #     "group/",
-    #     views.GroupList.as_view(),
-    #     name="group/list"
-    # ),
+    path(
+        "group/",
+        views.GroupList.as_view(),
+        name="group/list"
+    ),
+    path(
+        "group/<int:pk>/",
+        views.GroupDetails.as_view(),
+        name="group/details"
+    ),
     path(
         "group/<int:group_id>/match/<int:match_id>/",
         views.GroupMatchScore.as_view(),
