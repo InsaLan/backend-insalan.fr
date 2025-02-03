@@ -10,6 +10,7 @@ import requests
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from django.core.validators import MinValueValidator
 from rest_framework.serializers import ValidationError
 
 import insalan.settings as app_settings
@@ -420,7 +421,11 @@ class Discount(models.Model):
         Product, null=True, on_delete=models.SET_NULL, verbose_name=_("Produit")
     )
     discount = models.DecimalField(
-        null=False, max_digits=5, decimal_places=2, verbose_name=_("Réduction")
+        null=False,
+        max_digits=5,
+        decimal_places=2,
+        verbose_name=_("Réduction"),
+        validators=[MinValueValidator(Decimal('0.01'))]
     )
     reason = models.CharField(max_length=200, verbose_name=_("Motif"))
     creation_date = models.DateTimeField(
