@@ -1195,7 +1195,8 @@ class TournamentFullDerefEndpoint(TestCase):
                         seat_two.x,
                         seat_two.y,
                     )
-                ]
+                ],
+                "planning_file": None,
             },
             "game": {
                 "id": game_obj.id,
@@ -1250,7 +1251,7 @@ class TournamentFullDerefEndpoint(TestCase):
             "description": "",
             "description_bottom": "",
             "casters": [],
-            "planning": "",
+            "planning_file": None,
             "groups" : [],
             "brackets" : [],
             "swissRounds" : [],
@@ -1470,6 +1471,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
             ],
             "logo": None,
             "poster": None,
+            "planning_file": None,
         }
         self.assertEqual(request.data, model)
 
@@ -1528,7 +1530,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
                     "description": "",
                     "description_bottom": "",
                     "casters": [],
-                    "planning": "",
+                    "planning_file": None,
                     "groups" : [],
                     "brackets" : [],
                     "swissRounds" : []
@@ -1536,6 +1538,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
             ],
             "logo": None,
             "poster": None,
+            "planning_file": None,
         }
         self.assertEqual(request.data, model)
 

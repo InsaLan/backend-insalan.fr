@@ -19,9 +19,11 @@ développeurs.
 
 ## Fonctionnalités
 
-Il y a deux type de contenu CMS, les `contents` et les `constants`. Les
-`contents` sont des éléments de contenu qui sont affichés sur le site web et qui
-peuvent dépendre de constantes qui sont justement définies à part.
+Il y a trois type de contenu CMS, les `contents`, les `constants` et les
+`files`. Les `contents` sont des éléments de contenu qui sont affichés sur le
+site web et qui peuvent dépendre de constantes qui sont justement définies à
+part. Les `files` sont des fichiers uploadés sur le site web. Ils peuvent être
+des images, des vidéos, des documents, etc.
 
 ## Spécificités
 
