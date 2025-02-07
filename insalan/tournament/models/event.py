@@ -61,6 +61,13 @@ class Event(models.Model):
             FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp", "avif"])
         ],
     )
+    planning_file = models.FileField(
+        verbose_name=_("Fichier ICS du planning"),
+        blank=True,
+        null=True,
+        upload_to="event-planning",
+        validators=[FileExtensionValidator(allowed_extensions=["ics"])],
+    )
 
     class Meta:
         """Meta options"""
