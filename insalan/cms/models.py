@@ -38,7 +38,7 @@ def constant_definition_validator(content: str):
         )
 
     # validate that all files used in the content are defined
-    regex = re.compile(r"\$<(?P<name>[^{}]*)>")
+    regex = re.compile(r"\$\[(?P<name>[^\[\]]*)\]")
     file_list = set(
         re.findall(regex, content)
     )  # get the file names in the content
