@@ -1107,7 +1107,7 @@ admin.site.register(SwissRound,SwissRoundAdmin)
 class SwissMatchAdmin(admin.ModelAdmin):
     """Admin handle for Swiss matchs"""
 
-    list_display = ("id","swiss","status","round_number","index_in_round","bo_type",)
+    list_display = ("id","swiss","status","round_number","index_in_round","bo_type","score_group")
     inlines = [ScoreInline]
     actions = [
         "launch_swiss_matchs_action",

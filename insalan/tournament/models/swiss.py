@@ -62,6 +62,8 @@ class SwissMatch(match.Match):
         on_delete=models.CASCADE
     )
 
+    score_group = models.PositiveIntegerField()
+
     class Meta:
         verbose_name = _("Match de ronde suisse")
         verbose_name_plural = _("Matchs de ronde suisse")
