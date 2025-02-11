@@ -67,6 +67,25 @@ class SwissMatchsLaunch(generics.UpdateAPIView):
             "matchs": matchs, "warning": data.validated_data["warning"]
         }, status=status.HTTP_200_OK)
 
+class GenerateSwissRoundRound(generics.UpdateAPIView):
+    queryset = Tournament.objects.all()
+    permission_classes = [permissions.IsAdminUser]
+    serializer_class = serializers.GenerateSwissRoundRoundSerializer
+
+    def patch(self, request, pk, *args, **kargs):
+        request.data["tournament"] = pk
+
+        data = self.get_serializer(data=request.data)
+        data.is_valid(raise_exception=True)
+
+        updated_matchs = generate_swiss_round_round(data.validated_data["swiss"], data.validated_data["round"])
+
+        updated_matchs_serialized = serializers.SwissMatchSerializer(updated_matchs, many=True)
+
+        updated_matchs_serialized = {m["id"]: m for m in updated_matchs_serialized.data}
+
+        return Response(updated_matchs_serialized, status=status.HTTP_200_OK)
+
 class SwissMatchScore(generics.GenericAPIView):
     """Update score of a swiss match"""
 

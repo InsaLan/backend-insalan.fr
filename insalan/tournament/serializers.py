@@ -200,6 +200,31 @@ class CreateSwissRoundsSerializer(serializers.Serializer):
     min_score = serializers.IntegerField(min_value=1)
     use_seeding = serializers.BooleanField()
 
+class GenerateSwissRoundRoundSerializer(serializers.Serializer):
+    tournament = serializers.PrimaryKeyRelatedField(queryset=Tournament.objects.all())
+    swiss = serializers.PrimaryKeyRelatedField(queryset=SwissRound.objects.all())
+    round = serializers.IntegerField(min_value=2)
+
+    def validate(self, data):
+        tournament = data["tournament"]
+        swiss = data["swiss"]
+        round_idx = data["round"]
+
+        if not tournament.swissround_set.contains(swiss):
+            raise serializers.ValidationError(_("La ronde suisse ne fait pas partie de ce tournoi."))
+
+        if round_idx > 2*swiss.min_score - 1:
+            raise serializers.ValidationError(_("Le tour demandé ne fait pas partie de cette ronde suisse."))
+
+        if SwissMatch.objects.filter(swiss=swiss, round_number=round_idx).exclude(status=MatchStatus.SCHEDULED).exists():
+            raise serializers.ValidationError(_("Des matchs existent déjà et sont en cours ou terminés."))
+
+        if SwissMatch.objects.filter(swiss=swiss, round_number=round_idx-1).exclude(status=MatchStatus.COMPLETED).exists():
+            raise serializers.ValidationError(_("Des matchs du tour précédant n'ont pas encore commencés ou ne sont pas terminés."))
+
+        return data
+
+
 class CasterSerializer(serializers.ModelSerializer):
     """Serializer for a tournament Caster"""
 

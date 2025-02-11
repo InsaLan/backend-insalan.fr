@@ -1,5 +1,6 @@
 from ..models import Team, Tournament, SwissRound, SwissMatch, SwissSeeding
 from math import ceil
+from random import shuffle
 
 def create_swiss_matchs(swiss: SwissRound):
     teams = swiss.get_sorted_teams()
@@ -75,3 +76,80 @@ def create_swiss_rounds(tournament: Tournament, min_score: int, use_seeding: boo
                 SwissSeeding.objects.create(swiss=swiss, seeding=0, team=team)
 
     create_swiss_matchs(swiss)
+
+def get_winners_loosers_per_score_group(matchs_per_score_group):
+    winners_per_score_group, loosers_per_score_group = [], []
+
+    for idx, matchs in enumerate(matchs_per_score_group):
+        winners_per_score_group.append([])
+        loosers_per_score_group.append([])
+
+        for match in matchs:
+            winners, loosers = match.get_winners_loosers()
+            winners_per_score_group[idx] += winners
+            loosers_per_score_group[idx] += loosers
+
+    return winners_per_score_group, loosers_per_score_group
+
+def fill_matchs(matchs, teams, team_per_match):
+    matchs = list(matchs)
+    nb_matchs = len(matchs)
+
+    # clear matchs
+    for match in matchs:
+        match.teams.clear()
+    
+    teams += [None]*(nb_matchs*team_per_match - len(teams))
+
+    matchs += matchs[::-1]
+
+    for i, team in enumerate(teams):
+        if team != None:
+            matchs[i%(2*nb_matchs)].teams.add(team)
+
+def generate_swiss_round_round(swiss: SwissRound, round_idx: int):
+    team_per_match = swiss.tournament.get_game().get_team_per_match()
+    # before qualifying rounds
+    if round_idx <= swiss.min_score:
+        matchs_per_score_group = [SwissMatch.objects.filter(swiss=swiss, round_number=round_idx-1, score_group=sg) for sg in range(round_idx-1)]
+
+        winners_per_score_group, loosers_per_score_group = get_winners_loosers_per_score_group(matchs_per_score_group)
+
+        matchs = SwissMatch.objects.filter(swiss=swiss, round_number=round_idx, score_group=0)
+
+        teams = winners_per_score_group[0]
+        shuffle(teams)
+        
+        fill_matchs(matchs, teams, team_per_match)
+
+        for score_group in range(1,round_idx-1):
+            matchs = SwissMatch.objects.filter(swiss=swiss, round_number=round_idx, score_group=score_group)
+
+            teams = loosers_per_score_group[score_group-1] + winners_per_score_group[score_group]
+            shuffle(teams)
+
+            fill_matchs(matchs, teams, team_per_match)
+        
+        matchs = SwissMatch.objects.filter(swiss=swiss, round_number=round_idx, score_group=round_idx-1)
+
+        teams = loosers_per_score_group[round_idx-2]
+        shuffle(teams)
+
+        fill_matchs(matchs, teams, team_per_match)
+
+    # qualifying rounds
+    else:
+        score_group_count = 2*swiss.min_score - round_idx
+        matchs_per_score_group = [SwissMatch.objects.filter(swiss=swiss, round_number=round_idx-1, score_group=sg) for sg in range(score_group_count+1)]
+
+        winners_per_score_group, loosers_per_score_group = get_winners_loosers_per_score_group(matchs_per_score_group)
+
+        for score_group in range(score_group_count):
+            matchs = SwissMatch.objects.filter(swiss=swiss, round_number=round_idx, score_group=score_group)
+
+            teams = loosers_per_score_group[score_group] + winners_per_score_group[score_group+1]
+            shuffle(teams)
+
+            fill_matchs(matchs, teams, team_per_match)
+
+    return SwissMatch.objects.filter(swiss=swiss, round_number=round_idx)
