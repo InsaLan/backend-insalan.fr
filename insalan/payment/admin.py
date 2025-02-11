@@ -8,7 +8,7 @@ from django.contrib import admin, messages
 from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
-from .models import Product, Transaction, Payment, TransactionStatus
+from .models import Product, Transaction, Payment, TransactionStatus, Discount
 
 
 class ProductAdmin(admin.ModelAdmin):
@@ -123,3 +123,15 @@ class TransactionAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Transaction, TransactionAdmin)
+
+class DiscountAdmin(admin.ModelAdmin):
+    """
+    Admin handler for Discounts
+    """
+
+    list_display = ("id", "discount", "user", "product", "used")
+    search_fields = ["id", "discount", "user", "product", "reason"]
+    
+
+
+admin.site.register(Discount, DiscountAdmin)

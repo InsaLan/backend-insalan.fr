@@ -20,6 +20,14 @@ automatiquement à la création d'un tournoi (et plus tard, d'un créneau pizza)
 Ils contiennent plusieurs info comme le nom, le prix, la description, les dates
 de début et de fin de vente, etc.
 
+## Discount
+
+Les réductions sont créées manuellement par les admins. Elles font le lien entre
+un utilisateur et un produit. La valeur de la réduction et une description sont
+également stockées dans ce modèle. Les réductions doivent être ajoutés en amont
+du paiement et peuvent être utilisées une seule fois. Cela peut permettre de
+réduire le prix d'un pour certains joueurs. 
+
 ## Transaction
 
 Les transactions sont créées à chaque fois qu'un utilisateur initie un paiement
