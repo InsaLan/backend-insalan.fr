@@ -61,7 +61,7 @@ def create_swiss_matchs(swiss: SwissRound):
             matchs_per_score_group_per_round[-1].append(idx+1)
             match_idx += idx + 1
 
-def generate_swiss_round(tournament: Tournament, min_score: int, use_seeding: bool):
+def create_swiss_rounds(tournament: Tournament, min_score: int, use_seeding: bool):
     teams = tournament.teams.filter(validated=True)
     swiss = SwissRound.objects.create(tournament=tournament, min_score=min_score)
 

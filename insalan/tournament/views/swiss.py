@@ -11,11 +11,11 @@ from drf_yasg import openapi
 import insalan.tournament.serializers as serializers
 
 from ..models import MatchStatus, Tournament, SwissMatch, SwissRound, validate_match_data
-from ..manage import update_match_score, generate_swiss_round, launch_match
+from ..manage import update_match_score, create_swiss_rounds, launch_match, generate_swiss_round_round
 
-class GenerateSwissRound(generics.CreateAPIView):
+class CreateSwissRounds(generics.CreateAPIView):
     queryset = Tournament.objects.all()
-    serializer_class = serializers.GenerateSwissRoundsSerializer
+    serializer_class = serializers.CreateSwissRoundsSerializer
     permission_classes = [permissions.IsAdminUser]
 
     def post(self, request, pk, *args, **kwargs):
@@ -24,7 +24,7 @@ class GenerateSwissRound(generics.CreateAPIView):
         data = self.get_serializer(data=request.data)
         data.is_valid(raise_exception=True)
 
-        generate_swiss_round(**data.validated_data)
+        create_swiss_rounds(**data.validated_data)
 
         serialized_data = serializers.SwissRoundField(data.validated_data["tournament"].swissround_set.all(), many=True).data
 

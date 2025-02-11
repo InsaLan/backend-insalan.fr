@@ -52,9 +52,9 @@ urlpatterns = [
         name="launch/tournament/group/matchs"
     ),
     path(
-        "tournament/<int:pk>/swiss/generate/",
-        views.GenerateSwissRound.as_view(),
-        name="generate/tournament/swiss",
+        "tournament/<int:pk>/swiss/create/",
+        views.CreateSwissRounds.as_view(),
+        name="create/tournament/swiss",
     ),
     path(
         "tournament/<int:pk>/swiss/delete/",
