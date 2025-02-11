@@ -7,11 +7,11 @@ The models include:
 """
 
 import re
-import string
 
 from djongo import models
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 
 def constant_definition_validator(content: str):
     """
@@ -87,7 +87,15 @@ class Constant(models.Model):
     """
 
     name = models.CharField(
-        max_length=100, unique=True, verbose_name=_("Nom de la constante")
+        max_length=100,
+        unique=True,
+        verbose_name=_("Nom de la constante"),
+        validators=[
+            RegexValidator(
+                regex=r'^[^{}]*$',
+                message=_("Le nom de la constante ne doit pas contenir les symboles { et }")
+            )
+        ]
     )
     value = models.CharField(max_length=200, verbose_name=_("Valeur de la constante"))
 
@@ -107,7 +115,15 @@ class File(models.Model):
     """
 
     name = models.CharField(
-        max_length=100, verbose_name=_("Nom du fichier")
+        max_length=100,
+        unique=True,
+        verbose_name=_("Nom du fichier"),
+        validators=[
+            RegexValidator(
+                regex=r'^[^[\]]*$',
+                message=_("Le nom du fichier ne doit pas contenir les symboles [ et ]")
+            )
+        ]
     )
     file = models.FileField(
         verbose_name=_("Fichier"),
