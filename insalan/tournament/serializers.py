@@ -145,7 +145,7 @@ class LaunchMatchsSerializer(serializers.Serializer):
         if round:
             tournament = {f"{self.match_type}__tournament": data["tournament"]}
             if self.match_class.objects.filter(round_number__lt=round, **tournament).exclude(status=MatchStatus.COMPLETED).exists():
-                raise serializers.ValidationError(_("Des matchs des round précédent sont encore en cours ou ne sont pas terminés."))
+                raise serializers.ValidationError(_("Des matchs des tours précédents sont encore en cours ou ne sont pas terminés."))
 
             scheduled_matchs = self.match_class.objects.filter(round_number=round, **tournament, status=MatchStatus.SCHEDULED)
 
