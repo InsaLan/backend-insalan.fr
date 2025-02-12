@@ -14,7 +14,8 @@ from insalan.user.models import User
 from .models import (Event, Tournament, Game, Team, Player, Manager,
                      Substitute, Caster, Group, GroupMatch, Bracket,
                      KnockoutMatch, SwissRound, SwissMatch, Score, Seat, 
-                     SeatSlot, GroupTiebreakScore, MatchStatus)
+                     SeatSlot, GroupTiebreakScore, MatchStatus,
+                     BestofType)
 from .models import (unique_event_registration_validator, tournament_announced,
                      max_players_per_team_reached,
                      tournament_registration_full,
@@ -103,6 +104,7 @@ class GenerateGroupsSerializer(serializers.Serializer):
 class GenerateGroupMatchsSerializer(serializers.Serializer):
     tournament = serializers.PrimaryKeyRelatedField(queryset=Tournament.objects.all().prefetch_related("group_set"))
     groups = serializers.PrimaryKeyRelatedField(queryset=Group.objects.all().prefetch_related("groupmatch_set"), many=True)
+    bo_type = serializers.ChoiceField(BestofType)
 
     def validate(self, data):
         tournament: Tournament = data["tournament"]

@@ -1,6 +1,6 @@
 import math
 from typing import List
-from ..models import Group, GroupMatch, Team, Tournament, Seeding, GroupTiebreakScore
+from ..models import Group, GroupMatch, Team, Tournament, Seeding, GroupTiebreakScore, BestofType
 
 def generate_groups(tournament: Tournament, count: int, team_per_group: int, names: list[str], use_seeding: bool):
     if use_seeding:
@@ -18,7 +18,7 @@ def generate_groups(tournament: Tournament, count: int, team_per_group: int, nam
                 Seeding.objects.create(group=group, team=team, seeding=j+1)
                 GroupTiebreakScore.objects.create(group=group, team=team)
 
-def create_group_matchs(group: Group):
+def create_group_matchs(group: Group, bo_type: BestofType):
     teams = group.get_sorted_teams()
     team_per_match = group.get_tournament().get_game().get_team_per_match()
     nb_matchs = math.ceil(len(teams)/team_per_match)
@@ -32,7 +32,7 @@ def create_group_matchs(group: Group):
     for round_idx in range(nb_rounds):
         matchs = []
         for match_idx in range(nb_matchs):
-            matchs.append(GroupMatch.objects.create(round_number=round_idx+1,index_in_round=match_idx+1,group=group))
+            matchs.append(GroupMatch.objects.create(round_number=round_idx+1,index_in_round=match_idx+1,group=group, bo_type=bo_type))
         
         matchs += matchs[::-1]
 
