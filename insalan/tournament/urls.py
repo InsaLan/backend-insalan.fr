@@ -128,22 +128,31 @@ urlpatterns = [
     ),
     path(
         "group/<int:group_id>/match/<int:match_id>/",
+        views.GroupMatchPatch.as_view(),
+        name="group/match"
+    ),
+    path(
+        "group/<int:group_id>/match/<int:match_id>/score/",
         views.GroupMatchScore.as_view(),
         name="group/match/score"
     ),
-    # path(
-    #     "bracket/"
-    # ),
     path(
         "bracket/<int:bracket_id>/match/<int:match_id>/",
+        views.BracketMatchPatch.as_view(),
+        name="bracket/match"
+    ),
+    path(
+        "bracket/<int:bracket_id>/match/<int:match_id>/score/",
         views.BracketMatchScore.as_view(),
         name="bracket/match/score"
     ),
-    # path(
-    #     "match/"
-    # ),
     path(
         "swiss/<int:swiss_id>/match/<int:match_id>/",
+        views.SwissMatchPatch.as_view(),
+        name="swiss/match"
+    ),
+    path(
+        "swiss/<int:swiss_id>/match/<int:match_id>/score/",
         views.SwissMatchScore.as_view(),
         name="swiss/match/score"
     ),

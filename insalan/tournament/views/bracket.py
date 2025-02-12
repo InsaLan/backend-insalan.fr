@@ -11,8 +11,13 @@ from drf_yasg import openapi
 import insalan.tournament.serializers as serializers
 
 from ..models import KnockoutMatch, validate_match_data
-# , InvalidScores, InvalidTeamList, InvalidTeamScore, NotOngoingMatch
 from ..manage import update_match_score, update_next_knockout_match
+
+class BracketMatchPatch(generics.UpdateAPIView):
+    queryset = KnockoutMatch.objects.all()
+    permission_classes = [permissions.IsAdminUser]
+    serializer_class = serializers.KnockoutMatchSerializer
+    lookup_url_kwarg = "match_id"
 
 class BracketMatchScore(generics.GenericAPIView):
     """Update score of a bracket match"""

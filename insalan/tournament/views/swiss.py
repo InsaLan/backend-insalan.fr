@@ -86,6 +86,12 @@ class GenerateSwissRoundRound(generics.UpdateAPIView):
 
         return Response(updated_matchs_serialized, status=status.HTTP_200_OK)
 
+class SwissMatchPatch(generics.UpdateAPIView):
+    queryset = SwissMatch.objects.all()
+    permission_classes = [permissions.IsAdminUser]
+    serializer_class = serializers.SwissMatchSerializer
+    lookup_url_kwarg = "match_id"
+
 class SwissMatchScore(generics.GenericAPIView):
     """Update score of a swiss match"""
 

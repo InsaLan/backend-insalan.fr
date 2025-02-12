@@ -138,6 +138,12 @@ class GroupMatchsLaunch(generics.UpdateAPIView):
 
         return Response({ "matchs": matchs, "warning": data.validated_data["warning"] },status=status.HTTP_200_OK)
 
+class GroupMatchPatch(generics.UpdateAPIView):
+    queryset = GroupMatch.objects.all()
+    permission_classes = [permissions.IsAdminUser]
+    serializer_class = serializers.GroupMatchSerializer
+    lookup_url_kwarg = "match_id"
+
 class GroupMatchScore(generics.UpdateAPIView):
     """Update score of a group match"""
 
