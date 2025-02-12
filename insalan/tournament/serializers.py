@@ -204,6 +204,7 @@ class CreateSwissRoundsSerializer(serializers.Serializer):
     tournament = serializers.PrimaryKeyRelatedField(queryset=Tournament.objects.all())
     min_score = serializers.IntegerField(min_value=1)
     use_seeding = serializers.BooleanField()
+    bo_type = serializers.ChoiceField(BestofType)
 
 class GenerateSwissRoundRoundSerializer(serializers.Serializer):
     tournament = serializers.PrimaryKeyRelatedField(queryset=Tournament.objects.all())

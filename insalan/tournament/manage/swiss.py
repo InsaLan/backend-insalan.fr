@@ -1,8 +1,8 @@
-from ..models import Team, Tournament, SwissRound, SwissMatch, SwissSeeding
+from ..models import Team, Tournament, SwissRound, SwissMatch, SwissSeeding, BestofType
 from math import ceil
 from random import shuffle
 
-def create_swiss_matchs(swiss: SwissRound):
+def create_swiss_matchs(swiss: SwissRound, bo_type):
     teams = swiss.get_sorted_teams()
     team_per_match = swiss.tournament.get_game().get_team_per_match()
     nb_matchs = ceil(len(teams)/team_per_match)
@@ -17,7 +17,7 @@ def create_swiss_matchs(swiss: SwissRound):
     # first round
     matchs = []
     for match_idx in range(nb_matchs):
-        matchs.append(SwissMatch.objects.create(round_number=1,index_in_round=match_idx+1,swiss=swiss,score_group=0))
+        matchs.append(SwissMatch.objects.create(round_number=1,index_in_round=match_idx+1,swiss=swiss,score_group=0, bo_type=bo_type))
 
     matchs_per_score_group_per_round.append([nb_matchs])
 
@@ -32,20 +32,20 @@ def create_swiss_matchs(swiss: SwissRound):
         match_idx = 0
 
         for idx in range(ceil(matchs_per_score_group_per_round[round_idx - 1][0] / 2)):
-            SwissMatch.objects.create(round_number=round_idx+1,index_in_round=idx + 1,swiss=swiss,score_group=0)
+            SwissMatch.objects.create(round_number=round_idx+1,index_in_round=idx + 1,swiss=swiss,score_group=0, bo_type=bo_type)
 
         match_idx += idx + 1
         matchs_per_score_group_per_round.append([match_idx])
 
         for j in range(round_idx - 1):
             for idx in range(ceil(sum(matchs_per_score_group_per_round[round_idx - 1][j:j+2]) / 2)):
-                SwissMatch.objects.create(round_number=round_idx+1,index_in_round=match_idx + idx + 1,swiss=swiss,score_group=j+1)
+                SwissMatch.objects.create(round_number=round_idx+1,index_in_round=match_idx + idx + 1,swiss=swiss,score_group=j+1, bo_type=bo_type)
 
             matchs_per_score_group_per_round[-1].append(idx+1)
             match_idx += idx + 1
 
         for idx in range(ceil(matchs_per_score_group_per_round[round_idx - 1][-1] / 2)):
-            SwissMatch.objects.create(round_number=round_idx+1,index_in_round=match_idx + idx + 1,swiss=swiss,score_group=round_idx)
+            SwissMatch.objects.create(round_number=round_idx+1,index_in_round=match_idx + idx + 1,swiss=swiss,score_group=round_idx, bo_type=bo_type)
 
         matchs_per_score_group_per_round[-1].append(idx+1)
 
@@ -57,12 +57,12 @@ def create_swiss_matchs(swiss: SwissRound):
 
         for j in range(2*swiss.min_score - round_idx - 1):
             for idx in range(ceil(sum(matchs_per_score_group_per_round[round_idx - 1][j:j+2]) / 2)):
-                SwissMatch.objects.create(round_number=round_idx+1,index_in_round=match_idx + idx + 1,swiss=swiss,score_group=j)
+                SwissMatch.objects.create(round_number=round_idx+1,index_in_round=match_idx + idx + 1,swiss=swiss,score_group=j, bo_type=bo_type)
 
             matchs_per_score_group_per_round[-1].append(idx+1)
             match_idx += idx + 1
 
-def create_swiss_rounds(tournament: Tournament, min_score: int, use_seeding: bool):
+def create_swiss_rounds(tournament: Tournament, min_score: int, use_seeding: bool, bo_type: BestofType):
     teams = tournament.teams.filter(validated=True)
     swiss = SwissRound.objects.create(tournament=tournament, min_score=min_score)
 
@@ -75,7 +75,7 @@ def create_swiss_rounds(tournament: Tournament, min_score: int, use_seeding: boo
             if team != None:
                 SwissSeeding.objects.create(swiss=swiss, seeding=0, team=team)
 
-    create_swiss_matchs(swiss)
+    create_swiss_matchs(swiss, bo_type)
 
 def get_winners_loosers_per_score_group(matchs_per_score_group):
     winners_per_score_group, loosers_per_score_group = [], []
