@@ -141,9 +141,9 @@ class LaunchMatchsSerializer(serializers.Serializer):
         round = data.pop("round", 0)
         matchs = data.pop("matchs", [])
         data["warning"] = False
+        tournament = {f"{self.match_type}__tournament": data["tournament"]}
 
         if round:
-            tournament = {f"{self.match_type}__tournament": data["tournament"]}
             if self.match_class.objects.filter(round_number__lt=round, **tournament).exclude(status=MatchStatus.COMPLETED).exists():
                 raise serializers.ValidationError(_("Des matchs des tours précédents sont encore en cours ou ne sont pas terminés."))
 
@@ -157,9 +157,20 @@ class LaunchMatchsSerializer(serializers.Serializer):
             data["matchs"] = []
 
             for match in matchs:
-                ongoing_teams_matchs = self.match_class.objects.filter(teams__in=match.teams.all()).exclude(pk=match.pk).filter(status=MatchStatus.ONGOING)
+                if self.match_type in ["bracket", "swiss"]:
+                    unfinished_previous_matchs = self.match_class.objects.filter(
+                        round_number__lt=match.round_number,
+                        **tournament, teams__in=match.teams.all()
+                    ).exclude(
+                        status=MatchStatus.COMPLETED
+                    ).exists()
 
-                if not ongoing_teams_matchs.exists():
+                    if unfinished_previous_matchs:
+                        raise serializers.ValidationError(_("Des matchs des tours précédents sont encore en cours ou ne sont pas terminés."))
+
+                ongoing_teams_matchs = self.match_class.objects.filter(teams__in=match.teams.all(),status=MatchStatus.ONGOING).exclude(pk=match.pk)
+
+                if not ongoing_teams_matchs.exists() and match.teams.all().exists():
                     data["matchs"].append(match)
                 else:
                     data["warning"] = True
