@@ -8,10 +8,47 @@ from rest_framework.exceptions import NotFound
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
+from .permissions import ReadOnly
+
 import insalan.tournament.serializers as serializers
 
-from ..models import KnockoutMatch, validate_match_data
-from ..manage import update_match_score, update_next_knockout_match
+from ..models import Bracket, KnockoutMatch, MatchStatus, Tournament, validate_match_data
+from ..manage import create_empty_knockout_matchs, update_match_score, update_next_knockout_match
+
+
+class BracketDetails(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Bracket.objects.all()
+    permission_classes = [permissions.IsAdminUser | ReadOnly]
+    serializer_class = serializers.BracketSerializer
+
+    def delete(self, request, *args, **kwargs):
+        bracket = self.get_object()
+
+        if KnockoutMatch.objects.filter(bracket=bracket).exclude(status=MatchStatus.SCHEDULED).exists():
+            return Response({
+                "error": _("Impossible de supprimé l'arbre. Des matchs sont déjà en cours ou terminés")
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        bracket.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class CreateBracket(generics.CreateAPIView):
+    queryset = Tournament.objects.all()
+    permission_classes = [permissions.IsAdminUser]
+    serializer_class = serializers.BracketSerializer
+
+    def post(self, request, pk, *args, **kwargs):
+        request.data["tournament"] = pk
+
+        data = self.get_serializer(data=request.data)
+        data.is_valid(raise_exception=True)
+
+        bracket = Bracket.objects.create(**data.validated_data)
+
+        create_empty_knockout_matchs(bracket)
+
+        return Response(serializers.BracketField(bracket).data, status=status.HTTP_201_CREATED)
 
 class BracketMatchPatch(generics.UpdateAPIView):
     queryset = KnockoutMatch.objects.all()

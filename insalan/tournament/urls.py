@@ -27,6 +27,11 @@ urlpatterns = [
         name="tournament/details-full",
     ),
     path(
+        "tournament/<int:pk>/bracket/create/",
+        views.CreateBracket.as_view(),
+        name="create/tournament/bracket"
+    ),
+    path(
         "tournament/<int:pk>/group/generate/",
         views.GenerateGroups.as_view(),
         name="generate/tournament/groups",
@@ -135,6 +140,11 @@ urlpatterns = [
         "group/<int:group_id>/match/<int:match_id>/score/",
         views.GroupMatchScore.as_view(),
         name="group/match/score"
+    ),
+    path(
+        "bracket/<int:pk>/",
+        views.BracketDetails.as_view(),
+        name="bracket/details"
     ),
     path(
         "bracket/<int:bracket_id>/match/<int:match_id>/",

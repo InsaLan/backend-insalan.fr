@@ -6,6 +6,7 @@
 
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.hashers import make_password
+from django.core.validators import MinValueValidator
 
 from rest_framework import serializers
 
@@ -15,7 +16,7 @@ from .models import (Event, Tournament, Game, Team, Player, Manager,
                      Substitute, Caster, Group, GroupMatch, Bracket,
                      KnockoutMatch, SwissRound, SwissMatch, Score, Seat, 
                      SeatSlot, GroupTiebreakScore, MatchStatus,
-                     BestofType)
+                     BestofType, BracketSet)
 from .models import (unique_event_registration_validator, tournament_announced,
                      max_players_per_team_reached,
                      tournament_registration_full,
@@ -186,14 +187,39 @@ class KnockoutMatchSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class BracketSerializer(serializers.ModelSerializer):
-    teams = serializers.ListField(source="get_teams_id")
-    matchs = KnockoutMatchSerializer(many=True,source="get_matchs")
-    winner = serializers.IntegerField(source="get_winner")
+    teams = serializers.ListField(required=False,source="get_teams_id")
+    matchs = KnockoutMatchSerializer(required=False,many=True,source="get_matchs")
+    winner = serializers.IntegerField(required=False,source="get_winner")
     depth = serializers.IntegerField(required=False,source="get_depth")
 
     class Meta:
         model = Bracket
-        exclude = ["team_count"]
+        fields = "__all__"
+        extra_kwargs = {"team_count": {"write_only": True}}
+
+    def validate(self, data):
+        tournament = data["tournament"]
+        team_count = data["team_count"]
+
+        if (team_count > tournament.maxTeam):
+            raise serializers.ValidationError(_("Le nombre d'équipes demandé est supérieur au nombre maximum d'équipe inscrite dans le tournoi."))
+
+        return data
+
+# class CreateBracketSerializer(serializers.Serializer):
+#     tournament = serializers.PrimaryKeyRelatedField(queryset=Tournament.objects.all())
+#     name = serializers.CharField()
+#     team_count = serializers.IntegerField(min_value=2)
+#     bracket_set = serializers.ChoiceField(BracketSet)
+
+#     def validate(self, data):
+#         tournament = data["tournament"]
+#         team_count = data["team_count"]
+
+#         if (team_count > tournament.maxTeam):
+#             raise serializers.ValidationError(_("Le nombre d'équipes demandé est supérieur au nombre maximum d'équipe inscrite dans le tournoi."))
+
+#         return data
 
 class SwissMatchSerializer(serializers.ModelSerializer):
     score = serializers.DictField(required=True,source="get_scores")
