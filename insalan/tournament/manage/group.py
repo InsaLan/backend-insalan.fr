@@ -4,7 +4,7 @@ from ..models import Group, GroupMatch, Team, Tournament, Seeding, GroupTiebreak
 
 def generate_groups(tournament: Tournament, count: int, team_per_group: int, names: list[str], use_seeding: bool):
     if use_seeding:
-        teams = list(Team.objects.filter(tournament=tournament, validated=True).order_by("seed"))
+        teams = list(Team.objects.filter(tournament=tournament, validated=True).order_by("seed").reverse())
     else:
         teams = list(Team.objects.filter(tournament=tournament, validated=True))
     teams += [None]*(tournament.maxTeam - len(teams))
@@ -26,8 +26,8 @@ def create_group_matchs(group: Group, bo_type: BestofType):
 
     teams += [None]*(nb_matchs*team_per_match-len(teams))
 
-    # for gmatch in GroupMatch.objects.filter(group=group):
-    #     gmatch.delete()
+    for gmatch in GroupMatch.objects.filter(group=group):
+        gmatch.delete()
 
     for round_idx in range(nb_rounds):
         matchs = []
