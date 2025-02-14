@@ -139,16 +139,19 @@ class LaunchMatchsSerializer(serializers.Serializer):
         self.fields["matchs"] = serializers.PrimaryKeyRelatedField(queryset=self.match_class.objects.all(), many=True, required=False)
 
     def validate(self, data):
-        round = data.pop("round", 0)
+        round_id = data.pop("round", 0)
         matchs = data.pop("matchs", [])
         data["warning"] = False
         tournament = {f"{self.match_type}__tournament": data["tournament"]}
 
-        if round:
-            if self.match_class.objects.filter(round_number__lt=round, **tournament).exclude(status=MatchStatus.COMPLETED).exists():
+        if round_id:
+            if self.match_type == "bracket":
+                raise serializers.ValidationError(_("Le lancement de matchs par tour n'est pas supporté pour les arbres."))
+
+            if self.match_class.objects.filter(round_number__lt=round_id, **tournament).exclude(status=MatchStatus.COMPLETED).exists():
                 raise serializers.ValidationError(_("Des matchs des tours précédents sont encore en cours ou ne sont pas terminés."))
 
-            scheduled_matchs = self.match_class.objects.filter(round_number=round, **tournament, status=MatchStatus.SCHEDULED)
+            scheduled_matchs = self.match_class.objects.filter(round_number=round_id, **tournament, status=MatchStatus.SCHEDULED)
 
             if not scheduled_matchs.exists():
                 raise serializers.ValidationError(_("Tous les matchs sont déjà en cours ou bien terminés."))

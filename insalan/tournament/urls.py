@@ -32,6 +32,11 @@ urlpatterns = [
         name="create/tournament/bracket"
     ),
     path(
+        "tournament/<int:pk>/bracket/matchs/launch/",
+        views.BracketMatchsLaunch.as_view(),
+        name="launch/tournament/bracket/matchs"
+    ),
+    path(
         "tournament/<int:pk>/group/generate/",
         views.GenerateGroups.as_view(),
         name="generate/tournament/groups",

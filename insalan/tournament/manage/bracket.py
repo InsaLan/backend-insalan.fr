@@ -18,8 +18,6 @@ def create_empty_knockout_matchs(bracket: Bracket):
                 KnockoutMatch.objects.create(round_number=round_idx,index_in_round=match_id,bracket=bracket,bracket_set=BracketSet.LOOSER)
         KnockoutMatch.objects.create(round_number=0,index_in_round=1,bracket=bracket)
 
-# def fill_knockout_matchs(bracket: Bracket):
-
 def update_next_knockout_match(match: KnockoutMatch):
     if match.bracket_set == BracketSet.WINNER:
         winners, loosers = match.get_winners_loosers()

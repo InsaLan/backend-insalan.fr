@@ -1,5 +1,5 @@
 from django.utils.translation import gettext_lazy as _
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, BadRequest
 
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
@@ -13,7 +13,7 @@ from .permissions import ReadOnly
 import insalan.tournament.serializers as serializers
 
 from ..models import Bracket, KnockoutMatch, MatchStatus, Tournament, validate_match_data
-from ..manage import create_empty_knockout_matchs, update_match_score, update_next_knockout_match
+from ..manage import create_empty_knockout_matchs, update_match_score, update_next_knockout_match, launch_match
 
 
 class BracketDetails(generics.RetrieveUpdateDestroyAPIView):
@@ -55,6 +55,25 @@ class BracketMatchPatch(generics.UpdateAPIView):
     permission_classes = [permissions.IsAdminUser]
     serializer_class = serializers.KnockoutMatchSerializer
     lookup_url_kwarg = "match_id"
+
+class BracketMatchsLaunch(generics.UpdateAPIView):
+    serializer_class = serializers.LaunchMatchsSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    def patch(self, request, *args, **kwargs):
+        if kwargs["pk"] != request.data["tournament"]:
+            raise BadRequest()
+
+        data = self.get_serializer(data=request.data, type="bracket")
+        data.is_valid(raise_exception=True)
+
+        matchs = []
+
+        for match in data.validated_data["matchs"]:
+            launch_match(match)
+            matchs.append(match.id)
+
+        return Response({ "matchs": matchs, "warning": data.validated_data["warning"] },status=status.HTTP_200_OK)
 
 class BracketMatchScore(generics.GenericAPIView):
     """Update score of a bracket match"""
