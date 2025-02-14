@@ -4,7 +4,7 @@ This module contains the admin configuration for the CMS app.
 It defines the admin classes for the Constant and Content models, and registers them with the Django admin site.
 """
 from django.contrib import admin
-from .models import Constant, Content
+from .models import Constant, Content, File
 
 
 class ConstantAdmin(admin.ModelAdmin):
@@ -17,3 +17,4 @@ class ConstantAdmin(admin.ModelAdmin):
 
 admin.site.register(Constant, ConstantAdmin)
 admin.site.register(Content)
+admin.site.register(File)

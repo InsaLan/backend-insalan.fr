@@ -167,12 +167,12 @@ class Tournament(models.Model):
         verbose_name=_("Description du tournoi en bas de page"),
         max_length=300,
     )
-    planning = models.CharField(
-        null=False,
+    planning_file = models.FileField(
+        verbose_name=_("Fichier ICS du planning"),
         blank=True,
-        default='',
-        verbose_name=_("Nom du content du planning du tournoi"),
-        max_length=300,
+        null=True,
+        upload_to="tournament-planning",
+        validators=[FileExtensionValidator(allowed_extensions=["ics"])],
     )
 
     class Meta:
