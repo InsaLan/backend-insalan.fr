@@ -8,12 +8,19 @@ def create_empty_knockout_matchs(bracket: Bracket):
         match.delete()
 
     for round_idx in range(1,depth+1):
-        match_count = min(2**(round_idx-1),ceil(bracket.get_max_match_count()/2**(depth-round_idx)))
+        match_count = min(
+            2**(round_idx-1),
+            ceil(bracket.get_max_match_count()/2**(depth-round_idx))
+        )
         for match_id in range(1,match_count+1):
             KnockoutMatch.objects.create(round_number=round_idx,index_in_round=match_id,bracket=bracket)
+
     if bracket.bracket_type == BracketType.DOUBLE:
         for round_idx in range(1,2*depth-1):
-            match_count = min(2**((round_idx-1)//2),ceil((bracket.get_max_match_count()//2)/2**(depth-(round_idx+1)//2 - 1)))
+            match_count = min(
+                2**((round_idx-1)//2),
+                ceil(bracket.get_max_match_count()/2**(depth-(round_idx+1)//2))
+            )
             for match_id in range(1,match_count+1):
                 KnockoutMatch.objects.create(round_number=round_idx,index_in_round=match_id,bracket=bracket,bracket_set=BracketSet.LOOSER)
         KnockoutMatch.objects.create(round_number=0,index_in_round=1,bracket=bracket)
