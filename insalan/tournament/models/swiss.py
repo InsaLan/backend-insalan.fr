@@ -37,7 +37,7 @@ class SwissRound(models.Model):
         if any([team[1] is None for team in teams]):
             return [team[0] for team in teams]
 
-        teams.sort(key=lambda e: e[1])
+        teams.sort(key=lambda e: e[1], reverse=True)
         return [team[0] for team in teams]
 
     def get_matchs(self) -> List["SwissMatch"]:
@@ -52,15 +52,18 @@ class SwissSeeding(models.Model):
         "Team",
         on_delete=models.CASCADE
     )
-    seeding = models.IntegerField(
-        null=True,
-        blank=True
+    seeding = models.PositiveIntegerField(
+        default=0
     )
 
 class SwissMatch(match.Match):
     swiss = models.ForeignKey(
         SwissRound,
         on_delete=models.CASCADE
+    )
+
+    score_group = models.PositiveIntegerField(
+        default=0
     )
 
     class Meta:

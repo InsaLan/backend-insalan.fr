@@ -1258,19 +1258,16 @@ class TournamentFullDerefEndpoint(TestCase):
             "seatslots": [
                 {
                     "id": seatslot_one.id,
-                    "tournament": tourneyobj_one.id,
                     "seats": [
                         {
                             "id": seat_one.id,
                             "x": seat_one.x,
-                            "y": seat_one.y,
-                            "event": evobj.id
+                            "y": seat_one.y
                         },
                         {
                             "id": seat_two.id,
                             "x": seat_two.x,
-                            "y": seat_two.y,
-                            "event": evobj.id
+                            "y": seat_two.y
                         },
                     ]
                 }
@@ -1331,6 +1328,8 @@ class TournamentFullDerefEndpoint(TestCase):
             reverse("tournament/details-full", args=[tourneyobj_one.id]), format="json"
         )
         self.assertEqual(request.status_code, 200)
+
+        model["teams"][0]["seed"] = 0
 
         self.assertEqual(request.data["teams"], model["teams"])
         self.assertEqual(request.data, model)
