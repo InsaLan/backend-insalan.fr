@@ -65,6 +65,10 @@ def tournament_registration_full(tournament: "Tournament", exclude=None):
     return False
 
 def validate_match_data(match: "Match", data):
+    winning_score = match.get_winning_score()
+    winner_count = 0
+    max_score = match.get_max_score()
+
     if match.status != Match.MatchStatus.ONGOING:
         return {
             "status" : "Le match n'est pas en cours"
@@ -81,10 +85,29 @@ def validate_match_data(match: "Match", data):
         }
 
     for _,score in data["score"].items():
-        if score > match.get_max_score():
+        if score > max_score:
             return {
                 "score" : "Le score d'une équipe est trop grand"
             }
+
+        if score < 0:
+            return {
+                "score": "Le score d'une équipe ne peut pas être négatif."
+            }
+
+        if match.bo_type == Match.BestofType.RANKING and score <= winning_score:
+            winner_count += 1
+        elif match.bo_type != Match.BestofType.RANKING and score >= winning_score:
+            winner_count += 1
+    
+    if (
+        (match.bo_type == Match.BestofType.RANKING and winner_count != ceil(match.get_team_count())) 
+        or
+        (match.bo_type != Match.BestofType.RANKING and winner_count != 1)
+    ) :
+        return {
+            "score": "Scores incomplets, il y a trop ou pas assez de gagnants."
+        }
 
     return None
 
