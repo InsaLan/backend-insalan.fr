@@ -16,7 +16,7 @@ from .models import (Event, Tournament, Game, Team, Player, Manager,
                      Substitute, Caster, Group, GroupMatch, Bracket,
                      KnockoutMatch, SwissRound, SwissMatch, Score, Seat, 
                      SeatSlot, GroupTiebreakScore, MatchStatus,
-                     BestofType, BracketSet)
+                     BestofType, BracketSet, Match)
 from .models import (unique_event_registration_validator, tournament_announced,
                      max_players_per_team_reached,
                      tournament_registration_full,
@@ -28,10 +28,15 @@ class ScoreSerializer(serializers.ModelSerializer):
         model = Score
         fields = ["team","score"]
 
-class GroupMatchSerializer(serializers.ModelSerializer):
+class MatchSerializer(serializers.ModelSerializer):
     score = serializers.DictField(required=True,source="get_scores")
-    teams = serializers.PrimaryKeyRelatedField(queryset=Team.objects.all(),label="Liste des équipes", many=True)
+    teams = serializers.PrimaryKeyRelatedField(queryset=Team.objects.all(), label="Liste des équipes", many=True)
 
+    class Meta:
+        model = Match
+        fields = "__all__"
+
+class GroupMatchSerializer(MatchSerializer):
     class Meta:
         model = GroupMatch
         fields = "__all__"
@@ -181,10 +186,7 @@ class LaunchMatchsSerializer(serializers.Serializer):
 
         return data
 
-class KnockoutMatchSerializer(serializers.ModelSerializer):
-    score = serializers.DictField(required=True,source="get_scores")
-    teams = serializers.PrimaryKeyRelatedField(queryset=Team.objects.all(),label="Liste des équipes", many=True)
-
+class KnockoutMatchSerializer(MatchSerializer):
     class Meta:
         model = KnockoutMatch
         fields = "__all__"
@@ -209,25 +211,7 @@ class BracketSerializer(serializers.ModelSerializer):
 
         return data
 
-# class CreateBracketSerializer(serializers.Serializer):
-#     tournament = serializers.PrimaryKeyRelatedField(queryset=Tournament.objects.all())
-#     name = serializers.CharField()
-#     team_count = serializers.IntegerField(min_value=2)
-#     bracket_set = serializers.ChoiceField(BracketSet)
-
-#     def validate(self, data):
-#         tournament = data["tournament"]
-#         team_count = data["team_count"]
-
-#         if (team_count > tournament.maxTeam):
-#             raise serializers.ValidationError(_("Le nombre d'équipes demandé est supérieur au nombre maximum d'équipe inscrite dans le tournoi."))
-
-#         return data
-
-class SwissMatchSerializer(serializers.ModelSerializer):
-    score = serializers.DictField(required=True,source="get_scores")
-    teams = serializers.PrimaryKeyRelatedField(queryset=Team.objects.all(),label="Liste des équipes", many=True)
-
+class SwissMatchSerializer(MatchSerializer):
     class Meta:
         model = SwissMatch
         fields = "__all__"
