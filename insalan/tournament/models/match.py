@@ -56,7 +56,6 @@ class Match(models.Model):
     )
 
     class Meta:
-
         ordering = ["round_number","index_in_round"]
         indexes = [
             models.Index(fields=["round_number"]),

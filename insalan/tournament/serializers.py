@@ -16,7 +16,7 @@ from .models import (Event, Tournament, Game, Team, Player, Manager,
                      Substitute, Caster, Group, GroupMatch, Bracket,
                      KnockoutMatch, SwissRound, SwissMatch, Score, Seat, 
                      SeatSlot, GroupTiebreakScore, MatchStatus,
-                     BestofType, BracketSet, Match)
+                     BestofType, BracketSet, Match, validate_match_data)
 from .models import (unique_event_registration_validator, tournament_announced,
                      max_players_per_team_reached,
                      tournament_registration_full,
@@ -35,6 +35,26 @@ class MatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Match
         fields = "__all__"
+
+    def validate(self, data):
+        data["score"] = data.pop("get_scores", {})
+        error_response = validate_match_data(self.instance, data)
+        if error_response != None:
+            raise serializers.ValidationError(_(list(error_response.values())[0]))
+
+        return data
+
+    def update(self, instance, validated_data):
+        scores = validated_data.pop("score", {})
+
+        super().update(instance, validated_data)
+
+        for team, score in scores.items():
+            scoreObj = Score.objects.get(team=team, match=instance)
+            scoreObj.score = score
+            scoreObj.save()
+
+        return instance
 
 class GroupMatchSerializer(MatchSerializer):
     class Meta:

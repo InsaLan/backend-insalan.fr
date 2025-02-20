@@ -156,6 +156,9 @@ class SwissMatchScore(generics.GenericAPIView):
         if not match.is_user_in_match(user):
             raise PermissionDenied()
 
+        if match.status != Match.MatchStatus.ONGOING:
+            return Return({"status" : "Le match n'est pas en cours"}, status = status.HTTP_400_BAD_REQUEST)
+
         error_response = validate_match_data(match, data)
         if error_response is not None:
             return Response({k: _(v) for k,v in error_response.items()},status=status.HTTP_400_BAD_REQUEST)

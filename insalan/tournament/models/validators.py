@@ -69,11 +69,6 @@ def validate_match_data(match: "Match", data):
     winner_count = 0
     max_score = match.get_max_score()
 
-    if match.status != Match.MatchStatus.ONGOING:
-        return {
-            "status" : "Le match n'est pas en cours"
-        }
-
     if Counter(map(int,data["score"].keys())) != Counter(match.get_teams_id()):
         return {
             "teams" : "Liste des équipes invalide"
