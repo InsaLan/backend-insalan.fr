@@ -36,7 +36,10 @@ def update_next_knockout_match(match):
             # regular new index
             new_index_in_round = ceil(match.index_in_round / 2) - 1
             # correction if more than one winner per match
-            new_index_in_round = (new_index_in_round // winners_count)*winners_count + (new_index_in_round%winners_count - i)%winners_count + 1
+            if match.round_number > 2:
+                new_index_in_round = (new_index_in_round // winners_count)*winners_count + (new_index_in_round%winners_count - i)%winners_count + 1
+            else:
+                new_index_in_round += 1
 
             next_match_winner = KnockoutMatch.objects.get(bracket=match.bracket,bracket_set=match.bracket_set,round_number=match.round_number-1,index_in_round=new_index_in_round)
 
@@ -45,18 +48,21 @@ def update_next_knockout_match(match):
         if match.bracket.bracket_type == BracketType.DOUBLE:
             for i, looser in enumerate(loosers):
                 # regular new index
-                new_index_in_round = ceil(match.index_in_round / 2) - 1
+                if match.round_number == depth:
+                    looser_round = 2*(match.round_number-1)
+                    new_index_in_round = ceil(match.index_in_round / 2) - 1
+                else:
+                    looser_round = 2*match.round_number-1
+                    new_index_in_round = match.index_in_round - 1
                 # reverse order if odd round
                 if (depth - match.round_number) % 2:
                     matchs_count = ceil(match.bracket.get_max_match_count() / 2**(depth - match.round_number))
                     new_index_in_round = matchs_count - new_index_in_round - 1
                 # correction if more than one winner per match
-                new_index_in_round = (new_index_in_round // winners_count)*winners_count + (new_index_in_round%winners_count - i)%winners_count + 1
-
-                if match.round_number == depth:
-                    looser_round = 2*(match.round_number-1)
+                if match.round_number > 2:
+                    new_index_in_round = (new_index_in_round // winners_count)*winners_count + (new_index_in_round%winners_count - i)%winners_count + 1
                 else:
-                    looser_round = 2*match.round_number-1
+                    new_index_in_round += 1
 
                 next_match_looser = KnockoutMatch.objects.get(bracket=match.bracket,bracket_set=BracketSet.LOOSER,round_number=looser_round,index_in_round=new_index_in_round)
 
@@ -72,8 +78,12 @@ def update_next_knockout_match(match):
                 base_index_in_round = ceil(match.index_in_round / 2) - 1
             else:
                 base_index_in_round = match.index_in_round - 1
+
             for i, winner in enumerate(winners):
-                new_index_in_round = (base_index_in_round // winners_count)*winners_count + (base_index_in_round%winners_count - i)%winners_count + 1
+                if match.round_number > 3:
+                    new_index_in_round = (base_index_in_round // winners_count)*winners_count + (base_index_in_round%winners_count - i)%winners_count + 1
+                else:
+                    new_index_in_round = base_index_in_round + 1
 
                 next_match = KnockoutMatch.objects.get(bracket=match.bracket,bracket_set=match.bracket_set,round_number=match.round_number-1,index_in_round=new_index_in_round)
 
