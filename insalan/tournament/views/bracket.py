@@ -83,6 +83,10 @@ class BracketMatchsLaunch(generics.UpdateAPIView):
 
         for match in data.validated_data["matchs"]:
             launch_match(match)
+
+            if match.status == MatchStatus.COMPLETED:
+                update_next_knockout_match(match)
+
             matchs.append(match.id)
 
         return Response({ "matchs": matchs, "warning": data.validated_data["warning"] },status=status.HTTP_200_OK)
