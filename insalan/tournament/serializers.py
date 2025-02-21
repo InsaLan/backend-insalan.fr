@@ -216,6 +216,7 @@ class BracketSerializer(serializers.ModelSerializer):
     matchs = KnockoutMatchSerializer(required=False,many=True,source="get_matchs")
     winner = serializers.IntegerField(required=False,source="get_winner")
     depth = serializers.IntegerField(required=False,source="get_depth")
+    bo_type = serializers.ChoiceField(BestofType, required=False, write_only=True)
 
     class Meta:
         model = Bracket

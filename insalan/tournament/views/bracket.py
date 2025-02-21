@@ -12,7 +12,7 @@ from .permissions import ReadOnly
 
 import insalan.tournament.serializers as serializers
 
-from ..models import Bracket, KnockoutMatch, MatchStatus, Tournament, validate_match_data
+from ..models import Bracket, BestofType, KnockoutMatch, MatchStatus, Tournament, validate_match_data
 from ..manage import create_empty_knockout_matchs, update_match_score, update_next_knockout_match, launch_match
 
 
@@ -44,9 +44,11 @@ class CreateBracket(generics.CreateAPIView):
         data = self.get_serializer(data=request.data)
         data.is_valid(raise_exception=True)
 
+        bo_type = data.validated_data.pop("bo_type", BestofType.BO1)
+
         bracket = Bracket.objects.create(**data.validated_data)
 
-        create_empty_knockout_matchs(bracket)
+        create_empty_knockout_matchs(bracket, bo_type)
 
         return Response(serializers.BracketField(bracket).data, status=status.HTTP_201_CREATED)
 
