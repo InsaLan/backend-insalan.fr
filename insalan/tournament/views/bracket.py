@@ -58,6 +58,16 @@ class BracketMatchPatch(generics.UpdateAPIView):
     serializer_class = serializers.KnockoutMatchSerializer
     lookup_url_kwarg = "match_id"
 
+    def patch(self, request, *args, **kwargs):
+        response = super().patch(request, *args, **kwargs)
+
+        match = self.get_object()
+
+        if match.status == MatchStatus.COMPLETED and match.round_number != 0:
+            update_next_knockout_match(match)
+
+        return response
+
 class BracketMatchsLaunch(generics.UpdateAPIView):
     serializer_class = serializers.LaunchMatchsSerializer
     permission_classes = [permissions.IsAdminUser]
