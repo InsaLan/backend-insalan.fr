@@ -45,7 +45,7 @@ def update_next_knockout_match(match):
         if match.bracket.bracket_type == BracketType.DOUBLE:
             for i, looser in enumerate(loosers):
                 # regular new index
-                new_index_in_round = match.index_in_round - 1
+                new_index_in_round = ceil(match.index_in_round / 2) - 1
                 # reverse order if odd round
                 if (depth - match.round_number) % 2:
                     matchs_count = ceil(match.bracket.get_max_match_count() / 2**(depth - match.round_number))
