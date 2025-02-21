@@ -80,7 +80,7 @@ def validate_match_data(match: "Match", data):
             "score" : "Les scores sont invalides, le score total cummulé est trop grand"
         }
 
-    for _,score in data["score"].items():
+    for score in data["score"].values():
         if score > max_score:
             return {
                 "score" : "Le score d'une équipe est trop grand"

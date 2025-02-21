@@ -4,6 +4,9 @@
 # "Too few public methods"
 # pylint: disable=R0903
 
+from collections import Counter
+from math import ceil
+
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.hashers import make_password
 from django.core.validators import MinValueValidator
@@ -38,9 +41,46 @@ class MatchSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         data["score"] = data.pop("get_scores", {})
-        error_response = validate_match_data(self.instance, data)
-        if error_response != None:
-            raise serializers.ValidationError(_(list(error_response.values())[0]))
+        bo_type = data["bo_type"]
+        team_count = len(data["teams"])
+        max_score = 0
+        winning_score = 0
+        total_max_score = 0
+        winner_count = 0
+
+        if bo_type == BestofType.RANKING:
+            max_score = team_count
+            winning_score = ceil(team_count / 2)
+            total_max_score = (team_count*(team_count+1)) // 2
+        else:
+            total_max_score = bo_type
+            max_score = ceil(total_max_score / 2)
+            winning_score = max_score
+        
+        if Counter(map(int, data["score"].keys())) != Counter([team.id for team in data["teams"]]):
+            raise serializers.ValidationError(_("La liste des équipes et celle des scores sont incompatibles."))
+
+        if sum(data["score"].values()) > total_max_score:
+            raise serializers.ValidationError(_("Scores invalides, le score total cummulé est trop grand."))
+
+        for score in data["score"].values():
+            if score > max_score:
+                raise serializers.ValidationError(_("Le score d'une équipe est trop grand"))
+
+            if score < 0:
+                raise serializers.ValidationError(_("Le score d'une équipe ne peut pas être négatif."))
+
+            if bo_type == Match.BestofType.RANKING and score <= winning_score:
+                winner_count += 1
+            elif bo_type != Match.BestofType.RANKING and score >= winning_score:
+                winner_count += 1
+
+        if (
+            (bo_type == Match.BestofType.RANKING and winner_count != ceil(team_count/2))
+            or
+            (bo_type != Match.BestofType.RANKING and winner_count != 1)
+        ) :
+            raise serializers.ValidationError(_("Scores incomplets, il y a trop ou pas assez de gagnants."))
 
         return data
 
