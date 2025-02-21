@@ -41,46 +41,47 @@ class MatchSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         data["score"] = data.pop("get_scores", {})
-        bo_type = data["bo_type"]
-        team_count = len(data["teams"])
-        max_score = 0
-        winning_score = 0
-        total_max_score = 0
-        winner_count = 0
+        if data["status"] == MatchStatus.COMPLETED:
+            bo_type = data["bo_type"]
+            team_count = len(data["teams"])
+            max_score = 0
+            winning_score = 0
+            total_max_score = 0
+            winner_count = 0
 
-        if bo_type == BestofType.RANKING:
-            max_score = team_count
-            winning_score = ceil(team_count / 2)
-            total_max_score = (team_count*(team_count+1)) // 2
-        else:
-            total_max_score = bo_type
-            max_score = ceil(total_max_score / 2)
-            winning_score = max_score
-        
-        if Counter(map(int, data["score"].keys())) != Counter([team.id for team in data["teams"]]):
-            raise serializers.ValidationError(_("La liste des équipes et celle des scores sont incompatibles."))
+            if bo_type == BestofType.RANKING:
+                max_score = team_count
+                winning_score = ceil(team_count / 2)
+                total_max_score = (team_count*(team_count+1)) // 2
+            else:
+                total_max_score = bo_type
+                max_score = ceil(total_max_score / 2)
+                winning_score = max_score
+            
+            if Counter(map(int, data["score"].keys())) != Counter([team.id for team in data["teams"]]):
+                raise serializers.ValidationError(_("La liste des équipes et celle des scores sont incompatibles."))
 
-        if sum(data["score"].values()) > total_max_score:
-            raise serializers.ValidationError(_("Scores invalides, le score total cummulé est trop grand."))
+            if sum(data["score"].values()) > total_max_score:
+                raise serializers.ValidationError(_("Scores invalides, le score total cummulé est trop grand."))
 
-        for score in data["score"].values():
-            if score > max_score:
-                raise serializers.ValidationError(_("Le score d'une équipe est trop grand"))
+            for score in data["score"].values():
+                if score > max_score:
+                    raise serializers.ValidationError(_("Le score d'une équipe est trop grand"))
 
-            if score < 0:
-                raise serializers.ValidationError(_("Le score d'une équipe ne peut pas être négatif."))
+                if score < 0:
+                    raise serializers.ValidationError(_("Le score d'une équipe ne peut pas être négatif."))
 
-            if bo_type == Match.BestofType.RANKING and score <= winning_score:
-                winner_count += 1
-            elif bo_type != Match.BestofType.RANKING and score >= winning_score:
-                winner_count += 1
+                if bo_type == Match.BestofType.RANKING and score <= winning_score:
+                    winner_count += 1
+                elif bo_type != Match.BestofType.RANKING and score >= winning_score:
+                    winner_count += 1
 
-        if (
-            (bo_type == Match.BestofType.RANKING and winner_count != ceil(team_count/2))
-            or
-            (bo_type != Match.BestofType.RANKING and winner_count != 1)
-        ) :
-            raise serializers.ValidationError(_("Scores incomplets, il y a trop ou pas assez de gagnants."))
+            if (
+                (bo_type == Match.BestofType.RANKING and winner_count != ceil(team_count/2))
+                or
+                (bo_type != Match.BestofType.RANKING and winner_count != 1)
+            ) :
+                raise serializers.ValidationError(_("Scores incomplets, il y a trop ou pas assez de gagnants."))
 
         return data
 
@@ -89,10 +90,11 @@ class MatchSerializer(serializers.ModelSerializer):
 
         super().update(instance, validated_data)
 
-        for team, score in scores.items():
-            scoreObj = Score.objects.get(team=team, match=instance)
-            scoreObj.score = score
-            scoreObj.save()
+        if self.instance.status == MatchStatus.COMPLETED:
+            for team, score in scores.items():
+                scoreObj = Score.objects.get(team=team, match=instance)
+                scoreObj.score = score
+                scoreObj.save()
 
         return instance
 
