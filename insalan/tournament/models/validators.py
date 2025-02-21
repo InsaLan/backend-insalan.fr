@@ -1,4 +1,5 @@
 from collections import Counter
+from math import ceil
 
 from django.utils.translation import gettext_lazy as _
 from rest_framework.validators import ValidationError
@@ -94,9 +95,9 @@ def validate_match_data(match: "Match", data):
             winner_count += 1
         elif match.bo_type != Match.BestofType.RANKING and score >= winning_score:
             winner_count += 1
-    
+
     if (
-        (match.bo_type == Match.BestofType.RANKING and winner_count != ceil(match.get_team_count())) 
+        (match.bo_type == Match.BestofType.RANKING and winner_count != ceil(match.get_team_count()/2)) 
         or
         (match.bo_type != Match.BestofType.RANKING and winner_count != 1)
     ) :
