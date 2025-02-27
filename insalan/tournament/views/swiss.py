@@ -10,7 +10,7 @@ from drf_yasg import openapi
 
 import insalan.tournament.serializers as serializers
 
-from ..models import MatchStatus, Tournament, SwissMatch, SwissRound, validate_match_data
+from ..models import MatchStatus, Tournament, SwissMatch, SwissRound, validate_match_data, Match
 from ..manage import update_match_score, create_swiss_rounds, launch_match, generate_swiss_round_round
 
 class CreateSwissRounds(generics.CreateAPIView):

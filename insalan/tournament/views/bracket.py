@@ -12,7 +12,7 @@ from .permissions import ReadOnly
 
 import insalan.tournament.serializers as serializers
 
-from ..models import Bracket, BestofType, KnockoutMatch, MatchStatus, Tournament, validate_match_data
+from ..models import Bracket, BestofType, KnockoutMatch, MatchStatus, Tournament, validate_match_data, Match
 from ..manage import create_empty_knockout_matchs, update_match_score, update_next_knockout_match, launch_match
 
 

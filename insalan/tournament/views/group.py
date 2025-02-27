@@ -10,7 +10,7 @@ from drf_yasg import openapi
 
 import insalan.tournament.serializers as serializers
 
-from ..models import Group, validate_match_data, GroupMatch, MatchStatus, Tournament
+from ..models import Group, validate_match_data, GroupMatch, MatchStatus, Tournament, Match
 from ..manage import update_match_score, generate_groups, create_group_matchs, launch_match
 
 from .permissions import ReadOnly
