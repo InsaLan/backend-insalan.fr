@@ -160,7 +160,7 @@ class BracketMatchScore(generics.GenericAPIView):
             raise PermissionDenied()
 
         if match.status != Match.MatchStatus.ONGOING:
-            return Return({"status" : "Le match n'est pas en cours"}, status = status.HTTP_400_BAD_REQUEST)
+            return Response({"status" : "Le match n'est pas en cours"}, status = status.HTTP_400_BAD_REQUEST)
 
         error_response = validate_match_data(match, data)
         if error_response is not None:

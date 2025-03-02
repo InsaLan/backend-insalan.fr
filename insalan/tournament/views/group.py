@@ -43,7 +43,8 @@ class GroupDetails(generics.RetrieveUpdateDestroyAPIView):
 
         if GroupMatch.objects.filter(group=group).exclude(status=MatchStatus.SCHEDULED).exists():
             return Response({
-                "error": _("Impossible de supprimé la poule. Des matchs sont déjà en cours ou terminés")
+                "error": _("Impossible de supprimé la poule.\
+                     Des matchs sont déjà en cours ou terminés")
             }, status=status.HTTP_400_BAD_REQUEST)
 
         group.delete()
@@ -213,7 +214,7 @@ class GroupMatchScore(generics.UpdateAPIView):
             raise PermissionDenied()
 
         if match.status != Match.MatchStatus.ONGOING:
-            return Return({"status" : "Le match n'est pas en cours"}, status = status.HTTP_400_BAD_REQUEST)
+            return Response({"status" : "Le match n'est pas en cours"}, status = status.HTTP_400_BAD_REQUEST)
 
         error_response = validate_match_data(match, data)
         if error_response is not None:
