@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple
+from typing import List, Dict
 from operator import itemgetter
 
 from django.db import models
@@ -21,10 +21,6 @@ class Group(models.Model):
         verbose_name=_("Nombre de rounds"),
         default=1
     )
-    # teams = models.ManyToManyField(
-    #     "Team",
-    #     through="Seeding"
-    # )
 
     class Meta:
         verbose_name = _("Poule")
@@ -54,6 +50,9 @@ class Group(models.Model):
 
     def get_teams_id(self) -> List[int]:
         return Seeding.objects.filter(group=self).values_list("team", flat=True)
+
+    def get_teams_seeding_by_id(self) -> Dict[int,int]:
+        return {seeding.team.id: seeding.seeding for seeding in Seeding.objects.filter(group=self)}
 
     def get_teams_seeding(self) -> Dict["Team",int]:
         return {seeding.team: seeding.seeding for seeding in Seeding.objects.filter(group=self)}
@@ -119,21 +118,10 @@ class GroupTiebreakScore(models.Model):
         "Team",
         on_delete=models.CASCADE,
     )
-    score = models.PositiveIntegerField(
+    score = models.IntegerField(
         default=0,
         verbose_name=_("Score de tiebreak")
     )
 
     class Meta:
         verbose_name = _("Score de tiebreak d'une équipe dans une poule")
-
-# class GroupMatchScore(models.Model):
-#     score = models.IntegerField()
-#     match = models.ForeignKey(
-#         GroupMatch,
-#         on_delete=models.CASCADE
-#     )
-#     team = models.ForeignKey(
-#         "Team",
-#         on_delete=models.CASCADE
-#     )

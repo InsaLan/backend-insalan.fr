@@ -9,31 +9,60 @@ from math import ceil
 
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.hashers import make_password
-from django.core.validators import MinValueValidator
 
 from rest_framework import serializers
 
 from insalan.user.models import User
 
-from .models import (Event, Tournament, Game, Team, Player, Manager,
-                     Substitute, Caster, Group, GroupMatch, Bracket,
-                     KnockoutMatch, SwissRound, SwissMatch, Score, Seat, 
-                     SeatSlot, GroupTiebreakScore, MatchStatus,
-                     BestofType, BracketSet, Match, validate_match_data)
-from .models import (unique_event_registration_validator, tournament_announced,
-                     max_players_per_team_reached,
-                     tournament_registration_full,
-                     max_substitue_per_team_reached, valid_name)
+from .models import (
+    Event,
+    Tournament,
+    Game,
+    Team,
+    Player,
+    Manager,
+    Substitute,
+    Caster,
+    Group,
+    GroupMatch,
+    Bracket,
+    KnockoutMatch,
+    SwissRound,
+    SwissMatch,
+    Score,
+    Seat,
+    SeatSlot,
+    Seeding,
+    GroupTiebreakScore,
+    MatchStatus,
+    BestofType,
+    Match,
+)
+from .models import (
+    unique_event_registration_validator,
+    tournament_announced,
+    max_players_per_team_reached,
+    tournament_registration_full,
+    max_substitue_per_team_reached,
+    valid_name,
+)
+
 
 class ScoreSerializer(serializers.ModelSerializer):
+    """Serializer for Score objects"""
 
     class Meta:
         model = Score
-        fields = ["team","score"]
+        fields = ["team", "score"]
+
 
 class MatchSerializer(serializers.ModelSerializer):
-    score = serializers.DictField(required=True,source="get_scores")
-    teams = serializers.PrimaryKeyRelatedField(queryset=Team.objects.all(), label="Liste des équipes", many=True)
+    """Generic Match object serializer"""
+
+    score = serializers.DictField(required=True, source="get_scores")
+    teams = serializers.PrimaryKeyRelatedField(
+        queryset=Team.objects.all(), label="Liste des équipes", many=True
+    )
 
     class Meta:
         model = Match
@@ -52,36 +81,44 @@ class MatchSerializer(serializers.ModelSerializer):
             if bo_type == BestofType.RANKING:
                 max_score = team_count
                 winning_score = ceil(team_count / 2)
-                total_max_score = (team_count*(team_count+1)) // 2
+                total_max_score = (team_count * (team_count + 1)) // 2
             else:
                 total_max_score = bo_type
                 max_score = ceil(total_max_score / 2)
                 winning_score = max_score
-            
-            if Counter(map(int, data["score"].keys())) != Counter([team.id for team in data["teams"]]):
-                raise serializers.ValidationError(_("La liste des équipes et celle des scores sont incompatibles."))
+
+            if Counter(map(int, data["score"].keys())) != Counter(
+                [team.id for team in data["teams"]]
+            ):
+                raise serializers.ValidationError(
+                    _("La liste des équipes et celle des scores sont incompatibles.")
+                )
 
             if sum(data["score"].values()) > total_max_score:
-                raise serializers.ValidationError(_("Scores invalides, le score total cummulé est trop grand."))
+                raise serializers.ValidationError(
+                    _("Scores invalides, le score total cummulé est trop grand.")
+                )
 
             for score in data["score"].values():
                 if score > max_score:
                     raise serializers.ValidationError(_("Le score d'une équipe est trop grand"))
 
                 if score < 0:
-                    raise serializers.ValidationError(_("Le score d'une équipe ne peut pas être négatif."))
+                    raise serializers.ValidationError(
+                        _("Le score d'une équipe ne peut pas être négatif.")
+                    )
 
                 if bo_type == Match.BestofType.RANKING and score <= winning_score:
                     winner_count += 1
                 elif bo_type != Match.BestofType.RANKING and score >= winning_score:
                     winner_count += 1
 
-            if (
-                (bo_type == Match.BestofType.RANKING and winner_count != ceil(team_count/2))
-                or
-                (bo_type != Match.BestofType.RANKING and winner_count != 1)
-            ) :
-                raise serializers.ValidationError(_("Scores incomplets, il y a trop ou pas assez de gagnants."))
+            if (bo_type == Match.BestofType.RANKING and winner_count != ceil(team_count / 2)) or (
+                bo_type != Match.BestofType.RANKING and winner_count != 1
+            ):
+                raise serializers.ValidationError(
+                    _("Scores incomplets, il y a trop ou pas assez de gagnants.")
+                )
 
         return data
 
@@ -90,27 +127,32 @@ class MatchSerializer(serializers.ModelSerializer):
 
         super().update(instance, validated_data)
 
-        if self.instance.status == MatchStatus.COMPLETED:
-            for team, score in scores.items():
-                scoreObj = Score.objects.get(team=team, match=instance)
-                scoreObj.score = score
-                scoreObj.save()
+        # if self.instance.status == MatchStatus.COMPLETED:
+        for team, score in scores.items():
+            score_obj = Score.objects.get(team=team, match=instance)
+            score_obj.score = score
+            score_obj.save()
 
         return instance
 
+
 class GroupMatchSerializer(MatchSerializer):
+    """Serializer for a group match"""
+
     class Meta:
         model = GroupMatch
         fields = "__all__"
 
+
 class GroupSerializer(serializers.ModelSerializer):
     """Serializer for a group in a tournament"""
 
-    teams = serializers.ListField(required=False,source="get_teams_id")
-    matchs = GroupMatchSerializer(required=False,many=True,source="get_matchs")
-    scores = serializers.DictField(required=False,source="get_leaderboard")
-    tiebreak_scores = serializers.DictField(required=False,source="get_tiebreaks")
-    round_count = serializers.IntegerField(source="get_round_count")
+    teams = serializers.ListField(required=False, source="get_teams_id")
+    matchs = GroupMatchSerializer(read_only=True, many=True, source="get_matchs")
+    scores = serializers.DictField(read_only=True, source="get_leaderboard")
+    tiebreak_scores = serializers.DictField(required=False, source="get_tiebreaks")
+    round_count = serializers.IntegerField(read_only=True, source="get_round_count")
+    seeding = serializers.DictField(source="get_teams_seeding_by_id")
 
     class Meta:
         """Meta options for the serializer"""
@@ -118,30 +160,80 @@ class GroupSerializer(serializers.ModelSerializer):
         model = Group
         fields = "__all__"
 
-    def validate_tiebreak_scores(self, value: dict[str, int]):
-        validated_data = value.copy()
+    def validate_seeding(self, value: dict[any, any]):
+        for seed in value.values():
+            if not isinstance(seed, int):
+                raise serializers.ValidationError(_("Les seeds doivent être des nombres entiers."))
 
-        for team in value.keys():
-            try:
-                Team.objects.get(pk=team)
-            except:
-                del validated_data[team]
+        return value
 
-        return validated_data
+    def validate_tiebreak_scores(self, value: dict[any, any]):
+        for tiebreak in value.values():
+            if not isinstance(tiebreak, int):
+                raise serializers.ValidationError(_("Les scores de tiebreak\
+                    doivent être des nombres entiers."))
+
+        return value
+
+    def validate(self, data):
+        teams: list[int] = data.pop("get_teams_id", [])
+        seeding: dict[str, int] = data.pop("get_teams_seeding_by_id", {})
+        tiebreak_scores: dict[str, int] = data.pop("get_tiebreaks", {})
+
+        for team in teams:
+            if (Seeding.objects.filter(team=team).exclude(group=self.instance).exists()):
+                raise serializers.ValidationError(_(f"L'équipe {Team.objects.get(pk=team).name}\
+                    est déjà dans une autre poule."))
+
+        if Counter(map(int, seeding.keys())) != Counter(teams):
+            raise serializers.ValidationError(_("Incompatibilité entre\
+                la liste des équipes et les équipes du seeding."))
+
+        if Counter(map(int, tiebreak_scores.keys())) != Counter(teams):
+            raise serializers.ValidationError(_("Incompatibilité entre\
+                la liste des équipes et les équipes des scores de tiebreak."))
+
+        non_zero_seed = list(filter(lambda x: x != 0, seeding.values()))
+        if len(set(non_zero_seed)) != len(non_zero_seed):
+            raise serializers.ValidationError(_("Les seeds doivent être unique."))
+
+        if max(seeding.values()) > len(teams):
+            raise serializers.ValidationError(_(f"Le seed maximum ne peut pas être supérieur à {len(teams)}."))
+
+        data["teams"] = teams
+        data["seeding"] = { int(k): v for k,v in seeding.items() }
+        data["tiebreak_scores"] = { int(k): v for k,v in tiebreak_scores.items() }
+
+        return data
 
     def update(self, instance, validated_data):
-        tiebreak_scores: dict[str, int] = validated_data.pop("get_tiebreaks", {})
+        tiebreak_scores: dict[int, int] = validated_data.pop("tiebreak_scores", {})
+        seeding: dict[int, int] = validated_data.pop("seeding", {})
+        teams = validated_data.pop("teams", [])
 
-        for team_id, score in tiebreak_scores.items():
-            team = Team.objects.get(pk=team_id)
-            tiebreak_score, _ = GroupTiebreakScore.objects.update_or_create(team=team, group=instance, defaults={"score": score})
-            tiebreak_score.save()
-        
         super().update(instance, validated_data)
+
+        for team_id in teams:
+            team = Team.objects.get(pk=team_id)
+            Seeding.objects.update_or_create(
+                team=team, group=instance, defaults={"seeding": seeding[team_id]}
+            )
+            GroupTiebreakScore.objects.update_or_create(
+                team=team, group=instance, defaults={"score": tiebreak_scores[team_id]}
+            )
+
+        for old_seed in Seeding.objects.filter(group=instance).exclude(team__in=teams):
+            old_seed.delete()
+
+        for old_tiebreak in GroupTiebreakScore.objects.filter(group=instance).exclude(team__in=teams):
+            old_tiebreak.delete()
 
         return instance
 
+
 class GenerateGroupsSerializer(serializers.Serializer):
+    """Serializer for data used to generate tournament groups"""
+
     tournament = serializers.PrimaryKeyRelatedField(queryset=Tournament.objects.all())
     count = serializers.IntegerField(min_value=1)
     team_per_group = serializers.IntegerField(min_value=2)
@@ -159,35 +251,76 @@ class GenerateGroupsSerializer(serializers.Serializer):
         validated_teams = tournament.get_validated_teams()
 
         if len(data["names"]) != count:
-            raise serializers.ValidationError(_(f"Le nombre de noms de poules ({len(data['names'])}) ne correspond pas au nombre de poules demandées ({count})."))
+            raise serializers.ValidationError(
+                _(
+                    f"Le nombre de noms de poules ({len(data['names'])})\
+                    ne correspond pas au nombre de poules demandées ({count})."
+                )
+            )
 
-        if count*2 > validated_teams or (count-1)*team_per_group >= validated_teams:
-            raise serializers.ValidationError(_(f"{count} poules de {team_per_group} équipes permet d'accueillir entre {count*2} et {count*team_per_group} équipes, or il n'y a que {tournament.get_validated_teams()} équipes inscritent à ce tournoi. Veuillez revoir le nombre de poules et/ou le nombre d'équipes par poule."))
+        if count * 2 > validated_teams or (count - 1) * team_per_group >= validated_teams:
+            raise serializers.ValidationError(
+                _(
+                    f"{count} poules de {team_per_group} équipes permet d'accueillir\
+                    entre {count * 2} et {count * team_per_group} équipes, or il n'y a que\
+                    {tournament.get_validated_teams()} équipes inscritent à ce tournoi.\
+                    Veuillez revoir le nombre de poules et/ou le nombre d'équipes par poule."
+                )
+            )
 
-        if count*team_per_group > tournament.maxTeam:
-            raise serializers.ValidationError(_(f"{count} poules de {team_per_group} équipes permet d'accueillir {count*team_per_group} équipes au maximum, or il peut y avoir au plus {tournament.maxTeam} équipes inscrites. Veuillez revoir le nombre de poules et/ou le nombre d'équipes par poule."))
+        if count * team_per_group > tournament.maxTeam:
+            raise serializers.ValidationError(
+                _(
+                    f"{count} poules de {team_per_group} équipes permet d'accueillir\
+                    {count * team_per_group} équipes au maximum, or il peut y avoir\
+                    au plus {tournament.maxTeam} équipes inscrites.\
+                    Veuillez revoir le nombre de poules et/ou le nombre d'équipes par poule."
+                )
+            )
 
         return data
 
+
 class GenerateGroupMatchsSerializer(serializers.Serializer):
-    tournament = serializers.PrimaryKeyRelatedField(queryset=Tournament.objects.all().prefetch_related("group_set"))
-    groups = serializers.PrimaryKeyRelatedField(queryset=Group.objects.all().prefetch_related("groupmatch_set"), many=True)
+    """Serializer for data used to generate all groups' matchs of a tournament"""
+
+    tournament = serializers.PrimaryKeyRelatedField(
+        queryset=Tournament.objects.all().prefetch_related("group_set")
+    )
+    groups = serializers.PrimaryKeyRelatedField(
+        queryset=Group.objects.all().prefetch_related("groupmatch_set"), many=True
+    )
     bo_type = serializers.ChoiceField(BestofType)
 
     def validate(self, data):
         tournament: Tournament = data["tournament"]
-        groups: List[Group] = data["groups"]
+        groups: list[Group] = data["groups"]
 
         if not all([tournament.group_set.contains(group) for group in groups]):
-            raise serializers.ValidationError(_("Certaines poules ne font pas parti de ce tournoi ou il manque des poules dans la liste."))
+            raise serializers.ValidationError(
+                _(
+                    "Certaines poules ne font pas parti de ce tournoi\
+                    ou il manque des poules dans la liste."
+                )
+            )
 
         for group in groups:
-            if group.groupmatch_set.filter(status__in=[MatchStatus.ONGOING, MatchStatus.COMPLETED]).exists():
-                raise serializers.ValidationError(_("Impossible de créer les matchs, des matchs existent déjà et sont en cours ou terminés."))
+            if group.groupmatch_set.filter(
+                status__in=[MatchStatus.ONGOING, MatchStatus.COMPLETED]
+            ).exists():
+                raise serializers.ValidationError(
+                    _(
+                        "Impossible de créer les matchs, des matchs existent\
+                        déjà et sont en cours ou terminés."
+                    )
+                )
 
         return data
 
+
 class LaunchMatchsSerializer(serializers.Serializer):
+    """Generic serializer for launching matchs"""
+
     tournament = serializers.PrimaryKeyRelatedField(queryset=Tournament.objects.all())
     round = serializers.IntegerField(required=False)
 
@@ -203,7 +336,9 @@ class LaunchMatchsSerializer(serializers.Serializer):
 
         super().__init__(*args, **kwargs)
 
-        self.fields["matchs"] = serializers.PrimaryKeyRelatedField(queryset=self.match_class.objects.all(), many=True, required=False)
+        self.fields["matchs"] = serializers.PrimaryKeyRelatedField(
+            queryset=self.match_class.objects.all(), many=True, required=False
+        )
 
     def validate(self, data):
         round_id = data.pop("round", 0)
@@ -213,22 +348,39 @@ class LaunchMatchsSerializer(serializers.Serializer):
 
         if round_id:
             if self.match_type == "bracket":
-                raise serializers.ValidationError(_("Le lancement de matchs par tour n'est pas supporté pour les arbres."))
+                raise serializers.ValidationError(
+                    _("Le lancement de matchs par tour n'est pas supporté pour les arbres.")
+                )
 
-            if self.match_class.objects.filter(round_number__lt=round_id, **tournament).exclude(status=MatchStatus.COMPLETED).exists():
-                raise serializers.ValidationError(_("Des matchs des tours précédents sont encore en cours ou ne sont pas terminés."))
+            if (
+                self.match_class.objects.filter(round_number__lt=round_id, **tournament)
+                .exclude(status=MatchStatus.COMPLETED)
+                .exists()
+            ):
+                raise serializers.ValidationError(
+                    _(
+                        "Des matchs des tours précédents sont\
+                        encore en cours ou ne sont pas terminés."
+                    )
+                )
 
-            scheduled_matchs = self.match_class.objects.filter(round_number=round_id, **tournament, status=MatchStatus.SCHEDULED)
+            scheduled_matchs = self.match_class.objects.filter(
+                round_number=round_id, **tournament, status=MatchStatus.SCHEDULED
+            )
 
             if not scheduled_matchs.exists():
-                raise serializers.ValidationError(_("Tous les matchs sont déjà en cours ou bien terminés."))
+                raise serializers.ValidationError(
+                    _("Tous les matchs sont déjà en cours ou bien terminés.")
+                )
 
             data["matchs"] = scheduled_matchs
         else:
             data["matchs"] = []
 
             for match in matchs:
-                ongoing_teams_matchs = self.match_class.objects.filter(teams__in=match.teams.all(),status=MatchStatus.ONGOING).exclude(pk=match.pk)
+                ongoing_teams_matchs = self.match_class.objects.filter(
+                    teams__in=match.teams.all(), status=MatchStatus.ONGOING
+                ).exclude(pk=match.pk)
 
                 if not ongoing_teams_matchs.exists() and match.teams.all().exists():
                     data["matchs"].append(match)
@@ -237,16 +389,22 @@ class LaunchMatchsSerializer(serializers.Serializer):
 
         return data
 
+
 class KnockoutMatchSerializer(MatchSerializer):
+    """Serialiser for knockout's match"""
+
     class Meta:
         model = KnockoutMatch
         fields = "__all__"
 
+
 class BracketSerializer(serializers.ModelSerializer):
-    teams = serializers.ListField(required=False,source="get_teams_id")
-    matchs = KnockoutMatchSerializer(required=False,many=True,source="get_matchs")
-    winner = serializers.IntegerField(required=False,source="get_winner")
-    depth = serializers.IntegerField(required=False,source="get_depth")
+    """Serializer for bracket"""
+
+    teams = serializers.ListField(required=False, source="get_teams_id")
+    matchs = KnockoutMatchSerializer(required=False, many=True, source="get_matchs")
+    winner = serializers.IntegerField(required=False, source="get_winner")
+    depth = serializers.IntegerField(required=False, source="get_depth")
     bo_type = serializers.ChoiceField(BestofType, required=False, write_only=True)
 
     class Meta:
@@ -258,31 +416,48 @@ class BracketSerializer(serializers.ModelSerializer):
         tournament = data["tournament"]
         team_count = data["team_count"]
 
-        if (team_count > tournament.maxTeam):
-            raise serializers.ValidationError(_("Le nombre d'équipes demandé est supérieur au nombre maximum d'équipe inscrite dans le tournoi."))
+        if team_count > tournament.maxTeam:
+            raise serializers.ValidationError(
+                _(
+                    "Le nombre d'équipes demandé est supérieur\
+                    au nombre maximum d'équipe inscrite dans le tournoi."
+                )
+            )
 
         return data
 
+
 class SwissMatchSerializer(MatchSerializer):
+    """Serializer for swiss's match"""
+
     class Meta:
         model = SwissMatch
         fields = "__all__"
 
+
 class SwissRoundSerializer(serializers.ModelSerializer):
+    """Serializer for swiss round"""
+
     teams = serializers.ListField(source="get_teams_id")
-    matchs = SwissMatchSerializer(many=True,source="get_matchs")
+    matchs = SwissMatchSerializer(many=True, source="get_matchs")
 
     class Meta:
         model = SwissRound
         fields = "__all__"
 
+
 class CreateSwissRoundsSerializer(serializers.Serializer):
+    """Serializer for data used to create a tournament swiss round"""
+
     tournament = serializers.PrimaryKeyRelatedField(queryset=Tournament.objects.all())
     min_score = serializers.IntegerField(min_value=1)
     use_seeding = serializers.BooleanField()
     bo_type = serializers.ChoiceField(BestofType)
 
+
 class GenerateSwissRoundRoundSerializer(serializers.Serializer):
+    """Serializer for data used to generate a round of matchs of a swiss round"""
+
     tournament = serializers.PrimaryKeyRelatedField(queryset=Tournament.objects.all())
     swiss = serializers.PrimaryKeyRelatedField(queryset=SwissRound.objects.all())
     round = serializers.IntegerField(min_value=2)
@@ -293,16 +468,35 @@ class GenerateSwissRoundRoundSerializer(serializers.Serializer):
         round_idx = data["round"]
 
         if not tournament.swissround_set.contains(swiss):
-            raise serializers.ValidationError(_("La ronde suisse ne fait pas partie de ce tournoi."))
+            raise serializers.ValidationError(
+                _("La ronde suisse ne fait pas partie de ce tournoi.")
+            )
 
-        if round_idx > 2*swiss.min_score - 1:
-            raise serializers.ValidationError(_("Le tour demandé ne fait pas partie de cette ronde suisse."))
+        if round_idx > 2 * swiss.min_score - 1:
+            raise serializers.ValidationError(
+                _("Le tour demandé ne fait pas partie de cette ronde suisse.")
+            )
 
-        if SwissMatch.objects.filter(swiss=swiss, round_number=round_idx).exclude(status=MatchStatus.SCHEDULED).exists():
-            raise serializers.ValidationError(_("Des matchs existent déjà et sont en cours ou terminés."))
+        if (
+            SwissMatch.objects.filter(swiss=swiss, round_number=round_idx)
+            .exclude(status=MatchStatus.SCHEDULED)
+            .exists()
+        ):
+            raise serializers.ValidationError(
+                _("Des matchs existent déjà et sont en cours ou terminés.")
+            )
 
-        if SwissMatch.objects.filter(swiss=swiss, round_number=round_idx-1).exclude(status=MatchStatus.COMPLETED).exists():
-            raise serializers.ValidationError(_("Des matchs du tour précédant n'ont pas encore commencés ou ne sont pas terminés."))
+        if (
+            SwissMatch.objects.filter(swiss=swiss, round_number=round_idx - 1)
+            .exclude(status=MatchStatus.COMPLETED)
+            .exists()
+        ):
+            raise serializers.ValidationError(
+                _(
+                    "Des matchs du tour précédant n'ont pas encore\
+                    commencés ou ne sont pas terminés."
+                )
+            )
 
         return data
 
@@ -316,12 +510,12 @@ class CasterSerializer(serializers.ModelSerializer):
         model = Caster
         exclude = ["tournament"]
 
+
 class EventSerializer(serializers.ModelSerializer):
     # pylint: disable=R0903
     """Serializer for the tournament Event"""
-    tournaments = serializers.ListField(
-        required=False, read_only=True, source="get_tournaments_id"
-    )
+
+    tournaments = serializers.ListField(required=False, read_only=True, source="get_tournaments_id")
 
     class Meta:
         """Serializer meta options"""
@@ -350,7 +544,14 @@ class GameSerializer(serializers.ModelSerializer):
 
         model = Game
         read_only_fields = ("id",)
-        fields = ("id", "name", "short_name", "players_per_team", "substitute_players_per_team", "team_per_match")
+        fields = (
+            "id",
+            "name",
+            "short_name",
+            "players_per_team",
+            "substitute_players_per_team",
+            "team_per_match",
+        )
 
 
 class TournamentSerializer(serializers.ModelSerializer):
@@ -359,9 +560,9 @@ class TournamentSerializer(serializers.ModelSerializer):
     teams = serializers.ListField(required=False, read_only=True, source="get_teams_id")
     validated_teams = serializers.IntegerField(read_only=True, source="get_validated_teams")
     casters = CasterSerializer(many=True, source="get_casters")
-    groups = serializers.ListField(required=False,source="get_groups_id")
-    brackets = serializers.ListField(required=False,source="get_brackets_id")
-    swissRounds = serializers.ListField(required=False,source="get_swissRounds_id")
+    groups = serializers.ListField(required=False, source="get_groups_id")
+    brackets = serializers.ListField(required=False, source="get_brackets_id")
+    swissRounds = serializers.ListField(required=False, source="get_swissRounds_id")
 
     class Meta:
         """Meta options of the serializer"""
@@ -402,44 +603,41 @@ class TeamSerializer(serializers.ModelSerializer):
         model = Team
         read_only_fields = ("id",)
         fields = "__all__"
-        extra_kwargs = {"password" : {"write_only": True}}
+        extra_kwargs = {"password": {"write_only": True}}
 
     def validate(self, data):
         if not tournament_announced(data["tournament"]):
-            raise serializers.ValidationError(
-                _("Ce tournoi n'est pas encore annoncé")
-            )
+            raise serializers.ValidationError(_("Ce tournoi n'est pas encore annoncé"))
         if tournament_registration_full(data["tournament"]):
-            raise serializers.ValidationError(
-                _("Ce tournoi est complet")
-            )
-        for user in data.get("get_players_id", []) + data.get("get_managers_id", []) + data.get("get_substitutes_id", []):
+            raise serializers.ValidationError(_("Ce tournoi est complet"))
+        for user in (
+            data.get("get_players_id", [])
+            + data.get("get_managers_id", [])
+            + data.get("get_substitutes_id", [])
+        ):
             event = Event.objects.get(tournament=data["tournament"])
-            if not unique_event_registration_validator(user,event):
+            if not unique_event_registration_validator(user, event):
                 raise serializers.ValidationError(
-                _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
-            )
+                    _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
+                )
 
         if len(data.get("players_names_in_game", [])) != len(data.get("get_players_id", [])):
             raise serializers.ValidationError(_("Il manque des name_in_games de joueur⋅euses"))
 
-        if len(data.get("substitutes_names_in_game", [])) != len(data.get("get_substitutes_id", [])):
+        if len(data.get("substitutes_names_in_game", [])) != len(
+            data.get("get_substitutes_id", [])
+        ):
             raise serializers.ValidationError(_("Il manque des name_in_games de remplaçant⋅e⋅s"))
 
         # Validate the name in game
         for name in data.get("players_names_in_game", []):
             if not valid_name(data["tournament"].game, name):
-                raise serializers.ValidationError(
-                    _("Le pseudo en jeu n'est pas valide")
-                )
+                raise serializers.ValidationError(_("Le pseudo en jeu n'est pas valide"))
         for name in data.get("substitutes_names_in_game", []):
             if not valid_name(data["tournament"].game, name):
-                raise serializers.ValidationError(
-                    _("Le pseudo en jeu n'est pas valide")
-                )
+                raise serializers.ValidationError(_("Le pseudo en jeu n'est pas valide"))
 
         return data
-
 
     def create(self, validated_data):
         """Create a Team from input data"""
@@ -454,15 +652,15 @@ class TeamSerializer(serializers.ModelSerializer):
         validated_data["password"] = make_password(validated_data["password"])
         team_obj = Team.objects.create(**validated_data)
 
-        for player, name_in_game in zip(players,players_names_in_game):
+        for player, name_in_game in zip(players, players_names_in_game):
             user_obj = User.objects.get(id=player)
-            Player.objects.create(user=user_obj, team=team_obj,name_in_game=name_in_game)
+            Player.objects.create(user=user_obj, team=team_obj, name_in_game=name_in_game)
 
         for manager in managers:
             user_obj = User.objects.get(id=manager)
             Manager.objects.create(user=user_obj, team=team_obj)
 
-        for sub, name_in_game in zip(substitutes,substitutes_names_in_game):
+        for sub, name_in_game in zip(substitutes, substitutes_names_in_game):
             user_obj = User.objects.get(id=sub)
             Substitute.objects.create(user=user_obj, team=team_obj, name_in_game=name_in_game)
 
@@ -516,16 +714,19 @@ class TeamSerializer(serializers.ModelSerializer):
 
 class TeamMatchsSerializer(serializers.ModelSerializer):
     """Serializer for team matchs"""
+
     group_matchs = GroupMatchSerializer(many=True, source="get_group_matchs")
     bracket_matchs = KnockoutMatchSerializer(many=True, source="get_knockout_matchs")
     swiss_matchs = SwissMatchSerializer(many=True, source="get_swiss_matchs")
 
     class Meta:
         model = Team
-        fields = ["id","group_matchs","bracket_matchs","swiss_matchs"]
+        fields = ["id", "group_matchs", "bracket_matchs", "swiss_matchs"]
+
 
 class PlayerSerializer(serializers.ModelSerializer):
     """Serializer for a Player Registration"""
+
     password = serializers.CharField(write_only=True)
 
     class Meta:
@@ -536,7 +737,7 @@ class PlayerSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         event = data["team"].tournament.event
-        if not unique_event_registration_validator(data["user"],event):
+        if not unique_event_registration_validator(data["user"], event):
             raise serializers.ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
@@ -546,13 +747,9 @@ class PlayerSerializer(serializers.ModelSerializer):
                 _("Nombre maximum de joueur⋅euses par équipe atteint")
             )
         if not tournament_announced(data["team"].tournament):
-            raise serializers.ValidationError(
-                _("Ce tournoi n'est pas encore annoncé")
-            )
+            raise serializers.ValidationError(_("Ce tournoi n'est pas encore annoncé"))
         if not valid_name(data["team"].tournament.game, data["name_in_game"]):
-            raise serializers.ValidationError(
-                _("Le pseudo en jeu n'est pas valide")
-            )
+            raise serializers.ValidationError(_("Le pseudo en jeu n'est pas valide"))
 
         return data
 
@@ -573,6 +770,7 @@ class PlayerIdSerializer(serializers.Serializer):
 
 class ManagerSerializer(serializers.ModelSerializer):
     """Serializer for a Manager Registration"""
+
     password = serializers.CharField(write_only=True)
 
     class Meta:
@@ -583,15 +781,13 @@ class ManagerSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         event = data["team"].tournament.event
-        if not unique_event_registration_validator(data["user"],event):
+        if not unique_event_registration_validator(data["user"], event):
             raise serializers.ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
         del data["password"]
         if not tournament_announced(data["team"].tournament):
-            raise serializers.ValidationError(
-                _("Ce tournoi n'est pas encore annoncé")
-            )
+            raise serializers.ValidationError(_("Ce tournoi n'est pas encore annoncé"))
 
         return data
 
@@ -609,8 +805,10 @@ class ManagerIdSerializer(serializers.ModelSerializer):
         """Turn a Django object into a serialized representation"""
         return instance.id
 
+
 class SubstituteSerializer(serializers.ModelSerializer):
     """Serializer for a Substitute Registration"""
+
     password = serializers.CharField(write_only=True)
 
     class Meta:
@@ -621,25 +819,22 @@ class SubstituteSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         event = data["team"].tournament.event
-        if not unique_event_registration_validator(data["user"],event):
+        if not unique_event_registration_validator(data["user"], event):
             raise serializers.ValidationError(
                 _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
             )
         del data["password"]
         if not tournament_announced(data["team"].tournament):
-            raise serializers.ValidationError(
-                _("Ce tournoi n'est pas encore annoncé")
-            )
+            raise serializers.ValidationError(_("Ce tournoi n'est pas encore annoncé"))
         if max_substitue_per_team_reached(data["team"]):
             raise serializers.ValidationError(
                 _("Nombre maximum de remplaçant⋅e⋅s par équipe atteint")
             )
         if not valid_name(data["team"].tournament.game, data["name_in_game"]):
-            raise serializers.ValidationError(
-                _("Le pseudo en jeu n'est pas valide")
-            )
+            raise serializers.ValidationError(_("Le pseudo en jeu n'est pas valide"))
 
         return data
+
 
 class SubstituteIdSerializer(serializers.ModelSerializer):
     """Serializer to verify a list of Substitute IDs"""
@@ -654,6 +849,7 @@ class SubstituteIdSerializer(serializers.ModelSerializer):
         """Turn a Django object into a serialized representation"""
         return instance.id
 
+
 class SeatSlotSerializer(serializers.ModelSerializer):
     """Serializer for a SeatSlot"""
 
@@ -663,53 +859,66 @@ class SeatSlotSerializer(serializers.ModelSerializer):
         model = SeatSlot
         fields = "__all__"
 
+
 class SeatSerializer(serializers.ModelSerializer):
     """Serializer for a Seat"""
 
     class Meta:
         """Meta options for the serializer"""
+
         model = Seat
         fields = "__all__"
+
 
 class FullDerefSwissMatchSerializer(serializers.ModelSerializer):
     """Serializer for a Swiss Match in a tournament"""
 
     class Meta:
         """Meta options for the serializer"""
+
         model = SwissMatch
         fields = "__all__"
+
 
 class FullDerefSwissRoundSerializer(serializers.ModelSerializer):
     """Serializer for a Swiss Round in a tournament"""
 
     class Meta:
         """Meta options for the serializer"""
+
         model = SwissRound
         fields = "__all__"
+
 
 class FullDerefKnockoutMatchSerializer(serializers.ModelSerializer):
     """Serializer for a knockout match in a tournament"""
 
     class Meta:
         """Meta options for the serializer"""
+
         model = KnockoutMatch
         fields = "__all__"
+
 
 class FullDerefBracketSerializer(serializers.ModelSerializer):
     """Serializer for a bracket in a tournament"""
 
     class Meta:
         """Meta options for the serializer"""
+
         model = Bracket
         fields = "__all__"
+
 
 class FullDerefGroupMatchSerializer(serializers.ModelSerializer):
     """Serializer for a group match in a tournament"""
 
     class Meta:
         """Meta options for the serializer"""
+
         model = GroupMatch
         fields = "__all__"
+
 
 class FullDerefGroupSerializer(serializers.ModelSerializer):
     """Serializer for a group in a tournament"""
@@ -730,6 +939,7 @@ class FullDerefPlayerSerializer(serializers.ModelSerializer):
         model = Player
         fields = ("id", "name_in_game", "payment_status")
 
+
 class FullDerefManagerSerializer(serializers.ModelSerializer):
     """Serializer for a Manager Registration"""
 
@@ -742,6 +952,7 @@ class FullDerefManagerSerializer(serializers.ModelSerializer):
         """Remove all fields except id and is_announced when is_announced is False"""
         return instance.user.username
 
+
 class FullDerefSubstituteSerializer(serializers.ModelSerializer):
     """Serializer for a Substitute Registration"""
 
@@ -750,6 +961,7 @@ class FullDerefSubstituteSerializer(serializers.ModelSerializer):
 
         model = Substitute
         fields = ("id", "name_in_game", "payment_status")
+
 
 class FullDerefTeamSerializer(serializers.ModelSerializer):
     """Serializer class for Teams"""
@@ -761,13 +973,14 @@ class FullDerefTeamSerializer(serializers.ModelSerializer):
         read_only_fields = ("id",)
         fields = ("id", "name", "validated", "captain")
 
+
 class FullDerefTeamSerializer2(serializers.ModelSerializer):
     """Serializer class for Teams"""
 
-    players = FullDerefPlayerSerializer(many=True,source="player_set")
-    substitutes = FullDerefSubstituteSerializer(many=True,source="substitute_set")
-    managers = FullDerefManagerSerializer(many=True,source="manager_set",read_only=True)
-    captain = serializers.SlugRelatedField(slug_field="name_in_game",read_only=True)
+    players = FullDerefPlayerSerializer(many=True, source="player_set")
+    substitutes = FullDerefSubstituteSerializer(many=True, source="substitute_set")
+    managers = FullDerefManagerSerializer(many=True, source="manager_set", read_only=True)
+    captain = serializers.SlugRelatedField(slug_field="name_in_game", read_only=True)
 
     class Meta:
         """Meta options of the team serializer"""
@@ -776,15 +989,16 @@ class FullDerefTeamSerializer2(serializers.ModelSerializer):
         read_only_fields = ("id",)
         exclude = ["tournament", "password"]
 
+
 class GroupField(serializers.ModelSerializer):
     """Serializer for a group in a tournament"""
 
-    teams = serializers.ListField(required=False,source="get_teams_id")
-    matchs = GroupMatchSerializer(many=True,source="get_matchs")
-    scores = serializers.DictField(required=False,source="get_leaderboard")
-    tiebreak_scores = serializers.DictField(required=False,source="get_tiebreaks")
+    teams = serializers.ListField(required=False, source="get_teams_id")
+    matchs = GroupMatchSerializer(many=True, source="get_matchs")
+    scores = serializers.DictField(required=False, source="get_leaderboard")
+    tiebreak_scores = serializers.DictField(required=False, source="get_tiebreaks")
     round_count = serializers.IntegerField(source="get_round_count")
-    # seeding = serializers.DictField(source="get_teams_seeding")
+    seeding = serializers.DictField(source="get_teams_seeding_by_id")
 
     class Meta:
         """Meta options for the serializer"""
@@ -792,38 +1006,51 @@ class GroupField(serializers.ModelSerializer):
         model = Group
         exclude = ["tournament"]
 
+
 class BracketField(serializers.ModelSerializer):
+    """Serializer for a bracket when used as a field in another serializer"""
+
     teams = serializers.ListField(source="get_teams_id")
-    matchs = KnockoutMatchSerializer(many=True,source="get_matchs")
+    matchs = KnockoutMatchSerializer(many=True, source="get_matchs")
     winner = serializers.IntegerField(source="get_winner")
-    depth = serializers.IntegerField(required=False,source="get_depth")
+    depth = serializers.IntegerField(required=False, source="get_depth")
 
     class Meta:
         model = Bracket
         exclude = ["team_count", "tournament"]
 
+
 class SwissRoundField(serializers.ModelSerializer):
+    """Serializer for a swiss round when used as a field in another serializer"""
+
     teams = serializers.ListField(source="get_teams_id")
-    matchs = SwissMatchSerializer(many=True,source="get_matchs")
+    matchs = SwissMatchSerializer(many=True, source="get_matchs")
 
     class Meta:
         model = SwissRound
         exclude = ["tournament"]
 
+
 class FullDerefEventSeatField(serializers.RelatedField):
+    """Serializer for an event's seat when used as a field in another serializer"""
+
     def to_representation(self, value):
         return (value.x, value.y)
+
 
 class FullDerefSeatSerializer(serializers.ModelSerializer):
     """Serializer for a Seat"""
 
     class Meta:
         """Meta options for the serializer"""
+
         model = Seat
         exclude = ["event"]
 
+
 class FullDerefSeatSlotSerializer(serializers.ModelSerializer):
     """Serializer for a SeatSlot"""
+
     seats = FullDerefSeatSerializer(many=True)
 
     class Meta:
@@ -832,23 +1059,29 @@ class FullDerefSeatSlotSerializer(serializers.ModelSerializer):
         model = SeatSlot
         exclude = ["tournament"]
 
+
 class FullDerefEventSerializer(serializers.ModelSerializer):
-    seats = FullDerefEventSeatField(many=True,source="seat_set",read_only=True)
+    """Serializer for an Event with all fields"""
+
+    seats = FullDerefEventSeatField(many=True, source="seat_set", read_only=True)
 
     class Meta:
         model = Event
         fields = "__all__"
 
+
 class FullDerefTournamentSerializer(serializers.ModelSerializer):
+    """Serializer for a Tournament with all fields serialized"""
+
     validated_teams = serializers.IntegerField(read_only=True, source="get_validated_teams")
     casters = CasterSerializer(many=True, source="get_casters")
     teams = FullDerefTeamSerializer2(many=True)
-    groups = GroupField(many=True,source="group_set")
-    brackets = BracketField(many=True,source="bracket_set")
-    swissRounds = SwissRoundField(many=True,source="swissround_set")
+    groups = GroupField(many=True, source="group_set")
+    brackets = BracketField(many=True, source="bracket_set")
+    swissRounds = SwissRoundField(many=True, source="swissround_set")
     event = FullDerefEventSerializer()
     game = GameSerializer()
-    seatslots = FullDerefSeatSlotSerializer(many=True,source="seatslot_set")
+    seatslots = FullDerefSeatSlotSerializer(many=True, source="seatslot_set")
 
     class Meta:
         model = Tournament
@@ -859,7 +1092,10 @@ class FullDerefTournamentSerializer(serializers.ModelSerializer):
             return super().to_representation(value)
         return {"id": value.id, "is_announced": False}
 
+
 class TeamSeedListSerializer(serializers.ListSerializer):
+    """Serializer for updating multiple teams' seed"""
+
     def update(self, teams, validated_data):
         data_mapping = {item["id"]: item for item in validated_data}
 
@@ -873,9 +1109,12 @@ class TeamSeedListSerializer(serializers.ListSerializer):
 
         return ret
 
+
 class TeamSeedingSerializer(serializers.ModelSerializer):
+    """Serializer for updating team's seed"""
+
     id = serializers.IntegerField()
-    
+
     class Meta:
         model = Team
         fields = ["id", "seed"]
