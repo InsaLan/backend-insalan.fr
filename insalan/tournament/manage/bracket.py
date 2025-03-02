@@ -1,7 +1,7 @@
-from ..models import Bracket, KnockoutMatch, BracketType, BracketSet
 from math import ceil
+from ..models import Bracket, KnockoutMatch, BracketType, BracketSet, BestofType
 
-def create_empty_knockout_matchs(bracket: Bracket, bo_type):
+def create_empty_knockout_matchs(bracket: Bracket, bo_type: BestofType = BestofType.BO1):
     depth = bracket.get_depth()
 
     for match in KnockoutMatch.objects.filter(bracket=bracket):
@@ -49,10 +49,10 @@ def update_next_knockout_match(match):
             for i, looser in enumerate(loosers):
                 # regular new index
                 if match.round_number == depth:
-                    looser_round = 2*(match.round_number-1)
+                    looser_round = 2*(match.round_number - 1)
                     new_index_in_round = ceil(match.index_in_round / 2) - 1
                 else:
-                    looser_round = 2*match.round_number-1
+                    looser_round = 2*match.round_number - 1
                     new_index_in_round = match.index_in_round - 1
                 # reverse order if odd round
                 if (depth - match.round_number) % 2:

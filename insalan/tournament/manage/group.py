@@ -18,7 +18,7 @@ def generate_groups(tournament: Tournament, count: int, team_per_group: int, nam
                 Seeding.objects.create(group=group, team=team, seeding=j+1)
                 GroupTiebreakScore.objects.create(group=group, team=team)
 
-def create_group_matchs(group: Group, bo_type: BestofType):
+def create_group_matchs(group: Group, bo_type: BestofType = BestofType.BO1):
     teams = group.get_sorted_teams()
     team_per_match = group.get_tournament().get_game().get_team_per_match()
     nb_matchs = math.ceil(len(teams)/team_per_match)

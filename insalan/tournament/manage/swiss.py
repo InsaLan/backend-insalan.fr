@@ -1,8 +1,8 @@
-from ..models import Team, Tournament, SwissRound, SwissMatch, SwissSeeding, BestofType
 from math import ceil
 from random import shuffle
+from ..models import Tournament, SwissRound, SwissMatch, SwissSeeding, BestofType
 
-def create_swiss_matchs(swiss: SwissRound, bo_type):
+def create_swiss_matchs(swiss: SwissRound, bo_type: BestofType = BestofType.BO1):
     teams = swiss.get_sorted_teams()
     team_per_match = swiss.tournament.get_game().get_team_per_match()
     nb_matchs = ceil(len(teams)/team_per_match)
