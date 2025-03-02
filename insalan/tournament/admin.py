@@ -49,7 +49,6 @@ from .models import (
     Game,
     Group,
     GroupMatch,
-    GroupTiebreakScore,
     KnockoutMatch,
     Manager,
     MatchStatus,
@@ -1055,7 +1054,7 @@ class KnockoutMatchAdmin(admin.ModelAdmin):
         for match in queryset:
             if match.status != MatchStatus.COMPLETED:
                 for team in match.get_teams():
-                    team_matchs = KnockoutMatch.objects.filter(teams=team,round_index__gt=match.round_number)
+                    team_matchs = KnockoutMatch.objects.filter(teams=team,round_number__gt=match.round_number)
                     for team_match in team_matchs:
                         if team_match.status == MatchStatus.ONGOING:
                             self.message_user(request,_(f"L'équipe {team.name} est encore dans un match en cours"), messages.ERROR)
