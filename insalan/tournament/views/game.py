@@ -5,7 +5,7 @@ from rest_framework import generics, permissions
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-import insalan.tournament.serializers as serializers
+from insalan.tournament import serializers
 
 from ..models import Game
 from .permissions import ReadOnly

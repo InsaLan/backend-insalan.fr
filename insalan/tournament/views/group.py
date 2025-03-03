@@ -8,7 +8,7 @@ from rest_framework.exceptions import NotFound, PermissionDenied
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-import insalan.tournament.serializers as serializers
+from insalan.tournament import serializers
 
 from ..models import Group, validate_match_data, GroupMatch, MatchStatus, Tournament, Match
 from ..manage import update_match_score, generate_groups, create_group_matchs, launch_match
@@ -43,8 +43,8 @@ class GroupDetails(generics.RetrieveUpdateDestroyAPIView):
 
         if GroupMatch.objects.filter(group=group).exclude(status=MatchStatus.SCHEDULED).exists():
             return Response({
-                "error": _("Impossible de supprimé la poule.\
-                     Des matchs sont déjà en cours ou terminés")
+                "error": _("Impossible de supprimer la poule.\
+                    Des matchs sont déjà en cours ou terminés")
             }, status=status.HTTP_400_BAD_REQUEST)
 
         group.delete()

@@ -296,7 +296,7 @@ class GenerateGroupMatchsSerializer(serializers.Serializer):
         tournament: Tournament = data["tournament"]
         groups: list[Group] = data["groups"]
 
-        if not all([tournament.group_set.contains(group) for group in groups]):
+        if not all(tournament.group_set.contains(group) for group in groups):
             raise serializers.ValidationError(
                 _(
                     "Certaines poules ne font pas parti de ce tournoi\
@@ -420,7 +420,7 @@ class BracketSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 _(
                     "Le nombre d'équipes demandé est supérieur\
-                    au nombre maximum d'équipe inscrite dans le tournoi."
+                    au nombre maximum d'équipes inscrites dans le tournoi."
                 )
             )
 

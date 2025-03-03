@@ -11,7 +11,7 @@ from drf_yasg import openapi
 
 from insalan.settings import EMAIL_AUTH
 from insalan.mailer import MailManager
-import insalan.tournament.serializers as serializers
+from insalan.tournament import serializers
 
 from ..models import Player, Manager, Substitute, Team, PaymentStatus, SeatSlot
 from .permissions import ReadOnly, Patch

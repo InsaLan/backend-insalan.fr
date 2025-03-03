@@ -1,4 +1,3 @@
-import math
 from django.core.exceptions import PermissionDenied
 from django.utils.translation import gettext_lazy as _
 
@@ -9,17 +8,21 @@ from rest_framework.authentication import SessionAuthentication
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-from rest_framework.exceptions import NotFound
-
 from insalan.tickets.models import Ticket
 from insalan.user.models import User
-import insalan.tournament.serializers as serializers
+from insalan.tournament import serializers
 
-from ..models import (Player, Manager, Substitute, Event, Tournament, Game,
-                      Team, Group, Bracket, SwissRound,
-                      GroupMatch, KnockoutMatch, SwissMatch, Seeding, Score,
-                      BracketType, BracketSet, MatchStatus,
-                      SwissSeeding, SeatSlot, Seat)
+from ..models import (
+    Player,
+    Manager,
+    Substitute,
+    Event,
+    Tournament,
+    Team,
+    GroupMatch,
+    KnockoutMatch,
+    SwissMatch,
+)
 from .permissions import ReadOnly
 
 class TournamentList(generics.ListCreateAPIView):

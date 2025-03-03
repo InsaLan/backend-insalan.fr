@@ -10,7 +10,7 @@ from drf_yasg import openapi
 
 from .permissions import ReadOnly
 
-import insalan.tournament.serializers as serializers
+from insalan.tournament import serializers
 
 from ..models import Bracket, BestofType, KnockoutMatch, MatchStatus, Tournament, validate_match_data, Match
 from ..manage import create_empty_knockout_matchs, update_match_score, update_next_knockout_match, launch_match
@@ -26,7 +26,8 @@ class BracketDetails(generics.RetrieveUpdateDestroyAPIView):
 
         if KnockoutMatch.objects.filter(bracket=bracket).exclude(status=MatchStatus.SCHEDULED).exists():
             return Response({
-                "error": _("Impossible de supprimé l'arbre. Des matchs sont déjà en cours ou terminés")
+                "error": _("Impossible de supprimer l'arbre.\
+                    Des matchs sont déjà en cours ou terminés")
             }, status=status.HTTP_400_BAD_REQUEST)
 
         bracket.delete()

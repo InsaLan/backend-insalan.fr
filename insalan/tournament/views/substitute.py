@@ -12,7 +12,7 @@ from drf_yasg import openapi
 
 from insalan.tournament.models.validators import valid_name
 from insalan.user.models import User
-import insalan.tournament.serializers as serializers
+from insalan.tournament import serializers
 
 from ..models import Substitute, Team, PaymentStatus
 

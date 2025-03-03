@@ -8,9 +8,9 @@ from rest_framework.exceptions import NotFound, PermissionDenied
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-import insalan.tournament.serializers as serializers
+from insalan.tournament import serializers
 
-from ..models import MatchStatus, Tournament, SwissMatch, SwissRound, validate_match_data, Match
+from ..models import MatchStatus, Tournament, SwissMatch, validate_match_data, Match
 from ..manage import update_match_score, create_swiss_rounds, launch_match, generate_swiss_round_round
 
 class CreateSwissRounds(generics.CreateAPIView):
@@ -39,7 +39,8 @@ class DeleteSwissRounds(generics.DestroyAPIView):
 
         if SwissMatch.objects.filter(swiss__tournament=tournament).exclude(status=MatchStatus.SCHEDULED).exists():
             return Response({
-                "error": _("Impossible de supprimer les rondes suisses. Des matchs sont en cours ou déjà terminés.")
+                "error": _("Impossible de supprimer les rondes suisses.\
+                    Des matchs sont en cours ou déjà terminés.")
             }, status=status.HTTP_400_BAD_REQUEST)
 
         tournament.swissround_set.all().delete()
