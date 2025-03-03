@@ -127,11 +127,11 @@ class MatchSerializer(serializers.ModelSerializer):
 
         super().update(instance, validated_data)
 
-        # if self.instance.status == MatchStatus.COMPLETED:
-        for team, score in scores.items():
-            score_obj = Score.objects.get(team=team, match=instance)
-            score_obj.score = score
-            score_obj.save()
+        if self.instance.status == MatchStatus.COMPLETED:
+            for team, score in scores.items():
+                score_obj = Score.objects.get(team=team, match=instance)
+                score_obj.score = score
+                score_obj.save()
 
         return instance
 
