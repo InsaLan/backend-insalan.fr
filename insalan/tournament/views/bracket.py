@@ -64,7 +64,7 @@ class BracketMatchPatch(generics.UpdateAPIView):
 
         match = self.get_object()
 
-        if match.status == MatchStatus.COMPLETED and match.round_number != 0:
+        if match.status == MatchStatus.COMPLETED and not match.is_last_match():
             update_next_knockout_match(match)
 
         return response
