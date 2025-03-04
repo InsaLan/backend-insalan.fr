@@ -169,7 +169,7 @@ class BracketMatchScore(generics.GenericAPIView):
 
         update_match_score(match,data)
 
-        if match.round_number != 0:
+        if not match.is_last_match():
             update_next_knockout_match(match)
 
         serializer = serializers.KnockoutMatchSerializer(match, context={"request": request})
