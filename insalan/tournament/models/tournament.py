@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from typing import List
 from django.db import models
+from django.db.models import QuerySet
 from django.core.validators import (
     FileExtensionValidator,
     MinValueValidator,
@@ -269,9 +270,9 @@ class Tournament(models.Model):
         """Get the game of a tournament"""
         return self.game
 
-    def get_teams(self) -> List["Team"]:
+    def get_teams(self) -> QuerySet["Team"]:
         """Return the list of Teams in that Tournament"""
-        return team.Team.objects.filter(tournament=self)
+        return self.teams.all() #team.Team.objects.filter(tournament=self)
 
     def get_teams_id(self) -> List[int]:
         """Return the list of identifiers of this Tournament's Teams"""

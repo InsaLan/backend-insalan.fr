@@ -1,4 +1,4 @@
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, BadRequest
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.hashers import make_password
 
@@ -11,7 +11,7 @@ from drf_yasg import openapi
 
 from insalan.settings import EMAIL_AUTH
 from insalan.mailer import MailManager
-import insalan.tournament.serializers as serializers
+from insalan.tournament import serializers
 
 from ..models import Player, Manager, Substitute, Team, PaymentStatus, SeatSlot
 from .permissions import ReadOnly, Patch
@@ -282,3 +282,20 @@ class TeamMatchs(generics.RetrieveAPIView):
     serializer_class = serializers.TeamMatchsSerializer
     permission_classes = [permissions.IsAdminUser | permissions.IsAuthenticated]
     pagination_class = None
+
+class AdminTeamSeeding(generics.UpdateAPIView):
+    queryset = Team.objects.all()
+    serializer_class = serializers.TeamSeedingSerializer
+    permission_classes = [permissions.IsAdminUser]
+    pagination_class = None
+
+    def patch(self, request):
+        new_seeding = self.get_serializer(self.get_queryset(),data=request.data, many=True)
+        if not new_seeding.is_valid():
+            raise BadRequest(_("Les données sont invalides."))
+
+        saved_seeding = new_seeding.save()
+
+        saved_seeding_serialized = self.get_serializer(saved_seeding, many=True).data
+
+        return Response(saved_seeding_serialized, status=status.HTTP_200_OK)

@@ -36,6 +36,7 @@ from insalan.tournament.manage import (
     create_empty_knockout_matchs,
     create_group_matchs,
     create_swiss_matchs,
+    launch_match,
 )
 from insalan.admin import ADMIN_ORDERING
 
@@ -89,6 +90,7 @@ ADMIN_ORDERING += [
         'KnockoutMatch',
         'SwissRound',
         'SwissMatch',
+        'GroupTiebreakScore'
     ]),
 ]
 
@@ -475,7 +477,7 @@ class TeamCreationForm(forms.ModelForm):
         Meta options for the form
         """
         model = Team
-        fields = ("name", "tournament", "validated")
+        fields = ("name", "tournament", "validated", "seed")
         field_classes = {"name": UsernameField}
 
     def __init__(self, *args, **kwargs):
@@ -952,15 +954,7 @@ class GroupMatchAdmin(admin.ModelAdmin):
                             self.message_user(request,_(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"), messages.ERROR)
                             return
 
-                if len(match.get_teams()) == 1:
-                    match.status = MatchStatus.COMPLETED
-                    score = Score.objects.get(team=match.get_teams()[0],match=match)
-                    score.score = match.get_winning_score()
-                    score.save()
-                else:
-                    match.status = MatchStatus.ONGOING
-
-                match.save()
+                launch_match(match)
         self.message_user(request,_("Les matchs ont bien été lancés"))
 
 
@@ -1060,7 +1054,7 @@ class KnockoutMatchAdmin(admin.ModelAdmin):
         for match in queryset:
             if match.status != MatchStatus.COMPLETED:
                 for team in match.get_teams():
-                    team_matchs = KnockoutMatch.objects.filter(teams=team,round_index__gt=match.round_number)
+                    team_matchs = KnockoutMatch.objects.filter(teams=team,round_number__gt=match.round_number)
                     for team_match in team_matchs:
                         if team_match.status == MatchStatus.ONGOING:
                             self.message_user(request,_(f"L'équipe {team.name} est encore dans un match en cours"), messages.ERROR)
@@ -1069,15 +1063,7 @@ class KnockoutMatchAdmin(admin.ModelAdmin):
                             self.message_user(request,_(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"), messages.ERROR)
                             return
 
-                if len(match.get_teams()) == 1:
-                    match.status = MatchStatus.COMPLETED
-                    score = Score.objects.get(team=match.get_teams()[0],match=match)
-                    score.score = match.get_winning_score()
-                    score.save()
-                else:
-                    match.status = MatchStatus.ONGOING
-
-                match.save()
+                launch_match(match)
         self.message_user(request,_("Les matchs ont bien été lancés"))
 
 
@@ -1120,7 +1106,7 @@ admin.site.register(SwissRound,SwissRoundAdmin)
 class SwissMatchAdmin(admin.ModelAdmin):
     """Admin handle for Swiss matchs"""
 
-    list_display = ("id","swiss","status","round_number","index_in_round","bo_type",)
+    list_display = ("id","swiss","status","round_number","index_in_round","bo_type","score_group")
     inlines = [ScoreInline]
     actions = [
         "launch_swiss_matchs_action",
@@ -1143,15 +1129,7 @@ class SwissMatchAdmin(admin.ModelAdmin):
                             self.message_user(request,_(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"), messages.ERROR)
                             return
 
-                if len(match.get_teams()) == 1:
-                    match.status = MatchStatus.COMPLETED
-                    score = Score.objects.get(team=match.get_teams()[0],match=match)
-                    score.score = match.get_winning_score()
-                    score.save()
-                else:
-                    match.status = MatchStatus.ONGOING
-
-                match.save()
+                launch_match(match)
         self.message_user(request,_("Les matchs ont bien été lancés"))
 
 admin.site.register(SwissMatch, SwissMatchAdmin)

@@ -1,4 +1,5 @@
-from typing import List, Dict, Tuple
+from typing import List, Dict
+from operator import itemgetter
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -16,14 +17,10 @@ class Group(models.Model):
         verbose_name=_("Tournoi"),
         on_delete=models.CASCADE
     )
-    round_count = models.IntegerField(
+    round_count = models.PositiveIntegerField(
         verbose_name=_("Nombre de rounds"),
         default=1
     )
-    # teams = models.ManyToManyField(
-    #     "Team",
-    #     through="Seeding"
-    # )
 
     class Meta:
         verbose_name = _("Poule")
@@ -49,40 +46,39 @@ class Group(models.Model):
         return self.tournament
 
     def get_teams(self) -> List["Team"]:
-        teams = Seeding.objects.filter(group=self).values_list("team", flat=True)
-        return team.Team.objects.filter(pk__in=teams)
+        return team.Team.objects.filter(pk__in=self.get_teams_id())
 
     def get_teams_id(self) -> List[int]:
         return Seeding.objects.filter(group=self).values_list("team", flat=True)
 
-    def get_teams_seeding(self) -> List[Tuple["Team",int]]:
-        return [(seeding.team,seeding.seeding) for seeding in Seeding.objects.filter(group=self)]
+    def get_teams_seeding_by_id(self) -> Dict[int,int]:
+        return {seeding.team.id: seeding.seeding for seeding in Seeding.objects.filter(group=self)}
 
+    def get_teams_seeding(self) -> Dict["Team",int]:
+        return {seeding.team: seeding.seeding for seeding in Seeding.objects.filter(group=self)}
+    
     def get_sorted_teams(self) -> List["Team"]:
-        teams = self.get_teams_seeding()
-        teams.sort(key=lambda e: e[1])
+        teams = sorted(self.get_teams_seeding().items(), key=itemgetter(1))
         return [team[0] for team in teams]
 
     def get_round_count(self) -> int:
-        return self.round_count
+        return len(self.get_teams_id()) - 1
 
-    def get_leaderboard(self) -> Dict["Team",int]:
+    def get_leaderboard(self) -> Dict[int,int]:
         leaderboard = {}
 
-        for team in self.get_teams():
+        for team in self.get_teams_id():
             group_matchs = GroupMatch.objects.filter(teams=team,group=self)
             score = sum(match.Score.objects.filter(team=team,match__in=group_matchs).values_list("score",flat=True))
             leaderboard[team] = score
 
-        return leaderboard
-
-    def get_scores(self) -> Dict[int,int]:
-        leaderboard = self.get_leaderboard()
-
-        return {team.id : score for team, score in leaderboard.items()}
+        return dict(sorted(leaderboard.items(), key=itemgetter(1), reverse=True))
 
     def get_matchs(self) -> List["GroupMatch"]:
         return GroupMatch.objects.filter(group=self)
+
+    def get_tiebreaks(self) -> Dict[int,int]:
+        return {tiebreak.team.id: tiebreak.score for tiebreak in GroupTiebreakScore.objects.filter(group=self)}
 
 
 class Seeding(models.Model):
@@ -94,7 +90,9 @@ class Seeding(models.Model):
         "Team",
         on_delete=models.CASCADE,
     )
-    seeding = models.IntegerField()
+    seeding = models.PositiveIntegerField(
+        default=0
+    )
 
 
 class GroupMatch(match.Match):
@@ -111,13 +109,19 @@ class GroupMatch(match.Match):
     def get_tournament(self):
         return self.group.tournament
 
-# class GroupMatchScore(models.Model):
-#     score = models.IntegerField()
-#     match = models.ForeignKey(
-#         GroupMatch,
-#         on_delete=models.CASCADE
-#     )
-#     team = models.ForeignKey(
-#         "Team",
-#         on_delete=models.CASCADE
-#     )
+class GroupTiebreakScore(models.Model):
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.CASCADE,
+    )
+    team = models.OneToOneField(
+        "Team",
+        on_delete=models.CASCADE,
+    )
+    score = models.IntegerField(
+        default=0,
+        verbose_name=_("Score de tiebreak")
+    )
+
+    class Meta:
+        verbose_name = _("Score de tiebreak d'une équipe dans une poule")

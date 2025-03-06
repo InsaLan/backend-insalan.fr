@@ -1,4 +1,5 @@
 from collections import Counter
+from math import ceil
 
 from django.utils.translation import gettext_lazy as _
 from rest_framework.validators import ValidationError
@@ -65,10 +66,9 @@ def tournament_registration_full(tournament: "Tournament", exclude=None):
     return False
 
 def validate_match_data(match: "Match", data):
-    if match.status != Match.MatchStatus.ONGOING:
-        return {
-            "status" : "Le match n'est pas en cours"
-        }
+    winning_score = match.get_winning_score()
+    winner_count = 0
+    max_score = match.get_max_score()
 
     if Counter(map(int,data["score"].keys())) != Counter(match.get_teams_id()):
         return {
@@ -80,11 +80,30 @@ def validate_match_data(match: "Match", data):
             "score" : "Les scores sont invalides, le score total cummulé est trop grand"
         }
 
-    for _,score in data["score"].items():
-        if score > match.get_max_score():
+    for score in data["score"].values():
+        if score > max_score:
             return {
                 "score" : "Le score d'une équipe est trop grand"
             }
+
+        if score < 0:
+            return {
+                "score": "Le score d'une équipe ne peut pas être négatif."
+            }
+
+        if match.bo_type == Match.BestofType.RANKING and score <= winning_score:
+            winner_count += 1
+        elif match.bo_type != Match.BestofType.RANKING and score >= winning_score:
+            winner_count += 1
+
+    if (
+        (match.bo_type == Match.BestofType.RANKING and winner_count != ceil(match.get_team_count()/2)) 
+        or
+        (match.bo_type != Match.BestofType.RANKING and winner_count != 1)
+    ) :
+        return {
+            "score": "Scores incomplets, il y a trop ou pas assez de gagnants."
+        }
 
     return None
 

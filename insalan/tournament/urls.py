@@ -22,12 +22,68 @@ urlpatterns = [
         name="tournament/details/",
     ),
     path(
-        "tournament/<int:primary_key>/full/",
+        "tournament/<int:pk>/full/",
         views.TournamentDetailsFull.as_view(),
         name="tournament/details-full",
     ),
+    path(
+        "tournament/<int:pk>/bracket/create/",
+        views.CreateBracket.as_view(),
+        name="create/tournament/bracket"
+    ),
+    path(
+        "tournament/<int:pk>/bracket/matchs/launch/",
+        views.BracketMatchsLaunch.as_view(),
+        name="launch/tournament/bracket/matchs"
+    ),
+    path(
+        "tournament/<int:pk>/group/generate/",
+        views.GenerateGroups.as_view(),
+        name="generate/tournament/groups",
+    ),
+    path(
+        "tournament/<int:pk>/group/delete/",
+        views.DeleteGroups.as_view(),
+        name="delete/tournament/groups",
+    ),
+    path(
+        "tournament/<int:pk>/group/matchs/generate/",
+        views.GenerateGroupMatchs.as_view(),
+        name="generate/tournament/group/matchs"
+    ),
+    path(
+        "tournament/<int:pk>/group/matchs/delete/",
+        views.DeleteGroupMatchs.as_view(),
+        name="delete/tournament/group/matchs"
+    ),
+    path(
+        "tournament/<int:pk>/group/matchs/launch/",
+        views.GroupMatchsLaunch.as_view(),
+        name="launch/tournament/group/matchs"
+    ),
+    path(
+        "tournament/<int:pk>/swiss/create/",
+        views.CreateSwissRounds.as_view(),
+        name="create/tournament/swiss",
+    ),
+    path(
+        "tournament/<int:pk>/swiss/delete/",
+        views.DeleteSwissRounds.as_view(),
+        name="delete/tournament/swiss",
+    ),
+    path(
+        "tournament/<int:pk>/swiss/matchs/launch/",
+        views.SwissMatchsLaunch.as_view(),
+        name="launch/tournament/swiss/matchs"
+    ),
+    path(
+        "tournament/<int:pk>/swiss/round/generate/",
+        views.GenerateSwissRoundRound.as_view(),
+        name="generate/tournament/swiss/round"
+    ),
     path("me/", views.TournamentMe.as_view(), name="tournament/me"),
     path("team/", views.TeamList.as_view(), name="team/list"),
+    path("team/seeding", views.AdminTeamSeeding.as_view(), name="team/seeding"),
     path("team/<int:pk>/", views.TeamDetails.as_view(), name="team/details"),
     path("team/<int:pk>/matchs", views.TeamMatchs.as_view(), name="team/matchs"),
     path("player/", views.PlayerRegistrationList.as_view(), name="player/list"),
@@ -70,29 +126,48 @@ urlpatterns = [
         views.SubstituteRegistrationListName.as_view(),
         name="substitute/listFromUsername",
     ),
-    # path(
-    #     "group/",
-    #     views.GroupList.as_view(),
-    #     name="group/list"
-    # ),
+    path(
+        "group/",
+        views.GroupList.as_view(),
+        name="group/list"
+    ),
+    path(
+        "group/<int:pk>/",
+        views.GroupDetails.as_view(),
+        name="group/details"
+    ),
     path(
         "group/<int:group_id>/match/<int:match_id>/",
+        views.GroupMatchPatch.as_view(),
+        name="group/match"
+    ),
+    path(
+        "group/<int:group_id>/match/<int:match_id>/score/",
         views.GroupMatchScore.as_view(),
         name="group/match/score"
     ),
-    # path(
-    #     "bracket/"
-    # ),
+    path(
+        "bracket/<int:pk>/",
+        views.BracketDetails.as_view(),
+        name="bracket/details"
+    ),
     path(
         "bracket/<int:bracket_id>/match/<int:match_id>/",
+        views.BracketMatchPatch.as_view(),
+        name="bracket/match"
+    ),
+    path(
+        "bracket/<int:bracket_id>/match/<int:match_id>/score/",
         views.BracketMatchScore.as_view(),
         name="bracket/match/score"
     ),
-    # path(
-    #     "match/"
-    # ),
     path(
         "swiss/<int:swiss_id>/match/<int:match_id>/",
+        views.SwissMatchPatch.as_view(),
+        name="swiss/match"
+    ),
+    path(
+        "swiss/<int:swiss_id>/match/<int:match_id>/score/",
         views.SwissMatchScore.as_view(),
         name="swiss/match/score"
     ),

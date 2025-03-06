@@ -102,3 +102,9 @@ class KnockoutMatch(match.Match):
 
     def get_tournament(self):
         return self.bracket.tournament
+
+    def is_last_match(self):
+        if self.bracket.bracket_type == BracketType.SINGLE and self.round_number == 1 or self.round_number == 0:
+            return True
+
+        return False

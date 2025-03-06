@@ -2,7 +2,7 @@ from .bracket import Bracket, KnockoutMatch, BracketSet, BracketType
 from .event import Event
 from .caster import Caster
 from .game import Game
-from .group import Group, Seeding, GroupMatch
+from .group import Group, Seeding, GroupMatch, GroupTiebreakScore
 from .manager import Manager
 from .match import Match, MatchStatus, Score, BestofType
 from .payement_status import PaymentStatus

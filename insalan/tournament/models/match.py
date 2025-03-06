@@ -56,7 +56,6 @@ class Match(models.Model):
     )
 
     class Meta:
-
         ordering = ["round_number","index_in_round"]
         indexes = [
             models.Index(fields=["round_number"]),
@@ -119,7 +118,7 @@ class Match(models.Model):
         scores = self.get_scores()
 
         for team in self.get_teams_id():
-            if self.bo_type == BestofType.RANKING and scores[team] <= self.get_winning_score():
+            if self.bo_type == BestofType.RANKING and scores[team] > 0 and scores[team] <= self.get_winning_score():
                 winners.append((team,scores[team]))
             elif self.bo_type != BestofType.RANKING and scores[team] >= self.get_winning_score():
                 winners.append((team,scores[team]))
