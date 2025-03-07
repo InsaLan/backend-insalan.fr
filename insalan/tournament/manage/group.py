@@ -1,10 +1,9 @@
 import math
-from typing import List
 from ..models import Group, GroupMatch, Team, Tournament, Seeding, GroupTiebreakScore, BestofType
 
 def generate_groups(tournament: Tournament, count: int, team_per_group: int, names: list[str], use_seeding: bool):
     if use_seeding:
-        teams = list(Team.objects.filter(tournament=tournament, validated=True).order_by("seed").reverse())
+        teams = list(Team.objects.filter(tournament=tournament, validated=True, seed__gt=0).order_by("seed")) + list(Team.objects.filter(tournament=tournament,validated=True, seed=0))
     else:
         teams = list(Team.objects.filter(tournament=tournament, validated=True))
     teams += [None]*(tournament.maxTeam - len(teams))

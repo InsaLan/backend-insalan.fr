@@ -32,13 +32,20 @@ class SwissRound(models.Model):
     def get_teams_seeding(self) -> List[Tuple["Team",int]]:
         return [(seeding.team,seeding.seeding) for seeding in SwissSeeding.objects.filter(swiss=self)]
 
-    def get_sorted_teams(self) -> List[Tuple["Team",int]]:
+    def get_sorted_teams(self) -> List[int]:
         teams = self.get_teams_seeding()
-        if any([team[1] is None for team in teams]):
-            return [team[0] for team in teams]
 
-        teams.sort(key=lambda e: e[1], reverse=True)
-        return [team[0] for team in teams]
+        non_seeded_teams = []
+        seeded_teams = []
+
+        for (team, seed) in teams:
+            if seed == 0:
+                non_seeded_teams.append((team.id,seed))
+            else:
+                seeded_teams.append((team.id,seed))
+
+        seeded_teams.sort(key=lambda e: e[1])
+        return [team for (team, _) in seeded_teams + non_seeded_teams]
 
     def get_matchs(self) -> List["SwissMatch"]:
         return SwissMatch.objects.filter(swiss=self)

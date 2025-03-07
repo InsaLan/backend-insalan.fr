@@ -57,9 +57,20 @@ class Group(models.Model):
     def get_teams_seeding(self) -> Dict["Team",int]:
         return {seeding.team: seeding.seeding for seeding in Seeding.objects.filter(group=self)}
     
-    def get_sorted_teams(self) -> List["Team"]:
-        teams = sorted(self.get_teams_seeding().items(), key=itemgetter(1))
-        return [team[0] for team in teams]
+    def get_sorted_teams(self) -> List[int]:
+        teams = self.get_teams_seeding()
+
+        non_seeded_teams = []
+        seeded_teams = []
+
+        for (team, seed) in teams.items():
+            if seed == 0:
+                non_seeded_teams.append((team.id,seed))
+            else:
+                seeded_teams.append((team.id,seed))
+
+        seeded_teams.sort(key=lambda e: e[1])
+        return [team for (team, _) in seeded_teams + non_seeded_teams]
 
     def get_round_count(self) -> int:
         return len(self.get_teams_id()) - 1
