@@ -974,7 +974,6 @@ class MailerAdmin(admin.ModelAdmin):
         return False
 
     def add_view(self, request, form_url="", extra_context=None):
-        super().add_view(request, form_url, extra_context)
         return self.changeform_view(request, None, form_url, {
             'show_save_and_add_another': False,
             'show_save_and_continue': False,
@@ -1006,7 +1005,7 @@ class MailerAdmin(admin.ModelAdmin):
 
     def response_add(self, request, obj, post_url_continue=None):
         messages.info(request, _("Le mail est en cours d'envoi"))
-        return HttpResponseRedirect(reverse('admin:mailer_add'))
+        return HttpResponseRedirect(reverse('admin:tournament_tournamentmailer_changelist'))
 
 admin.site.register(TournamentMailer, MailerAdmin)
 
