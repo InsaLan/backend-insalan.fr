@@ -369,7 +369,7 @@ def pay(request: HttpRequest) -> JsonResponse:
                                 status=status.HTTP_400_BAD_REQUEST)
         player.payment_status = PaymentStatus.PAID
         player.save()
-        ticket = Ticket.objects.create(user=player.user, tournament=player.team.tournament)
+        ticket = Ticket.objects.create(user=player.user, tournament=player.team.tournament, status=Ticket.Status.SCANNED)
         MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_ticket_mail(player.user, ticket)
         return JsonResponse({'success': True})
     elif data['type'] == 'substitute':
@@ -384,7 +384,7 @@ def pay(request: HttpRequest) -> JsonResponse:
         substitute.payment_status = PaymentStatus.PAID
         substitute.save()
         ticket = Ticket.objects.create(user=substitute.user, tournament=substitute.team.tournament)
-        MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_ticket_mail(substitute.user, ticket)
+        MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_ticket_mail(substitute.user, ticket, status=Ticket.Status.SCANNED)
         return JsonResponse({'success': True})
     elif data['type'] == 'manager':
         try:
@@ -397,7 +397,7 @@ def pay(request: HttpRequest) -> JsonResponse:
                                 status=status.HTTP_400_BAD_REQUEST)
         manager.payment_status = PaymentStatus.PAID
         manager.save()
-        ticket = Ticket.objects.create(user=manager.user, tournament=manager.team.tournament)
+        ticket = Ticket.objects.create(user=manager.user, tournament=manager.team.tournament, status=Ticket.Status.SCANNED)
         MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_ticket_mail(manager.user, ticket)
         return JsonResponse({'success': True})
     else:
