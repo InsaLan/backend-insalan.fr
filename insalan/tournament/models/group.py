@@ -1,3 +1,4 @@
+from math import ceil
 from typing import List, Dict
 from operator import itemgetter
 
@@ -73,7 +74,8 @@ class Group(models.Model):
         return [team for (team, _) in seeded_teams + non_seeded_teams]
 
     def get_round_count(self) -> int:
-        return len(self.get_teams_id()) - 1
+        team_per_match = self.tournament.game.team_per_match
+        return ceil(len(self.get_teams_id()) / team_per_match) * team_per_match - 1
 
     def get_leaderboard(self) -> Dict[int,int]:
         leaderboard = {}
