@@ -7,7 +7,25 @@ from django.contrib import messages
 
 from insalan.settings import EMAIL_AUTH
 from insalan.mailer import MailManager
+from insalan.tournament.models.tournament import Tournament
 from .models import Ticket
+
+
+
+class OngoingTournamentFilter(admin.SimpleListFilter):
+    """
+    This filter is used to only show players from the selected tournament
+    """
+    title = _('Tournament')
+    parameter_name = 'tournament'
+
+    def lookups(self, request, model_admin):
+        return [(tournament.id, tournament.name) for tournament in Tournament.objects.filter(event__ongoing=True)]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(tournament_id=self.value())
+        return queryset
 
 
 class TicketAdmin(admin.ModelAdmin):
@@ -16,6 +34,7 @@ class TicketAdmin(admin.ModelAdmin):
     """
     list_display = ("id", "user", "status", "tournament", "token")
     search_fields = ["user__username", "user__email", "tournament__name", "token"]
+    list_filter = ("status", OngoingTournamentFilter)
     actions = ["send_tickets_to_mail"]
 
     @admin.action(description=_("Envoyer les tickets par mail"))
