@@ -31,7 +31,7 @@ class Tournament(models.Model):
     name = models.CharField(
         verbose_name=_("Nom du tournoi"),
         validators=[MinLengthValidator(3)],
-        max_length=40,
+        max_length=512,
     )
     is_announced = models.BooleanField(verbose_name=_("Annoncé"), default=False)
     rules = models.TextField(
