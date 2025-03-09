@@ -466,10 +466,10 @@ class TournamentTestCase(TestCase):
     def test_name_too_long(self):
         """Verify that a tournament name cannot be too long"""
         tourney = Tournament.objects.all()[0]
-        tourney.name = "C" * 41
+        tourney.name = "C" * 513
         self.assertRaises(ValidationError, tourney.full_clean)
 
-        tourney.name = "C" * 40
+        tourney.name = "C" * 512
         tourney.full_clean()
 
     def test_game_deletion_cascade(self):
