@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from typing import List
 from django.db import models
+from polymorphic.models import PolymorphicModel
 from django.db.models import QuerySet
 from django.core.validators import (
     FileExtensionValidator,
@@ -19,21 +20,16 @@ def in_thirty_days():
     """Return now + 30 days"""
     return timezone.now() + timedelta(days=30)
 
-class Tournament(models.Model):
+class BaseTournament(PolymorphicModel):
     """
-    A Tournament happening during an event that Teams of players register for.
+    Base class for a Tournament. Contains the common fields between a Tournament
     """
-
-    event = models.ForeignKey(
-        "Event", verbose_name=_("Évènement"), on_delete=models.CASCADE
-    )
     game = models.ForeignKey("Game", verbose_name=_("Jeu"), on_delete=models.CASCADE)
     name = models.CharField(
         verbose_name=_("Nom du tournoi"),
         validators=[MinLengthValidator(3)],
         max_length=512,
     )
-    is_announced = models.BooleanField(verbose_name=_("Annoncé"), default=False)
     rules = models.TextField(
         verbose_name=_("Règlement du tournoi"),
         max_length=50000,
@@ -41,6 +37,139 @@ class Tournament(models.Model):
         blank=True,
         default="",
     )
+    logo: models.FileField = ImageField(
+        verbose_name=_("Logo"),
+        blank=True,
+        null=True,
+        upload_to="tournament-icons",
+        validators=[
+            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp", "avif"])
+        ],
+    )
+    maxTeam = models.IntegerField(
+        default=0,
+        null=False,
+        verbose_name=_("Nombre maximal d'équipe"),
+        validators=[MinValueValidator(0)],
+    )
+    description = models.CharField(
+        null=False,
+        blank=True,
+        default='',
+        verbose_name=_("Description du tournoi"),
+        max_length=300,
+    )
+    description_bottom = models.CharField(
+        null=False,
+        blank=True,
+        default='',
+        verbose_name=_("Description du tournoi en bas de page"),
+        max_length=300,
+    )
+
+    class Meta:
+        """Meta options"""
+
+        indexes = [
+            models.Index(fields=["game"]),
+        ]
+
+    def __str__(self) -> str:
+        """Format this Tournament to a str"""
+        return f"{self.name}"
+
+    def get_name(self) -> str:
+        """Get the name of the tournament"""
+        return self.name
+
+    def get_game(self) -> "Game":
+        """Get the game of a tournament"""
+        return self.game
+
+    def get_teams(self) -> QuerySet["Team"]:
+        """Return the list of Teams in that Tournament"""
+        return self.teams.all() #team.Team.objects.filter(tournament=self)
+
+    def get_teams_id(self) -> List[int]:
+        """Return the list of identifiers of this Tournament's Teams"""
+        return self.get_teams().values_list("id", flat=True)
+
+    def get_rules(self) -> str:
+        """Return the raw tournament rules"""
+        return self.rules
+
+    def get_max_team(self) -> int:
+        """Return the max number of teams"""
+        return self.maxTeam
+
+    def get_validated_teams(self, exclude=None) -> int:
+        """Return the number of validated teams"""
+        return len(team.Team.objects.filter(tournament=self,validated=True).exclude(id=exclude))
+
+    def get_groups(self) -> List["Group"]:
+        return group.Group.objects.filter(tournament=self)
+
+    def get_groups_id(self) -> List[int]:
+        return group.Group.objects.filter(tournament=self).values_list("id",flat=True)
+
+    def get_brackets(self) -> List["Bracket"]:
+        return bracket.Bracket.objects.filter(tournament=self)
+
+    def get_brackets_id(self) -> List[int]:
+        return bracket.Bracket.objects.filter(tournament=self).values_list("id",flat=True)
+
+    def get_swissRounds(self) -> List["SwissRound"]:
+        return swiss.SwissRound.objects.filter(tournament=self)
+
+    def get_swissRounds_id(self) -> List[int]:
+        return swiss.SwissRound.objects.filter(tournament=self).values_list("id",flat=True)
+
+class PrivateTournament(BaseTournament):
+    """
+    A private Tournament without paid registration.
+    """
+
+    # No need to use a password field here, as it would add unnecessary complexity
+    password = models.CharField(
+        verbose_name=_("Mot de passe"),
+        max_length=512,
+        validators=[MinLengthValidator(3)],
+        blank=True,
+        null=False,
+    )
+    running = models.BooleanField(
+        verbose_name=_("En cours"),
+        default=True,
+        null=False,
+    )
+    start = models.DateTimeField(
+        verbose_name=_("Début du tournoi"),
+        default=timezone.now,
+        null=False,
+    )
+    rewards = models.TextField(
+        verbose_name=_("Récompenses du tournois"),
+        max_length=50000,
+        null=False,
+        blank=True,
+        default="",
+    )
+
+    class Meta:
+        """Meta options"""
+
+        verbose_name = _("Tournoi privé")
+        verbose_name_plural = _("Tournois privés")
+
+class EventTournament(BaseTournament):
+    """
+    A Tournament happening during an event that Teams of players register for.
+    """
+
+    event = models.ForeignKey(
+        "Event", verbose_name=_("Évènement"), on_delete=models.CASCADE
+    )
+    is_announced = models.BooleanField(verbose_name=_("Annoncé"), default=False)
     registration_open = models.DateTimeField(
         verbose_name=_("Ouverture des inscriptions"),
         default=timezone.now,
@@ -52,15 +181,6 @@ class Tournament(models.Model):
         blank=True,
         default=in_thirty_days,
         null=False,
-    )
-    logo: models.FileField = ImageField(
-        verbose_name=_("Logo"),
-        blank=True,
-        null=True,
-        upload_to="tournament-icons",
-        validators=[
-            FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp", "avif"])
-        ],
     )
     # Tournament player slot prices
     # These prices are used at the tournament creation to create associated
@@ -148,26 +268,6 @@ class Tournament(models.Model):
         verbose_name=_("Produit joueur"),
         on_delete=models.SET_NULL,
     )
-    maxTeam = models.IntegerField(
-        default=0,
-        null=False,
-        verbose_name=_("Nombre maximal d'équipe"),
-        validators=[MinValueValidator(0)],
-    )
-    description = models.CharField(
-        null=False,
-        blank=True,
-        default='',
-        verbose_name=_("Description du tournoi"),
-        max_length=300,
-    )
-    description_bottom = models.CharField(
-        null=False,
-        blank=True,
-        default='',
-        verbose_name=_("Description du tournoi en bas de page"),
-        max_length=300,
-    )
     planning_file = models.FileField(
         verbose_name=_("Fichier ICS du planning"),
         blank=True,
@@ -183,7 +283,6 @@ class Tournament(models.Model):
         verbose_name_plural = _("Tournois")
         indexes = [
             models.Index(fields=["event"]),
-            models.Index(fields=["game"]),
         ]
 
     def save(self, *args, **kwargs):
@@ -258,56 +357,10 @@ class Tournament(models.Model):
         """Format this Tournament to a str"""
         return f"{self.name} (@ {self.event})"
 
-    def get_name(self) -> str:
-        """Get the name of the tournament"""
-        return self.name
-
     def get_event(self) -> "Event":
         """Get the event of a tournament"""
         return self.event
 
-    def get_game(self) -> "Game":
-        """Get the game of a tournament"""
-        return self.game
-
-    def get_teams(self) -> QuerySet["Team"]:
-        """Return the list of Teams in that Tournament"""
-        return self.teams.all() #team.Team.objects.filter(tournament=self)
-
-    def get_teams_id(self) -> List[int]:
-        """Return the list of identifiers of this Tournament's Teams"""
-        return self.get_teams().values_list("id", flat=True)
-
-    def get_rules(self) -> str:
-        """Return the raw tournament rules"""
-        return self.rules
-
-    def get_max_team(self) -> int:
-        """Return the max number of teams"""
-        return self.maxTeam
-
-    def get_validated_teams(self, exclude=None) -> int:
-        """Return the number of validated teams"""
-        return len(team.Team.objects.filter(tournament=self,validated=True).exclude(id=exclude))
-
     def get_casters(self) -> List["Caster"]:
         """Return the list of casters for this tournament"""
         return caster.Caster.objects.filter(tournament=self)
-
-    def get_groups(self) -> List["Group"]:
-        return group.Group.objects.filter(tournament=self)
-
-    def get_groups_id(self) -> List[int]:
-        return group.Group.objects.filter(tournament=self).values_list("id",flat=True)
-
-    def get_brackets(self) -> List["Bracket"]:
-        return bracket.Bracket.objects.filter(tournament=self)
-
-    def get_brackets_id(self) -> List[int]:
-        return bracket.Bracket.objects.filter(tournament=self).values_list("id",flat=True)
-
-    def get_swissRounds(self) -> List["SwissRound"]:
-        return swiss.SwissRound.objects.filter(tournament=self)
-
-    def get_swissRounds_id(self) -> List[int]:
-        return swiss.SwissRound.objects.filter(tournament=self).values_list("id",flat=True)

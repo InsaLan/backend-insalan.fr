@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from insalan.tournament.models import Tournament, Team, Player
+from insalan.tournament.models import EventTournament, Team, Player
 
 from insalan.mailer import MailManager
 from insalan.settings import EMAIL_AUTH
@@ -36,7 +36,7 @@ class TournamentMailer(models.Model):
         default=0,
     )
     tournament = models.ForeignKey(
-        Tournament,
+        EventTournament,
         verbose_name=_("Tournoi"),
         on_delete=models.SET_NULL,
         null=True,

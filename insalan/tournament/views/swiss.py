@@ -10,11 +10,11 @@ from drf_yasg import openapi
 
 from insalan.tournament import serializers
 
-from ..models import MatchStatus, Tournament, SwissMatch, validate_match_data, Match
+from ..models import MatchStatus, BaseTournament, SwissMatch, validate_match_data, Match
 from ..manage import update_match_score, create_swiss_rounds, launch_match, generate_swiss_round_round
 
 class CreateSwissRounds(generics.CreateAPIView):
-    queryset = Tournament.objects.all()
+    queryset = BaseTournament.objects.all()
     serializer_class = serializers.CreateSwissRoundsSerializer
     permission_classes = [permissions.IsAdminUser]
 
@@ -31,7 +31,7 @@ class CreateSwissRounds(generics.CreateAPIView):
         return Response(serialized_data, status=status.HTTP_201_CREATED)
 
 class DeleteSwissRounds(generics.DestroyAPIView):
-    queryset = Tournament.objects.all()
+    queryset = BaseTournament.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
     def delete(self, request, *args, **kwargs):
@@ -69,7 +69,7 @@ class SwissMatchsLaunch(generics.UpdateAPIView):
         }, status=status.HTTP_200_OK)
 
 class GenerateSwissRoundRound(generics.UpdateAPIView):
-    queryset = Tournament.objects.all()
+    queryset = BaseTournament.objects.all()
     permission_classes = [permissions.IsAdminUser]
     serializer_class = serializers.GenerateSwissRoundRoundSerializer
 

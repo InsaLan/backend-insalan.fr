@@ -16,7 +16,7 @@ from rest_framework.serializers import ValidationError
 import insalan.settings as app_settings
 
 from insalan.pizza.models import TimeSlot
-from insalan.tournament.models import Tournament
+from insalan.tournament.models import EventTournament
 from insalan.user.models import User
 
 from .tokens import Token
@@ -48,8 +48,14 @@ class Product(models.Model):
     price = models.DecimalField(
         null=False, max_digits=5, decimal_places=2, verbose_name=_("prix")
     )
-    name = models.CharField(max_length=80, verbose_name=_("intitulé"))
-    desc = models.CharField(max_length=80, verbose_name=_("description"))
+    name = models.CharField(
+        max_length=1024,
+        verbose_name=_("intitulé")
+    )
+    desc = models.CharField(
+        max_length=1024,
+        verbose_name=_("description")
+    )
     category = models.CharField(
         max_length=20,
         blank=False,
@@ -59,7 +65,7 @@ class Product(models.Model):
         choices=ProductCategory.choices,
     )
     associated_tournament = models.ForeignKey(
-        Tournament,
+        EventTournament,
         on_delete=models.CASCADE,
         verbose_name=_("Tournoi associé"),
         null=True,

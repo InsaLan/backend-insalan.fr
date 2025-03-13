@@ -24,7 +24,7 @@ class Caster(models.Model):
         ],
     )
     tournament = models.ForeignKey(
-        "Tournament",
+        "EventTournament",
         verbose_name=_("Tournoi"),
         on_delete=models.CASCADE
     )

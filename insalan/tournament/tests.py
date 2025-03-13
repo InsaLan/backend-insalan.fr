@@ -17,7 +17,7 @@ from insalan.tournament.models import (
     Manager,
     Substitute,
     Team,
-    Tournament,
+    EventTournament,
     Event,
     Game,
     SeatSlot,
@@ -173,10 +173,10 @@ class EventTestCase(TransactionTestCase):
         game_one = Game.objects.create(name="Test Game One")
         game_two = Game.objects.create(name="Test Game Two")
         game_three = Game.objects.create(name="Test Game Three")
-        trnm_one = Tournament.objects.create(game=game_one, event=event)
-        trnm_two = Tournament.objects.create(game=game_two, event=event)
-        trnm_three = Tournament.objects.create(game=game_three, event=event)
-        trnm_four = Tournament.objects.create(game=game_three, event=event_two)
+        trnm_one = EventTournament.objects.create(game=game_one, event=event)
+        trnm_two = EventTournament.objects.create(game=game_two, event=event)
+        trnm_three = EventTournament.objects.create(game=game_three, event=event)
+        trnm_four = EventTournament.objects.create(game=game_three, event=event_two)
 
         trnms_found = event.get_tournaments()
         self.assertEqual(3, len(trnms_found))
@@ -237,33 +237,33 @@ class TournamentTestCase(TestCase):
         game_one = Game.objects.create(name="Test Game One")
         game_two = Game.objects.create(name="Test Game Two")
         game_three = Game.objects.create(name="Test Game Three")
-        Tournament.objects.create(name="Tourney 1", game=game_one, event=event)
-        Tournament.objects.create(name="Tourney 2", game=game_two, event=event)
-        Tournament.objects.create(name="Tourney 3", game=game_three, event=event)
-        Tournament.objects.create(name="Tourney 4", game=game_three, event=event_two)
+        EventTournament.objects.create(name="Tourney 1", game=game_one, event=event)
+        EventTournament.objects.create(name="Tourney 2", game=game_two, event=event)
+        EventTournament.objects.create(name="Tourney 3", game=game_three, event=event)
+        EventTournament.objects.create(name="Tourney 4", game=game_three, event=event_two)
 
     def test_tournament_null_event(self):
         """Test failure of creation of a Tournament with no event"""
         game = Game.objects.create(name="Test")
         self.assertRaises(
-            IntegrityError, Tournament.objects.create, event=None, game=game
+            IntegrityError, EventTournament.objects.create, event=None, game=game
         )
 
     def test_tournament_null_game(self):
         """Test failure of creation of a Tournament with no game"""
         event = Event.objects.create(name="Test", year=2023, month=2, description="")
         self.assertRaises(
-            IntegrityError, Tournament.objects.create, event=event, game=None
+            IntegrityError, EventTournament.objects.create, event=event, game=None
         )
 
     def test_manager_player_duplication(self):
         """Verify that a user cannot be a manager and a player on the same tournament"""
         event = Event.objects.create(name="Test", year=2023, month=2, description="")
         game_obj = Game.objects.create(name="Game 1", short_name="G1")
-        tourney_one = Tournament.objects.create(
+        tourney_one = EventTournament.objects.create(
             name="Tourney 1", game=game_obj, event=event
         )
-        tourney_two = Tournament.objects.create(
+        tourney_two = EventTournament.objects.create(
             name="Tourney 2", game=game_obj, event=event
         )
 
@@ -325,10 +325,10 @@ class TournamentTestCase(TestCase):
         """Verify that a user cannot be a substitute and a player on the same tournament"""
         event = Event.objects.create(name="Test", year=2023, month=2, description="")
         game_obj = Game.objects.create(name="Game 1", short_name="G1")
-        tourney_one = Tournament.objects.create(
+        tourney_one = EventTournament.objects.create(
             name="Tourney 1", game=game_obj, event=event
         )
-        tourney_two = Tournament.objects.create(
+        tourney_two = EventTournament.objects.create(
             name="Tourney 2", game=game_obj, event=event
         )
 
@@ -390,7 +390,7 @@ class TournamentTestCase(TestCase):
         """Get the event for a tournament"""
         event = Event.objects.get(year=2023, month=3)
         game = Game.objects.get(name="Test Game One")
-        tourney = Tournament.objects.get(game=game)
+        tourney = EventTournament.objects.get(game=game)
 
         self.assertEqual(event, tourney.get_event())
 
@@ -398,14 +398,14 @@ class TournamentTestCase(TestCase):
         """Get the game for a tournament"""
         event = Event.objects.get(year=2023, month=2)
         game = Game.objects.get(name="Test Game Three")
-        tourney = Tournament.objects.get(event=event)
+        tourney = EventTournament.objects.get(event=event)
 
         self.assertEqual(game, tourney.get_game())
 
     def test_get_teams(self):
         """Get the teams for a tournament"""
-        tourney = Tournament.objects.all()[0]
-        tourney_two = Tournament.objects.all()[1]
+        tourney = EventTournament.objects.all()[0]
+        tourney_two = EventTournament.objects.all()[1]
         team_one = Team.objects.create(name="Ohlala", tournament=tourney, password=make_password("ohlalapwd"))
         team_two = Team.objects.create(name="OhWow", tournament=tourney, password=make_password("ohwowpwd"))
         team_three = Team.objects.create(name="LeChiengue", tournament=tourney_two, password=make_password("lechienguepwd"))
@@ -418,12 +418,12 @@ class TournamentTestCase(TestCase):
 
     def test_default_cashprizes(self):
         """Test that the default for cashprizes is an empty list"""
-        tourney = Tournament.objects.all()[0]
+        tourney = EventTournament.objects.all()[0]
         self.assertEqual([], tourney.cashprizes)
 
     def test_get_set_cashprizes(self):
         """Verify that getting and setting cashprizes is possible"""
-        tourney = Tournament.objects.all()[0]
+        tourney = EventTournament.objects.all()[0]
 
         # One price
         tourney.cashprizes = [Decimal(28)]
@@ -446,7 +446,7 @@ class TournamentTestCase(TestCase):
 
     def test_cashprizes_cannot_be_strictly_negative(self):
         """Test that a cashprize cannot be strictly negative"""
-        tourney = Tournament.objects.all()[0]
+        tourney = EventTournament.objects.all()[0]
 
         tourney.cashprizes = [Decimal(278), Decimal(-1), Decimal(0)]
         self.assertRaises(ValidationError, tourney.full_clean)
@@ -456,7 +456,7 @@ class TournamentTestCase(TestCase):
 
     def test_name_too_short(self):
         """Verify that a tournament name cannot be too short"""
-        tourneyobj = Tournament.objects.all()[0]
+        tourneyobj = EventTournament.objects.all()[0]
         tourneyobj.name = "C" * 2
         self.assertRaises(ValidationError, tourneyobj.full_clean)
 
@@ -465,7 +465,7 @@ class TournamentTestCase(TestCase):
 
     def test_name_too_long(self):
         """Verify that a tournament name cannot be too long"""
-        tourney = Tournament.objects.all()[0]
+        tourney = EventTournament.objects.all()[0]
         tourney.name = "C" * 513
         self.assertRaises(ValidationError, tourney.full_clean)
 
@@ -474,30 +474,30 @@ class TournamentTestCase(TestCase):
 
     def test_game_deletion_cascade(self):
         """Verify that a tournament is deleted when its game is"""
-        tourney = Tournament.objects.all()[0]
+        tourney = EventTournament.objects.all()[0]
         game_obj = tourney.game
 
-        Tournament.objects.get(id=tourney.id)
+        EventTournament.objects.get(id=tourney.id)
 
         # Delete and verify
         game_obj.delete()
 
         self.assertRaises(
-            Tournament.DoesNotExist, Tournament.objects.get, id=tourney.id
+            EventTournament.DoesNotExist, EventTournament.objects.get, id=tourney.id
         )
 
     def test_event_deletion_cascade(self):
         """Verify that a tournament is deleted when its event is"""
-        tourney = Tournament.objects.all()[0]
+        tourney = EventTournament.objects.all()[0]
         ev_obj = tourney.game
 
-        Tournament.objects.get(id=tourney.id)
+        EventTournament.objects.get(id=tourney.id)
 
         # Delete and verify
         ev_obj.delete()
 
         self.assertRaises(
-            Tournament.DoesNotExist, Tournament.objects.get, id=tourney.id
+            EventTournament.DoesNotExist, EventTournament.objects.get, id=tourney.id
         )
 
     @staticmethod
@@ -509,7 +509,7 @@ class TournamentTestCase(TestCase):
 
     def test_logo_extension_enforcement(self):
         """Verify that we only accept logos as PNG, JPG, JPEG and SVG"""
-        tourney = Tournament.objects.all()[0]
+        tourney = EventTournament.objects.all()[0]
 
         # PNGs work
         test_png = __class__.create_tourney_logo("tourney-test.png")
@@ -547,7 +547,7 @@ class TournamentTestCase(TestCase):
 
         See: https://docs.djangoproject.com/en/4.2/ref/models/fields/#django.db.models.TextField
         """
-        tourney = Tournament.objects.all()[0]
+        tourney = EventTournament.objects.all()[0]
 
         tourney.rules = "C" * 50001
         tourney.full_clean()
@@ -562,7 +562,7 @@ class TournamentTestCase(TestCase):
 
         game = Game.objects.create(name="Fortnite")
 
-        trnm_one = Tournament.objects.create(
+        trnm_one = EventTournament.objects.create(
             event=event_one, game=game, player_price_online=23.3, manager_price_online=3, substitute_price_online=3
         )
         self.assertEqual(trnm_one.player_price_online, 23.3)
@@ -622,13 +622,13 @@ class TeamTestCase(TestCase):
             substitute_players_per_team=1,
         )
 
-        trnm_one = Tournament.objects.create(
+        trnm_one = EventTournament.objects.create(
             event=event_one,
             game=game,
             is_announced=True,
             maxTeam = 10
         )
-        trnm_two = Tournament.objects.create(
+        trnm_two = EventTournament.objects.create(
             event=event_one,
             game=game,
             is_announced=True,
@@ -655,7 +655,7 @@ class TeamTestCase(TestCase):
         self.assertIsNotNone(team)
 
         self.assertEqual("LaLooze", team.get_name())
-        self.assertIsInstance(team.get_tournament(), Tournament)
+        self.assertIsInstance(team.get_tournament(), EventTournament)
         self.assertEqual(2, len(team.get_players()))
         self.assertEqual(0, len(team.get_managers()))
         self.assertEqual(1, len(team.get_substitutes()))
@@ -664,7 +664,7 @@ class TeamTestCase(TestCase):
         self.assertIsNotNone(team)
 
         self.assertEqual("LaPouasse", team.get_name())
-        self.assertIsInstance(team.get_tournament(), Tournament)
+        self.assertIsInstance(team.get_tournament(), EventTournament)
         self.assertEqual(1, len(team.get_players()))
         self.assertEqual(1, len(team.get_managers()))
         self.assertEqual(0, len(team.get_substitutes()))
@@ -764,14 +764,14 @@ class PlayerTestCase(TestCase):
             name="InsaLan Test", year=2023, month=8, description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(game=game, event=event)
+        trnm = EventTournament.objects.create(game=game, event=event)
         team_one: Team = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("password"))
 
         # Second edition
         event_two = Event.objects.create(
             name="InsaLan Test (Past)", year=2023, month=3, description=""
         )
-        trnm_two = Tournament.objects.create(game=game, event=event_two)
+        trnm_two = EventTournament.objects.create(game=game, event=event_two)
         team_two: Team = Team.objects.create(
             name="La Team Test Passée", tournament=trnm_two, password=make_password("password2")
         )
@@ -843,7 +843,7 @@ class PlayerTestCase(TestCase):
             name="InsaLan Collision Test", year=2023, month=9, description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(game=game, event=event)
+        trnm = EventTournament.objects.create(game=game, event=event)
         team = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
 
         user = User.objects.get(username="randomplayer")
@@ -859,7 +859,7 @@ class PlayerTestCase(TestCase):
             name="InsaLan Collision Test", year=2023, month=9, description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(game=game, event=event)
+        trnm = EventTournament.objects.create(game=game, event=event)
         team = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
 
         user = User.objects.get(username="randomplayer")
@@ -877,7 +877,7 @@ class PlayerTestCase(TestCase):
             name="InsaLan Collision Test", year=2023, month=9, description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(game=game, event=event)
+        trnm = EventTournament.objects.create(game=game, event=event)
         team = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
         team_two = Team.objects.create(name="La Team Test 2", tournament=trnm, password=make_password("lateamtest2pwd"))
 
@@ -896,8 +896,8 @@ class PlayerTestCase(TestCase):
             name="InsaLan Collision Test", year=2023, month=9, description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(game=game, event=event)
-        trnm_two = Tournament.objects.create(game=game, event=event)
+        trnm = EventTournament.objects.create(game=game, event=event)
+        trnm_two = EventTournament.objects.create(game=game, event=event)
         team = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
         team_two = Team.objects.create(name="La Team Test 2", tournament=trnm_two, password=make_password("lateamtest2pwd"))
 
@@ -919,8 +919,8 @@ class PlayerTestCase(TestCase):
             name="InsaLan Collision Test Two", year=2023, month=9, description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(game=game, event=event)
-        trnm_two = Tournament.objects.create(game=game, event=event_two)
+        trnm = EventTournament.objects.create(game=game, event=event)
+        trnm_two = EventTournament.objects.create(game=game, event=event_two)
         team = Team.objects.create(name="La Team Test", tournament=trnm)
         team_two = Team.objects.create(name="La Team Test 2", tournament=trnm_two)
 
@@ -948,7 +948,7 @@ class PlayerTestCase(TestCase):
         user = User.objects.get(username="testplayer")
         # There should be only one
         event = Event.objects.get(year=2023, month=8)
-        trnm = Tournament.objects.get(event=event)
+        trnm = EventTournament.objects.get(event=event)
 
         player = Player.objects.get(user=user)
         self.assertIsNotNone(player)
@@ -963,7 +963,7 @@ class PlayerTestCase(TestCase):
         """Verify the behaviour of a Player when their team gets deleted"""
         user_obj = User.objects.get(username="testplayer")
         event = Event.objects.get(year=2023, month=8)
-        trnm = Tournament.objects.get(event=event)
+        trnm = EventTournament.objects.get(event=event)
         # Create a team and player
         team_obj = Team.objects.create(name="La Team Test Player", tournament=trnm)
         play_obj = Player.objects.create(team=team_obj, user=user_obj, name_in_game="pseudo")
@@ -979,7 +979,7 @@ class PlayerTestCase(TestCase):
         """Verify that a Player registration is deleted along with its user"""
         user_obj = User.objects.get(username="testplayer")
         event = Event.objects.get(year=2023, month=8)
-        trnm = Tournament.objects.get(event=event)
+        trnm = EventTournament.objects.get(event=event)
         # Create a Player registration
         team_obj = Team.objects.create(name="La Team Test User", tournament=trnm)
         play_obj = Player.objects.create(team=team_obj, user=user_obj, name_in_game="pseudo")
@@ -1095,7 +1095,7 @@ class TournamentFullDerefEndpoint(TestCase):
 
     def test_not_found(self):
         """Test what happens on a tournament not found"""
-        candidates = Tournament.objects.all().values_list("id", flat=True)
+        candidates = EventTournament.objects.all().values_list("id", flat=True)
         if len(candidates) == 0:
             candidates = [1]
         not_used = max(candidates) + 1
@@ -1136,7 +1136,7 @@ class TournamentFullDerefEndpoint(TestCase):
             month=12,
             ongoing=False,
         )
-        tourneyobj_one = Tournament.objects.create(
+        tourneyobj_one = EventTournament.objects.create(
             event=evobj,
             name="Test Tournament",
             rules="have fun!",
@@ -1355,7 +1355,7 @@ class TournamentFullDerefEndpoint(TestCase):
             month=12,
             ongoing=False,
         )
-        tourneyobj_one = Tournament.objects.create(
+        tourneyobj_one = EventTournament.objects.create(
             event=evobj,
             name="Test Tournament",
             rules="have fun!",
@@ -1441,7 +1441,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
         """Test a simple example of a dereference"""
         evobj = Event.objects.create(name="Test", year=2023, month=3, ongoing=True)
         gobj = Game.objects.create(name="Test Game", short_name="TG")
-        tourney = Tournament.objects.create(
+        tourney = EventTournament.objects.create(
             name="Test Tournament",
             game=gobj,
             event=evobj,
@@ -1478,7 +1478,7 @@ class EventDerefAndGroupingEndpoints(TestCase):
         """Test a simple example of a dereference"""
         evobj = Event.objects.create(name="Test", year=2023, month=3, ongoing=True)
         gobj = Game.objects.create(name="Test Game", short_name="TG")
-        tourney = Tournament.objects.create(
+        tourney = EventTournament.objects.create(
             name="Test Tournament",
             game=gobj,
             event=evobj,
@@ -1554,7 +1554,7 @@ class ManagerTestCase(TestCase):
             name="InsaLan Test", year=2023, month=3, description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(game=game, event=event)
+        trnm = EventTournament.objects.create(game=game, event=event)
         team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
 
         user_one = User.objects.create_user(
@@ -1623,7 +1623,7 @@ class ManagerTestCase(TestCase):
         """Check that a manager gives the correct team"""
         user = User.objects.get(username="randomplayer")
         event = Event.objects.get(year=2023, month=3)
-        trnm = Tournament.objects.get(event=event)
+        trnm = EventTournament.objects.get(event=event)
 
         managers = Manager.objects.filter(user=user)
         self.assertEqual(1, len(managers))
@@ -1642,7 +1642,7 @@ class ManagerTestCase(TestCase):
             name="InsaLan Test", year=2023, month=8, description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(
+        trnm = EventTournament.objects.create(
             game=game,
             event=event,
             is_announced=True,
@@ -1671,7 +1671,7 @@ class ManagerTestCase(TestCase):
             name="InsaLan Test", year=2023, month=8, description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(game=game, event=event)
+        trnm = EventTournament.objects.create(game=game, event=event)
         team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
         team_two = Team.objects.create(name="La Team Test 2", tournament=trnm, password=make_password("lateamtest2pwd"))
 
@@ -1694,12 +1694,12 @@ class ManagerTestCase(TestCase):
             name="InsaLan Test", year=2023, month=8, description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(
+        trnm = EventTournament.objects.create(
             game=game,
             event=event,
             is_announced=True,
         )
-        trnm_two = Tournament.objects.create(
+        trnm_two = EventTournament.objects.create(
             game=game,
             event=event,
             is_announced=True,
@@ -1734,12 +1734,12 @@ class ManagerTestCase(TestCase):
             name="InsaLan Test", year=2023, month=2, description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(
+        trnm = EventTournament.objects.create(
             game=game,
             event=event,
             is_announced=True,
         )
-        trnm_two = Tournament.objects.create(
+        trnm_two = EventTournament.objects.create(
             game=game,
             event=event_two,
             is_announced=True,
@@ -1768,7 +1768,7 @@ class ManagerTestCase(TestCase):
             name="InsaLan Test", year=2023, month=8, description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(game=game, event=event)
+        trnm = EventTournament.objects.create(game=game, event=event)
         # Create a team and player
         team_obj = Team.objects.create(name="La Team Test", tournament=trnm)
         play_obj = Manager.objects.create(team=team_obj, user=user_obj)
@@ -1787,7 +1787,7 @@ class ManagerTestCase(TestCase):
             name="InsaLan Test", year=2023, month=8, description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(
+        trnm = EventTournament.objects.create(
             game=game, event=event
         )  # Create a Manager registration
         team_obj = Team.objects.create(name="La Team Test", tournament=trnm)
@@ -1876,7 +1876,7 @@ class SubstituteTestCase(TestCase):
             name="InsaLan Test", year=2023, month=3, description=""
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
-        trnm = Tournament.objects.create(game=game, event=event)
+        trnm = EventTournament.objects.create(game=game, event=event)
         team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
 
         user_one = User.objects.create_user(
@@ -1945,7 +1945,7 @@ class SubstituteTestCase(TestCase):
         """Check that a substitutes gives the correct team"""
         user = User.objects.get(username="randomplayer")
         event = Event.objects.get(year=2023, month=3)
-        trnm = Tournament.objects.get(event=event)
+        trnm = EventTournament.objects.get(event=event)
 
         substitutes = Substitute.objects.filter(user=user)
         self.assertEqual(1, len(substitutes))
@@ -1964,7 +1964,7 @@ class SubstituteTestCase(TestCase):
             name="InsaLan Test", year=2023, month=8, description=""
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
-        trnm = Tournament.objects.create(
+        trnm = EventTournament.objects.create(
             game=game,
             event=event,
             is_announced=True,
@@ -1993,7 +1993,7 @@ class SubstituteTestCase(TestCase):
             name="InsaLan Test", year=2023, month=8, description=""
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
-        trnm = Tournament.objects.create(game=game, event=event)
+        trnm = EventTournament.objects.create(game=game, event=event)
         team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
         team_two = Team.objects.create(name="La Team Test 2", tournament=trnm, password=make_password("lateamtest2pwd"))
 
@@ -2016,12 +2016,12 @@ class SubstituteTestCase(TestCase):
             name="InsaLan Test", year=2023, month=8, description=""
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
-        trnm = Tournament.objects.create(
+        trnm = EventTournament.objects.create(
             game=game,
             event=event,
             is_announced=True,
         )
-        trnm_two = Tournament.objects.create(
+        trnm_two = EventTournament.objects.create(
             game=game,
             event=event,
             is_announced=True,
@@ -2056,12 +2056,12 @@ class SubstituteTestCase(TestCase):
             name="InsaLan Test", year=2023, month=2, description=""
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
-        trnm = Tournament.objects.create(
+        trnm = EventTournament.objects.create(
             game=game,
             event=event,
             is_announced=True,
         )
-        trnm_two = Tournament.objects.create(
+        trnm_two = EventTournament.objects.create(
             game=game,
             event=event_two,
             is_announced=True,
@@ -2090,7 +2090,7 @@ class SubstituteTestCase(TestCase):
             name="InsaLan Test", year=2023, month=8, description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(game=game, event=event)
+        trnm = EventTournament.objects.create(game=game, event=event)
         # Create a team and player
         team_obj = Team.objects.create(name="La Team Test", tournament=trnm)
         play_obj = Substitute.objects.create(team=team_obj, user=user_obj)
@@ -2109,7 +2109,7 @@ class SubstituteTestCase(TestCase):
             name="InsaLan Test", year=2023, month=8, description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = Tournament.objects.create(
+        trnm = EventTournament.objects.create(
             game=game, event=event
         )  # Create a substitute registration
         team_obj = Team.objects.create(name="La Team Test", tournament=trnm)
@@ -2253,7 +2253,7 @@ class TournamentTeamEndpoints(TestCase):
             name="InsaLan Test", year=2023, month=3, description=""
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
-        trnm = Tournament.objects.create(
+        trnm = EventTournament.objects.create(
             game=game,
             event=event,
             maxTeam=16,
@@ -2605,7 +2605,7 @@ class TournamentTeamEndpoints(TestCase):
         event = Event.objects.get(name="InsaLan Test")
 
         game2 = Game.objects.create(name="Test Game 2", short_name="TFG2", players_per_team=3)
-        trnm2 = Tournament.objects.create(
+        trnm2 = EventTournament.objects.create(
             game=game2,
             event=event,
             maxTeam=16,
@@ -2653,7 +2653,7 @@ class TournamentTeamEndpoints(TestCase):
         event = Event.objects.get(name="InsaLan Test")
 
         game2 = Game.objects.create(name="Test Game 2", short_name="TFG2", players_per_team=3)
-        trnm2 = Tournament.objects.create(
+        trnm2 = EventTournament.objects.create(
             game=game2,
             event=event,
             maxTeam=16,
@@ -2859,7 +2859,7 @@ class TournamentMeTests(TestCase):
             ongoing=False,
         )
         self.game_obj = Game.objects.create(name="Test Game", short_name="TFG")
-        self.tourneyobj_one = Tournament.objects.create(
+        self.tourneyobj_one = EventTournament.objects.create(
             event=self.evobj,
             name="Test Tournament",
             rules="have fun!",

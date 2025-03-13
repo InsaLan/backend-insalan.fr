@@ -6,7 +6,7 @@ from . import match
 
 class SwissRound(models.Model):
     tournament = models.ForeignKey(
-        "Tournament",
+        "BaseTournament",
         verbose_name=_("Tournoi"),
         on_delete=models.CASCADE
     )

@@ -347,7 +347,7 @@
 
     // set up form submission hook
     let seatsInput = document.getElementById("id_seat_slots");
-    let form = document.getElementById("tournament_form");
+    let form = document.getElementById("eventtournament_form");
     form.addEventListener("submit", event => {
       let seats = JSON.stringify(slotSelection.slots);
       seatsInput.setAttribute("value", seats);

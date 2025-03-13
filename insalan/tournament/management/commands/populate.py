@@ -18,7 +18,7 @@ import insalan.settings
 from insalan.tournament.models import (
     Event,
     Game,
-    Tournament,
+    EventTournament,
     Team,
     Player,
     Manager,
@@ -78,7 +78,7 @@ class Command(BaseCommand):
         par = Partner.objects.create(
             name="partner_" + generate_garbage(randint(50, 150)),
             url="https://example.com/" + generate_garbage(randint(10, 20)),
-            logo=self.generate_logo(),
+            #logo=self.generate_logo(),
             partner_type=choice(
                 [Partner.PartnerType.PARTNER, Partner.PartnerType.SPONSOR]
             ),
@@ -139,11 +139,13 @@ class Command(BaseCommand):
                 game_id = choice(game_ids_free)
                 game_ids_free.remove(game_id)
 
-                tourney = Tournament.objects.create(
+                tourney = EventTournament.objects.create(
                     event=event,
                     game=Game.objects.get(id=game_id),
-                    name="tourney_" + generate_garbage(randint(18, 26)),
+                    name="tourney_" + generate_garbage(randint(20, 30)),
                     rules=generate_garbage(randint(40000, 45000)),
+                    is_announced=randint(0, 100) < 80,
+                    maxTeam=randint(16, 32),
                 )
                 print(tourney)
 
@@ -153,8 +155,17 @@ class Command(BaseCommand):
         if user_id is None:
             return
         user = User.objects.get(id=user_id)
-        team = Team.objects.create(tournament=tourney, name="sp_" + user.username[5:17])
-        Player.objects.create(team=team, user=user, payment_status=payment_random())
+        team = Team.objects.create(
+            tournament=tourney,
+            name="sp_" + user.username[5:17],
+            validated=True,
+        )
+        Player.objects.create(
+            team=team,
+            user=user,
+            payment_status=payment_random(),
+            name_in_game="player_" + generate_garbage(8),
+        )
         print(f"\r    [{team}] \u2713", end="\r")
 
     def generate_games(self):
@@ -177,6 +188,7 @@ class Command(BaseCommand):
         team = Team.objects.create(
             tournament=tourney,
             name="team_" + generate_garbage(randint(25, 32)),
+            validated=True,
         )
 
         # each team will have an okay amount of people around 8
@@ -189,6 +201,7 @@ class Command(BaseCommand):
                 user=User.objects.get(id=user_id),
                 team=team,
                 payment_status=payment_random(),
+                name_in_game="player_" + generate_garbage(8),
             )
             print(".", end="", flush=True)
 

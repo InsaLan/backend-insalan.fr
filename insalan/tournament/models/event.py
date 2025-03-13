@@ -85,11 +85,11 @@ class Event(models.Model):
 
     def get_tournaments_id(self) -> List[int]:
         """Return the list of tournaments identifiers for that Event"""
-        return tournament.Tournament.objects.filter(event=self).values_list("id", flat=True)
+        return tournament.EventTournament.objects.filter(event=self).values_list("id", flat=True)
 
-    def get_tournaments(self) -> List["Tournament"]:
+    def get_tournaments(self) -> List["EventTournament"]:
         """Return the list of tournaments for that Event"""
-        return tournament.Tournament.objects.filter(event=self)
+        return tournament.EventTournament.objects.filter(event=self)
 
     @staticmethod
     def get_ongoing_ids() -> List[int]:

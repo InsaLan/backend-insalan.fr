@@ -21,14 +21,14 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from insalan.tournament.models import Event, Game, Tournament
+from insalan.tournament.models import Event, Game, EventTournament
 from insalan.user.models import User
 from .models import Ticket
 
 def create_ticket(
     username: str,
     token: str,
-    tourney: Tournament,
+    tourney: EventTournament,
     ticket_status: Ticket.Status = Ticket.Status.VALID,
 ) -> int:
     """
@@ -59,7 +59,7 @@ class TicketTestCase(TestCase):
             name="InsaLan Test", description="Test", month=2023, year=12, ongoing=True
         )
         game_one = Game.objects.create(name="Counter-Strike 2", short_name="CS2")
-        tourney_one = Tournament.objects.create(
+        tourney_one = EventTournament.objects.create(
             name="Tournament", event=event_one, game=game_one, rules=""
         )
         create_ticket("user1", "00000000-0000-0000-0000-000000000001", tourney_one)
@@ -114,7 +114,7 @@ class TicketTODO(APITestCase):
             name="InsaLan Test", description="Test", month=2023, year=12, ongoing=True
         )
         game_one = Game.objects.create(name="Counter-Strike 2", short_name="CS2")
-        Tournament.objects.create(
+        EventTournament.objects.create(
             name="Tournament", event=event_one, game=game_one, rules=""
         )
 
@@ -128,7 +128,7 @@ class TicketTODO(APITestCase):
         """
         Test the `get` API endpoint.
         """
-        tourney = Tournament.objects.all()[0]
+        tourney = EventTournament.objects.all()[0]
         user1_id = create_ticket("user1", "00000000-0000-0000-0000-000000000001", tourney)
 
         response = self.client.get(
@@ -193,7 +193,7 @@ class TicketTODO(APITestCase):
         """
         Test the `scan` API endpoint.
         """
-        tourney = Tournament.objects.all()[0]
+        tourney = EventTournament.objects.all()[0]
         create_ticket("user1", "00000000-0000-0000-0000-000000000001", tourney)
         create_ticket(
             "user2",
@@ -254,7 +254,7 @@ class TicketTODO(APITestCase):
         """
         Test the `qrcode` API endpoint.
         """
-        tourney = Tournament.objects.all()[0]
+        tourney = EventTournament.objects.all()[0]
         create_ticket(
             "user1", "00000000-0000-0000-0000-000000000001", tourney
         )

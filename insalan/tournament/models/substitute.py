@@ -87,22 +87,25 @@ class Substitute(models.Model):
         Assert that the user associated with the provided substitute does not already
         exist in any team of any tournament of the event
         """
+        from . import EventTournament
         user = self.user
-        event = self.get_team().get_tournament().get_event()
-        if not validators.unique_event_registration_validator(user,event, substitute=self.id):
-            raise ValidationError(
-                _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
-            )
+        tournament = self.team.get_tournament()
+        if isinstance(tournament, EventTournament):
+            event = tournament.get_event()
+            if not validators.unique_event_registration_validator(user,event, substitute=self.id):
+                raise ValidationError(
+                    _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
+                )
+            if not validators.tournament_announced(tournament):
+                raise ValidationError(
+                    _("Tournoi non annoncé")
+                )
         if validators.max_substitue_per_team_reached(self.team, exclude=self.id):
             raise ValidationError(
                 _("Nombre maximum de remplaçants déjà atteint")
             )
-        if not validators.tournament_announced(self.team.get_tournament()):
-            raise ValidationError(
-                _("Tournoi non annoncé")
-            )
         # Validate the name in game
-        if not validators.valid_name(self.team.get_tournament().get_game(), self.name_in_game):
+        if not validators.valid_name(tournament.get_game(), self.name_in_game):
             raise ValidationError(
                 _("Le pseudo en jeu n'est pas valide")
             )

@@ -168,11 +168,11 @@ class LangateUserView(CreateAPIView):
 
             reply_object.tournaments.append(tourney)
 
-        reply_object.err = (
-            LangateReply.RegistrationStatus.NOT_PAID
-            if err_not_paid
-            else None
-        )
+        if err_not_paid:
+            reply_object.err = LangateReply.RegistrationStatus.NOT_PAID
+            return Response(
+                ReplySerializer(reply_object).data, status=status.HTTP_400_BAD_REQUEST
+            )
 
         ret = ReplySerializer(reply_object)
         return Response(ret.data, status=status.HTTP_200_OK)

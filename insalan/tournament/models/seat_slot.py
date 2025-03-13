@@ -8,7 +8,7 @@ class SeatSlot(models.Model):
     """
 
     tournament = models.ForeignKey(
-        "Tournament",
+        "EventTournament",
         null=False,
         blank=False,
         on_delete=models.CASCADE,

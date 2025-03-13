@@ -21,7 +21,7 @@ class Team(models.Model):
     """
 
     tournament = models.ForeignKey(
-        "Tournament",
+        "BaseTournament",
         null=False,
         blank=False,
         on_delete=models.CASCADE,
@@ -86,8 +86,11 @@ class Team(models.Model):
 
     def __str__(self) -> str:
         """Format this team to a str"""
+        from . import tournament
         if self.tournament is not None:
-            return f"{self.name} ({self.tournament.event})"
+            if isinstance(self.tournament, tournament.EventTournament):
+                return f"{self.name} ({self.tournament.event})"
+            return f"{self.name} ({self.tournament.name})"
         return f"{self.name} (???)"
 
     def get_name(self):
@@ -96,7 +99,7 @@ class Team(models.Model):
         """
         return self.name
 
-    def get_tournament(self) -> Optional["Tournament"]:
+    def get_tournament(self) -> Optional["BaseTournament"]:
         """
         Retrieve the tournament of this team. Potentially null.
         """
@@ -178,29 +181,43 @@ class Team(models.Model):
 
     def refresh_validation(self):
         """Refreshes the validation state of a tournament"""
+        from . import tournament
         # Condition 1: ceil((n+1)/2) players have paid/will pay
         if self.validated:
             return
         if self.tournament.get_validated_teams() < self.tournament.get_max_team():
-            players = self.get_players()
+            # An EventTournament team is validated if ceil((n+1)/2) players have paid
+            if isinstance(self.tournament, tournament.EventTournament):
+                players = self.get_players()
 
-            game = self.get_tournament().get_game()
+                game = self.get_tournament().get_game()
 
-            threshold = ceil((game.get_players_per_team()+1)/2)
+                threshold = ceil((game.get_players_per_team()+1)/2)
 
-            paid_seats = len(players.filter(payment_status=ps.PaymentStatus.PAID))
+                paid_seats = len(players.filter(payment_status=ps.PaymentStatus.PAID))
 
-            self.validated = paid_seats >= threshold
-            self.save()
+                self.validated = paid_seats >= threshold
+                self.save()
+            # A PrivateTournament team is validated if the team is full
+            elif isinstance(self.tournament, tournament.PrivateTournament):
+                players = self.get_players()
+
+                game = self.get_tournament().get_game()
+
+                self.validated = len(players) == game.get_players_per_team()
+                self.save()
 
     def clean(self):
         """
         Assert that the tournament associated with the provided team is announced
         """
-        if not validators.tournament_announced(self.tournament):
-            raise ValidationError(
-                _("Tournoi non annoncé")
-            )
+        from . import tournament
+
+        if isinstance(self.tournament, tournament.EventTournament):
+            if not validators.tournament_announced(self.tournament):
+                raise ValidationError(
+                    _("Tournoi non annoncé")
+                )
         if validators.tournament_registration_full(self.tournament, exclude=self.id):
             raise ValidationError(
                 _("Tournoi complet")

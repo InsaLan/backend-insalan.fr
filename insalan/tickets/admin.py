@@ -7,7 +7,7 @@ from django.contrib import messages
 
 from insalan.settings import EMAIL_AUTH
 from insalan.mailer import MailManager
-from insalan.tournament.models.tournament import Tournament
+from insalan.tournament.models.tournament import EventTournament
 from .models import Ticket
 
 
@@ -20,7 +20,7 @@ class OngoingTournamentFilter(admin.SimpleListFilter):
     parameter_name = 'tournament'
 
     def lookups(self, request, model_admin):
-        return [(tournament.id, tournament.name) for tournament in Tournament.objects.filter(event__ongoing=True)]
+        return [(tournament.id, tournament.name) for tournament in EventTournament.objects.filter(event__ongoing=True)]
 
     def queryset(self, request, queryset):
         if self.value():

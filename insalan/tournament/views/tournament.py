@@ -17,7 +17,9 @@ from ..models import (
     Manager,
     Substitute,
     Event,
-    Tournament,
+    BaseTournament,
+    EventTournament,
+    PrivateTournament,
     Team,
     GroupMatch,
     KnockoutMatch,
@@ -25,12 +27,21 @@ from ..models import (
 )
 from .permissions import ReadOnly
 
+class PrivateTournamentList(generics.ListAPIView):
+    """List all known private tournaments"""
+
+    pagination_class = None
+    queryset = PrivateTournament.objects.filter(running=True).order_by("id")
+    serializer_class = serializers.PrivateTournamentSerializer
+    permission_classes = [permissions.IsAdminUser | ReadOnly]
+
+
 class TournamentList(generics.ListCreateAPIView):
     """List all known tournaments"""
 
     pagination_class = None
-    queryset = Tournament.objects.all().order_by("id")
-    serializer_class = serializers.TournamentSerializer
+    queryset = EventTournament.objects.all().order_by("id")
+    serializer_class = serializers.EventTournamentSerializer
     permission_classes = [permissions.IsAdminUser | ReadOnly]
 
     @swagger_auto_schema(
@@ -64,8 +75,8 @@ class TournamentList(generics.ListCreateAPIView):
 class TournamentDetails(generics.RetrieveUpdateDestroyAPIView):
     """Details about a tournament"""
 
-    queryset = Tournament.objects.all().order_by("id")
-    serializer_class = serializers.TournamentSerializer
+    queryset = EventTournament.objects.all().order_by("id")
+    serializer_class = serializers.EventTournamentSerializer
     permission_classes = [permissions.IsAdminUser | ReadOnly]
 
     @swagger_auto_schema(
@@ -196,8 +207,8 @@ class TournamentDetails(generics.RetrieveUpdateDestroyAPIView):
 
 class TournamentDetailsFull(generics.RetrieveAPIView):
     """Details about a tournament, with full dereferencing of data"""
-    serializer_class = serializers.FullDerefTournamentSerializer
-    queryset = Tournament.objects.all().prefetch_related("event__seat_set","game","teams","group_set__groupmatch_set","bracket_set__knockoutmatch_set","swissround_set__swissmatch_set","seatslot_set__seats")
+    serializer_class = serializers.FullDerefEventTournamentSerializer
+    queryset = EventTournament.objects.all().prefetch_related("event__seat_set","game","teams","group_set__groupmatch_set","bracket_set__knockoutmatch_set","swissround_set__swissmatch_set","seatslot_set__seats")
 
     def get(self, request, pk: int):
         tourney = self.get_object()
@@ -439,15 +450,16 @@ class TournamentMe(generics.RetrieveAPIView):
                 Team.objects.get(id=player["team"]), context={"request": request}
             ).data
             # dereference tournament
-            player["team"]["tournament"] = serializers.TournamentSerializer(
-                Tournament.objects.get(id=player["team"]["tournament"]),
+            player["team"]["tournament"] = serializers.BaseTournamentSerializer(
+                BaseTournament.objects.get(id=player["team"]["tournament"]),
                 context={"request": request},
             ).data
-            # dereference event
-            player["team"]["tournament"]["event"] = serializers.EventSerializer(
-                Event.objects.get(id=player["team"]["tournament"]["event"]),
-                context={"request": request},
-            ).data
+            if "event" in player["team"]["tournament"]:
+                # dereference event
+                player["team"]["tournament"]["event"] = serializers.EventSerializer(
+                    Event.objects.get(id=player["team"]["tournament"]["event"]),
+                    context={"request": request},
+                ).data
             player["ticket"] = Ticket.objects.get(id=player["ticket"]).token if player["ticket"] is not None else None
 
         # retrieve registration as Manager
@@ -462,15 +474,16 @@ class TournamentMe(generics.RetrieveAPIView):
                 Team.objects.get(id=manager["team"]), context={"request": request}
             ).data
             # dereference tournament
-            manager["team"]["tournament"] = serializers.TournamentSerializer(
-                Tournament.objects.get(id=manager["team"]["tournament"]),
+            manager["team"]["tournament"] = serializers.BaseTournamentSerializer(
+                EventTournament.objects.get(id=manager["team"]["tournament"]),
                 context={"request": request},
             ).data
-            # dereference event
-            manager["team"]["tournament"]["event"] = serializers.EventSerializer(
-                Event.objects.get(id=manager["team"]["tournament"]["event"]),
-                context={"request": request},
-            ).data
+            if "event" in player["team"]["tournament"]:
+                # dereference event
+                manager["team"]["tournament"]["event"] = serializers.EventSerializer(
+                    Event.objects.get(id=manager["team"]["tournament"]["event"]),
+                    context={"request": request},
+                ).data
             manager["ticket"] = Ticket.objects.get(id=manager["ticket"]).token if manager["ticket"] is not None else None
 
         # retrieve registration as Substitute
@@ -484,11 +497,12 @@ class TournamentMe(generics.RetrieveAPIView):
             substitute["team"] = serializers.TeamSerializer(
                 Team.objects.get(id=substitute["team"]), context={"request": request}
             ).data
-            # dereference tournament
-            substitute["team"]["tournament"] = serializers.TournamentSerializer(
-                Tournament.objects.get(id=substitute["team"]["tournament"]),
-                context={"request": request},
-            ).data
+            if "event" in player["team"]["tournament"]:
+                # dereference tournament
+                substitute["team"]["tournament"] = serializers.BaseTournamentSerializer(
+                    EventTournament.objects.get(id=substitute["team"]["tournament"]),
+                    context={"request": request},
+                ).data
             # dereference event
             substitute["team"]["tournament"]["event"] = serializers.EventSerializer(
                 Event.objects.get(id=substitute["team"]["tournament"]["event"]),

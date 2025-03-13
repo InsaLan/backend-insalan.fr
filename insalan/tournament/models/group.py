@@ -5,8 +5,7 @@ from operator import itemgetter
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from . import team
-from . import match
+from . import team, match
 
 class Group(models.Model):
     name = models.CharField(
@@ -14,7 +13,7 @@ class Group(models.Model):
         verbose_name=_("Nom de la poule")
     )
     tournament = models.ForeignKey(
-        "Tournament",
+        "BaseTournament",
         verbose_name=_("Tournoi"),
         on_delete=models.CASCADE
     )
@@ -38,12 +37,15 @@ class Group(models.Model):
         ordering = ["tournament","name"]
 
     def __str__(self) -> str:
-        return f"{self.name} ({self.tournament.name}, {self.tournament.event})"
+        from . import EventTournament
+        if isinstance(self.tournament, EventTournament) and self.tournament.event is not None:
+            return f"{self.name} ({self.tournament.name}, {self.tournament.event})"
+        return f"{self.name} ({self.tournament.name})"
 
     def get_name(self) -> str:
         return self.name
 
-    def get_tournament(self) -> "Tournament":
+    def get_tournament(self) -> "BaseTournament":
         return self.tournament
 
     def get_teams(self) -> List["Team"]:
