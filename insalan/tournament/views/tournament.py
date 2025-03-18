@@ -450,14 +450,19 @@ class TournamentMe(generics.RetrieveAPIView):
                 Team.objects.get(id=player["team"]), context={"request": request}
             ).data
             # dereference tournament
-            player["team"]["tournament"] = serializers.BaseTournamentSerializer(
-                BaseTournament.objects.get(id=player["team"]["tournament"]),
-                context={"request": request},
-            ).data
-            if "event" in player["team"]["tournament"]:
-                # dereference event
+            tournament = BaseTournament.objects.get(id=player["team"]["tournament"])
+            if isinstance(tournament, EventTournament):
+                player["team"]["tournament"] = serializers.EventTournamentSerializer(
+                    tournament,
+                    context={"request": request},
+                ).data
                 player["team"]["tournament"]["event"] = serializers.EventSerializer(
                     Event.objects.get(id=player["team"]["tournament"]["event"]),
+                    context={"request": request},
+                ).data
+            elif isinstance(tournament, PrivateTournament):
+                player["team"]["tournament"] = serializers.BaseTournamentSerializer(
+                    tournament,
                     context={"request": request},
                 ).data
             player["ticket"] = Ticket.objects.get(id=player["ticket"]).token if player["ticket"] is not None else None
@@ -474,14 +479,19 @@ class TournamentMe(generics.RetrieveAPIView):
                 Team.objects.get(id=manager["team"]), context={"request": request}
             ).data
             # dereference tournament
-            manager["team"]["tournament"] = serializers.BaseTournamentSerializer(
-                EventTournament.objects.get(id=manager["team"]["tournament"]),
-                context={"request": request},
-            ).data
-            if "event" in player["team"]["tournament"]:
-                # dereference event
+            tournament = BaseTournament.objects.get(id=player["team"]["tournament"])
+            if isinstance(tournament, EventTournament):
+                manager["team"]["tournament"] = serializers.EventTournamentSerializer(
+                    tournament,
+                    context={"request": request},
+                ).data
                 manager["team"]["tournament"]["event"] = serializers.EventSerializer(
                     Event.objects.get(id=manager["team"]["tournament"]["event"]),
+                    context={"request": request},
+                ).data
+            elif isinstance(tournament, PrivateTournament):
+                manager["team"]["tournament"] = serializers.BaseTournamentSerializer(
+                    tournament,
                     context={"request": request},
                 ).data
             manager["ticket"] = Ticket.objects.get(id=manager["ticket"]).token if manager["ticket"] is not None else None
@@ -497,10 +507,21 @@ class TournamentMe(generics.RetrieveAPIView):
             substitute["team"] = serializers.TeamSerializer(
                 Team.objects.get(id=substitute["team"]), context={"request": request}
             ).data
-            if "event" in player["team"]["tournament"]:
+            # dereference tournament
+            tournament = BaseTournament.objects.get(id=substitute["team"]["tournament"])
+            if isinstance(tournament, EventTournament):
+                substitute["team"]["tournament"] = serializers.EventTournamentSerializer(
+                    tournament,
+                    context={"request": request},
+                ).data
+                substitute["team"]["tournament"]["event"] = serializers.EventSerializer(
+                    Event.objects.get(id=substitute["team"]["tournament"]["event"]),
+                    context={"request": request},
+                ).data
+            elif isinstance(tournament, PrivateTournament):
                 # dereference tournament
                 substitute["team"]["tournament"] = serializers.BaseTournamentSerializer(
-                    EventTournament.objects.get(id=substitute["team"]["tournament"]),
+                    tournament,
                     context={"request": request},
                 ).data
             # dereference event

@@ -635,14 +635,14 @@ class TeamSerializer(serializers.ModelSerializer):
         model = Team
         read_only_fields = ("id",)
         fields = "__all__"
-        extra_kwargs = {"password": {"write_only": True}}
+        extra_kwargs = {"password": {"write_only": True, "required": False}}
 
     def validate(self, data):
         if not tournament_announced(data["tournament"]):
             raise serializers.ValidationError(_("Ce tournoi n'est pas encore annoncé"))
         if tournament_registration_full(data["tournament"]):
             raise serializers.ValidationError(_("Ce tournoi est complet"))
-        if not private_tournament_password_matching(data["tournament"], data["password"]):
+        if "password" in data and not private_tournament_password_matching(data["tournament"], data["password"]):
             raise serializers.ValidationError(_("Le mot de passe ne correspond pas au mot de passe du tournoi"))
         for user in (
             data.get("get_players_id", [])
@@ -687,7 +687,7 @@ class TeamSerializer(serializers.ModelSerializer):
         players_names_in_game = validated_data.pop("players_names_in_game", [])
         substitutes_names_in_game = validated_data.pop("substitutes_names_in_game", [])
 
-        validated_data["password"] = make_password(validated_data["password"])
+        validated_data["password"] = make_password(validated_data.get("password", ""))
         team_obj = Team.objects.create(**validated_data)
 
         for player, name_in_game in zip(players, players_names_in_game):
@@ -765,7 +765,7 @@ class TeamMatchsSerializer(serializers.ModelSerializer):
 class PlayerSerializer(serializers.ModelSerializer):
     """Serializer for a Player Registration"""
 
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         """Meta options for the serializer"""
@@ -774,12 +774,14 @@ class PlayerSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def validate(self, data):
-        event = data["team"].tournament.event
-        if not unique_event_registration_validator(data["user"], event):
-            raise serializers.ValidationError(
-                _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
-            )
-        del data["password"]
+        if isinstance(data["team"].tournament, EventTournament):
+            event = data["team"].tournament.event
+            if not unique_event_registration_validator(data["user"], event):
+                raise serializers.ValidationError(
+                    _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
+                )
+        if "password" in data:
+            del data["password"]
         if max_players_per_team_reached(data["team"]):
             raise serializers.ValidationError(
                 _("Nombre maximum de joueur⋅euses par équipe atteint")

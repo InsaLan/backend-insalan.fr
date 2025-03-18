@@ -264,6 +264,14 @@ class PlayerRegistrationList(generics.ListCreateAPIView):
                     { "password": _("Mot de passe invalide.")},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+        elif tournament.password is not None and tournament.password != "":
+            if "password" not in data:
+                raise BadRequest()
+            if not check_password(data["password"], Team.objects.get(pk=data["team"]).get_password()):
+                return Response(
+                    { "password": _("Mot de passe invalide.")},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
         # make the data dict mutable in the case of immutable QueryDict form django test client
         if isinstance(data, QueryDict):
