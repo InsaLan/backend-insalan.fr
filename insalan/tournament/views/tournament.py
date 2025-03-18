@@ -479,7 +479,7 @@ class TournamentMe(generics.RetrieveAPIView):
                 Team.objects.get(id=manager["team"]), context={"request": request}
             ).data
             # dereference tournament
-            tournament = BaseTournament.objects.get(id=player["team"]["tournament"])
+            tournament = BaseTournament.objects.get(id=manager["team"]["tournament"])
             if isinstance(tournament, EventTournament):
                 manager["team"]["tournament"] = serializers.EventTournamentSerializer(
                     tournament,
@@ -524,11 +524,6 @@ class TournamentMe(generics.RetrieveAPIView):
                     tournament,
                     context={"request": request},
                 ).data
-            # dereference event
-            substitute["team"]["tournament"]["event"] = serializers.EventSerializer(
-                Event.objects.get(id=substitute["team"]["tournament"]["event"]),
-                context={"request": request},
-            ).data
             substitute["ticket"] = Ticket.objects.get(id=substitute["ticket"]).token if substitute["ticket"] is not None else None
 
         return Response({"player": players, "manager": managers, "substitute": substitutes,"ongoing_match": ongoing_match}, status=status.HTTP_200_OK)

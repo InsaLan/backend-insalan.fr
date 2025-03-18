@@ -2693,7 +2693,7 @@ class TournamentTeamEndpoints(TestCase):
         event = Event.objects.get(name="InsaLan Test")
 
         game2 = Game.objects.create(name="Test Game 2", short_name="TFG2", players_per_team=3)
-        trnm2 = Tournament.objects.create(
+        trnm2 = EventTournament.objects.create(
             game=game2,
             event=event,
             maxTeam=16,
