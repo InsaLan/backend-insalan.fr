@@ -1,6 +1,6 @@
 from math import ceil
 from random import shuffle
-from ..models import EventTournament, SwissRound, SwissMatch, SwissSeeding, BestofType
+from ..models import BaseTournament, SwissRound, SwissMatch, SwissSeeding, BestofType
 
 def create_swiss_matchs(swiss: SwissRound, bo_type: BestofType = BestofType.BO1):
     teams = swiss.get_sorted_teams()
@@ -62,7 +62,7 @@ def create_swiss_matchs(swiss: SwissRound, bo_type: BestofType = BestofType.BO1)
             matchs_per_score_group_per_round[-1].append(idx+1)
             match_idx += idx + 1
 
-def create_swiss_rounds(tournament: EventTournament, min_score: int, use_seeding: bool, bo_type: BestofType):
+def create_swiss_rounds(tournament: BaseTournament, min_score: int, use_seeding: bool, bo_type: BestofType):
     teams = tournament.teams.filter(validated=True)
     swiss = SwissRound.objects.create(tournament=tournament, min_score=min_score)
 
