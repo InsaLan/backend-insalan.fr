@@ -82,6 +82,13 @@ def tournament_registration_full(tournament: "BaseTournament", exclude=None):
         return True
     return False
 
+def private_tournament_password_matching(tournament: "BaseTournament", password: str):
+    """Validate the password of a private tournament"""
+    from . import PrivateTournament
+    if isinstance(tournament, PrivateTournament):
+        return tournament.password is None or tournament.password == password
+    return True
+
 def validate_match_data(match: "Match", data):
     winning_score = match.get_winning_score()
     winner_count = 0

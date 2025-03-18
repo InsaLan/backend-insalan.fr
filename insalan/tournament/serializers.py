@@ -45,6 +45,7 @@ from .models import (
     tournament_announced,
     max_players_per_team_reached,
     tournament_registration_full,
+    private_tournament_password_matching,
     max_substitue_per_team_reached,
     valid_name,
 )
@@ -641,6 +642,8 @@ class TeamSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(_("Ce tournoi n'est pas encore annoncé"))
         if tournament_registration_full(data["tournament"]):
             raise serializers.ValidationError(_("Ce tournoi est complet"))
+        if not private_tournament_password_matching(data["tournament"], data["password"]):
+            raise serializers.ValidationError(_("Le mot de passe ne correspond pas au mot de passe du tournoi"))
         for user in (
             data.get("get_players_id", [])
             + data.get("get_managers_id", [])
