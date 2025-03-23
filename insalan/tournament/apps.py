@@ -33,5 +33,4 @@ class TournamentConfig(AppConfig):
 
         payment_handler_register()
         
-        #scheduler.add_job(check_ongoing_events, 'interval', days=1)
-        scheduler.add_job(check_ongoing_events, 'interval', seconds=10)
+        scheduler.add_job(check_ongoing_events, 'interval', days=1)
