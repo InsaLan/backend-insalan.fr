@@ -13,6 +13,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import insalan.settings
 from insalan.user.models import User
 from insalan.tickets.models import TicketManager
+from insalan.scheduler import scheduler
 
 class EmailConfirmationTokenGenerator(PasswordResetTokenGenerator):
     """
@@ -241,13 +242,9 @@ class MailManager:
         for mailer in MailManager.mailers.values():
             mailer.send_first_mail()
 
-def start_scheduler():
-    # Remove apscheduler logs
-    logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
-
+def start_job():
     # Check if we are in test mode
     test = 'test' in sys.argv
-    print(test, file=sys.stderr)
 
     # Add mailers
     for auth in insalan.settings.EMAIL_AUTH:
@@ -256,6 +253,4 @@ def start_scheduler():
 
     # Start scheduler
     if not test:
-        scheduler = BackgroundScheduler()
         scheduler.add_job(MailManager.send_queued_mail, 'interval', seconds=30)
-        scheduler.start()
