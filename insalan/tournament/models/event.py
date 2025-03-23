@@ -4,10 +4,9 @@ from typing import TYPE_CHECKING
 
 from django.core.validators import (
     FileExtensionValidator,
-    MaxValueValidator,
-    MinValueValidator,
     MinLengthValidator,
 )
+from django.forms import ValidationError
 from django.db import models
 from django.db.models.query import QuerySet
 from django.utils.translation import gettext_lazy as _
@@ -45,15 +44,18 @@ class Event(models.Model):
         default="",
         blank=True,
     )
-    year = models.IntegerField(
-        verbose_name=_("Année"), null=False, validators=[MinValueValidator(2003)]
+    date_start = models.DateField(
+        verbose_name=_("Date de début"),
+        null=True
     )
-    month = models.IntegerField(
-        verbose_name=_("Mois"),
-        null=False,
-        validators=[MinValueValidator(1), MaxValueValidator(12)],
+    date_end = models.DateField(
+        verbose_name=_("Date de fin"),
+        null=True
     )
-    ongoing = models.BooleanField(verbose_name=_("En cours"), default=False)
+    ongoing = models.BooleanField(
+        verbose_name=_("En cours"),
+        default=True
+    )
     logo: models.FileField = ImageField(
         verbose_name=_("Logo"),
         blank=True,
@@ -87,12 +89,20 @@ class Event(models.Model):
         verbose_name_plural = _("Évènements")
         indexes = [
             models.Index(fields=["name"]),
-            models.Index(fields=["year", "month"]),
+            models.Index(fields=["date_start"]),
         ]
+    
+    def clean(self):
+        super().clean()
+        self.clean_date_end()
+
+    def clean_date_end(self):
+        if self.date_end and self.date_start and self.date_end < self.date_start:
+            raise ValidationError(_("La date de fin ne peut pas être avant la date de début."))
 
     def __str__(self) -> str:
         """Format this Event to a str"""
-        return f"{self.name} ({self.year}-{self.month:02d})"
+        return f"{self.name} ({self.date_start.year}-{self.date_start.month:02d})"
 
     def get_tournaments_id(self) -> ValuesQuerySet[EventTournament, int]:
         """Return the list of tournaments identifiers for that Event"""

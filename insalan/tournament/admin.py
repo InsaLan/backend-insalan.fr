@@ -182,8 +182,8 @@ class EventAdmin(ModelAdmin[Event]):  # pylint: disable=unsubscriptable-object
 
     form = EventForm
 
-    list_display = ("id", "name", "description", "year", "month", "ongoing")
-    search_fields = ["name", "year", "month", "ongoing"]
+    list_display = ("id", "name", "description", "date_start", "date_end", "ongoing")
+    search_fields = ["name", "date_start", "date_end", "ongoing"]
 
     class Media:
         css = {
