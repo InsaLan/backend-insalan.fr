@@ -299,9 +299,6 @@ class TournamentForm(forms.ModelForm):
             }
         }
         self.fields["canvas_params"].initial = data
-        
-        import sys
-        print(data, file=sys.stderr)
 
     def clean(self) -> dict[str, Any] | None:
         # if event changed, reset seat_slots
