@@ -258,7 +258,7 @@ class PlayerRegistrationList(generics.ListCreateAPIView):
         tournament = Team.objects.get(pk=data["team"]).tournament
         if (
             isinstance(tournament, EventTournament)
-            or isinstance(tournament, EventTournament)
+            or isinstance(tournament, PrivateTournament)
             and tournament.password is not None
             and tournament.password != ""
         ):
