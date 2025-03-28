@@ -14,7 +14,7 @@ from insalan.tournament.models.validators import valid_name
 from insalan.user.models import User
 from insalan.tournament import serializers
 
-from ..models import Player, Team, PaymentStatus, EventTournament
+from ..models import Player, Team, PaymentStatus, EventTournament, PrivateTournament
 
 
 class PlayerRegistration(generics.RetrieveAPIView):
@@ -256,18 +256,31 @@ class PlayerRegistrationList(generics.ListCreateAPIView):
             )
 
         tournament = Team.objects.get(pk=data["team"]).tournament
-        if isinstance(tournament, EventTournament):
+        if (
+            isinstance(tournament, EventTournament)
+            or isinstance(tournament, EventTournament)
+            and tournament.password is not None
+            and tournament.password != ""
+        ):
             if "password" not in data:
                 raise BadRequest()
-            if not check_password(data["password"], Team.objects.get(pk=data["team"]).get_password()):
-                return Response(
-                    { "password": _("Mot de passe invalide.")},
-                    status=status.HTTP_400_BAD_REQUEST
+
+            if (
+                # in case of EventTournament,
+                # check if the password is the same
+                # as the team password
+                isinstance(tournament, EventTournament)
+                and not check_password(
+                    data["password"],
+                    Team.objects.get(pk=data["team"]).get_password()
                 )
-        elif tournament.password is not None and tournament.password != "":
-            if "password" not in data:
-                raise BadRequest()
-            if not check_password(data["password"], Team.objects.get(pk=data["team"]).get_password()):
+            ) or (
+                # in case of PrivateTournament,
+                # check if the password is the same
+                # as the tournament password
+                isinstance(tournament, PrivateTournament)
+                and not data["password"] == tournament.password
+            ):
                 return Response(
                     { "password": _("Mot de passe invalide.")},
                     status=status.HTTP_400_BAD_REQUEST
