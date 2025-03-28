@@ -9,7 +9,7 @@ from insalan.tickets.models import Ticket
 from insalan.user.models import User
 
 from .payement_status import PaymentStatus
-from . import validators, group, bracket, swiss, match
+from . import validators, group, bracket, swiss, match, tournament
 
 class Player(models.Model):
     """
@@ -85,16 +85,15 @@ class Player(models.Model):
         Assert that the user associated with the provided player does not already
         exist in any team of any tournament of the event
         """
-        from . import EventTournament
         user = self.user
-        tournament = self.team.get_tournament()
-        if isinstance(tournament, EventTournament):
-            event = tournament.get_event()
+        tourney = self.team.get_tournament()
+        if isinstance(tourney, tournament.EventTournament):
+            event = tourney.get_event()
             if not validators.unique_event_registration_validator(user,event,player=self.id):
                 raise ValidationError(
                     _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
                 )
-            if not validators.tournament_announced(tournament):
+            if not validators.tournament_announced(tourney):
                 raise ValidationError(
                     _("Tournoi non annoncé")
                 )
@@ -104,7 +103,7 @@ class Player(models.Model):
             )
 
         # Validate the name in game
-        if not validators.valid_name(tournament.get_game(), self.name_in_game):
+        if not validators.valid_name(tourney.get_game(), self.name_in_game):
             raise ValidationError(
                 _("Le pseudo en jeu n'est pas valide")
             )

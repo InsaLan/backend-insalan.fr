@@ -7,6 +7,7 @@ from rest_framework.validators import ValidationError
 from insalan.user.models import User
 
 # from .event import Event
+from . import tournament
 from . import team
 from . import player as play
 from . import manager as manage
@@ -16,22 +17,21 @@ from . import game
 
 def unique_event_registration_validator(user: User, event: "Event", player = None, manager = None, substitute = None):
     """Validate a unique registration per event"""
-    from . import EventTournament
     player_regs = play.Player.objects.filter(user=user).exclude(id=player)
 
     for reg in player_regs:
-        if isinstance(reg.get_team().get_tournament(), EventTournament) and reg.get_team().get_tournament().get_event().id == event.id:
+        if isinstance(reg.get_team().get_tournament(), tournament.EventTournament) and reg.get_team().get_tournament().get_event().id == event.id:
             return False
 
     manager_regs = manage.Manager.objects.filter(user=user).exclude(id=manager)
 
     for reg in manager_regs:
-        if isinstance(reg.get_team().get_tournament(), EventTournament) and reg.get_team().get_tournament().get_event().id == event.id:
+        if isinstance(reg.get_team().get_tournament(), tournament.EventTournament) and reg.get_team().get_tournament().get_event().id == event.id:
             return False
 
     substitute_regs = sub.Substitute.objects.filter(user=user).exclude(id=substitute)
     for reg in substitute_regs:
-        if isinstance(reg.get_team().get_tournament(), EventTournament) and reg.get_team().get_tournament().get_event().id == event.id:
+        if isinstance(reg.get_team().get_tournament(), tournament.EventTournament) and reg.get_team().get_tournament().get_event().id == event.id:
             return False
 
     return True
@@ -67,26 +67,24 @@ def max_substitue_per_team_reached(team: "Team", exclude=None):
         return True
     return False
 
-def tournament_announced(tournament: "BaseTournament"):
+def tournament_announced(tourney: "BaseTournament"):
     """Validate if a tournament is announced"""
-    from . import PrivateTournament
-    if isinstance(tournament, PrivateTournament) or tournament.is_announced:
+    if isinstance(tourney, tournament.PrivateTournament) or tourney.is_announced:
         return True
     return False
 
-def tournament_registration_full(tournament: "BaseTournament", exclude=None):
+def tournament_registration_full(tourney: "BaseTournament", exclude=None):
     """Validate if a tournament is full"""
     if exclude is not None:
         return False
-    if tournament.get_validated_teams(exclude) >= tournament.get_max_team():
+    if tourney.get_validated_teams(exclude) >= tourney.get_max_team():
         return True
     return False
 
-def private_tournament_password_matching(tournament: "BaseTournament", password: str):
+def private_tournament_password_matching(tourney: "BaseTournament", password: str):
     """Validate the password of a private tournament"""
-    from . import PrivateTournament
-    if isinstance(tournament, PrivateTournament):
-        return tournament.password is None or tournament.password == password
+    if isinstance(tourney, tournament.PrivateTournament):
+        return tourney.password is None or tourney.password == password
     return True
 
 def validate_match_data(match: "Match", data):

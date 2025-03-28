@@ -5,7 +5,7 @@ from operator import itemgetter
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from . import team, match
+from . import team, match, tournament
 
 class Group(models.Model):
     name = models.CharField(
@@ -37,8 +37,7 @@ class Group(models.Model):
         ordering = ["tournament","name"]
 
     def __str__(self) -> str:
-        from . import EventTournament
-        if isinstance(self.tournament, EventTournament) and self.tournament.event is not None:
+        if isinstance(self.tournament, tournament.EventTournament) and self.tournament.event is not None:
             return f"{self.name} ({self.tournament.name}, {self.tournament.event})"
         return f"{self.name} ({self.tournament.name})"
 

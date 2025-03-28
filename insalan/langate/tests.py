@@ -316,8 +316,6 @@ class EndpointTests(TestCase):
         self.assertEqual(reply.status_code, 200)
 
         ser = reply.data
-        import sys
-        print(ser, file=sys.stderr)
         self.assertEqual(ser["err"], None)
 
         self.assertEqual(len(ser["tournaments"]), 2)
