@@ -70,7 +70,7 @@ class Manager(models.Model):
         """
         user = self.user
         tourney = self.get_team().get_tournament()
-        if isinstance(tournament, tournament.EventTournament):
+        if isinstance(tourney, tournament.EventTournament):
             event = tourney.get_event()
             if not validators.unique_event_registration_validator(user,event, manager=self.id):
                 raise ValidationError(

@@ -649,8 +649,6 @@ class TeamSerializer(serializers.ModelSerializer):
             + data.get("get_managers_id", [])
             + data.get("get_substitutes_id", [])
         ):
-            import sys
-            print(data["tournament"], file=sys.stderr)
             tournament = BaseTournament.objects.get(id=data["tournament"].id)
             if isinstance(tournament, EventTournament):
                 event = Event.objects.get(eventtournament=data["tournament"])
