@@ -22,7 +22,7 @@ def in_thirty_days():
 
 class BaseTournament(PolymorphicModel):
     """
-    Base class for a Tournament. Contains the common fields between a Tournament
+    Base class for a Tournament. Contains the common fields between a Tournament.
     """
     game = models.ForeignKey("Game", verbose_name=_("Jeu"), on_delete=models.CASCADE)
     name = models.CharField(
