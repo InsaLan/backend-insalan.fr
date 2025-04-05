@@ -43,7 +43,10 @@ class OrderAdmin(admin.ModelAdmin):
         export = "pizza;prix;moyen de paiement;date créneau\n"
 
         for order in queryset:
-            price = order.price / order.pizzaorder_set.count()
+            if order.pizzaorder_set.count() > 0:
+                price = order.price / order.pizzaorder_set.count()
+            else:
+                price = 0
             payment_method = order.payment_method
             # Get the label of the payment method from the choices
             for choice in PaymentMethod.choices:

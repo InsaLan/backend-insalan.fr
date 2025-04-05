@@ -1,11 +1,11 @@
 #!/bin/sh
 
 echo "=== MAKING MIGRATIONS ==="
-python manage.py makemigrations
+python manage.py makemigrations --no-input
+echo "=== APPLYING MIGRATIONS ==="
+python manage.py migrate --no-input
 echo "=== ALL MIGRATIONS ==="
 python manage.py showmigrations
-echo "=== APPLYING MIGRATIONS ==="
-python manage.py migrate --run-syncdb
 echo "=== DEPLOYING STATIC FILES ==="
 python manage.py collectstatic --noinput
 echo "=== STARTING SERVER... ==="
