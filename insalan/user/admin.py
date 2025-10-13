@@ -142,18 +142,18 @@ class CustomUserAdmin(UserAdmin):
         """
         return [
             path(
-                "<id>/resend/",
+                "<int:user_id>/resend/",
                 self.admin_site.admin_view(self.resend_email),
                 name="auth_user_resend_email",
             ),
         ] + super().get_urls()
 
     @sensitive_post_parameters_m
-    def resend_email(self, request, id: int):
+    def resend_email(self, request, user_id: int):
         """
         Resend the email to the user
         """
-        user = User.objects.get(pk=id)
+        user = User.objects.get(pk=user_id)
         if not self.has_change_permission(request, user):
             raise PermissionDenied
         if user is None:
@@ -161,7 +161,7 @@ class CustomUserAdmin(UserAdmin):
                 _("%(name)s object with primary key %(key)r does not exist.")
                 % {
                     "name": self.opts.verbose_name,
-                    "key": escape(id),
+                    "key": escape(user_id),
                 }
             )
         if user.has_perm("email_active"):

@@ -16,7 +16,6 @@ jobs:
       PYLINT_MINSCORE: 8.0
     runs-on: ubuntu-22.04
     steps:
-      - run: echo "### Linting" >> $GITHUB_STEP_SUMMARY
       - uses: actions/checkout@v3
 
       # Install Python 3.12
@@ -36,14 +35,7 @@ jobs:
 
       # Run lints
       - name: Run linter evaluation
-        shell: bash
-        run: |
-          pylint  --fail-under ${{ env.PYLINT_MINSCORE }} ./insalan | tee >(grep "Your code has been" | sed 's/^Your code has been rated at \(.*\)\/10.*/PYLINT_SCORE=\1/' >> "$GITHUB_ENV")
-
-      # Summary
-      - name: Summary
-        run: echo ::notice title=Pylint Score::Your \`pylint\` score is ${{ env.PYLINT_SCORE }}
-      - run: echo Your \`pylint\` score is ${{ env.PYLINT_SCORE }} >> "$GITHUB_STEP_SUMMARY"
+        run: pylint ./insalan
 
   unit-tests:
     if: always()
