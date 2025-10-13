@@ -63,11 +63,13 @@ ALLOWED_HOSTS = [
     "api." + WEBSITE_HOST,
     WEBSITE_HOST,
     "dev." + WEBSITE_HOST,
+    "gate." + WEBSITE_HOST,
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-     PROTOCOL + "://api." + getenv("WEBSITE_HOST", "localhost") + OUTSIDE_PORT,
-     PROTOCOL + "://" + getenv("WEBSITE_HOST", "localhost") + OUTSIDE_PORT,
+     PROTOCOL + "://api." + WEBSITE_HOST + OUTSIDE_PORT,
+     PROTOCOL + "://" + WEBSITE_HOST + OUTSIDE_PORT,
+     PROTOCOL + "://gate." + WEBSITE_HOST + OUTSIDE_PORT,
 ]
 
 # Application definition
@@ -213,6 +215,9 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
+    "DEFAULT_RENDERER_CLASSES": (
+        'rest_framework.renderers.JSONRenderer',
+    )
 }
 
 # Login and logout
@@ -227,6 +232,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://" + getenv("WEBSITE_HOST", "localhost"),
     "http://api." + getenv("WEBSITE_HOST", "localhost"),
     "https://" + getenv("HELLOASSO_HOSTNAME", "localhost"), # helloasso has be to trusted
+    "http://gate." + getenv("WEBSITE_HOST", "localhost"),
     "https://gate." + getenv("WEBSITE_HOST", "localhost"),
 
 ]

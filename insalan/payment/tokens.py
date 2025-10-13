@@ -81,6 +81,11 @@ class Token:
                 _("Impossible de rafraîchir le jeton HelloAsso")
             ) from err
 
+        if request.status_code != 200:
+            raise RuntimeError(
+                _("Impossible de rafraîchir le jeton HelloAsso: %s")
+                % request.text
+            )
         result = request.json()
         if "error" in result:
             raise RuntimeError(_("Impossible de rafraichir le jeton HelloAsso: %s") % result["error_description"])

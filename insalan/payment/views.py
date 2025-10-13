@@ -247,6 +247,7 @@ class Notifications(APIView):
     def post(self, request):
         """Notification POST"""
 
+        logger.error("Received notification: %s", request.data)
         data = request.data
         if not data.get("metadata") or not data["metadata"].get("uuid"):
             return Response(status=status.HTTP_400_BAD_REQUEST)
