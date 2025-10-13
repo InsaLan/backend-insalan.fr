@@ -1,5 +1,6 @@
 """
-This module contains views for handling content and constants in the CMS (Content Management System) of the Insalan website.
+This module contains views for handling content and constants in the CMS (Content Management System)
+of the Insalan website.
 """
 from rest_framework import generics
 from rest_framework.response import Response
@@ -81,7 +82,8 @@ class FullList(generics.ListAPIView):
 
         constants_serializer = serializers.ConstantSerializer(constants, many=True)
         content_serializer = serializers.ContentSerializer(content, many=True)
-        files_serializer = serializers.FileSerializer(files, many=True, context={'request': request})
+        files_serializer = serializers.FileSerializer(files, many=True,
+                                                      context={'request': request})
 
         return Response({
             "constants": constants_serializer.data,

@@ -213,11 +213,12 @@ class EventDetailsSomeDeref(generics.RetrieveAPIView):
             )
         }
     )
-    def get(self, request, primary_key: int):
+    # pylint: disable-next=arguments-differ
+    def get(self, request, pk: int, *args, **kwargs):
         """
         Get the tournaments of an event
         """
-        candidates = Event.objects.filter(id=primary_key)
+        candidates = Event.objects.filter(id=pk)
         if len(candidates) == 0:
             raise Http404
         if len(candidates) > 1:

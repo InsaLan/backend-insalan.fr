@@ -8,9 +8,10 @@ from django.core.validators import (
 )
 from django.utils.translation import gettext_lazy as _
 
+from insalan.components.image_field import ImageField
+
 from . import tournament
 
-from insalan.components.image_field import ImageField
 
 class Event(models.Model):
     """

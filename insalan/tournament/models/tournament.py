@@ -1,6 +1,5 @@
 from datetime import timedelta
 
-from typing import List
 from django.db import models
 from polymorphic.models import PolymorphicModel
 from django.db.models import QuerySet

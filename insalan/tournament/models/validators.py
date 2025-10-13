@@ -15,7 +15,8 @@ from . import substitute as sub
 from . import match as Match
 from . import game
 
-def unique_event_registration_validator(user: User, event: "Event", player = None, manager = None, substitute = None):
+def unique_event_registration_validator(user: User, event: "Event", player=None,
+                                        manager=None, substitute=None):
     """Validate a unique registration per event"""
     player_regs = play.Player.objects.filter(user=user).exclude(id=player)
 
@@ -50,22 +51,22 @@ def player_manager_user_unique_validator(user: User):
     s_regs = {
         (obj.user, obj.team.tournament) for obj in sub.Substitute.objects.filter(user=user)
     }
-    if len(m_regs.intersection(p_regs)) > 0 or len(s_regs.intersection(p_regs)) > 0 or len(s_regs.intersection(m_regs)) > 0:
+    if (len(m_regs.intersection(p_regs)) > 0 or
+        len(s_regs.intersection(p_regs)) > 0 or
+        len(s_regs.intersection(m_regs)) > 0):
         raise ValidationError(
             _("Utilisateur⋅rice déjà inscrit⋅e dans ce tournois (rôles distincts)")
         )
 
-def max_players_per_team_reached(team: "Team", exclude=None):
+def max_players_per_team_reached(team: "Team", exclude=None) -> bool:
     """Validate the number of players in a team"""
-    if len(team.get_players().exclude(id=exclude)) >= team.get_tournament().get_game().get_players_per_team():
-        return True
-    return False
+    return (len(team.get_players().exclude(id=exclude)) >=
+            team.get_tournament().get_game().get_players_per_team())
 
-def max_substitue_per_team_reached(team: "Team", exclude=None):
+def max_substitue_per_team_reached(team: "Team", exclude=None) -> bool:
     """Validate the number of sub in a team"""
-    if len(team.get_substitutes().exclude(id=exclude)) >= team.get_tournament().get_game().get_substitute_players_per_team():
-        return True
-    return False
+    return (len(team.get_substitutes().exclude(id=exclude)) >=
+            team.get_tournament().get_game().get_substitute_players_per_team())
 
 def tournament_announced(tourney: "BaseTournament"):
     """Validate if a tournament is announced"""
@@ -73,7 +74,8 @@ def tournament_announced(tourney: "BaseTournament"):
         return True
     return False
 
-def tournament_registration_full(tourney: "BaseTournament", exclude=None):
+def tournament_registration_full(tournament: "BaseTournament", exclude=None
+                                 ) -> bool:
     """Validate if a tournament is full"""
     if exclude is not None:
         return False
@@ -119,7 +121,8 @@ def validate_match_data(match: "Match", data):
             winner_count += 1
 
     if (
-        (match.bo_type == Match.BestofType.RANKING and winner_count != ceil(match.get_team_count()/2)) 
+        (match.bo_type == Match.BestofType.RANKING and
+         winner_count != ceil(match.get_team_count()/2))
         or
         (match.bo_type != Match.BestofType.RANKING and winner_count != 1)
     ) :

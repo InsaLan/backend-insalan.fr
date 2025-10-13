@@ -48,7 +48,8 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp", "avif"])
         ],
     )
-    name = serializers.CharField(write_only=True, required=False, allow_blank=True) #If this field is filled, something bad happened (bot), purposely ambiguous nament
+    # If this field is filled, something bad happened (bot), purposely ambiguous nament.
+    name = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
     class Meta:
         """Meta class, used to set parameters"""
@@ -81,7 +82,8 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         if data["password"] != data["password_validation"]:
             raise serializers.ValidationError(_("Les mots de passe diffèrent"))
         if 'name' in data and data['name']:
-            raise serializers.ValidationError(_("Inscription non conforme")) # confusing error message to deceive malicious user
+            # confusing error message to deceive malicious user
+            raise serializers.ValidationError(_("Inscription non conforme"))
         return data
 
     def create(self, data):

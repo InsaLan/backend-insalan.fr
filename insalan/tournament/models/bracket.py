@@ -52,14 +52,20 @@ class Bracket(models.Model):
         return self.name
 
     def get_depth(self) -> int:
-        return math.ceil(math.log2(self.team_count/self.tournament.get_game().get_team_per_match())) + 1
+        return math.ceil(
+            # pylint: disable-next=no-member
+            math.log2(self.team_count / self.tournament.get_game().get_team_per_match())
+        ) + 1
 
     def get_max_match_count(self) -> int:
+        # pylint: disable-next=no-member
         return math.ceil(self.team_count/self.tournament.get_game().get_team_per_match())
 
     def get_teams(self) -> List["Team"]:
         # return [match.get_teams() for match in KnockoutMatch.objects.filter(bracket=self)]
-        return team.Team.objects.filter(pk__in=KnockoutMatch.objects.filter(bracket=self).values("teams"))
+        return team.Team.objects.filter(
+            pk__in=KnockoutMatch.objects.filter(bracket=self).values("teams"),
+        )
 
     def get_teams_id(self) -> List[int]:
         return self.get_teams().values_list("id", flat=True)
@@ -67,11 +73,23 @@ class Bracket(models.Model):
     def get_matchs(self) -> List["KnockoutMatch"]:
         return KnockoutMatch.objects.filter(bracket=self)
 
-    def get_winner(self) -> int:
+    def get_winner(self) -> int | None:
         if self.bracket_type == BracketType.SINGLE:
-            final = KnockoutMatch.objects.filter(round_number=1,index_in_round=1,bracket=self,bracket_set=BracketSet.WINNER,status=match.MatchStatus.COMPLETED)
+            final = KnockoutMatch.objects.filter(
+                round_number=1,
+                index_in_round=1,
+                bracket=self,
+                bracket_set=BracketSet.WINNER,
+                status=match.MatchStatus.COMPLETED,
+            )
         else:
-            final = KnockoutMatch.objects.filter(round_number=0,index_in_round=1,bracket=self,bracket_set=BracketSet.WINNER,status=match.MatchStatus.COMPLETED)
+            final = KnockoutMatch.objects.filter(
+                round_number=0,
+                index_in_round=1,
+                bracket=self,
+                bracket_set=BracketSet.WINNER,
+                status=match.MatchStatus.COMPLETED,
+            )
 
         if len(final) != 1:
             return None
@@ -103,8 +121,6 @@ class KnockoutMatch(match.Match):
     def get_tournament(self):
         return self.bracket.tournament
 
-    def is_last_match(self):
-        if self.bracket.bracket_type == BracketType.SINGLE and self.round_number == 1 or self.round_number == 0:
-            return True
-
-        return False
+    def is_last_match(self) -> bool:
+        return (self.bracket.bracket_type == BracketType.SINGLE and self.round_number == 1 or
+                self.round_number == 0)

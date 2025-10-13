@@ -2,7 +2,7 @@
 This module contains the views for the Langate app.
 
 LangateUserView is an API endpoint used by the langate to authenticate and verify a user's data.
-It handles retrieving and checking user data, and provides a response containing 
+It handles retrieving and checking user data, and provides a response containing
 all the necessary information for the langate to identify the user.
 """
 from django.utils.translation import gettext_lazy as _
@@ -10,7 +10,6 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.generics import CreateAPIView
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from drf_yasg.utils import swagger_auto_schema
@@ -18,11 +17,11 @@ from drf_yasg import openapi
 
 from insalan.tournament.models import Event, Player, PaymentStatus, Manager, Substitute, EventTournament
 from insalan.user.models import User
+from insalan.user.serializers import UserLoginSerializer
 
 from .models import LangateReply, TournamentRegistration
 from .serializers import ReplySerializer
 
-from insalan.user.serializers import UserLoginSerializer
 
 class LangateUserView(CreateAPIView):
     """

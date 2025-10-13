@@ -18,7 +18,6 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 
 from insalan.user.models import User

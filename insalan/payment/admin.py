@@ -1,7 +1,4 @@
 """Payment Admin Panel Code"""
-# Disable lints:
-# "Too few public methods"
-# pylint: disable=R0903
 
 from django.contrib import admin, messages
 
@@ -14,7 +11,8 @@ from .models import Product, Transaction, Payment, TransactionStatus, Discount
 class ProductAdmin(admin.ModelAdmin):
     """Admin handler for Products"""
 
-    list_display = ("id", "price", "name", "desc", "category", "associated_tournament", "associated_timeslot")
+    list_display = ("id", "price", "name", "desc", "category", "associated_tournament",
+                    "associated_timeslot")
     search_fields = ["id", "price", "name"]
 
 
@@ -68,6 +66,7 @@ class PaymentAdmin(admin.ModelAdmin):
                 [product.name for product in payment.transaction.products.all()]
             )
 
+            # pylint: disable-next=line-too-long
             export += f"{payment.id};{payment.amount};{payment_type};{payment_status};{payment.transaction.creation_date};{payment.transaction.last_modification_date}\n"
         response = HttpResponse(export, content_type="text/csv")
         response["Content-Disposition"] = "attachment; filename=export.csv"
@@ -131,7 +130,6 @@ class DiscountAdmin(admin.ModelAdmin):
 
     list_display = ("id", "discount", "user", "product", "used")
     search_fields = ["id", "discount", "user", "product", "reason"]
-    
 
 
 admin.site.register(Discount, DiscountAdmin)

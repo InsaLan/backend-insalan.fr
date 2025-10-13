@@ -20,7 +20,7 @@ class GroupList(generics.ListCreateAPIView):
     serializer_class = serializers.GroupSerializer
     permission_classes = [permissions.IsAdminUser | ReadOnly]
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         data = request.data
 
         multiple = isinstance(data, list)
@@ -31,7 +31,8 @@ class GroupList(generics.ListCreateAPIView):
 
         saved_groups = groups.save()
 
-        return Response(self.get_serializer(saved_groups, many=multiple).data, status=status.HTTP_201_CREATED)
+        return Response(self.get_serializer(saved_groups, many=multiple).data,
+                        status=status.HTTP_201_CREATED)
 
 class GroupDetails(generics.RetrieveUpdateDestroyAPIView):
     queryset = Group.objects.all().order_by("id")
@@ -64,8 +65,9 @@ class GenerateGroups(generics.CreateAPIView):
 
         generate_groups(**data.validated_data)
 
-        serialized_data = serializers.GroupField(data.validated_data["tournament"].group_set.all(), many=True).data
-        
+        serialized_data = serializers.GroupField(data.validated_data["tournament"].group_set.all(),
+                                                 many=True).data
+
         return Response(serialized_data, status=status.HTTP_201_CREATED)
 
 class DeleteGroups(generics.DestroyAPIView):
@@ -75,13 +77,16 @@ class DeleteGroups(generics.DestroyAPIView):
     def delete(self, request, *args, **kwargs):
         tournament = self.get_object()
 
-        if GroupMatch.objects.filter(group__tournament=tournament).exclude(status=MatchStatus.SCHEDULED).exists():
+        if GroupMatch.objects.filter(group__tournament=tournament).exclude(
+            status=MatchStatus.SCHEDULED,
+        ).exists():
             return Response({
+                # pylint: disable-next=line-too-long
                 "error": _("Impossible de supprimer les poules. Des matchs sont en cours ou déjà terminés")
             }, status=status.HTTP_400_BAD_REQUEST)
 
         tournament.group_set.all().delete()
-        
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class GenerateGroupMatchs(generics.CreateAPIView):
@@ -98,7 +103,8 @@ class GenerateGroupMatchs(generics.CreateAPIView):
         for group in data.validated_data["groups"]:
             create_group_matchs(group, data.validated_data["bo_type"])
 
-        groups = serializers.GroupField(data.validated_data["tournament"].group_set.all(), many=True).data
+        groups = serializers.GroupField(data.validated_data["tournament"].group_set.all(),
+                                        many=True).data
 
         return Response(groups, status=status.HTTP_201_CREATED)
 
@@ -113,6 +119,7 @@ class DeleteGroupMatchs(generics.DestroyAPIView):
 
         if matchs.exclude(status=MatchStatus.SCHEDULED).exists():
             return Response({
+                # pylint: disable-next=line-too-long
                 "error": _("Impossible de supprimer les matchs. Des matchs sont déjà en cours ou terminés")
             }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -137,7 +144,8 @@ class GroupMatchsLaunch(generics.UpdateAPIView):
             launch_match(match)
             matchs.append(match.id)
 
-        return Response({ "matchs": matchs, "warning": data.validated_data["warning"] },status=status.HTTP_200_OK)
+        return Response({ "matchs": matchs, "warning": data.validated_data["warning"] },
+                        status=status.HTTP_200_OK)
 
 class GroupMatchPatch(generics.UpdateAPIView):
     queryset = GroupMatch.objects.all()
@@ -214,11 +222,13 @@ class GroupMatchScore(generics.UpdateAPIView):
             raise PermissionDenied()
 
         if match.status != Match.MatchStatus.ONGOING:
-            return Response({"status" : "Le match n'est pas en cours"}, status = status.HTTP_400_BAD_REQUEST)
+            return Response({"status" : "Le match n'est pas en cours"},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         error_response = validate_match_data(match, data)
         if error_response is not None:
-            return Response({k: _(v) for k,v in error_response.items()},status=status.HTTP_400_BAD_REQUEST)
+            return Response({k: _(v) for k,v in error_response.items()},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         update_match_score(match,data)
 

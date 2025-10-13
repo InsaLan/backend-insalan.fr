@@ -8,7 +8,7 @@ urlpatterns = [
     path("event/ongoing/", views.OngoingEventList.as_view(), name="event/ongoing"),
     path("event/<int:pk>/", views.EventDetails.as_view(), name="event/details"),
     path(
-        "event/<int:primary_key>/tournaments/",
+        "event/<int:pk>/tournaments/",
         views.EventDetailsSomeDeref.as_view(),
         name="event/details-tournaments",
     ),

@@ -16,6 +16,7 @@ from django.contrib.postgres.fields import ArrayField
 
 from insalan.components.image_field import ImageField
 
+
 class PaymentMethod(models.TextChoices):
     """
     Payment method choices
@@ -292,11 +293,9 @@ class Order(models.Model):
         return f"{self.user} - {self.time_slot}"
 
     def get_username(self) -> str:
-        """
-        return the username of the user
-        """
+        """Return the username of the user."""
         if self.user_obj:
-            return self.user_obj.username
+            return self.user_obj.username # pylint: disable=no-member
         return self.user
     get_username.short_description = _('Utilisateur')
 

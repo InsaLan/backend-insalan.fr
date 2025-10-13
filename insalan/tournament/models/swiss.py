@@ -30,7 +30,8 @@ class SwissRound(models.Model):
         return self.get_teams().values_list("id", flat=True)
 
     def get_teams_seeding(self) -> List[Tuple["Team",int]]:
-        return [(seeding.team,seeding.seeding) for seeding in SwissSeeding.objects.filter(swiss=self)]
+        return [(seeding.team, seeding.seeding)
+                for seeding in SwissSeeding.objects.filter(swiss=self)]
 
     def get_sorted_teams(self) -> List[int]:
         teams = self.get_teams_seeding()

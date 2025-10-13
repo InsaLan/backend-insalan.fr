@@ -77,6 +77,4 @@ class Manager(models.Model):
                     _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
                 )
             if not validators.tournament_announced(tourney):
-                raise ValidationError(
-                    _("Tournoi non annoncé")
-                )
+                raise ValidationError(_("Tournoi non annoncé"))

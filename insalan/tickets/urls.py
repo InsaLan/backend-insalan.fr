@@ -12,7 +12,7 @@ from . import views
 
 app_name = "tickets"
 urlpatterns = [
-    path("get/<str:id>/<str:token>/", views.get, name="get"),
+    path("get/<str:user_id>/<str:token>/", views.get, name="get"),
     path("scan/<str:token>/", views.scan, name="scan"),
     path("qrcode/<str:token>/", views.qrcode, name="qrcode"),
     path("generate/<str:token>/", views.generate_pdf, name="generate"),

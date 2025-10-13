@@ -117,7 +117,7 @@ class PlayerRegistration(generics.RetrieveAPIView):
 
         try:
             player.save()
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             return Response(
                 {"player": str(exc)},
                 status=status.HTTP_400_BAD_REQUEST
@@ -143,6 +143,7 @@ class PlayerRegistration(generics.RetrieveAPIView):
                 properties={
                     "err": openapi.Schema(
                         type=openapi.TYPE_STRING,
+                        # pylint: disable-next=line-too-long
                         description=_("Vous n'avez pas la permission de supprimer cette inscription")
                     )
                 }

@@ -8,12 +8,24 @@ from rest_framework.exceptions import NotFound
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-from .permissions import ReadOnly
-
 from insalan.tournament import serializers
 
-from ..models import Bracket, BestofType, KnockoutMatch, MatchStatus, BaseTournament, validate_match_data, Match
-from ..manage import create_empty_knockout_matchs, update_match_score, update_next_knockout_match, launch_match
+from ..models import (
+    BaseTournament,
+    BestofType,
+    Bracket,
+    KnockoutMatch,
+    Match,
+    MatchStatus,
+    validate_match_data,
+)
+from ..manage import (
+    create_empty_knockout_matchs,
+    launch_match,
+    update_match_score,
+    update_next_knockout_match,
+)
+from .permissions import ReadOnly
 
 
 class BracketDetails(generics.RetrieveUpdateDestroyAPIView):
@@ -24,7 +36,9 @@ class BracketDetails(generics.RetrieveUpdateDestroyAPIView):
     def delete(self, request, *args, **kwargs):
         bracket = self.get_object()
 
-        if KnockoutMatch.objects.filter(bracket=bracket).exclude(status=MatchStatus.SCHEDULED).exists():
+        if KnockoutMatch.objects.filter(bracket=bracket).exclude(
+            status=MatchStatus.SCHEDULED,
+        ).exists():
             return Response({
                 "error": _("Impossible de supprimer l'arbre.\
                     Des matchs sont déjà en cours ou terminés")
@@ -39,7 +53,8 @@ class CreateBracket(generics.CreateAPIView):
     permission_classes = [permissions.IsAdminUser]
     serializer_class = serializers.BracketSerializer
 
-    def post(self, request, pk, *args, **kwargs):
+    # pylint: disable-next=arguments-differ
+    def post(self, request, pk: int, *args, **kwargs):
         request.data["tournament"] = pk
 
         data = self.get_serializer(data=request.data)
@@ -90,7 +105,10 @@ class BracketMatchsLaunch(generics.UpdateAPIView):
 
             matchs.append(match.id)
 
-        return Response({ "matchs": matchs, "warning": data.validated_data["warning"] },status=status.HTTP_200_OK)
+        return Response({
+            "matchs": matchs,
+            "warning": data.validated_data["warning"],
+        }, status=status.HTTP_200_OK)
 
 class BracketMatchScore(generics.GenericAPIView):
     """Update score of a bracket match"""
@@ -153,7 +171,7 @@ class BracketMatchScore(generics.GenericAPIView):
         data = request.data
 
         try:
-            match = KnockoutMatch.objects.get(pk=kwargs["match_id"],bracket=kwargs["bracket_id"])
+            match = KnockoutMatch.objects.get(pk=kwargs["match_id"], bracket=kwargs["bracket_id"])
         except KnockoutMatch.DoesNotExist as e:
             raise NotFound() from e
 
@@ -161,11 +179,13 @@ class BracketMatchScore(generics.GenericAPIView):
             raise PermissionDenied()
 
         if match.status != Match.MatchStatus.ONGOING:
-            return Response({"status" : "Le match n'est pas en cours"}, status = status.HTTP_400_BAD_REQUEST)
+            return Response({"status" : "Le match n'est pas en cours"},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         error_response = validate_match_data(match, data)
         if error_response is not None:
-            return Response({k: _(v) for k,v in error_response.items()},status=status.HTTP_400_BAD_REQUEST)
+            return Response({k: _(v) for k,v in error_response.items()},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         update_match_score(match,data)
 

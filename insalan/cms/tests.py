@@ -41,7 +41,8 @@ class ContentTestCase(TestCase):
 
     def test_display_undefined_constant_list(self):
         """
-        Test that a ValidationError raised by the usage of unknown constants give the correct list of undefined constants
+        Test that a ValidationError raised by the usage of unknown constants give the correct list
+        of undefined constants
         """
         Content.objects.create(
             name="content",
@@ -106,7 +107,7 @@ class FileFetchTests(APITestCase):
     def setUp(self):
         self.file1 = File.objects.create(name="file1", file="test_file.txt")
         self.file2 = File.objects.create(name="file2", file="test_file.txt")
-        
+
     def test_get_all_files(self):
         """Test that we can get all files"""
         url = reverse('file/list')

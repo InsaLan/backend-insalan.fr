@@ -88,7 +88,9 @@ class Token:
             )
         result = request.json()
         if "error" in result:
-            raise RuntimeError(_("Impossible de rafraichir le jeton HelloAsso: %s") % result["error_description"])
+            raise RuntimeError(
+                _("Impossible de rafraichir le jeton HelloAsso: %s") % result["error_description"]
+            )
 
         self.assign_token_data(request.json())
 

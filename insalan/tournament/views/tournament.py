@@ -208,9 +208,17 @@ class TournamentDetails(generics.RetrieveUpdateDestroyAPIView):
 class TournamentDetailsFull(generics.RetrieveAPIView):
     """Details about a tournament, with full dereferencing of data"""
     serializer_class = serializers.FullDerefEventTournamentSerializer
-    queryset = EventTournament.objects.all().prefetch_related("event__seat_set","game","teams","group_set__groupmatch_set","bracket_set__knockoutmatch_set","swissround_set__swissmatch_set","seatslot_set__seats")
+    queryset = EventTournament.objects.all().prefetch_related(
+        "event__seat_set",
+        "game",
+        "teams",
+        "group_set__groupmatch_set",
+        "bracket_set__knockoutmatch_set",
+        "swissround_set__swissmatch_set",
+        "seatslot_set__seats",
+    )
 
-    def get(self, request, pk: int):
+    def get(self, request, *args, **kwargs):
         tourney = self.get_object()
         tourney_serialized = self.get_serializer(tourney).data
 
@@ -226,7 +234,8 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
                 user_player = Player.objects.get(user=request.user, team__tournament=tourney)
             except Player.DoesNotExist:
                 try:
-                    user_substitue = Substitute.objects.get(user=request.user, team__tournament=tourney)
+                    user_substitue = Substitute.objects.get(user=request.user,
+                                                            team__tournament=tourney)
                 except Substitute.DoesNotExist:
                     pass
 
@@ -234,8 +243,9 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
             can_see_payment_status: bool = (
                 is_staff or
                 user_player is not None and user_player.id in [x["id"] for x in team["players"]] or
-                request.user.username in [x for x in team["managers"]] or
-                user_substitue is not None and user_substitue.id in [x["id"] for x in team["substitutes"]]
+                request.user.username in list(team["managers"]) or
+                user_substitue is not None and
+                user_substitue.id in [x["id"] for x in team["substitutes"]]
             )
 
             # remove payment status if not allowed
@@ -290,8 +300,12 @@ class TournamentMe(generics.RetrieveAPIView):
                                                 "event": openapi.Schema(
                                                     type=openapi.TYPE_OBJECT,
                                                     properties={
-                                                        "id": openapi.Schema(type=openapi.TYPE_INTEGER),
-                                                        "name": openapi.Schema(type=openapi.TYPE_STRING)
+                                                        "id": openapi.Schema(
+                                                            type=openapi.TYPE_INTEGER,
+                                                        ),
+                                                        "name": openapi.Schema(
+                                                            type=openapi.TYPE_STRING,
+                                                        )
                                                     }
                                                 )
                                             }
@@ -321,8 +335,12 @@ class TournamentMe(generics.RetrieveAPIView):
                                                 "event": openapi.Schema(
                                                     type=openapi.TYPE_OBJECT,
                                                     properties={
-                                                        "id": openapi.Schema(type=openapi.TYPE_INTEGER),
-                                                        "name": openapi.Schema(type=openapi.TYPE_STRING)
+                                                        "id": openapi.Schema(
+                                                            type=openapi.TYPE_INTEGER,
+                                                        ),
+                                                        "name": openapi.Schema(
+                                                            type=openapi.TYPE_STRING,
+                                                        )
                                                     }
                                                 )
                                             }
@@ -353,8 +371,12 @@ class TournamentMe(generics.RetrieveAPIView):
                                                 "event": openapi.Schema(
                                                     type=openapi.TYPE_OBJECT,
                                                     properties={
-                                                        "id": openapi.Schema(type=openapi.TYPE_INTEGER),
-                                                        "name": openapi.Schema(type=openapi.TYPE_STRING)
+                                                        "id": openapi.Schema(
+                                                            type=openapi.TYPE_INTEGER,
+                                                        ),
+                                                        "name": openapi.Schema(
+                                                            type=openapi.TYPE_STRING,
+                                                        ),
                                                     }
                                                 )
                                             }
@@ -414,17 +436,26 @@ class TournamentMe(generics.RetrieveAPIView):
 
         if len(ongoing_matchs) > 0:
             if isinstance(ongoing_matchs[0], GroupMatch):
-                ongoing_match = serializers.GroupMatchSerializer(ongoing_matchs[0],context={"request": request}).data
+                ongoing_match = serializers.GroupMatchSerializer(
+                    ongoing_matchs[0],
+                    context={"request": request},
+                ).data
                 ongoing_match["match_type"] = {"type": "group", "id": ongoing_match["group"]}
                 del ongoing_match["group"]
 
             if isinstance(ongoing_matchs[0], KnockoutMatch):
-                ongoing_match = serializers.KnockoutMatchSerializer(ongoing_matchs[0],context={"request": request}).data
+                ongoing_match = serializers.KnockoutMatchSerializer(
+                    ongoing_matchs[0],
+                    context={"request": request},
+                ).data
                 ongoing_match["match_type"] = {"type": "bracket", "id": ongoing_match["bracket"]}
                 del ongoing_match["bracket"]
 
             if isinstance(ongoing_matchs[0], SwissMatch):
-                ongoing_match = serializers.SwissMatchSerializer(ongoing_matchs[0],context={"request": request}).data
+                ongoing_match = serializers.SwissMatchSerializer(
+                    ongoing_matchs[0],
+                    context={"request": request},
+                ).data
                 ongoing_match["match_type"] = {"type": "swiss", "id": ongoing_match["swiss"]}
                 del ongoing_match["swiss"]
 
@@ -526,4 +557,9 @@ class TournamentMe(generics.RetrieveAPIView):
                 ).data
             substitute["ticket"] = Ticket.objects.get(id=substitute["ticket"]).token if substitute["ticket"] is not None else None
 
-        return Response({"player": players, "manager": managers, "substitute": substitutes,"ongoing_match": ongoing_match}, status=status.HTTP_200_OK)
+        return Response({
+            "player": players,
+            "manager": managers,
+            "substitute": substitutes,
+            "ongoing_match": ongoing_match,
+        }, status=status.HTTP_200_OK)

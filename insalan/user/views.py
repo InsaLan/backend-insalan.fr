@@ -273,6 +273,7 @@ class EmailConfirmView(APIView):
                         type=openapi.TYPE_ARRAY,
                         items=openapi.Schema(
                             type=openapi.TYPE_STRING,
+                            # pylint: disable-next=line-too-long
                             description=_("Utilisateur·rice ou jeton invalide (ou adresse déjà confirmée)")
                         )
                     )
