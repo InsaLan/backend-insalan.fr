@@ -101,7 +101,7 @@ class Match(models.Model):
 
         return False
 
-    def get_scores(self) -> dict[int,int]:
+    def get_scores(self) -> dict[int, int]:
         scores = {}
 
         for team in self.teams.all():
@@ -132,10 +132,10 @@ class Match(models.Model):
             winners.sort(key=lambda e: e[1])
             loosers.sort(key=lambda e: e[1])
         else:
-            winners.sort(key=lambda e: e[1],reverse=True)
-            loosers.sort(key=lambda e: e[1],reverse=True)
+            winners.sort(key=lambda e: e[1], reverse=True)
+            loosers.sort(key=lambda e: e[1], reverse=True)
 
-        return [winner[0] for winner in winners] ,[looser[0] for looser in loosers]
+        return [winner[0] for winner in winners], [looser[0] for looser in loosers]
 
 class Score(models.Model):
     team = models.ForeignKey(

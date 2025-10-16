@@ -418,7 +418,10 @@ class PrivateTournamentAdmin(admin.ModelAdmin):
         """
         Returns the occupancy of the tournament
         """
-        return str(Team.objects.filter(tournament=obj, validated=True).count()) + " / " + str(obj.maxTeam)
+        return str(Team.objects.filter(
+            tournament=obj,
+            validated=True,
+        ).count()) + " / " + str(obj.maxTeam)
 
     get_occupancy.short_description = 'Remplissage'
 

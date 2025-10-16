@@ -496,7 +496,9 @@ class TournamentMe(generics.RetrieveAPIView):
                     tournament,
                     context={"request": request},
                 ).data
-            player["ticket"] = Ticket.objects.get(id=player["ticket"]).token if player["ticket"] is not None else None
+            player["ticket"] = Ticket.objects.get(
+                id=player["ticket"],
+            ).token if player["ticket"] is not None else None
 
         # retrieve registration as Manager
         managers = Manager.objects.filter(user=user)
@@ -525,7 +527,9 @@ class TournamentMe(generics.RetrieveAPIView):
                     tournament,
                     context={"request": request},
                 ).data
-            manager["ticket"] = Ticket.objects.get(id=manager["ticket"]).token if manager["ticket"] is not None else None
+            manager["ticket"] = Ticket.objects.get(
+                id=manager["ticket"],
+            ).token if manager["ticket"] is not None else None
 
         # retrieve registration as Substitute
         substitutes = Substitute.objects.filter(user=user)
@@ -555,7 +559,9 @@ class TournamentMe(generics.RetrieveAPIView):
                     tournament,
                     context={"request": request},
                 ).data
-            substitute["ticket"] = Ticket.objects.get(id=substitute["ticket"]).token if substitute["ticket"] is not None else None
+            substitute["ticket"] = Ticket.objects.get(
+                id=substitute["ticket"],
+            ).token if substitute["ticket"] is not None else None
 
         return Response({
             "player": players,

@@ -1,7 +1,6 @@
 """BaseTournament Module Tests"""
 
 from io import BytesIO
-from decimal import Decimal
 
 from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError
@@ -66,19 +65,35 @@ class BaseTournamentTestCase(TestCase):
 
         Player.objects.create(
             user=user_one,
-            team=Team.objects.create(name="Team One", tournament=tourney_one, password=make_password("teamonepwd")),
+            team=Team.objects.create(
+                name="Team One",
+                tournament=tourney_one,
+                password=make_password("teamonepwd")
+            ),
         )
         Manager.objects.create(
             user=user_one,
-            team=Team.objects.create(name="Team Two", tournament=tourney_two, password=make_password("teamtwopwd")),
+            team=Team.objects.create(
+                name="Team Two",
+                tournament=tourney_two,
+                password=make_password("teamtwopwd"),
+            ),
         )
 
         # This should not work (Player and Manager in tourney 1 in different teams)
         user_two = User.objects.create_user(
             username="user_test_two", email="user_test_two@example.com"
         )
-        team_three = Team.objects.create(name="Team Three", tournament=tourney_one, password=make_password("teamthreepwd"))
-        team_four = Team.objects.create(name="Team Four", tournament=tourney_one, password=make_password("teamfourpwd"))
+        team_three = Team.objects.create(
+            name="Team Three",
+            tournament=tourney_one,
+            password=make_password("teamthreepwd"),
+        )
+        team_four = Team.objects.create(
+            name="Team Four",
+            tournament=tourney_one,
+            password=make_password("teamfourpwd"),
+        )
 
         Player.objects.create(user=user_two, team=team_three)
         man_obj = Manager.objects.create(user=user_two, team=team_four)
@@ -93,7 +108,11 @@ class BaseTournamentTestCase(TestCase):
         self.assertRaises(ValidationError, play_obj.full_clean)
 
         # This should not work (Player and Manager in tourney 1 in the same team)
-        team_five = Team.objects.create(name="Team Five", tournament=tourney_one, password=make_password("teamfivepwd"))
+        team_five = Team.objects.create(
+            name="Team Five",
+            tournament=tourney_one,
+            password=make_password("teamfivepwd"),
+        )
 
         user_four = User.objects.create_user(
             username="user_test_four", email="user_test_four@example.com"
@@ -130,19 +149,35 @@ class BaseTournamentTestCase(TestCase):
 
         Player.objects.create(
             user=user_one,
-            team=Team.objects.create(name="Team One", tournament=tourney_one, password=make_password("teamonepwd")),
+            team=Team.objects.create(
+                name="Team One",
+                tournament=tourney_one,
+                password=make_password("teamonepwd"),
+            ),
         )
         Substitute.objects.create(
             user=user_one,
-            team=Team.objects.create(name="Team Two", tournament=tourney_two, password=make_password("teamtwopwd")),
+            team=Team.objects.create(
+                name="Team Two",
+                tournament=tourney_two,
+                password=make_password("teamtwopwd"),
+            ),
         )
 
         # This should not work (Player and Manager in tourney 1 in different teams)
         user_two = User.objects.create_user(
             username="user_test_two", email="user_test_two@example.com"
         )
-        team_three = Team.objects.create(name="Team Three", tournament=tourney_one, password=make_password("teamthreepwd"))
-        team_four = Team.objects.create(name="Team Four", tournament=tourney_one, password=make_password("teamfourpwd"))
+        team_three = Team.objects.create(
+            name="Team Three",
+            tournament=tourney_one,
+            password=make_password("teamthreepwd"),
+        )
+        team_four = Team.objects.create(
+            name="Team Four",
+            tournament=tourney_one,
+            password=make_password("teamfourpwd"),
+        )
 
         Player.objects.create(user=user_two, team=team_three)
         man_obj = Substitute.objects.create(user=user_two, team=team_four)
@@ -157,7 +192,11 @@ class BaseTournamentTestCase(TestCase):
         self.assertRaises(ValidationError, play_obj.full_clean)
 
         # This should not work (Player and Substitute in tourney 1 in the same team)
-        team_five = Team.objects.create(name="Team Five", tournament=tourney_one, password=make_password("teamfivepwd"))
+        team_five = Team.objects.create(
+            name="Team Five",
+            tournament=tourney_one,
+            password=make_password("teamfivepwd"),
+        )
 
         user_four = User.objects.create_user(
             username="user_test_four", email="user_test_four@example.com"
@@ -188,9 +227,21 @@ class BaseTournamentTestCase(TestCase):
         """Get the teams for a tournament"""
         tourney = BaseTournament.objects.all()[0]
         tourney_two = BaseTournament.objects.all()[1]
-        team_one = Team.objects.create(name="Ohlala", tournament=tourney, password=make_password("ohlalapwd"))
-        team_two = Team.objects.create(name="OhWow", tournament=tourney, password=make_password("ohwowpwd"))
-        team_three = Team.objects.create(name="LeChiengue", tournament=tourney_two, password=make_password("lechienguepwd"))
+        team_one = Team.objects.create(
+            name="Ohlala",
+            tournament=tourney,
+            password=make_password("ohlalapwd"),
+        )
+        team_two = Team.objects.create(
+            name="OhWow",
+            tournament=tourney,
+            password=make_password("ohwowpwd"),
+        )
+        team_three = Team.objects.create(
+            name="LeChiengue",
+            tournament=tourney_two,
+            password=make_password("lechienguepwd"),
+        )
 
         teams = tourney.get_teams()
         self.assertEqual(2, len(teams))
@@ -310,14 +361,22 @@ class TournamentMeTests(TestCase):
             game=self.game_obj,
             is_announced=True,
         )
-        self.team_one = Team.objects.create(name="Team One", tournament=self.tourneyobj_one, password=make_password("password"))
+        self.team_one = Team.objects.create(
+            name="Team One",
+            tournament=self.tourneyobj_one,
+            password=make_password("password"),
+        )
         self.plobjt = Player.objects.create(
             user_id=self.usrobj.id,
             team=self.team_one,
             name_in_game="pseudo"
         )
 
-        self.team_two = Team.objects.create(name="Team Two", tournament=self.tourneyobj_one, password=make_password("password"))
+        self.team_two = Team.objects.create(
+            name="Team Two",
+            tournament=self.tourneyobj_one,
+            password=make_password("password"),
+        )
         self.managojt = Manager.objects.create(
             user_id=self.usrobj.id,
             team=self.team_two
@@ -332,7 +391,11 @@ class TournamentMeTests(TestCase):
             name="Test Tournament 2",
             game=self.game_obj,
         )
-        self.team_three = Team.objects.create(name="Team Three", tournament=self.tourneyobj_two, password=make_password("password"))
+        self.team_three = Team.objects.create(
+            name="Team Three",
+            tournament=self.tourneyobj_two,
+            password=make_password("password"),
+        )
         self.plobjt2 = Player.objects.create(
             user_id=self.usrobj.id,
             team=self.team_three,
@@ -349,12 +412,15 @@ class TournamentMeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['player'][0]['name_in_game'], self.plobjt.name_in_game)
         self.assertEqual(response.data['player'][0]['team']['name'], self.team_one.name)
-        self.assertEqual(response.data['player'][0]['team']['tournament']['name'], self.tourneyobj_one.name)
-        self.assertEqual(response.data['player'][0]['team']['tournament']['event']['name'], self.evobj.name)
+        self.assertEqual(response.data['player'][0]['team']['tournament']['name'],
+                         self.tourneyobj_one.name)
+        self.assertEqual(response.data['player'][0]['team']['tournament']['event']['name'],
+                         self.evobj.name)
 
         self.assertEqual(response.data['player'][1]['name_in_game'], self.plobjt2.name_in_game)
         self.assertEqual(response.data['player'][1]['team']['name'], self.team_three.name)
-        self.assertEqual(response.data['player'][1]['team']['tournament']['name'], self.tourneyobj_two.name)
+        self.assertEqual(response.data['player'][1]['team']['tournament']['name'],
+                         self.tourneyobj_two.name)
         self.assertTrue('event' not in response.data['player'][1]['team']['tournament'])
 
     def test_get_tournament_me_manager(self):
@@ -366,8 +432,10 @@ class TournamentMeTests(TestCase):
 
         self.assertEqual(response.data['manager'][0]['id'], self.managojt.id)
         self.assertEqual(response.data['manager'][0]['team']['name'], self.team_two.name)
-        self.assertEqual(response.data['manager'][0]['team']['tournament']['name'], self.tourneyobj_one.name)
-        self.assertEqual(response.data['manager'][0]['team']['tournament']['event']['name'], self.evobj.name)
+        self.assertEqual(response.data['manager'][0]['team']['tournament']['name'],
+                         self.tourneyobj_one.name)
+        self.assertEqual(response.data['manager'][0]['team']['tournament']['event']['name'],
+                         self.evobj.name)
 
     def test_get_tournament_me_substitute(self):
         """
@@ -378,8 +446,10 @@ class TournamentMeTests(TestCase):
 
         self.assertEqual(response.data['substitute'][0]['name_in_game'], self.subobj.name_in_game)
         self.assertEqual(response.data['substitute'][0]['team']['name'], self.team_two.name)
-        self.assertEqual(response.data['substitute'][0]['team']['tournament']['name'], self.tourneyobj_one.name)
-        self.assertEqual(response.data['substitute'][0]['team']['tournament']['event']['name'], self.evobj.name)
+        self.assertEqual(response.data['substitute'][0]['team']['tournament']['name'],
+                         self.tourneyobj_one.name)
+        self.assertEqual(response.data['substitute'][0]['team']['tournament']['event']['name'],
+                         self.evobj.name)
 
     def test_get_tournament_me_unauthenticated(self):
         """

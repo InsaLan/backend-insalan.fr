@@ -1,19 +1,21 @@
 from datetime import timedelta
 
-from django.db import models
-from polymorphic.models import PolymorphicModel
-from django.db.models import QuerySet
+from django.contrib.postgres.fields import ArrayField
 from django.core.validators import (
     FileExtensionValidator,
     MinValueValidator,
     MinLengthValidator,
 )
+from django.db import models
+from django.db.models.query import QuerySet
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from django.contrib.postgres.fields import ArrayField
+from polymorphic.models import PolymorphicModel
 
 from insalan.components.image_field import ImageField
+
 from . import team, caster, group, bracket, swiss
+
 
 def in_thirty_days():
     """Return now + 30 days"""
@@ -89,7 +91,7 @@ class BaseTournament(PolymorphicModel):
         """Return the list of Teams in that Tournament"""
         return self.teams.all() #team.Team.objects.filter(tournament=self)
 
-    def get_teams_id(self) -> List[int]:
+    def get_teams_id(self) -> list[int]:
         """Return the list of identifiers of this Tournament's Teams"""
         return self.get_teams().values_list("id", flat=True)
 
@@ -105,22 +107,19 @@ class BaseTournament(PolymorphicModel):
         """Return the number of validated teams"""
         return len(team.Team.objects.filter(tournament=self,validated=True).exclude(id=exclude))
 
-    def get_groups(self) -> List["Group"]:
+    def get_groups(self) -> list["Group"]:
         return group.Group.objects.filter(tournament=self)
 
-    def get_groups_id(self) -> List[int]:
+    def get_groups_id(self) -> list[int]:
         return group.Group.objects.filter(tournament=self).values_list("id",flat=True)
 
-    def get_brackets(self) -> List["Bracket"]:
+    def get_brackets(self) -> list["Bracket"]:
         return bracket.Bracket.objects.filter(tournament=self)
 
-    def get_brackets_id(self) -> List[int]:
+    def get_brackets_id(self) -> list[int]:
         return bracket.Bracket.objects.filter(tournament=self).values_list("id",flat=True)
 
-    def get_swissRounds(self) -> List["SwissRound"]:
-        return swiss.SwissRound.objects.filter(tournament=self)
-
-    def get_swissRounds_id(self) -> List[int]:
+    def get_swiss_rounds_id(self) -> list[int]:
         return swiss.SwissRound.objects.filter(tournament=self).values_list("id",flat=True)
 
 class PrivateTournament(BaseTournament):
@@ -360,6 +359,6 @@ class EventTournament(BaseTournament):
         """Get the event of a tournament"""
         return self.event
 
-    def get_casters(self) -> List["Caster"]:
+    def get_casters(self) -> list["Caster"]:
         """Return the list of casters for this tournament"""
         return caster.Caster.objects.filter(tournament=self)

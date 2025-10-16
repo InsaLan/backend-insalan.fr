@@ -27,7 +27,11 @@ class PlayerTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(game=game, event=event)
-        team_one: Team = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("password"))
+        team_one: Team = Team.objects.create(
+            name="La Team Test",
+            tournament=trnm,
+            password=make_password("password"),
+        )
 
         # Second edition
         event_two = Event.objects.create(
@@ -106,7 +110,11 @@ class PlayerTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(game=game, event=event)
-        team = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
+        team = Team.objects.create(
+            name="La Team Test",
+            tournament=trnm,
+            password=make_password("lateamtestpwd"),
+        )
 
         user = User.objects.get(username="randomplayer")
 
@@ -122,7 +130,11 @@ class PlayerTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(game=game, event=event)
-        team = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
+        team = Team.objects.create(
+            name="La Team Test",
+            tournament=trnm,
+            password=make_password("lateamtestpwd"),
+        )
 
         user = User.objects.get(username="randomplayer")
 
@@ -140,8 +152,16 @@ class PlayerTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(game=game, event=event)
-        team = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
-        team_two = Team.objects.create(name="La Team Test 2", tournament=trnm, password=make_password("lateamtest2pwd"))
+        team = Team.objects.create(
+            name="La Team Test",
+            tournament=trnm,
+            password=make_password("lateamtestpwd"),
+        )
+        team_two = Team.objects.create(
+            name="La Team Test 2",
+            tournament=trnm,
+            password=make_password("lateamtest2pwd"),
+        )
 
         user = User.objects.get(username="randomplayer")
 
@@ -160,8 +180,16 @@ class PlayerTestCase(TestCase):
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(game=game, event=event)
         trnm_two = EventTournament.objects.create(game=game, event=event)
-        team = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
-        team_two = Team.objects.create(name="La Team Test 2", tournament=trnm_two, password=make_password("lateamtest2pwd"))
+        team = Team.objects.create(
+            name="La Team Test",
+            tournament=trnm,
+            password=make_password("lateamtestpwd"),
+        )
+        team_two = Team.objects.create(
+            name="La Team Test 2",
+            tournament=trnm_two,
+            password=make_password("lateamtest2pwd"),
+        )
 
         user = User.objects.get(username="randomplayer")
 

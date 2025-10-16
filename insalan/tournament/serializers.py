@@ -595,7 +595,7 @@ class BaseTournamentSerializer(serializers.ModelSerializer):
     validated_teams = serializers.IntegerField(read_only=True, source="get_validated_teams")
     groups = serializers.ListField(required=False, source="get_groups_id")
     brackets = serializers.ListField(required=False, source="get_brackets_id")
-    swissRounds = serializers.ListField(required=False, source="get_swissRounds_id")
+    swissRounds = serializers.ListField(required=False, source="get_swiss_rounds_id")
 
     class Meta:
         """Meta options of the serializer"""
@@ -642,8 +642,11 @@ class TeamSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(_("Ce tournoi n'est pas encore annoncé"))
         if tournament_registration_full(data["tournament"]):
             raise serializers.ValidationError(_("Ce tournoi est complet"))
-        if "password" in data and not private_tournament_password_matching(data["tournament"], data["password"]):
-            raise serializers.ValidationError(_("Le mot de passe ne correspond pas au mot de passe du tournoi"))
+        if ("password" in data and
+            not private_tournament_password_matching(data["tournament"], data["password"])):
+            raise serializers.ValidationError(
+                _("Le mot de passe ne correspond pas au mot de passe du tournoi")
+            )
         for user in (
             data.get("get_players_id", [])
             + data.get("get_managers_id", [])

@@ -6,9 +6,7 @@ from rest_framework.validators import ValidationError
 
 from insalan.user.models import User
 
-# from .event import Event
 from . import tournament
-from . import team
 from . import player as play
 from . import manager as manage
 from . import substitute as sub
@@ -21,18 +19,21 @@ def unique_event_registration_validator(user: User, event: "Event", player=None,
     player_regs = play.Player.objects.filter(user=user).exclude(id=player)
 
     for reg in player_regs:
-        if isinstance(reg.get_team().get_tournament(), tournament.EventTournament) and reg.get_team().get_tournament().get_event().id == event.id:
+        if (isinstance(reg.get_team().get_tournament(), tournament.EventTournament) and
+            reg.get_team().get_tournament().get_event().id == event.id):
             return False
 
     manager_regs = manage.Manager.objects.filter(user=user).exclude(id=manager)
 
     for reg in manager_regs:
-        if isinstance(reg.get_team().get_tournament(), tournament.EventTournament) and reg.get_team().get_tournament().get_event().id == event.id:
+        if (isinstance(reg.get_team().get_tournament(), tournament.EventTournament) and
+            reg.get_team().get_tournament().get_event().id == event.id):
             return False
 
     substitute_regs = sub.Substitute.objects.filter(user=user).exclude(id=substitute)
     for reg in substitute_regs:
-        if isinstance(reg.get_team().get_tournament(), tournament.EventTournament) and reg.get_team().get_tournament().get_event().id == event.id:
+        if (isinstance(reg.get_team().get_tournament(), tournament.EventTournament) and
+            reg.get_team().get_tournament().get_event().id == event.id):
             return False
 
     return True
@@ -74,8 +75,7 @@ def tournament_announced(tourney: "BaseTournament"):
         return True
     return False
 
-def tournament_registration_full(tournament: "BaseTournament", exclude=None
-                                 ) -> bool:
+def tournament_registration_full(tourney: "BaseTournament", exclude=None) -> bool:
     """Validate if a tournament is full"""
     if exclude is not None:
         return False

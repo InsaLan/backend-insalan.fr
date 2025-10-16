@@ -6,13 +6,16 @@ from django.core.validators import MinLengthValidator
 
 from django.utils.translation import gettext_lazy as _
 
+from . import bracket
+from . import group
 from . import player
 from . import manager
-from . import substitute
-from . import group, bracket, swiss
-
-from . import validators
 from . import payement_status as ps
+from . import substitute
+from . import swiss
+from . import tournament
+from . import validators
+
 
 class Team(models.Model):
     """
@@ -86,10 +89,9 @@ class Team(models.Model):
 
     def __str__(self) -> str:
         """Format this team to a str"""
-        from . import tournament
         if self.tournament is not None:
             if isinstance(self.tournament, tournament.EventTournament):
-                return f"{self.name} ({self.tournament.event})"
+                return f"{self.name} ({self.tournament.event})"  # pylint: disable=no-member
             return f"{self.name} ({self.tournament.name})"
         return f"{self.name} (???)"
 
@@ -181,7 +183,6 @@ class Team(models.Model):
 
     def refresh_validation(self):
         """Refreshes the validation state of a tournament"""
-        from . import tournament
         # Condition 1: ceil((n+1)/2) players have paid/will pay
         if self.validated:
             return
@@ -191,7 +192,7 @@ class Team(models.Model):
             if isinstance(self.tournament, tournament.EventTournament):
                 players = self.get_players()
 
-                game = self.get_tournament().get_game()
+                game = self.get_tournament().get_game()  # pylint: disable=no-member
 
                 threshold = ceil((game.get_players_per_team()+1)/2)
 
@@ -203,7 +204,7 @@ class Team(models.Model):
             elif isinstance(self.tournament, tournament.PrivateTournament):
                 players = self.get_players()
 
-                game = self.get_tournament().get_game()
+                game = self.get_tournament().get_game()  # pylint: disable=no-member
 
                 self.validated = len(players) == game.get_players_per_team()
                 self.save()
@@ -212,8 +213,6 @@ class Team(models.Model):
         """
         Assert that the tournament associated with the provided team is announced
         """
-        from . import tournament
-
         if isinstance(self.tournament, tournament.EventTournament):
             if not validators.tournament_announced(self.tournament):
                 raise ValidationError(

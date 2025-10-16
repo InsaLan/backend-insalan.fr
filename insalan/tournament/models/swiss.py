@@ -39,11 +39,11 @@ class SwissRound(models.Model):
         non_seeded_teams = []
         seeded_teams = []
 
-        for (team, seed) in teams:
+        for team, seed in teams:
             if seed == 0:
-                non_seeded_teams.append((team.id,seed))
+                non_seeded_teams.append((team.id, seed))
             else:
-                seeded_teams.append((team.id,seed))
+                seeded_teams.append((team.id, seed))
 
         seeded_teams.sort(key=lambda e: e[1])
         return [team for (team, _) in seeded_teams + non_seeded_teams]

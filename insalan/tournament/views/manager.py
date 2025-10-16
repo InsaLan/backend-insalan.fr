@@ -13,7 +13,7 @@ from drf_yasg import openapi
 from insalan.user.models import User
 from insalan.tournament import serializers
 
-from ..models import Manager, Team, PaymentStatus, EventTournament
+from ..models import Manager, Team, PaymentStatus
 
 class ManagerRegistration(generics.RetrieveAPIView):
     """Show a manager registration"""

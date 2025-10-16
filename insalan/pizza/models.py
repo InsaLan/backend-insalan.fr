@@ -295,7 +295,7 @@ class Order(models.Model):
     def get_username(self) -> str:
         """Return the username of the user."""
         if self.user_obj:
-            return self.user_obj.username # pylint: disable=no-member
+            return self.user_obj.username  # pylint: disable=no-member
         return self.user
     get_username.short_description = _('Utilisateur')
 

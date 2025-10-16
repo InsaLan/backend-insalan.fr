@@ -272,7 +272,10 @@ class SubstituteRegistrationList(generics.ListCreateAPIView):
         if isinstance(tournament, EventTournament):
             if "password" not in data:
                 raise BadRequest()
-            if not check_password(data["password"], Team.objects.get(pk=data["team"]).get_password()):
+            if not check_password(
+                data["password"],
+                Team.objects.get(pk=data["team"]).get_password(),
+            ):
                 return Response(
                     { "password": _("Mot de passe invalide.")},
                     status=status.HTTP_400_BAD_REQUEST
@@ -280,7 +283,10 @@ class SubstituteRegistrationList(generics.ListCreateAPIView):
         elif tournament.password is not None:
             if "password" not in data:
                 raise BadRequest()
-            if not check_password(data["password"], Team.objects.get(pk=data["team"]).get_password()):
+            if not check_password(
+                data["password"],
+                Team.objects.get(pk=data["team"]).get_password(),
+            ):
                 return Response(
                     { "password": _("Mot de passe invalide.")},
                     status=status.HTTP_400_BAD_REQUEST

@@ -1,9 +1,17 @@
 import math
 
-from ..models import Group, GroupMatch, Team, BaseTournament, Seeding, GroupTiebreakScore, BestofType
+from ..models import (
+    BaseTournament,
+    BestofType,
+    Group,
+    GroupMatch,
+    GroupTiebreakScore,
+    Team,
+    Seeding,
+)
 
 
-def generate_groups(tournament: Tournament, count: int, team_per_group: int,
+def generate_groups(tournament: BaseTournament, count: int, team_per_group: int,
                     names: list[str], use_seeding: bool):
     if use_seeding:
         teams = list(Team.objects.filter(

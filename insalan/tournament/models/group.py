@@ -37,7 +37,8 @@ class Group(models.Model):
 
     def __str__(self) -> str:
         if (isinstance(self.tournament, tournament.EventTournament) and
-            self.tournament.event is not None):
+            self.tournament.event is not None):  # pylint: disable=no-member
+            # pylint: disable-next=no-member
             return f"{self.name} ({self.tournament.name}, {self.tournament.event})"
         return f"{self.name} ({self.tournament.name})"
 
