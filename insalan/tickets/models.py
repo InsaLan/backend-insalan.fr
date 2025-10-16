@@ -67,6 +67,7 @@ class TicketManager(models.Manager):
         page_height = 850
 
         # prevent unloadable models
+        # pylint: disable-next=import-outside-toplevel
         from insalan.tournament.models import Player, Manager, Substitute
 
         # create the pdf
@@ -75,7 +76,7 @@ class TicketManager(models.Manager):
 
         # get and resize (to reduce the size of the pdf) the tournament image
         image = Image.open(path.join(settings.MEDIA_ROOT, str(ticket.tournament.logo)))
-        image.thumbnail((page_width*1.5, page_height*1.5), Image.BILINEAR)
+        image.thumbnail((page_width*1.5, page_height*1.5), Image.Resampling.BILINEAR)
         img = utils.ImageReader(image)
         iw, ih = img.getSize()
         aspect = ih / float(iw)
@@ -102,7 +103,8 @@ class TicketManager(models.Manager):
 
         # encode the url in a qr code
         qr_buffer = BytesIO()
-        url = settings.PROTOCOL + "://" + settings.WEBSITE_HOST + reverse("tickets:get", args=[ticket.user.id, ticket.token])
+        url = settings.PROTOCOL + "://" + settings.WEBSITE_HOST + \
+              reverse("tickets:get", args=[ticket.user.id, ticket.token])
         img = qrcode.make(url)
         img.save(qr_buffer)
         qr = utils.ImageReader(qr_buffer)
@@ -129,14 +131,18 @@ class TicketManager(models.Manager):
         p.rect(page_width/4, 0.117 * page_height, rect_lenght, rect_size, fill=True, stroke=False)
         p.rect(page_width/4, 0.117 * page_height, rect_size, rect_lenght, fill=True, stroke=False)
 
-        p.rect(page_width/4 + 0.49 * page_width, 0.117 * page_height, -rect_lenght, rect_size, fill=True, stroke=False)
-        p.rect(page_width/4 + 0.49 * page_width, 0.117 * page_height, -rect_size, rect_lenght, fill=True, stroke=False)
+        p.rect(page_width/4 + 0.49 * page_width, 0.117 * page_height, -rect_lenght, rect_size,
+               fill=True, stroke=False)
+        p.rect(page_width/4 + 0.49 * page_width, 0.117 * page_height, -rect_size, rect_lenght,
+               fill=True, stroke=False)
 
         p.rect(page_width/4, 0.47 * page_height, rect_lenght, -rect_size, fill=True, stroke=False)
         p.rect(page_width/4, 0.47 * page_height, rect_size, -rect_lenght, fill=True, stroke=False)
 
-        p.rect(page_width/4 + 0.49 * page_width, 0.47 * page_height, -rect_lenght, -rect_size, fill=True, stroke=False)
-        p.rect(page_width/4 + 0.49 * page_width, 0.47 * page_height, -rect_size, -rect_lenght, fill=True, stroke=False)
+        p.rect(page_width/4 + 0.49 * page_width, 0.47 * page_height, -rect_lenght, -rect_size,
+               fill=True, stroke=False)
+        p.rect(page_width/4 + 0.49 * page_width, 0.47 * page_height, -rect_size, -rect_lenght,
+               fill=True, stroke=False)
 
         # write event name
         p.setFont("Helvetica", 0.049 * page_width)
@@ -162,9 +168,11 @@ class TicketManager(models.Manager):
                 user_name = user_name[:20] + "..."
             p.drawCentredString(2.5 * page_width/4, 0.588 * page_height, user_name)
 
-            p.drawCentredString(2.5 * page_width/4, 0.553 * page_height, player.user.first_name + " " + player.user.last_name)
+            p.drawCentredString(2.5 * page_width/4, 0.553 * page_height,
+                                player.user.first_name + " " + player.user.last_name)
         # if ticket is related to a manager
-        manager = Manager.objects.filter(user=ticket.user, team__tournament=ticket.tournament).first()
+        manager = Manager.objects.filter(user=ticket.user,
+                                         team__tournament=ticket.tournament).first()
         if manager:
             p.setFont("Helvetica", 0.033 * page_width)
             p.setFillColorRGB(255 / 255, 255 / 255, 255 / 255)
@@ -176,9 +184,11 @@ class TicketManager(models.Manager):
                 team_name = team_name[:20] + "..."
             p.drawCentredString(2.5 * page_width/4, 0.671 * page_height, team_name)
 
-            p.drawCentredString(2.5 * page_width/4, 0.553 * page_height, manager.user.first_name + " " + manager.user.last_name)
+            p.drawCentredString(2.5 * page_width/4, 0.553 * page_height,
+                                manager.user.first_name + " " + manager.user.last_name)
         # if ticket is related to a substitute
-        substitute = Substitute.objects.filter(user=ticket.user, team__tournament=ticket.tournament).first()
+        substitute = Substitute.objects.filter(user=ticket.user,
+                                               team__tournament=ticket.tournament).first()
         if substitute:
             p.setFont("Helvetica", 0.033 * page_width)
             p.setFillColorRGB(255 / 255, 255 / 255, 255 / 255)
@@ -196,7 +206,8 @@ class TicketManager(models.Manager):
                 user_name = user_name[:20] + "..."
             p.drawCentredString(2.5 * page_width/4, 0.588 * page_height, user_name)
 
-            p.drawCentredString(2.5 * page_width/4, 0.553 * page_height, substitute.user.first_name + " " + substitute.user.last_name)
+            p.drawCentredString(2.5 * page_width/4, 0.553 * page_height,
+                                substitute.user.first_name + " " + substitute.user.last_name)
 
         # write conditions of use in the footer
         p.setFont("Helvetica", 0.02 * page_width)
@@ -204,10 +215,10 @@ class TicketManager(models.Manager):
 
         # split the string in multiple lines
         n = 105
-        CGV = Content.objects.filter(name="ticket_CGV")
-        if CGV:
+        cgv = Content.objects.filter(name="ticket_CGV")
+        if cgv:
             parts = []
-            for i in CGV.first().content.split(" "):
+            for i in cgv.first().content.split(" "):
                 if len(parts) == 0 or len(parts[-1]) + 1 + len(i) > n:
                     parts.append(i)
                 else:
@@ -215,7 +226,8 @@ class TicketManager(models.Manager):
 
             # write the lines
             for i, part in enumerate(parts):
-                p.drawCentredString(page_width/2, 0.094 * page_height - i * 0.0141 * page_height, part)
+                p.drawCentredString(page_width/2,
+                                    0.094 * page_height - i * 0.0141 * page_height, part)
 
         p.showPage()
         p.save()

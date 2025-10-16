@@ -54,6 +54,7 @@ class OrderAdmin(admin.ModelAdmin):
                     payment_method = choice[1]
                     break
             for pizza_order in order.pizzaorder_set.all():
+                # pylint: disable-next=line-too-long
                 export += f"{pizza_order.pizza.name};{price};{payment_method};{order.time_slot.delivery_time}\n"
 
         response = HttpResponse(export, content_type="text/csv")

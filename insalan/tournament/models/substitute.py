@@ -88,7 +88,7 @@ class Substitute(models.Model):
         exist in any team of any tournament of the event
         """
         user = self.user
-        tourney = self.team.get_tournament()
+        tourney = self.team.get_tournament()  # pylint: disable=no-member
         if isinstance(tourney, tournament.EventTournament):
             event = tourney.get_event()
             if not validators.unique_event_registration_validator(user,event, substitute=self.id):

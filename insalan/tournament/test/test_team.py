@@ -177,7 +177,11 @@ class TeamTestCase(TestCase):
 
         # Attempt to register another one
         self.assertRaises(
-            IntegrityError, Team.objects.create, name="LaLooze", tournament=tourney, password=make_password("laloozepwd")
+            IntegrityError,
+            Team.objects.create,
+            name="LaLooze",
+            tournament=tourney,
+            password=make_password("laloozepwd"),
         )
 
     def test_team_name_too_short(self):
@@ -218,7 +222,11 @@ class TournamentTeamEndpoints(TestCase):
             maxTeam=16,
             is_announced=True
         )
-        team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("password"))
+        Team.objects.create(
+            name="La Team Test",
+            tournament=trnm,
+            password=make_password("password"),
+        )
 
         # user_one = User.objects.create_user(
         #     username="testplayer",
@@ -228,7 +236,7 @@ class TournamentTeamEndpoints(TestCase):
         #     last_name="Staff",
         # )
 
-        invalid_email_user: User = User.objects.create_user(
+        User.objects.create_user(
             username="invalidemail",
             email="randomplayer@gmail.com",
             password="IUseAVerySecurePassword",
@@ -402,13 +410,17 @@ class TournamentTeamEndpoints(TestCase):
         trnm = event.get_tournaments()[0]
 
         # Create a team
-        team = Team.objects.create(name="Nom d'équipe 1", tournament=trnm, password=make_password("password"))
+        team = Team.objects.create(
+            name="Nom d'équipe 1",
+            tournament=trnm,
+            password=make_password("password"),
+        )
 
         old_password = team.password
 
         # Create players
         player = Player.objects.create(team=team, user=user, name_in_game="pseudo")
-        player2 = Player.objects.create(team=team, user=user2, name_in_game="pseudo2")
+        Player.objects.create(team=team, user=user2, name_in_game="pseudo2")
 
         # patch data
         data = {
@@ -453,11 +465,15 @@ class TournamentTeamEndpoints(TestCase):
         trnm = event.get_tournaments()[0]
 
         # Create a team
-        team = Team.objects.create(name="Nom d'équipe 1", tournament=trnm, password=make_password("password"))
+        team = Team.objects.create(
+            name="Nom d'équipe 1",
+            tournament=trnm,
+            password=make_password("password"),
+        )
 
         # Create players
-        player = Player.objects.create(team=team, user=user, name_in_game="pseudo")
-        player2 = Player.objects.create(team=team, user=user2, name_in_game="pseudo2")
+        Player.objects.create(team=team, user=user, name_in_game="pseudo")
+        Player.objects.create(team=team, user=user2, name_in_game="pseudo2")
 
         # patch data
         data = {
@@ -478,7 +494,7 @@ class TournamentTeamEndpoints(TestCase):
 
     def test_can_patch_team_manager(self):
         """Test that we can patch a team"""
-        user: User = User.objects.get(username="validemail")
+        User.objects.get(username="validemail")
 
         user2: User = User.objects.create_user(
             username="validemail2",
@@ -492,7 +508,11 @@ class TournamentTeamEndpoints(TestCase):
         trnm = event.get_tournaments()[0]
 
         # Create a team
-        team = Team.objects.create(name="Nom d'équipe 1", tournament=trnm, password=make_password("password"))
+        team = Team.objects.create(
+            name="Nom d'équipe 1",
+            tournament=trnm,
+            password=make_password("password"),
+        )
 
         Manager.objects.create(team=team, user=user2)
 
@@ -520,7 +540,7 @@ class TournamentTeamEndpoints(TestCase):
 
     def test_cant_patch_team_substitute(self):
         """Test that we can't patch a team"""
-        user: User = User.objects.get(username="validemail")
+        User.objects.get(username="validemail")
 
         user2: User = User.objects.create_user(
             username="validemail2",
@@ -535,7 +555,11 @@ class TournamentTeamEndpoints(TestCase):
         trnm = event.get_tournaments()[0]
 
         # Create a team
-        team = Team.objects.create(name="Nom d'équipe 1", tournament=trnm, password=make_password("password"))
+        team = Team.objects.create(
+            name="Nom d'équipe 1",
+            tournament=trnm,
+            password=make_password("password"),
+        )
 
         Substitute.objects.create(team=team, user=user2, name_in_game="pseudo")
 
@@ -578,13 +602,18 @@ class TournamentTeamEndpoints(TestCase):
             Seat.objects.create(event=event, x=1, y=3),
         ])
 
-        team = Team.objects.create(name="Nom d'équipe 1", tournament=trnm2, password=make_password("password"), validated=True)
+        team = Team.objects.create(
+            name="Nom d'équipe 1",
+            tournament=trnm2,
+            password=make_password("password"),
+            validated=True,
+        )
         # Add a player in the team
         pl1 = Player.objects.create(team=team, user=user, name_in_game="pseudo")
         team.captain = pl1
         team.save()
 
-        player = Player.objects.create(team=team, user=user, name_in_game="pseudo")
+        Player.objects.create(team=team, user=user, name_in_game="pseudo")
 
         # patch data
         data = {
@@ -626,9 +655,13 @@ class TournamentTeamEndpoints(TestCase):
             Seat.objects.create(event=event, x=1, y=3),
         ])
 
-        team = Team.objects.create(name="Nom d'équipe 1", tournament=trnm2, password=make_password("password"))
+        team = Team.objects.create(
+            name="Nom d'équipe 1",
+            tournament=trnm2,
+            password=make_password("password"),
+        )
 
-        player = Player.objects.create(team=team, user=user, name_in_game="pseudo")
+        Player.objects.create(team=team, user=user, name_in_game="pseudo")
 
         # patch data
         data = {
@@ -666,9 +699,13 @@ class TournamentTeamEndpoints(TestCase):
             Seat.objects.create(event=event, x=1, y=3),
         ])
 
-        team = Team.objects.create(name="Nom d'équipe 1", tournament=trnm2, password=make_password("password"))
+        team = Team.objects.create(
+            name="Nom d'équipe 1",
+            tournament=trnm2,
+            password=make_password("password"),
+        )
 
-        player = Player.objects.create(team=team, user=user, name_in_game="pseudo")
+        Player.objects.create(team=team, user=user, name_in_game="pseudo")
 
         # invalid slot
         request = self.client.patch(
@@ -698,7 +735,7 @@ class TournamentTeamEndpoints(TestCase):
         self.assertEqual(request.status_code, 400)
 
         # slot already occupied
-        team2 = Team.objects.create(
+        Team.objects.create(
             name="Nom d'équipe 2",
             tournament=trnm2,
             password=make_password("password"),

@@ -1,4 +1,5 @@
-from typing import List, Dict
+from __future__ import annotations
+
 import math
 
 from django.db import models
@@ -65,10 +66,10 @@ class Match(models.Model):
     def get_team_count(self) -> int:
         return len(self.get_teams())
 
-    def get_teams(self) -> List["Team"]:
+    def get_teams(self) -> list["Team"]:
         return self.teams.all()
 
-    def get_teams_id(self) -> List[int]:
+    def get_teams_id(self) -> list[int]:
         return self.teams.all().values_list("id", flat=True)
 
     def get_total_max_score(self) -> int:
@@ -100,25 +101,27 @@ class Match(models.Model):
 
         return False
 
-    def get_scores(self) -> Dict[int,int]:
+    def get_scores(self) -> dict[int, int]:
         scores = {}
 
         for team in self.teams.all():
-            score = Score.objects.get(team=team,match=self).score
+            score = Score.objects.get(team=team, match=self).score
             scores[team.id] = score
 
         return scores
 
-    def get_Scores(self) -> List["Score"]:
-        return Score.objects.filter(team__in=self.get_teams(),match=self)
+    def get_scores_list(self) -> list[Score]:
+        return Score.objects.filter(team__in=self.get_teams(), match=self)
 
-    def get_winners_loosers(self) -> List[List[int]]:
+    def get_winners_loosers(self) -> list[list[int]]:
         winners = []
         loosers = []
         scores = self.get_scores()
 
         for team in self.get_teams_id():
-            if self.bo_type == BestofType.RANKING and scores[team] > 0 and scores[team] <= self.get_winning_score():
+            if (self.bo_type == BestofType.RANKING and
+                scores[team] > 0 and
+                scores[team] <= self.get_winning_score()):
                 winners.append((team,scores[team]))
             elif self.bo_type != BestofType.RANKING and scores[team] >= self.get_winning_score():
                 winners.append((team,scores[team]))
@@ -129,10 +132,10 @@ class Match(models.Model):
             winners.sort(key=lambda e: e[1])
             loosers.sort(key=lambda e: e[1])
         else:
-            winners.sort(key=lambda e: e[1],reverse=True)
-            loosers.sort(key=lambda e: e[1],reverse=True)
+            winners.sort(key=lambda e: e[1], reverse=True)
+            loosers.sort(key=lambda e: e[1], reverse=True)
 
-        return [winner[0] for winner in winners] ,[looser[0] for looser in loosers]
+        return [winner[0] for winner in winners], [looser[0] for looser in loosers]
 
 class Score(models.Model):
     team = models.ForeignKey(
@@ -161,5 +164,6 @@ class Score(models.Model):
     def clean(self):
         if self.score > self.match.get_max_score():
             raise ValidationError({
+                # pylint: disable-next=line-too-long
                 "score" :_(f"Le score est trop grand, il doit être inférieur ou égale à {self.match.get_max_score()}")
             })

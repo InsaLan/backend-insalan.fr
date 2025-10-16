@@ -2,7 +2,6 @@
 NameValidator class
 """
 from django.utils.translation import gettext_lazy as _
-from django.db import models
 
 import requests
 
@@ -16,7 +15,7 @@ class EmptyNameValidator:
     name = _("Pas de Validation de nom")
 
     @staticmethod
-    def is_valid(name: str):
+    def is_valid(_name: str):
         """
         This method is used to validate the name of a player
         Each validators should implement this method
@@ -35,8 +34,10 @@ class LeagueOfLegendsNameValidator:
         """
         This method is used to validate the name of a LoL player
         """
-        ACCOUNTENDPOINT = "https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{}/{}?api_key={}"
-        SUMMONERENDPOINT = "https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{}?api_key={}"
+        # pylint: disable-next=line-too-long
+        accountendpoint: str = "https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{}/{}?api_key={}"
+        # pylint: disable-next=line-too-long
+        summonerendpoint: str = "https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{}?api_key={}"
 
         # Validate the format of the name
         if name.count("#") != 1:
@@ -45,7 +46,7 @@ class LeagueOfLegendsNameValidator:
 
         # Get the puuid associated with the account
         response = requests.get(
-            ACCOUNTENDPOINT.format(gamename, tagline, RIOT_API_KEY),
+            accountendpoint.format(gamename, tagline, RIOT_API_KEY),
             timeout=5
         )
         if response.status_code != 200:
@@ -54,7 +55,7 @@ class LeagueOfLegendsNameValidator:
 
         # Get the league of legends account associated with the puuid
         response = requests.get(
-            SUMMONERENDPOINT.format(puuid, RIOT_API_KEY),
+            summonerendpoint.format(puuid, RIOT_API_KEY),
             timeout=5
         )
         if response.status_code != 200:

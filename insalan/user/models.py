@@ -18,10 +18,8 @@ class UserManager(BaseUserManager):
     Managers the User objects (kind of like a serializer but not quite that)
     """
 
-    # pylint: disable=unused-argument
-    def create_user(
-        self, email, username, password, password_validation=None, **extra_fields
-    ):
+    # pylint: disable-next=unused-argument
+    def create_user(self, email, username, password, password_validation=None, **extra_fields):
         """
         check that all required fields are present and create an user
         """
@@ -49,9 +47,11 @@ class UserManager(BaseUserManager):
         if password is None:
             raise TypeError(_("Les superutilisateur·rices requièrent un mot de passe"))
         user = self.create_user(email, username, password, **extra_fields)
+        # pylint: disable=attribute-defined-outside-init
         user.is_superuser = True
         user.is_staff = True
         user.is_active = True
+        # pylint: enable=attribute-defined-outside-init
         user.user_permissions.add(Permission.objects.get(codename="email_active"))
         user.save()
 

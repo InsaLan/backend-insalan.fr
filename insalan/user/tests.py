@@ -140,10 +140,13 @@ class UserEndToEndTestCase(TestCase):
         Test registering valid users
         """
 
-        def send_valid_data(data, check_fields=[]):
+        def send_valid_data(data, check_fields: list | None = None) -> None:
             """
             Helper function that will request a register and check its output
             """
+            if check_fields is None:
+                check_fields = []
+
             request = self.client.post("/v1/user/register/", data, format="json")
 
             self.assertEqual(request.status_code, 201)
@@ -223,7 +226,9 @@ class UserEndToEndTestCase(TestCase):
         Test that the read-only register fields are indeed read-only
         """
 
-        def send_valid_data(data, check_fields=[]):
+        def send_valid_data(data, check_fields: list | None = None) -> None:
+            if check_fields is None:
+                check_fields = []
             request = self.client.post("/v1/user/register/", data, format="json")
 
             self.assertEqual(request.status_code, 201)
@@ -336,8 +341,8 @@ class UserEndToEndTestCase(TestCase):
             "last_name": "Chronopost",
         }
 
-        self.client.post("/v1/user/register/", data, format="json")
-        user_pk = User.objects.get(username=data["username"]).pk
+        request = self.client.post("/v1/user/register/", data, format="json")
+        self.assertEqual(request.status_code, 201)
         match = re.match(
             ".*https?://[^ ]*/(?P<user_pk>[^ /]*)/(?P<token>[^ /]*)/",
             mail.outbox[0].body,
@@ -822,12 +827,14 @@ class UserEndToEndTestCase(TestCase):
             },
         )
         self.assertEqual(request.status_code, 200)
-        self.assertEqual(User.objects.get(username="randomplayer").status, "Je suis un fournisseur de la base de donnée épicerie")
+        self.assertEqual(User.objects.get(username="randomplayer").status,
+                         "Je suis un fournisseur de la base de donnée épicerie")
 
 
     def test_password_validation_error_are_caught(self):
         """
-        Test that password validation errors does not crashes the server but sends a bad request instead
+        Test that password validation errors does not crashes the server but sends a bad request
+        instead
         """
         c = APIClient()
 

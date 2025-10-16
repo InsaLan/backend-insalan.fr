@@ -5,21 +5,16 @@ import itertools
 import logging
 import uuid
 
-import requests
-
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.core.validators import MinValueValidator
 from rest_framework.serializers import ValidationError
 
-import insalan.settings as app_settings
-
 from insalan.pizza.models import TimeSlot
 from insalan.tournament.models import EventTournament
 from insalan.user.models import User
 
-from .tokens import Token
 
 logger = logging.getLogger(__name__)
 
@@ -219,6 +214,7 @@ class Transaction(models.Model):
 
     def product_callback(self, key):
         """Call a product callback on the list of product"""
+        # pylint: disable-next=import-outside-toplevel
         from insalan.payment.hooks import PaymentCallbackSystem
 
         for proccount in ProductCount.objects.filter(transaction=self):
@@ -232,6 +228,7 @@ class Transaction(models.Model):
 
     def run_prepare_hooks(self) -> bool:
         """Run the preparation hook on all products"""
+        # pylint: disable-next=import-outside-toplevel
         from insalan.payment.hooks import PaymentCallbackSystem
 
         for proccount in ProductCount.objects.filter(transaction=self):
@@ -409,7 +406,7 @@ class DiscountAlreadyUsedError(Exception):
 class Discount(models.Model):
     """
     A discount is a temporary reduction of the price of a product
-    
+
     A discount is tied to a user, a product and can be used only once
     """
 

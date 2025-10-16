@@ -77,8 +77,17 @@ class Player(models.Model):
         """Return the name_in_game of the player"""
         return self.name_in_game
 
-    def get_ongoing_match(self) -> Union["GroupMatch","KnockoutMatch","SwissMatch"]:
-        return list(group.GroupMatch.objects.filter(teams=self.team,status=match.MatchStatus.ONGOING)) + list(bracket.KnockoutMatch.objects.filter(teams=self.team,status=match.MatchStatus.ONGOING)) + list(swiss.SwissMatch.objects.filter(teams=self.team,status=match.MatchStatus.ONGOING))
+    def get_ongoing_match(self) -> Union["GroupMatch", "KnockoutMatch", "SwissMatch"]:
+        return list(group.GroupMatch.objects.filter(
+            teams=self.team,
+            status=match.MatchStatus.ONGOING,
+        )) + list(bracket.KnockoutMatch.objects.filter(
+            teams=self.team,
+            status=match.MatchStatus.ONGOING,
+        )) + list(swiss.SwissMatch.objects.filter(
+            teams=self.team,
+            status=match.MatchStatus.ONGOING
+        ))
 
     def clean(self):
         """
@@ -86,10 +95,10 @@ class Player(models.Model):
         exist in any team of any tournament of the event
         """
         user = self.user
-        tourney = self.team.get_tournament()
+        tourney = self.team.get_tournament()  # pylint: disable=no-member
         if isinstance(tourney, tournament.EventTournament):
             event = tourney.get_event()
-            if not validators.unique_event_registration_validator(user,event,player=self.id):
+            if not validators.unique_event_registration_validator(user, event, player=self.id):
                 raise ValidationError(
                     _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
                 )
@@ -110,10 +119,10 @@ class Player(models.Model):
 
     def save(self,*args,**kwargs):
         super().save(*args,**kwargs)
-        self.team.refresh_validation()
+        self.team.refresh_validation()  # pylint: disable=no-member
 
     def delete(self,*args,**kwargs):
         if self.team.captain == self:
             self.team.captain = None
         super().delete(*args,**kwargs)
-        self.team.refresh_validation()
+        self.team.refresh_validation()  # pylint: disable=no-member

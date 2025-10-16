@@ -1,7 +1,8 @@
 """
 This module contains Django views for ticket-related operations.
 
-It includes views for retrieving ticket details, scanning tickets, and generating QR codes for tickets.
+It includes views for retrieving ticket details, scanning tickets, and
+generating QR codes for tickets.
 """
 import io
 import uuid
@@ -20,7 +21,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
-from insalan.tournament.models import Team, Player, Substitute, Manager, PaymentStatus
+from insalan.tournament.models import Player, Substitute, Manager, PaymentStatus
 from insalan.user.models import User
 from insalan.mailer import MailManager
 from insalan.settings import EMAIL_AUTH
@@ -80,7 +81,7 @@ from .models import Ticket, TicketManager
 )
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
-def get(request: HttpRequest, id: str, token: str) -> JsonResponse:
+def get(request: HttpRequest, user_id: str, token: str) -> JsonResponse:
     """Get ticket details for the given user id and token."""
     try:
         uuid.UUID(hex=token)
@@ -89,7 +90,7 @@ def get(request: HttpRequest, id: str, token: str) -> JsonResponse:
                             status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        user = User.objects.get(id=id)
+        user = User.objects.get(id=user_id)
     except User.DoesNotExist:
         return JsonResponse({'err': _("Utilisateur⋅ice non trouvé⋅e")},
                             status=status.HTTP_404_NOT_FOUND)
@@ -369,10 +370,15 @@ def pay(request: HttpRequest) -> JsonResponse:
                                 status=status.HTTP_400_BAD_REQUEST)
         player.payment_status = PaymentStatus.PAID
         player.save()
-        ticket = Ticket.objects.create(user=player.user, tournament=player.team.tournament, status=Ticket.Status.SCANNED)
+        ticket = Ticket.objects.create(
+            user=player.user,
+            tournament=player.team.tournament,
+            status=Ticket.Status.SCANNED,
+        )
         MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_ticket_mail(player.user, ticket)
         return JsonResponse({'success': True})
-    elif data['type'] == 'substitute':
+
+    if data['type'] == 'substitute':
         try:
             substitute = Substitute.objects.get(id=data['id'])
         except Substitute.DoesNotExist:
@@ -384,9 +390,14 @@ def pay(request: HttpRequest) -> JsonResponse:
         substitute.payment_status = PaymentStatus.PAID
         substitute.save()
         ticket = Ticket.objects.create(user=substitute.user, tournament=substitute.team.tournament)
-        MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_ticket_mail(substitute.user, ticket, status=Ticket.Status.SCANNED)
+        MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_ticket_mail(
+            substitute.user,
+            ticket,
+            status=Ticket.Status.SCANNED,
+        )
         return JsonResponse({'success': True})
-    elif data['type'] == 'manager':
+
+    if data['type'] == 'manager':
         try:
             manager = Manager.objects.get(id=data['id'])
         except Manager.DoesNotExist:
@@ -397,12 +408,16 @@ def pay(request: HttpRequest) -> JsonResponse:
                                 status=status.HTTP_400_BAD_REQUEST)
         manager.payment_status = PaymentStatus.PAID
         manager.save()
-        ticket = Ticket.objects.create(user=manager.user, tournament=manager.team.tournament, status=Ticket.Status.SCANNED)
+        ticket = Ticket.objects.create(
+            user=manager.user,
+            tournament=manager.team.tournament,
+            status=Ticket.Status.SCANNED,
+        )
         MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_ticket_mail(manager.user, ticket)
         return JsonResponse({'success': True})
-    else:
-        return JsonResponse({'err': _("Type invalide")},
-                            status=status.HTTP_400_BAD_REQUEST)
+
+    return JsonResponse({'err': _("Type invalide")}, status=status.HTTP_400_BAD_REQUEST)
+
 
 @swagger_auto_schema(
     method='get',

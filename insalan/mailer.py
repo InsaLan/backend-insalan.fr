@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
-import insalan.settings
+from insalan import settings
 from insalan.user.models import User
 from insalan.tickets.models import TicketManager
 
@@ -31,7 +31,8 @@ class UserMailer:
     """
     Send emails.
     """
-    def __init__(self, mail_host:str, mail_port:str, mail_from: str, mail_pass: str, mail_ssl:bool, test: bool = False):
+    def __init__(self, mail_host: str, mail_port: str, mail_from: str, mail_pass: str,
+                 mail_ssl: bool, test: bool = False) -> None:
         self.mail_host = mail_host
         self.mail_port = mail_port
         self.mail_ssl = mail_ssl
@@ -60,9 +61,9 @@ class UserMailer:
             username=self.mail_from,
         )
         email = EmailMessage(
-            insalan.settings.EMAIL_SUBJECT_PREFIX + _("Confirmez votre courriel"),
+            settings.EMAIL_SUBJECT_PREFIX + _("Confirmez votre courriel"),
             _("Confirmez votre adresse de courriel en cliquant sur ") +
-            f"{insalan.settings.PROTOCOL}://{insalan.settings.WEBSITE_HOST}/verification/{user}/{token}/",
+            f"{settings.PROTOCOL}://{settings.WEBSITE_HOST}/verification/{user}/{token}/",
             self.mail_from,
             [user_object.email],
             connection=connection,
@@ -88,13 +89,13 @@ class UserMailer:
             use_ssl=self.mail_ssl,
         )
         email = EmailMessage(
-            insalan.settings.EMAIL_SUBJECT_PREFIX + _("Demande de ré-initialisation de mot de passe"),
+            settings.EMAIL_SUBJECT_PREFIX + _("Demande de ré-initialisation de mot de passe"),
             _(
                 "Une demande de ré-initialisation de mot de passe a été effectuée "
                 "pour votre compte. Si vous êtes à l'origine de cette demande, "
                 "vous pouvez cliquer sur le lien suivant: "
             ) +
-            f"{insalan.settings.PROTOCOL}://{insalan.settings.WEBSITE_HOST}/reset-password/{user}/{token}/",
+            f"{settings.PROTOCOL}://{settings.WEBSITE_HOST}/reset-password/{user}/{token}/",
             self.mail_from,
             [user_object.email],
             connection=connection,
@@ -117,7 +118,7 @@ class UserMailer:
             use_ssl=self.mail_ssl,
         )
         email = EmailMessage(
-            insalan.settings.EMAIL_SUBJECT_PREFIX + _("Vous avez été exclu.e de votre équipe"),
+            settings.EMAIL_SUBJECT_PREFIX + _("Vous avez été exclu.e de votre équipe"),
             _("Vous avez été exclu.e de l'équipe %s.") % team_name,
             self.mail_from,
             [user_object.email],
@@ -144,7 +145,8 @@ class UserMailer:
             use_ssl=self.mail_ssl,
         )
         email = EmailMessage(
-            insalan.settings.EMAIL_SUBJECT_PREFIX + _("Votre billet pour l'InsaLan"),
+            settings.EMAIL_SUBJECT_PREFIX + _("Votre billet pour l'InsaLan"),
+            # pylint: disable-next=line-too-long
             _("Votre inscription pour l'Insalan a été payée. Votre billet est disponible en pièce jointe. Vous pouvez retrouver davantages d'informations sur l'évènement sur le site internet de l'InsaLan."),
             self.mail_from,
             [user_object.email],
@@ -174,7 +176,7 @@ class UserMailer:
             use_ssl=self.mail_ssl,
         )
         email = EmailMessage(
-            insalan.settings.EMAIL_SUBJECT_PREFIX + title,
+            settings.EMAIL_SUBJECT_PREFIX + title,
             content,
             self.mail_from,
             [user_object.email],
@@ -197,7 +199,7 @@ class UserMailer:
         try:
             self.queue[0].send()
             self.queue.pop(0)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             print("Error sending mail", e, file=sys.stderr)
             mail = self.queue.pop(0)
             self.queue.append(mail)
@@ -216,7 +218,7 @@ class MailManager:
         if mail_from not in MailManager.mailers:
             return None
         return MailManager.mailers[mail_from]
-    
+
     @staticmethod
     def get_default_mailer() -> UserMailer:
         """
@@ -227,11 +229,13 @@ class MailManager:
         return list(MailManager.mailers.values())[0]
 
     @staticmethod
-    def add_mailer(mail_host:str, mail_port: str, mail_from: str, mail_pass: str, mail_ssl:bool, test: bool = False):
+    def add_mailer(mail_host: str, mail_port: str, mail_from: str, mail_pass: str, mail_ssl:bool,
+                   test: bool = False):
         """
         Add a mailer for a specific email address.
         """
-        MailManager.mailers[mail_from] = UserMailer(mail_host, mail_port, mail_from, mail_pass, mail_ssl, test=test)
+        MailManager.mailers[mail_from] = UserMailer(mail_host, mail_port, mail_from, mail_pass,
+                                                    mail_ssl, test=test)
 
     @staticmethod
     def send_queued_mail():
@@ -250,9 +254,10 @@ def start_scheduler():
     print(test, file=sys.stderr)
 
     # Add mailers
-    for auth in insalan.settings.EMAIL_AUTH:
-        mailer = insalan.settings.EMAIL_AUTH[auth]
-        MailManager.add_mailer(mailer["host"], mailer["port"], mailer["from"], mailer["pass"], mailer["ssl"], test=test)
+    for auth in settings.EMAIL_AUTH:
+        mailer = settings.EMAIL_AUTH[auth]
+        MailManager.add_mailer(mailer["host"], mailer["port"], mailer["from"], mailer["pass"],
+                               mailer["ssl"], test=test)
 
     # Start scheduler
     if not test:

@@ -1,9 +1,5 @@
 """Serializers for our objects"""
 
-# Disable lints:
-# "Too few public methods"
-# pylint: disable=R0903
-
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers

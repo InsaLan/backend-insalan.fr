@@ -1,5 +1,5 @@
 import json
-from django.forms import ValidationError
+
 from django.test import TestCase
 
 from insalan.tournament.models import (
@@ -16,7 +16,8 @@ from insalan.tournament.admin import EventForm, TournamentForm, GameForm, TeamFo
 
 class SeatsFieldTestCase(TestCase):
     """
-    Test validation and behavior of the TournamentForm and EventForm with regards to seats and seat slots
+    Test validation and behavior of the TournamentForm and EventForm with regards to seats and seat
+    slots.
     """
 
     def setUp(self) -> None:
@@ -172,8 +173,8 @@ class SeatsFieldTestCase(TestCase):
                 for slot in self.slots1
             },
         }
-        for key in expected:
-            self.assertEqual(form.fields["canvas_params"].initial[key], expected[key])
+        for key, value in expected.items():
+            self.assertEqual(form.fields["canvas_params"].initial[key], value)
 
     def test_tournament_resets_slots_if_event_changed(self):
         evobj2 = Event.objects.create(

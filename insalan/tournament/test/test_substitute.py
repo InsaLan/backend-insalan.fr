@@ -29,7 +29,11 @@ class SubstituteTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
         trnm = EventTournament.objects.create(game=game, event=event)
-        team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
+        team_one = Team.objects.create(
+            name="La Team Test",
+            tournament=trnm,
+            password=make_password("lateamtestpwd"),
+        )
 
         user_one = User.objects.create_user(
             username="testplayer",
@@ -121,7 +125,11 @@ class SubstituteTestCase(TestCase):
             event=event,
             is_announced=True,
         )
-        team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
+        team_one = Team.objects.create(
+            name="La Team Test",
+            tournament=trnm,
+            password=make_password("lateamtestpwd"),
+        )
 
         fella = User.objects.create_user(
             username="fella",
@@ -146,8 +154,16 @@ class SubstituteTestCase(TestCase):
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
         trnm = EventTournament.objects.create(game=game, event=event)
-        team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
-        team_two = Team.objects.create(name="La Team Test 2", tournament=trnm, password=make_password("lateamtest2pwd"))
+        Team.objects.create(
+            name="La Team Test",
+            tournament=trnm,
+            password=make_password("lateamtestpwd"),
+        )
+        team_two = Team.objects.create(
+            name="La Team Test 2",
+            tournament=trnm,
+            password=make_password("lateamtest2pwd"),
+        )
 
         fella = User.objects.create_user(
             username="fella",
@@ -178,8 +194,16 @@ class SubstituteTestCase(TestCase):
             event=event,
             is_announced=True,
         )
-        team_one = Team.objects.create(name="La Team Test", tournament=trnm, password=make_password("lateamtestpwd"))
-        team_two = Team.objects.create(name="La Team Test 2", tournament=trnm_two, password=make_password("lateamtest2pwd"))
+        team_one = Team.objects.create(
+            name="La Team Test",
+            tournament=trnm,
+            password=make_password("lateamtestpwd"),
+        )
+        team_two = Team.objects.create(
+            name="La Team Test 2",
+            tournament=trnm_two,
+            password=make_password("lateamtest2pwd"),
+        )
 
         fella = User.objects.create_user(
             username="fella",

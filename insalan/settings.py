@@ -239,6 +239,7 @@ CORS_ALLOWED_ORIGINS = [
 CSRF_COOKIE_DOMAIN = '.' + getenv("WEBSITE_HOST", "localhost")
 # MAILER SETTINGS - Mail are not sent with test mode
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# pylint: disable-next=line-too-long
 EMAIL_AUTH = json.loads(getenv("MAIL_AUTH", '{"contact": {"from":"noreply@insalan.fr", "pass":"password", "host":"localhost", "port":587, "ssl":true}, "tournament": {"from":"noreply@insalan.fr", "pass":"password", "host":"localhost", "port":587, "ssl":true}}'))
 EMAIL_SUBJECT_PREFIX = "[InsaLan] "
 

@@ -16,10 +16,10 @@ from rest_framework.authentication import SessionAuthentication
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-import insalan.settings as app_settings
-import insalan.payment.serializers as serializers
+from insalan import settings as app_settings
+from insalan.payment import serializers
 
-from .models import Transaction, TransactionStatus, Product, Payment, Discount
+from .models import Transaction, Product, Payment, Discount
 from .tokens import Token
 
 logger = logging.getLogger(__name__)
@@ -303,6 +303,7 @@ class Notifications(APIView):
                     continue
                 if not isinstance(amount, int):
                     logger.warning(
+                        # pylint: disable-next=line-too-long
                         "Amount for payment %s of transaction %s is not an integer. This may be fine, but beware.",
                         pid,
                         order_id,
@@ -332,6 +333,7 @@ class Notifications(APIView):
             pay_obj = pay_objs[0]
             if pay_obj is not None and pay_obj.transaction != trans_obj:
                 logger.error(
+                    # pylint: disable-next=line-too-long
                     "Mismatch! Payment %s is known to belong to transaction %s but HA metadata says %s",
                     pay_id,
                     trans_obj.id,
@@ -401,7 +403,7 @@ class PayView(generics.CreateAPIView):
     queryset = Transaction.objects.all()
     serializer_class = serializers.TransactionSerializer
 
-    def create(self, request):
+    def create(self, request, *args, **kwargs):
         """Process a payment request"""
         token = Token.get_instance()
         payer = request.user
@@ -466,6 +468,7 @@ class PayView(generics.CreateAPIView):
             }
 
             checkout_init = requests.post(
+                # pylint: disable-next=line-too-long
                 f"{app_settings.HA_URL}/v5/organizations/{app_settings.HA_ORG_SLUG}/checkout-intents",
                 data=json.dumps(intent_body),
                 headers=headers,

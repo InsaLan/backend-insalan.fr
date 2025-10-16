@@ -10,15 +10,21 @@ from drf_yasg import openapi
 
 from insalan.tournament import serializers
 
+from ..manage import (
+    create_swiss_rounds,
+    generate_swiss_round_round,
+    launch_match,
+    update_match_score,
+)
 from ..models import MatchStatus, BaseTournament, SwissMatch, validate_match_data, Match
-from ..manage import update_match_score, create_swiss_rounds, launch_match, generate_swiss_round_round
 
 class CreateSwissRounds(generics.CreateAPIView):
     queryset = BaseTournament.objects.all()
     serializer_class = serializers.CreateSwissRoundsSerializer
     permission_classes = [permissions.IsAdminUser]
 
-    def post(self, request, pk, *args, **kwargs):
+    # pylint: disable-next=arguments-differ
+    def post(self, request, pk: int, *args, **kwargs) -> Response:
         request.data["tournament"] = pk
 
         data = self.get_serializer(data=request.data)
@@ -26,7 +32,10 @@ class CreateSwissRounds(generics.CreateAPIView):
 
         create_swiss_rounds(**data.validated_data)
 
-        serialized_data = serializers.SwissRoundField(data.validated_data["tournament"].swissround_set.all(), many=True).data
+        serialized_data = serializers.SwissRoundField(
+            data.validated_data["tournament"].swissround_set.all(),
+            many=True,
+        ).data
 
         return Response(serialized_data, status=status.HTTP_201_CREATED)
 
@@ -34,10 +43,12 @@ class DeleteSwissRounds(generics.DestroyAPIView):
     queryset = BaseTournament.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request, *args, **kwargs) -> Response:
         tournament = self.get_object()
 
-        if SwissMatch.objects.filter(swiss__tournament=tournament).exclude(status=MatchStatus.SCHEDULED).exists():
+        if SwissMatch.objects.filter(swiss__tournament=tournament).exclude(
+            status=MatchStatus.SCHEDULED,
+        ).exists():
             return Response({
                 "error": _("Impossible de supprimer les rondes suisses.\
                     Des matchs sont en cours ou déjà terminés.")
@@ -73,13 +84,15 @@ class GenerateSwissRoundRound(generics.UpdateAPIView):
     permission_classes = [permissions.IsAdminUser]
     serializer_class = serializers.GenerateSwissRoundRoundSerializer
 
-    def patch(self, request, pk, *args, **kargs):
+    # pylint: disable-next=arguments-differ
+    def patch(self, request, pk: int, *args, **kwargs) -> Response:
         request.data["tournament"] = pk
 
         data = self.get_serializer(data=request.data)
         data.is_valid(raise_exception=True)
 
-        updated_matchs = generate_swiss_round_round(data.validated_data["swiss"], data.validated_data["round"])
+        updated_matchs = generate_swiss_round_round(data.validated_data["swiss"],
+                                                    data.validated_data["round"])
 
         updated_matchs_serialized = serializers.SwissMatchSerializer(updated_matchs, many=True)
 
@@ -158,11 +171,13 @@ class SwissMatchScore(generics.GenericAPIView):
             raise PermissionDenied()
 
         if match.status != Match.MatchStatus.ONGOING:
-            return Response({"status" : "Le match n'est pas en cours"}, status = status.HTTP_400_BAD_REQUEST)
+            return Response({"status" : "Le match n'est pas en cours"},
+                            status = status.HTTP_400_BAD_REQUEST)
 
         error_response = validate_match_data(match, data)
         if error_response is not None:
-            return Response({k: _(v) for k,v in error_response.items()},status=status.HTTP_400_BAD_REQUEST)
+            return Response({k: _(v) for k,v in error_response.items()},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         update_match_score(match,data)
 

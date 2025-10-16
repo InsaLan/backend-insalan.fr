@@ -20,7 +20,8 @@ class OngoingTournamentFilter(admin.SimpleListFilter):
     parameter_name = 'tournament'
 
     def lookups(self, request, model_admin):
-        return [(tournament.id, tournament.name) for tournament in EventTournament.objects.filter(event__ongoing=True)]
+        return [(tournament.id, tournament.name)
+                for tournament in EventTournament.objects.filter(event__ongoing=True)]
 
     def queryset(self, request, queryset):
         if self.value():
@@ -43,8 +44,11 @@ class TicketAdmin(admin.ModelAdmin):
         Action to send tickets to mail
         """
         for ticket in queryset:
-            if(ticket.status == Ticket.Status.VALID):
-                MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"]).send_ticket_mail(ticket.user, ticket)
+            if ticket.status == Ticket.Status.VALID:
+                MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"]).send_ticket_mail(
+                    ticket.user,
+                    ticket,
+                )
         messages.info(request, _("Les tickets sélectionnés sont en cours d'envoi."))
 
 admin.site.register(Ticket, TicketAdmin)

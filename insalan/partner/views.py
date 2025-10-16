@@ -1,11 +1,11 @@
+from django.utils.translation import gettext_lazy as _
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from rest_framework import generics, permissions
 
 from .models import Partner
 from .serializers import PartnerSerializer
 
-from django.utils.translation import gettext_lazy as _
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 
 class ReadOnly(permissions.BasePermission):
     def has_permission(self, request, view) -> bool:
@@ -38,7 +38,7 @@ class PartnerList(generics.ListCreateAPIView):
         Create a partner
         """
         return super().post(request, *args, **kwargs)
-    
+
     @swagger_auto_schema(
         responses={
             200: PartnerSerializer,
@@ -74,7 +74,7 @@ class PartnerDetail(generics.RetrieveUpdateDestroyAPIView):
         Get a partner
         """
         return super().get(request, *args, **kwargs)
-    
+
     @swagger_auto_schema(
         responses={
             200: PartnerSerializer,
@@ -132,7 +132,7 @@ class PartnerDetail(generics.RetrieveUpdateDestroyAPIView):
         Partially update a partner
         """
         return super().patch(request, *args, **kwargs)
-    
+
     @swagger_auto_schema(
         responses={
             204: openapi.Schema(

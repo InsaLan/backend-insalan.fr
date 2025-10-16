@@ -43,10 +43,11 @@ if getenv("DEV", "1") == "1":
     from drf_yasg.views import get_schema_view
     from drf_yasg import openapi
 
-    schema_view = get_schema_view(
+    SchemaView = get_schema_view(
         openapi.Info(
             title="InsaLAN API",
             default_version='v1',
+            # pylint: disable-next=line-too-long
             description="Cette API est l'API privée de l'INSALAN. Elle est utilisée pour gérer les inscriptions, les tournois, les partenaires, les utilisateurs, les tickets et le contenu du site l'INSALAN.",
         ),
         public=True,
@@ -54,9 +55,11 @@ if getenv("DEV", "1") == "1":
     )
 
     urlpatterns += [
-        re_path(r'^v1/swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-        path("v1/swagger/", schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-        path("v1/redoc/", schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc-ui'),
+        re_path(r'^v1/swagger(?P<format>\.json|\.yaml)$', SchemaView.without_ui(cache_timeout=0),
+                name='schema-json'),
+        path("v1/swagger/", SchemaView.with_ui('swagger', cache_timeout=0),
+             name='schema-swagger-ui'),
+        path("v1/redoc/", SchemaView.with_ui('redoc', cache_timeout=0), name='schema-redoc-ui'),
     ]
 
 if not int(getenv("DEV", "1")):
