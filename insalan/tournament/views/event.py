@@ -9,7 +9,7 @@ from drf_yasg import openapi
 
 from insalan.tournament import serializers
 
-from ..models import Event, Tournament
+from ..models import Event, EventTournament
 from .permissions import ReadOnly
 
 class EventList(generics.ListCreateAPIView):
@@ -165,7 +165,7 @@ class EventDetails(generics.RetrieveUpdateDestroyAPIView):
 
 class EventDetailsSomeDeref(generics.RetrieveAPIView):
     """Details about an Event that dereferences tournaments, but nothing else"""
-    serializer_class = serializers.TournamentSerializer
+    serializer_class = serializers.EventTournamentSerializer
 
     @swagger_auto_schema(
         responses={
@@ -230,8 +230,8 @@ class EventDetailsSomeDeref(generics.RetrieveAPIView):
         ).data
 
         event_serialized["tournaments"] = [
-            serializers.TournamentSerializer(
-                Tournament.objects.get(id=id), context={"request": request}
+            serializers.EventTournamentSerializer(
+                EventTournament.objects.get(id=id), context={"request": request}
             ).data
             for id in event_serialized["tournaments"]
         ]

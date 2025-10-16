@@ -63,7 +63,9 @@ from .models import (
     SwissRound,
     SwissSeeding,
     Team,
-    Tournament,
+    BaseTournament,
+    PrivateTournament,
+    EventTournament,
     TournamentMailer,
 )
 
@@ -73,7 +75,8 @@ ADMIN_ORDERING += [
     ('tournament', [
         'Event',
         'Game',
-        'Tournament',
+        'PrivateTournament',
+        'EventTournament',
         'Team',
         'Seat',
         'SeatSlot',
@@ -199,7 +202,7 @@ class GameForm(forms.ModelForm):
         # if players_per_team changed, reset associated seat_slots
         new_players_per_team = self.cleaned_data.get("players_per_team")
         if new_players_per_team is not None and new_players_per_team != self.instance.players_per_team:
-            tournaments = Tournament.objects.filter(game=self.instance)
+            tournaments = BaseTournament.objects.filter(game=self.instance)
             seat_slots = SeatSlot.objects.filter(tournament__in=tournaments)
             seat_slots.delete()
 
@@ -354,7 +357,7 @@ class TournamentForm(forms.ModelForm):
         """
         Meta class for the form
         """
-        model = Tournament
+        model = EventTournament
         fields = "__all__"
 
 
@@ -391,7 +394,24 @@ class TournamentAdmin(admin.ModelAdmin):
             'js/tournament_seat_canvas.js',
         )
 
-admin.site.register(Tournament, TournamentAdmin)
+admin.site.register(EventTournament, TournamentAdmin)
+
+class PrivateTournamentAdmin(admin.ModelAdmin):
+    """
+    Admin handler for PrivateTournament
+    """
+    list_display = ("id", "name", "game", "get_occupancy")
+    search_fields = ["name", "game__name"]
+
+    def get_occupancy(self, obj):
+        """
+        Returns the occupancy of the tournament
+        """
+        return str(Team.objects.filter(tournament=obj, validated=True).count()) + " / " + str(obj.maxTeam)
+
+    get_occupancy.short_description = 'Remplissage'
+
+admin.site.register(PrivateTournament, PrivateTournamentAdmin)
 
 class TeamForm(forms.ModelForm):
     """Form for Team"""
@@ -533,7 +553,7 @@ class TeamTournamentFilter(admin.SimpleListFilter):
     parameter_name = 'tournament'
 
     def lookups(self, request, model_admin):
-        return [(tournament.id, tournament.name) for tournament in Tournament.objects.filter(event__ongoing=True)]
+        return [(tournament.id, tournament.name) for tournament in EventTournament.objects.filter(event__ongoing=True)]
 
     def queryset(self, request, queryset):
         if self.value():
@@ -705,7 +725,7 @@ class OngoingTournamentFilter(admin.SimpleListFilter):
     parameter_name = 'tournament'
 
     def lookups(self, request, model_admin):
-        return [(tournament.id, tournament.name) for tournament in Tournament.objects.filter(event__ongoing=True)]
+        return [(tournament.id, tournament.name) for tournament in EventTournament.objects.filter(event__ongoing=True)]
 
     def queryset(self, request, queryset):
         if self.value():
@@ -903,6 +923,28 @@ class ScoreInline(admin.TabularInline):
                 kwargs["queryset"] = Team.objects.filter(tournament=self.parent_model.objects.get(pk=resolved.kwargs["object_id"]).get_tournament(),validated=True).order_by("name")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
+class TournamentEventFilter(admin.SimpleListFilter):
+    """
+    This filter is used to only show tournaments from the selected event
+    """
+    title = _('Event')
+    parameter_name = 'event'
+
+    def lookups(self, request, model_admin):
+        return [(event.id, event.name) for event in Event.objects.all()]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            for obj in queryset:
+                if (
+                    not isinstance(obj.tournament, EventTournament)
+                    or obj.tournament.event.id != int(self.value())
+                ):
+                    queryset = queryset.exclude(id=obj.id)
+            return queryset
+        return queryset
+
+
 class GroupAdmin(admin.ModelAdmin):
     """Admin handler for Groups"""
 
@@ -911,7 +953,7 @@ class GroupAdmin(admin.ModelAdmin):
     inlines = [GroupTeamsInline]
     actions = ["create_group_matchs_action"]
 
-    list_filter = ["tournament","tournament__event","tournament__game"]
+    list_filter = ["tournament",TournamentEventFilter,"tournament__game"]
 
     @admin.action(description=_("Créer les matchs des poules"))
     def create_group_matchs_action(self,request,queryset):
@@ -1013,10 +1055,10 @@ class BracketAdmin(admin.ModelAdmin):
     """Admin handle for Brackets"""
 
     list_display = ("id", "name", "tournament")
-    search_fields = ["name","tournament","tournament__event","tournament__game"]
+    search_fields = ["name","tournament","tournament","tournament__game"]
     actions = ["create_empty_knockout_matchs_action"]
 
-    list_filter = ["tournament","tournament__event","tournament__game"]
+    list_filter = ["tournament",TournamentEventFilter,"tournament__game"]
 
     @admin.action(description=_("Créer les matchs"))
     def create_empty_knockout_matchs_action(self,request,queryset):
@@ -1087,7 +1129,7 @@ class SwissRoundAdmin(admin.ModelAdmin):
     inlines = [SwissSeedingInline]
     actions = ["create_swiss_matchs_action"]
 
-    list_filter = ["tournament","tournament__game","tournament__event"]
+    list_filter = ["tournament","tournament__game",TournamentEventFilter]
 
     @admin.action(description=_("Créer les matchs du système suisse"))
     def create_swiss_matchs_action(self,request,queryset):

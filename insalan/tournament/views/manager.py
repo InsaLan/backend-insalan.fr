@@ -13,7 +13,7 @@ from drf_yasg import openapi
 from insalan.user.models import User
 from insalan.tournament import serializers
 
-from ..models import Manager, Team, PaymentStatus
+from ..models import Manager, Team, PaymentStatus, EventTournament
 
 class ManagerRegistration(generics.RetrieveAPIView):
     """Show a manager registration"""
@@ -147,7 +147,6 @@ class ManagerRegistrationList(generics.ListCreateAPIView):
             "team" not in data
             or "payment_status" in data
             or "ticket" in data
-            or "password" not in data
         ) :
             raise BadRequest()
 

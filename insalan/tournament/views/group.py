@@ -10,7 +10,7 @@ from drf_yasg import openapi
 
 from insalan.tournament import serializers
 
-from ..models import Group, validate_match_data, GroupMatch, MatchStatus, Tournament, Match
+from ..models import Group, validate_match_data, GroupMatch, MatchStatus, BaseTournament, Match
 from ..manage import update_match_score, generate_groups, create_group_matchs, launch_match
 
 from .permissions import ReadOnly
@@ -69,7 +69,7 @@ class GenerateGroups(generics.CreateAPIView):
         return Response(serialized_data, status=status.HTTP_201_CREATED)
 
 class DeleteGroups(generics.DestroyAPIView):
-    queryset = Tournament.objects.all()
+    queryset = BaseTournament.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
     def delete(self, request, *args, **kwargs):
@@ -103,7 +103,7 @@ class GenerateGroupMatchs(generics.CreateAPIView):
         return Response(groups, status=status.HTTP_201_CREATED)
 
 class DeleteGroupMatchs(generics.DestroyAPIView):
-    queryset = Tournament.objects.all()
+    queryset = BaseTournament.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
     def delete(self, request, *args, **kwargs):

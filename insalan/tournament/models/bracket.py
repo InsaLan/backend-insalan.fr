@@ -26,7 +26,7 @@ class Bracket(models.Model):
         verbose_name=_("Nom de l'arbre")
     )
     tournament = models.ForeignKey(
-        "Tournament",
+        "BaseTournament",
         verbose_name=_("Tournoi"),
         on_delete=models.CASCADE
     )

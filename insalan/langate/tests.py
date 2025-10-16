@@ -5,7 +5,7 @@ Langate unit tests
 from django.test import TestCase
 from django.utils.translation import gettext_lazy as _
 
-from insalan.tournament.models import Event, Game, Tournament, Player, Team, Manager, PaymentStatus
+from insalan.tournament.models import Event, Game, EventTournament, Player, Team, Manager, PaymentStatus
 from insalan.user.models import User
 
 from .models import SimplifiedUserData, LangateReply
@@ -136,7 +136,7 @@ class EndpointTests(TestCase):
         evobj = Event.objects.create(name="Insalan XVI", year=2022, month=3, ongoing=True)
         Event.objects.create(name="InsaLan XVII", year=2023, month=2, ongoing=False)
         game_obj = Game.objects.create(name="Test Game", short_name="TG")
-        tourney = Tournament.objects.create(name="Tourney", game=game_obj, event=evobj)
+        tourney = EventTournament.objects.create(name="Tourney", game=game_obj, event=evobj)
         team = Team.objects.create(name="Bloop", tournament=tourney)
         user = User.objects.create_user(username="limefox",
                                         email="test@example.com",
@@ -152,7 +152,7 @@ class EndpointTests(TestCase):
             "password": "bad_pass"
         }
         reply = self.client.post('/v1/langate/authenticate/', data)
-        self.assertEqual(reply.status_code, 200)
+        self.assertEqual(reply.status_code, 400)
 
         ser = reply.data
         self.assertEqual(ser["err"], LangateReply.RegistrationStatus.NOT_PAID)
@@ -174,7 +174,7 @@ class EndpointTests(TestCase):
         evobj = Event.objects.create(name="Insalan XVI", year=2022, month=3, ongoing=True)
         Event.objects.create(name="InsaLan XVII", year=2023, month=2, ongoing=False)
         game_obj = Game.objects.create(name="Test Game", short_name="TG")
-        tourney = Tournament.objects.create(name="Tourney", game=game_obj, event=evobj)
+        tourney = EventTournament.objects.create(name="Tourney", game=game_obj, event=evobj)
         team = Team.objects.create(name="Bloop", tournament=tourney)
         user = User.objects.create_user(username="limefox",
                                         email="test@example.com",
@@ -212,7 +212,7 @@ class EndpointTests(TestCase):
         evobj = Event.objects.create(name="Insalan XVI", year=2022, month=3, ongoing=True)
         Event.objects.create(name="InsaLan XVII", year=2023, month=2, ongoing=False)
         game_obj = Game.objects.create(name="Test Game", short_name="TG")
-        tourney = Tournament.objects.create(name="Tourney", game=game_obj, event=evobj)
+        tourney = EventTournament.objects.create(name="Tourney", game=game_obj, event=evobj)
         team = Team.objects.create(name="Bloop", tournament=tourney)
         user = User.objects.create_user(username="limefox",
                                         email="test@example.com",
@@ -228,7 +228,7 @@ class EndpointTests(TestCase):
             "password": "bad_pass"
         }
         reply = self.client.post('/v1/langate/authenticate/', data)
-        self.assertEqual(reply.status_code, 200)
+        self.assertEqual(reply.status_code, 400)
 
         ser = reply.data
         self.assertEqual(ser["err"], LangateReply.RegistrationStatus.NOT_PAID)
@@ -250,7 +250,7 @@ class EndpointTests(TestCase):
         evobj = Event.objects.create(name="Insalan XVI", year=2022, month=3, ongoing=True)
         Event.objects.create(name="InsaLan XVII", year=2023, month=2, ongoing=False)
         game_obj = Game.objects.create(name="Test Game", short_name="TG")
-        tourney = Tournament.objects.create(name="Tourney", game=game_obj, event=evobj)
+        tourney = EventTournament.objects.create(name="Tourney", game=game_obj, event=evobj)
         team = Team.objects.create(name="Bloop", tournament=tourney)
         user = User.objects.create_user(username="limefox",
                                         email="test@example.com",
@@ -267,7 +267,7 @@ class EndpointTests(TestCase):
             "password": "bad_pass"
         }
         reply = self.client.post('/v1/langate/authenticate/', data)
-        self.assertEqual(reply.status_code, 200)
+        self.assertEqual(reply.status_code, 400)
 
         ser = reply.data
         self.assertEqual(ser["err"], LangateReply.RegistrationStatus.NOT_PAID)
@@ -296,7 +296,7 @@ class EndpointTests(TestCase):
         evobj = Event.objects.create(name="Insalan XVI", year=2022, month=3, ongoing=True)
         Event.objects.create(name="InsaLan XVII", year=2023, month=2, ongoing=False)
         game_obj = Game.objects.create(name="Test Game", short_name="TG")
-        tourney = Tournament.objects.create(name="Tourney", game=game_obj, event=evobj)
+        tourney = EventTournament.objects.create(name="Tourney", game=game_obj, event=evobj)
         team = Team.objects.create(name="Bloop", tournament=tourney)
         user = User.objects.create_user(username="limefox",
                                         email="test@example.com",

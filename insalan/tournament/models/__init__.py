@@ -10,7 +10,7 @@ from .player import Player
 from .substitute import Substitute
 from .swiss import SwissRound, SwissSeeding, SwissMatch
 from .team import Team
-from .tournament import Tournament, in_thirty_days
+from .tournament import BaseTournament, EventTournament, PrivateTournament, in_thirty_days
 from .mailer import TournamentMailer
 from .seat import Seat
 from .seat_slot import SeatSlot

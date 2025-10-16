@@ -14,7 +14,7 @@ from insalan.tournament.models.validators import valid_name
 from insalan.user.models import User
 from insalan.tournament import serializers
 
-from ..models import Substitute, Team, PaymentStatus
+from ..models import Substitute, Team, PaymentStatus, EventTournament
 
 class SubstituteRegistration(generics.RetrieveAPIView):
     """Show a substitute registration"""
@@ -252,7 +252,6 @@ class SubstituteRegistrationList(generics.ListCreateAPIView):
             "team" not in data
             or "payment_status" in data
             or "ticket" in data
-            or "password" not in data
             or "name_in_game" not in data
         ) :
             raise BadRequest()
@@ -268,11 +267,23 @@ class SubstituteRegistrationList(generics.ListCreateAPIView):
                 }
             )
 
-        if not check_password(data["password"], Team.objects.get(pk=data["team"]).get_password()):
-            return Response(
-                { "password": _("Mot de passe invalide.")},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        tournament = Team.objects.get(pk=data["team"]).tournament
+        if isinstance(tournament, EventTournament):
+            if "password" not in data:
+                raise BadRequest()
+            if not check_password(data["password"], Team.objects.get(pk=data["team"]).get_password()):
+                return Response(
+                    { "password": _("Mot de passe invalide.")},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        elif tournament.password is not None:
+            if "password" not in data:
+                raise BadRequest()
+            if not check_password(data["password"], Team.objects.get(pk=data["team"]).get_password()):
+                return Response(
+                    { "password": _("Mot de passe invalide.")},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
         # make the data dict mutable in the case of immutable QueryDict form django test client
         if isinstance(data, QueryDict):

@@ -6,7 +6,7 @@ from insalan.tickets.models import Ticket
 from insalan.user.models import User
 
 from .payement_status import PaymentStatus
-from . import validators
+from . import validators, tournament
 
 class Manager(models.Model):
     """
@@ -69,12 +69,14 @@ class Manager(models.Model):
         exist in any team of any tournament of the event
         """
         user = self.user
-        event = self.get_team().get_tournament().get_event()
-        if not validators.unique_event_registration_validator(user,event, manager=self.id):
-            raise ValidationError(
-                _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
-            )
-        if not validators.tournament_announced(self.team.get_tournament()):
-            raise ValidationError(
-                _("Tournoi non annoncé")
-            )
+        tourney = self.get_team().get_tournament()
+        if isinstance(tourney, tournament.EventTournament):
+            event = tourney.get_event()
+            if not validators.unique_event_registration_validator(user,event, manager=self.id):
+                raise ValidationError(
+                    _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
+                )
+            if not validators.tournament_announced(tourney):
+                raise ValidationError(
+                    _("Tournoi non annoncé")
+                )

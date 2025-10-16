@@ -49,7 +49,7 @@ class Ticket(models.Model):
         default=Status.VALID,
     )
     tournament = models.ForeignKey(
-        "tournament.Tournament", verbose_name=_("Tournoi"),
+        "tournament.EventTournament", verbose_name=_("Tournoi"),
         on_delete=models.CASCADE, blank=False, null=False
     )
 

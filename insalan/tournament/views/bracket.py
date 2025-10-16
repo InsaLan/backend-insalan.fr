@@ -12,7 +12,7 @@ from .permissions import ReadOnly
 
 from insalan.tournament import serializers
 
-from ..models import Bracket, BestofType, KnockoutMatch, MatchStatus, Tournament, validate_match_data, Match
+from ..models import Bracket, BestofType, KnockoutMatch, MatchStatus, BaseTournament, validate_match_data, Match
 from ..manage import create_empty_knockout_matchs, update_match_score, update_next_knockout_match, launch_match
 
 
@@ -35,7 +35,7 @@ class BracketDetails(generics.RetrieveUpdateDestroyAPIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class CreateBracket(generics.CreateAPIView):
-    queryset = Tournament.objects.all()
+    queryset = BaseTournament.objects.all()
     permission_classes = [permissions.IsAdminUser]
     serializer_class = serializers.BracketSerializer
 

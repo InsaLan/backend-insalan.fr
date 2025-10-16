@@ -3,7 +3,7 @@ from django.test import TestCase
 
 from insalan.tournament.models import (
     Event,
-    Tournament,
+    EventTournament,
     Game,
     Seat,
     SeatSlot,
@@ -71,10 +71,10 @@ class SeatSlotFormTestCase(TestCase):
         self.game_one = Game.objects.create(name="Test Game One", players_per_team=5)
         self.game_two = Game.objects.create(name="Test Game Two", players_per_team=3)
 
-        self.tournament = Tournament.objects.create(
+        self.tournament = EventTournament.objects.create(
             name="Tourney 1", game=self.game_one, event=self.evobj
         )
-        self.tournament_two = Tournament.objects.create(
+        self.tournament_two = EventTournament.objects.create(
             name="Tourney 2", game=self.game_two, event=self.evobj_two
         )
 
