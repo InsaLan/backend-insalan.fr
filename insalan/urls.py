@@ -22,7 +22,8 @@ from django.urls import include, path
 from rest_framework import routers
 from rest_framework import permissions
 
-from insalan.mailer import start_scheduler
+from insalan.mailer import start_job
+from . import scheduler
 from insalan.langate import views as langate_views
 router = routers.DefaultRouter()
 # Wire up our API using automatic URL routing.
@@ -68,4 +69,5 @@ if not int(getenv("DEV", "1")):
 # Set admin site url correctly for the admin panel
 admin.site.site_url = getenv("HTTP_PROTOCOL", "http") + "://" + getenv("WEBSITE_HOST", "localhost")
 
-start_scheduler()
+scheduler.start()
+start_job()
