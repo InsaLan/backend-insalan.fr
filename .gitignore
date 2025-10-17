@@ -20,3 +20,6 @@ insalan/static/partners
 
 # Translation files
 locale/**/*.mo
+
+# Runtime stuff
+v1/*

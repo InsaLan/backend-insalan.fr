@@ -88,4 +88,4 @@ jobs:
       - run: python3 manage.py makemigrations
       - run: python3 manage.py migrate
 
-      - run: pytest
+      - run: pytest -n auto

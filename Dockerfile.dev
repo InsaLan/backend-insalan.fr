@@ -1,14 +1,16 @@
 FROM python:3.12-alpine3.19
 
 EXPOSE 8000
-WORKDIR /app
+WORKDIR /backend
 
-RUN apk add --no-cache postgresql15-dev gcc musl-dev
+RUN apk add --no-cache postgresql15-dev gcc musl-dev fish git
 
-COPY requirements.txt /app/
-COPY requirements-dev.txt /app/
+ENV SHELL=/usr/bin/fish
 
-RUN pip install -r /app/requirements.txt
-RUN pip install -r /app/requirements-dev.txt
+COPY requirements.txt /backend/
+COPY requirements-dev.txt /backend/
+
+RUN pip install -r /backend/requirements.txt
+RUN pip install -r /backend/requirements-dev.txt
 
 ENTRYPOINT ["./entrypoint-dev.sh"]
