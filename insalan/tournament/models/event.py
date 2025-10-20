@@ -46,14 +46,17 @@ class Event(models.Model):
     )
     date_start = models.DateField(
         verbose_name=_("Date de début"),
-        null=True
+        null=True,
+        blank=True
     )
     date_end = models.DateField(
         verbose_name=_("Date de fin"),
-        null=True
+        null=True,
+        blank=True
     )
     ongoing = models.BooleanField(
         verbose_name=_("En cours"),
+        help_text=_("Détermine si l'évènement est affiché sur la page principale"),
         default=True
     )
     logo: models.FileField = ImageField(
@@ -102,7 +105,9 @@ class Event(models.Model):
 
     def __str__(self) -> str:
         """Format this Event to a str"""
-        return f"{self.name} ({self.date_start.year}-{self.date_start.month:02d})"
+        if self.date_start:
+            return f"{self.name} ({self.date_start.year}-{self.date_start.month:02d})"
+        return self.name
 
     def get_tournaments_id(self) -> ValuesQuerySet[EventTournament, int]:
         """Return the list of tournaments identifiers for that Event"""
