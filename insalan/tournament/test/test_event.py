@@ -36,20 +36,29 @@ class EventTestCase(TransactionTestCase):
 
     def test_ongoing_events(self) -> None:
         """Test that we can find events that are ongoing"""
-        Event.objects.create(name="InsaLan", date_start=date(2023,8,1), date_end=date(2023,8,2), ongoing=False)
         evobj_one = Event.objects.create(
-            name="InsaLan", date_start=date(2023,9,1), date_end=date(2023,9,2), ongoing=True
+            name="InsaLan 1", date_start=date(2023,8,1), date_end=date(2023,8,2), ongoing=False
         )
-        Event.objects.create(name="InsaLan", date_start=date(2023,10,1), date_end=date(2023,10,2), ongoing=False)
         evobj_two = Event.objects.create(
-            name="InsaLan", date_start=date(2023,11,1), date_end=date(2023,11,2), ongoing=True
+            name="InsaLan 2", date_start=date(2023,9,1), date_end=date(2023,9,2), ongoing=True
         )
 
         query_ongoing = Event.objects.filter(ongoing=True)
-        self.assertEqual(2, len(query_ongoing))
+        self.assertEqual(1, len(query_ongoing))
 
-        self.assertTrue(evobj_one in query_ongoing)
+        self.assertFalse(evobj_one in query_ongoing)
         self.assertTrue(evobj_two in query_ongoing)
+    
+    def test_single_ongoing_event(self):
+        """Test that only one event can be ongoing at a time"""
+        Event.objects.create(
+            name="InsaLan 1", date_start=date(2023,8,1), date_end=date(2023,8,2), ongoing=True
+        )
+        evobj_two = Event(
+            name="InsaLan 2", date_start=date(2023,9,1), date_end=date(2023,9,2), ongoing=True
+        )
+
+        self.assertRaises(ValidationError, evobj_two.full_clean)
 
     def test_non_null_fields(self) -> None:
         """Test that all non-nullable fields should raise errors"""

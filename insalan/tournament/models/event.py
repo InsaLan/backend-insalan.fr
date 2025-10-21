@@ -98,6 +98,12 @@ class Event(models.Model):
     def clean(self):
         super().clean()
         self.clean_date_end()
+        if self.ongoing:
+            ongoing_events = Event.objects.filter(ongoing=True)
+            if self.pk:
+                ongoing_events = ongoing_events.exclude(pk=self.pk)
+            if ongoing_events.exists():
+                raise ValidationError(_("Un autre évènement est déjà en cours. Il ne peut y en avoir qu'un seul."))
 
     def clean_date_end(self):
         if self.date_end and self.date_start and self.date_end < self.date_start:
