@@ -13,6 +13,7 @@ The tests are organized into two classes:
 - `Ticket_TODO`: Contains API endpoint tests for ticket-related operations.
 
 """
+from datetime import date
 import uuid
 
 from django.test import TestCase
@@ -56,7 +57,7 @@ class TicketTestCase(TestCase):
         - `user2`: Cancelled ticket
         """
         event_one = Event.objects.create(
-            name="InsaLan Test", description="Test", month=2023, year=12, ongoing=True
+            name="InsaLan Test", description="Test", date_start=date(2023,3,1), date_end=date(2023,3,2), ongoing=True
         )
         game_one = Game.objects.create(name="Counter-Strike 2", short_name="CS2")
         tourney_one = EventTournament.objects.create(
@@ -111,7 +112,7 @@ class TicketTODO(APITestCase):
             username="admin", password="admin", email="admin@example.com", is_staff=True
         )
         event_one = Event.objects.create(
-            name="InsaLan Test", description="Test", month=2023, year=12, ongoing=True
+            name="InsaLan Test", description="Test", date_start=date(2023,3,1), date_end=date(2023,3,2), ongoing=True
         )
         game_one = Game.objects.create(name="Counter-Strike 2", short_name="CS2")
         EventTournament.objects.create(

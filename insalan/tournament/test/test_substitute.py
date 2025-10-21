@@ -1,5 +1,6 @@
 """Tournament Module Tests"""
 
+from datetime import date
 from django.db.utils import IntegrityError
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
@@ -26,7 +27,7 @@ class SubstituteTestCase(APITestCase):
 
         # Basic setup for a one-tournamnent game event
         event = Event.objects.create(
-            name="InsaLan Test", year=2023, month=3, description=""
+            name="InsaLan Test", date_start=date(2023,3,1), date_end=date(2023,3,2), description=""
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
         trnm = EventTournament.objects.create(game=game, event=event)
@@ -101,7 +102,7 @@ class SubstituteTestCase(APITestCase):
     def test_get_player_team_correct(self) -> None:
         """Check that a substitutes gives the correct team"""
         user = User.objects.get(username="randomplayer")
-        event = Event.objects.get(year=2023, month=3)
+        event = Event.objects.get(date_start=date(2023,3,1))
         trnm = EventTournament.objects.get(event=event)
 
         substitutes = Substitute.objects.filter(user=user)
@@ -118,7 +119,7 @@ class SubstituteTestCase(APITestCase):
         """Test the collision of duplicate substitutes"""
         # Basic setup for a one-tournamnent game event
         event = Event.objects.create(
-            name="InsaLan Test", year=2023, month=8, description=""
+            name="InsaLan Test", date_start=date(2023,8,1), date_end=date(2023,8,2), description=""
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
         trnm = EventTournament.objects.create(
@@ -151,7 +152,7 @@ class SubstituteTestCase(APITestCase):
         """Test the collision of duplicate substitutes"""
         # Basic setup for a one-tournamnent game event
         event = Event.objects.create(
-            name="InsaLan Test", year=2023, month=8, description=""
+            name="InsaLan Test", date_start=date(2023,8,1), date_end=date(2023,8,2), description=""
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
         trnm = EventTournament.objects.create(game=game, event=event)
@@ -182,7 +183,7 @@ class SubstituteTestCase(APITestCase):
         """Test the collision of duplicate substitutes"""
         # Basic setup for a one-tournamnent game event
         event = Event.objects.create(
-            name="InsaLan Test", year=2023, month=8, description=""
+            name="InsaLan Test", date_start=date(2023,8,1), date_end=date(2023,8,2), description=""
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
         trnm = EventTournament.objects.create(
@@ -227,10 +228,10 @@ class SubstituteTestCase(APITestCase):
         of different tournament of different event"""
         # Basic setup for a one-tournamnent game event
         event = Event.objects.create(
-            name="InsaLan Test", year=2023, month=8, description=""
+            name="InsaLan Test", date_start=date(2023,8,1), date_end=date(2023,8,2), description=""
         )
         event_two = Event.objects.create(
-            name="InsaLan Test", year=2023, month=2, description=""
+            name="InsaLan Test", date_start=date(2023,2,1), date_end=date(2023,2,2), description=""
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
         trnm = EventTournament.objects.create(
@@ -264,7 +265,7 @@ class SubstituteTestCase(APITestCase):
         """Verify the behaviour of a substitute when their team gets deleted"""
         user_obj = User.objects.get(username="testplayer")
         event = Event.objects.create(
-            name="InsaLan Test", year=2023, month=8, description=""
+            name="InsaLan Test", date_start=date(2023,8,1), date_end=date(2023,8,2), description=""
         )
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(game=game, event=event)
@@ -283,7 +284,7 @@ class SubstituteTestCase(APITestCase):
         """Verify that a substitute registration is deleted along with its user"""
         user_obj = User.objects.get(username="testplayer")
         event = Event.objects.create(
-            name="InsaLan Test", year=2023, month=8, description=""
+            name="InsaLan Test", date_start=date(2023,8,1), date_end=date(2023,8,2), description=""
         )
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(

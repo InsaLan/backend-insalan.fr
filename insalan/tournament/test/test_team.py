@@ -1,5 +1,6 @@
 """Tournament Team Module Tests"""
 
+from datetime import date
 from django.db.utils import IntegrityError
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
@@ -61,7 +62,7 @@ class TeamTestCase(TestCase):
         )
 
         event_one = Event.objects.create(
-            name="Insalan Test One", year=2023, month=2, description=""
+            name="Insalan Test One", date_start=date(2023,2,1), date_end=date(2023,2,2), description=""
         )
 
         game = Game.objects.create(
@@ -213,7 +214,7 @@ class TournamentTeamEndpoints(TestCase):
 
         # Basic setup for a one-tournamnent game event
         event = Event.objects.create(
-            name="InsaLan Test", year=2023, month=3, description=""
+            name="InsaLan Test", date_start=date(2023,3,1), date_end=date(2023,3,2), description=""
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
         trnm = EventTournament.objects.create(

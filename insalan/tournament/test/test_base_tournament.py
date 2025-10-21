@@ -1,5 +1,6 @@
 """BaseTournament Module Tests"""
 
+from datetime import date
 from io import BytesIO
 
 from django.contrib.auth.hashers import make_password
@@ -50,8 +51,8 @@ class BaseTournamentTestCase(TestCase):
         event_obj = Event.objects.create(
             name="Test Event",
             description="This is a test",
-            year=2021,
-            month=12,
+            date_start=date(2021,12,1),
+            date_end=date(2021,12,2),
             ongoing=False,
         )
         tourney_one = EventTournament.objects.create(
@@ -352,8 +353,8 @@ class TournamentMeTests(APITestCase):
         self.evobj = Event.objects.create(
             name="Test Event",
             description="This is a test",
-            year=2021,
-            month=12,
+            date_start=date(2021,12,1),
+            date_end=date(2021,12,2),
             ongoing=False,
         )
         self.game_obj = Game.objects.create(name="Test Game", short_name="TFG")
