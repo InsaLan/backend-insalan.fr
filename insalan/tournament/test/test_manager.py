@@ -1,5 +1,6 @@
 """Tournament Manager Module Tests"""
 
+from datetime import date
 from django.db.utils import IntegrityError
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
@@ -25,7 +26,7 @@ class ManagerTestCase(TestCase):
 
         # Basic setup for a one-tournamnent game event
         event = Event.objects.create(
-            name="InsaLan Test", year=2023, month=3, description=""
+            name="InsaLan Test", date_start=date(2023,3,1), date_end=date(2023,3,2), description=""
         )
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(game=game, event=event)
@@ -96,7 +97,7 @@ class ManagerTestCase(TestCase):
     def test_get_player_team_correct(self):
         """Check that a manager gives the correct team"""
         user = User.objects.get(username="randomplayer")
-        event = Event.objects.get(year=2023, month=3)
+        event = Event.objects.get(date_start=date(2023,3,1))
         trnm = EventTournament.objects.get(event=event)
 
         managers = Manager.objects.filter(user=user)
@@ -113,7 +114,7 @@ class ManagerTestCase(TestCase):
         """Test the collision of duplicate managers"""
         # Basic setup for a one-tournamnent game event
         event = Event.objects.create(
-            name="InsaLan Test", year=2023, month=8, description=""
+            name="InsaLan Test", date_start=date(2023,8,1), date_end=date(2023,8,2), description=""
         )
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(
@@ -142,7 +143,7 @@ class ManagerTestCase(TestCase):
         """Test the collision of duplicate managers"""
         # Basic setup for a one-tournamnent game event
         event = Event.objects.create(
-            name="InsaLan Test", year=2023, month=8, description=""
+            name="InsaLan Test", date_start=date(2023,8,1), date_end=date(2023,8,2), description=""
         )
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(game=game, event=event)
@@ -165,7 +166,7 @@ class ManagerTestCase(TestCase):
         """Test the collision of duplicate managers"""
         # Basic setup for a one-tournamnent game event
         event = Event.objects.create(
-            name="InsaLan Test", year=2023, month=8, description=""
+            name="InsaLan Test", date_start=date(2023,8,1), date_end=date(2023,8,2), description=""
         )
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(
@@ -202,10 +203,10 @@ class ManagerTestCase(TestCase):
         of different tournament of different event"""
         # Basic setup for a one-tournamnent game event
         event = Event.objects.create(
-            name="InsaLan Test", year=2023, month=8, description=""
+            name="InsaLan Test", date_start=date(2023,8,1), date_end=date(2023,8,2), description=""
         )
         event_two = Event.objects.create(
-            name="InsaLan Test", year=2023, month=2, description=""
+            name="InsaLan Test", date_start=date(2023,2,1), date_end=date(2023,2,2), description=""
         )
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(
@@ -239,7 +240,7 @@ class ManagerTestCase(TestCase):
         """Verify the behaviour of a Manager when their team gets deleted"""
         user_obj = User.objects.get(username="testplayer")
         event = Event.objects.create(
-            name="InsaLan Test", year=2023, month=8, description=""
+            name="InsaLan Test", date_start=date(2023,8,1), date_end=date(2023,8,2), description=""
         )
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(game=game, event=event)
@@ -258,7 +259,7 @@ class ManagerTestCase(TestCase):
         """Verify that a Manager registration is deleted along with its user"""
         user_obj = User.objects.get(username="testplayer")
         event = Event.objects.create(
-            name="InsaLan Test", year=2023, month=8, description=""
+            name="InsaLan Test", date_start=date(2023,8,1), date_end=date(2023,8,2), description=""
         )
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(
