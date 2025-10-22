@@ -1,3 +1,4 @@
+from datetime import date
 from typing import List
 from django.db import models
 from django.core.validators import (
@@ -36,12 +37,14 @@ class Event(models.Model):
     date_start = models.DateField(
         verbose_name=_("Date de début"),
         null=False,
-        blank=False
+        blank=False,
+        default=date(2000, 1, 1)
     )
     date_end = models.DateField(
         verbose_name=_("Date de fin"),
         null=False,
-        blank=False
+        blank=False,
+        default=date(2000, 1, 1)
     )
     ongoing = models.BooleanField(
         verbose_name=_("En cours"),
