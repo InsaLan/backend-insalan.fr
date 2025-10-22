@@ -251,4 +251,4 @@ class EventByYear(generics.ListAPIView):
 
     def get_queryset(self):
         """Return the queryset"""
-        return Event.objects.filter(year=int(self.kwargs["year"]))
+        return Event.objects.filter(date_start__year=int(self.kwargs["year"]))

@@ -1,3 +1,4 @@
+from datetime import date
 import json
 from django.forms import ValidationError
 from django.test import TestCase
@@ -23,8 +24,8 @@ class SeatsFieldTestCase(TestCase):
         self.evobj = Event.objects.create(
             name="Test Event",
             description="This is a test",
-            year=2021,
-            month=12,
+            date_start=date(2021,12,1),
+            date_end=date(2021,12,2),
             ongoing=False,
         )
 
@@ -78,8 +79,8 @@ class SeatsFieldTestCase(TestCase):
         evobj2 = Event.objects.create(
             name="Test Event 2",
             description="This is a test",
-            year=2022,
-            month=12,
+            date_start=date(2021,12,1),
+            date_end=date(2021,12,2),
             ongoing=False,
         )
         seats2 = [
@@ -118,8 +119,8 @@ class SeatsFieldTestCase(TestCase):
             instance=self.evobj,
             data={
                 "name": "Test Event",
-                "year": 2021,
-                "month": 12,
+                "date_start": "2021-12-1",
+                "date_end": "2021-12-2",
                 "seats": json.dumps([(seat.x, seat.y) for seat in self.seats])
             },
         )
@@ -132,8 +133,8 @@ class SeatsFieldTestCase(TestCase):
             instance=self.evobj,
             data={
                 "name": "Test Event",
-                "year": 2021,
-                "month": 12,
+                "date_start": "2021-12-1",
+                "date_end": "2021-12-2",
                 "seats": json.dumps([(seat.x, seat.y) for seat in self.seats[5:]])
             },
         )
@@ -148,8 +149,8 @@ class SeatsFieldTestCase(TestCase):
         ls += [(x, 7) for x in range(1, 7)]
         form = EventForm(instance=self.evobj, data={
             "name": "Test Event",
-            "year": 2021,
-            "month": 12,
+            "date_start": "2021-12-1",
+            "date_end": "2021-12-2",
             "seats": json.dumps(ls)
         })
         form.full_clean()
@@ -179,8 +180,8 @@ class SeatsFieldTestCase(TestCase):
         evobj2 = Event.objects.create(
             name="Test Event 2",
             description="This is a test",
-            year=2022,
-            month=12,
+            date_start=date(2021,12,1),
+            date_end=date(2021,12,2),
             ongoing=False,
         )
 
