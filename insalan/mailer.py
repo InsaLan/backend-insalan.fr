@@ -8,8 +8,6 @@ from django.contrib.auth.tokens import (
 )
 from django.utils.translation import gettext_lazy as _
 
-from apscheduler.schedulers.background import BackgroundScheduler
-
 import insalan.settings
 from insalan.user.models import User
 from insalan.tickets.models import TicketManager
