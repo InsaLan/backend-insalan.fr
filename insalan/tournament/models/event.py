@@ -35,13 +35,13 @@ class Event(models.Model):
     )
     date_start = models.DateField(
         verbose_name=_("Date de début"),
-        null=True,
-        blank=True
+        null=False,
+        blank=False
     )
     date_end = models.DateField(
         verbose_name=_("Date de fin"),
-        null=True,
-        blank=True
+        null=False,
+        blank=False
     )
     ongoing = models.BooleanField(
         verbose_name=_("En cours"),
