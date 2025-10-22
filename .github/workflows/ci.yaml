@@ -1,6 +1,6 @@
 on:
   pull_request:
-    type: [opened]
+    types: [opened]
   push:
     paths:
       - '.github/workflows/ci.yaml'
