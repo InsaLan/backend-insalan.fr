@@ -2,7 +2,8 @@
 This module defines the URL patterns for the payment app.
 
 It includes URL patterns for various views related to payment, such as payment flow, notifications,
-product listing, product details, creating a new product, transaction listing, and transaction details.
+product listing, product details, creating a new product, transaction listing, and transaction
+details.
 """
 from django.urls import path
 

@@ -1,5 +1,4 @@
 from math import ceil
-from typing import List, Dict
 from operator import itemgetter
 
 from django.db import models
@@ -37,7 +36,9 @@ class Group(models.Model):
         ordering = ["tournament","name"]
 
     def __str__(self) -> str:
-        if isinstance(self.tournament, tournament.EventTournament) and self.tournament.event is not None:
+        if (isinstance(self.tournament, tournament.EventTournament) and
+            self.tournament.event is not None):  # pylint: disable=no-member
+            # pylint: disable-next=no-member
             return f"{self.name} ({self.tournament.name}, {self.tournament.event})"
         return f"{self.name} ({self.tournament.name})"
 
@@ -47,52 +48,56 @@ class Group(models.Model):
     def get_tournament(self) -> "BaseTournament":
         return self.tournament
 
-    def get_teams(self) -> List["Team"]:
+    def get_teams(self) -> list["Team"]:
         return team.Team.objects.filter(pk__in=self.get_teams_id())
 
-    def get_teams_id(self) -> List[int]:
+    def get_teams_id(self) -> list[int]:
         return Seeding.objects.filter(group=self).values_list("team", flat=True)
 
-    def get_teams_seeding_by_id(self) -> Dict[int,int]:
+    def get_teams_seeding_by_id(self) -> dict[int, int]:
         return {seeding.team.id: seeding.seeding for seeding in Seeding.objects.filter(group=self)}
 
-    def get_teams_seeding(self) -> Dict["Team",int]:
+    def get_teams_seeding(self) -> dict["Team", int]:
         return {seeding.team: seeding.seeding for seeding in Seeding.objects.filter(group=self)}
-    
-    def get_sorted_teams(self) -> List[int]:
+
+    def get_sorted_teams(self) -> list[int]:
         teams = self.get_teams_seeding()
 
         non_seeded_teams = []
         seeded_teams = []
 
-        for (team, seed) in teams.items():
+        for team_obj, seed in teams.items():
             if seed == 0:
-                non_seeded_teams.append((team.id,seed))
+                non_seeded_teams.append((team_obj.id, seed))
             else:
-                seeded_teams.append((team.id,seed))
+                seeded_teams.append((team_obj.id, seed))
 
         seeded_teams.sort(key=lambda e: e[1])
         return [team for (team, _) in seeded_teams + non_seeded_teams]
 
     def get_round_count(self) -> int:
-        team_per_match = self.tournament.game.team_per_match
+        team_per_match = self.tournament.game.team_per_match  # pylint: disable=no-member
         return ceil(len(self.get_teams_id()) / team_per_match) * team_per_match - 1
 
-    def get_leaderboard(self) -> Dict[int,int]:
+    def get_leaderboard(self) -> dict[int, int]:
         leaderboard = {}
 
-        for team in self.get_teams_id():
-            group_matchs = GroupMatch.objects.filter(teams=team,group=self)
-            score = sum(match.Score.objects.filter(team=team,match__in=group_matchs).values_list("score",flat=True))
-            leaderboard[team] = score
+        for team_id in self.get_teams_id():
+            group_matchs = GroupMatch.objects.filter(teams=team_id, group=self)
+            score = sum(match.Score.objects.filter(
+                team=team_id,
+                match__in=group_matchs,
+            ).values_list("score",flat=True))
+            leaderboard[team_id] = score
 
         return dict(sorted(leaderboard.items(), key=itemgetter(1), reverse=True))
 
-    def get_matchs(self) -> List["GroupMatch"]:
+    def get_matchs(self) -> list["GroupMatch"]:
         return GroupMatch.objects.filter(group=self)
 
-    def get_tiebreaks(self) -> Dict[int,int]:
-        return {tiebreak.team.id: tiebreak.score for tiebreak in GroupTiebreakScore.objects.filter(group=self)}
+    def get_tiebreaks(self) -> dict[int,int]:
+        return {tiebreak.team.id: tiebreak.score
+                for tiebreak in GroupTiebreakScore.objects.filter(group=self)}
 
 
 class Seeding(models.Model):

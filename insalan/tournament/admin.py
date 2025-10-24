@@ -1,9 +1,5 @@
 """Admin handlers for the tournament module"""
 
-# Disable lints:
-# "Too few public methods"
-# pylint: disable=R0903
-
 import json
 from typing import Any
 
@@ -201,7 +197,8 @@ class GameForm(forms.ModelForm):
     def clean(self) -> dict[str, Any] | None:
         # if players_per_team changed, reset associated seat_slots
         new_players_per_team = self.cleaned_data.get("players_per_team")
-        if new_players_per_team is not None and new_players_per_team != self.instance.players_per_team:
+        if (new_players_per_team is not None and
+            new_players_per_team != self.instance.players_per_team):
             tournaments = BaseTournament.objects.filter(game=self.instance)
             seat_slots = SeatSlot.objects.filter(tournament__in=tournaments)
             seat_slots.delete()
@@ -259,6 +256,7 @@ class SeatSlotSelection(forms.Widget):
     Custom widget for listing seat slots and allowing selection
     """
     def render(self, name, value, attrs=None, renderer=None):
+        # pylint: disable=line-too-long
         return (
             '<div style="display: flex; flex-direction: row;" >'
                 '<div style="display: flex; flex-direction: column; justify-content: center;" >'
@@ -269,6 +267,7 @@ class SeatSlotSelection(forms.Widget):
                 '<select id="id_slot_selection" name="slot_selection" multiple />'
             '</div>'
         )
+        # pylint: enable=line-too-long
 
 
 class TournamentForm(forms.ModelForm):
@@ -285,13 +284,16 @@ class TournamentForm(forms.ModelForm):
         seats = Seat.objects.filter(event=self.instance.event)
         seat_slots = SeatSlot.objects.filter(tournament=self.instance)
 
-        other_tournament_slots = SeatSlot.objects.exclude(tournament=self.instance).filter(tournament__event=self.instance.event)
+        other_tournament_slots = SeatSlot.objects.exclude(tournament=self.instance).filter(
+            tournament__event=self.instance.event,
+        )
 
         data = {
             "cellSize": 25,
             "pickedColor": "lightgray",  # css colors
             "eventSeats": [(seat.x, seat.y) for seat in seats],
-            "unavailableSeats": [(seat.x, seat.y) for slot in other_tournament_slots for seat in slot.seats.all()],
+            "unavailableSeats": [(seat.x, seat.y)
+                                 for slot in other_tournament_slots for seat in slot.seats.all()],
             "seatsPerSlot": self.instance.game.players_per_team,  # for client side validation
             "seatSlots": {
                 slot.id: [(seat.x, seat.y) for seat in slot.seats.all()]
@@ -308,7 +310,8 @@ class TournamentForm(forms.ModelForm):
 
         # if game changed, reset seat_slots if different number of players
         new_game = self.cleaned_data.get("game")
-        if new_game is not None and new_game.players_per_team != self.instance.game.players_per_team:
+        if (new_game is not None and
+            new_game.players_per_team != self.instance.game.players_per_team):
             self.cleaned_data["seat_slots"] = {}
 
         seat_slots = self.cleaned_data.get("seat_slots")
@@ -324,7 +327,8 @@ class TournamentForm(forms.ModelForm):
 
             # Ensure that every used seat is used only once
             other_tournament_slots = SeatSlot.objects.exclude(tournament=self.instance)
-            unavailable_seats = set((seat.x, seat.y) for slot in other_tournament_slots for seat in slot.seats.all())
+            unavailable_seats = set((seat.x, seat.y)
+                                    for slot in other_tournament_slots for seat in slot.seats.all())
             all_seats = set(tuple(seat) for seats in seat_slots.values() for seat in seats)
             if unavailable_seats.intersection(all_seats):
                 raise ValidationError(
@@ -334,7 +338,9 @@ class TournamentForm(forms.ModelForm):
             # modification
             old_slots = SeatSlot.objects.filter(tournament=self.instance)
             to_delete = old_slots.exclude(id__in=[int(ss_id) for ss_id in seat_slots])
-            to_create = [seats for slot, seats in seat_slots.items() if int(slot) not in [slot.id for slot in old_slots]]
+            to_create = [seats
+                         for slot, seats in seat_slots.items()
+                         if int(slot) not in [slot.id for slot in old_slots]]
 
             # check remaining slots for modification
             remaining_slots = old_slots.difference(to_delete)
@@ -343,11 +349,13 @@ class TournamentForm(forms.ModelForm):
                 slot.delete()
             for seat_coords in to_create:
                 slot = SeatSlot.objects.create(tournament=self.instance)
-                seats = [Seat.objects.get(event=self.instance.event, x=x, y=y) for x, y in seat_coords]
+                seats = [Seat.objects.get(event=self.instance.event, x=x, y=y)
+                         for x, y in seat_coords]
                 slot.seats.set(seats)
                 slot.save()
             for slot in remaining_slots:
-                seats = [Seat.objects.get(event=self.instance.event, x=x, y=y) for x, y in seat_slots[str(slot.id)]]
+                seats = [Seat.objects.get(event=self.instance.event, x=x, y=y)
+                         for x, y in seat_slots[str(slot.id)]]
                 slot.seats.set(seats)
                 slot.save()
 
@@ -381,7 +389,10 @@ class TournamentAdmin(admin.ModelAdmin):
         """
         Returns the occupancy of the tournament
         """
-        return str(Team.objects.filter(tournament=obj, validated=True).count()) + " / " + str(obj.maxTeam)
+        return str(Team.objects.filter(
+            tournament=obj,
+            validated=True,
+        ).count()) + " / " + str(obj.maxTeam)
 
     get_occupancy.short_description = 'Remplissage'
 
@@ -407,7 +418,10 @@ class PrivateTournamentAdmin(admin.ModelAdmin):
         """
         Returns the occupancy of the tournament
         """
-        return str(Team.objects.filter(tournament=obj, validated=True).count()) + " / " + str(obj.maxTeam)
+        return str(Team.objects.filter(
+            tournament=obj,
+            validated=True,
+        ).count()) + " / " + str(obj.maxTeam)
 
     get_occupancy.short_description = 'Remplissage'
 
@@ -553,7 +567,8 @@ class TeamTournamentFilter(admin.SimpleListFilter):
     parameter_name = 'tournament'
 
     def lookups(self, request, model_admin):
-        return [(tournament.id, tournament.name) for tournament in EventTournament.objects.filter(event__ongoing=True)]
+        return [(tournament.id, tournament.name)
+                for tournament in EventTournament.objects.filter(event__ongoing=True)]
 
     def queryset(self, request, queryset):
         if self.value():
@@ -595,11 +610,11 @@ class TeamAdmin(admin.ModelAdmin):
 
     list_filter = (TeamTournamentFilter,ValidatedFilter)
 
-    def get_quota(self, obj):
-        """
-        Returns the quota of the team
-        """
-        return str(Player.objects.filter(team=obj).count()) + " / " + str(obj.tournament.game.players_per_team)
+    def get_quota(self, obj) -> str:
+        """Returns the quota of the team."""
+        return str(Player.objects.filter(team=obj).count()) + " / " + str(
+            obj.tournament.game.players_per_team,
+        )
 
     get_quota.short_description = 'Nombre de Joueurs'
 
@@ -629,7 +644,7 @@ class TeamAdmin(admin.ModelAdmin):
     change_password_form = AdminPasswordChangeForm
 
     @sensitive_post_parameters_m
-    def team_change_password(self, request, team_id, form_url="", *args, **kwargs):
+    def team_change_password(self, request, team_id, *args, form_url="", **kwargs):
         """Change the password of a team"""
         team = Team.objects.get(pk=team_id)
         if not self.has_change_permission(request, team):
@@ -650,6 +665,7 @@ class TeamAdmin(admin.ModelAdmin):
                     messages.error(request, msg)
                     return HttpResponseRedirect(
                         reverse(
+                            # pylint: disable-next=line-too-long
                             f"{self.admin_site.name}:{team._meta.app_label}_{team._meta.model_name}_change",
                             args=(team.pk,),
                         )
@@ -662,6 +678,7 @@ class TeamAdmin(admin.ModelAdmin):
                 messages.success(request, msg)
                 return HttpResponseRedirect(
                     reverse(
+                        # pylint: disable-next=line-too-long
                         f"{self.admin_site.name}:{team._meta.app_label}_{team._meta.model_name}_change",
                         args=(team.pk,),
                     )
@@ -725,7 +742,8 @@ class OngoingTournamentFilter(admin.SimpleListFilter):
     parameter_name = 'tournament'
 
     def lookups(self, request, model_admin):
-        return [(tournament.id, tournament.name) for tournament in EventTournament.objects.filter(event__ongoing=True)]
+        return [(tournament.id, tournament.name)
+                for tournament in EventTournament.objects.filter(event__ongoing=True)]
 
     def queryset(self, request, queryset):
         if self.value():
@@ -817,35 +835,35 @@ def update_bo_type_action(queryset,new_bo_type):
     queryset.update(bo_type=new_bo_type)
 
 @admin.action(description=_("Passer en Bo1"))
-def update_to_Bo1_action(modeladmin,request,queryset):
+def update_to_bo1_action(modeladmin, request, queryset) -> None:
     update_bo_type_action(queryset,BestofType.BO1)
     modeladmin.message_user(request,_("Les matchs ont bien été mis à jour"))
 
 @admin.action(description=_("Passer en Bo3"))
-def update_to_Bo3_action(modeladmin,request,queryset):
+def update_to_bo3_action(modeladmin, request, queryset) -> None:
     update_bo_type_action(queryset,BestofType.BO3)
     modeladmin.message_user(request,_("Les matchs ont bien été mis à jour"))
 
 @admin.action(description=_("Passer en Bo5"))
-def update_to_Bo5_action(modeladmin,request,queryset):
+def update_to_bo5_action(modeladmin, request, queryset) -> None:
     update_bo_type_action(queryset,BestofType.BO5)
     modeladmin.message_user(request,_("Les matchs ont bien été mis à jour"))
 
 @admin.action(description=_("Passer en Bo7"))
-def update_to_Bo7_action(modeladmin,request,queryset):
+def update_to_bo7_action(modeladmin, request, queryset) -> None:
     update_bo_type_action(queryset,BestofType.BO7)
     modeladmin.message_user(request,_("Les matchs ont bien été mis à jour"))
 
 @admin.action(description=_("Passer à un classement"))
-def update_to_ranking_action(modeladmin,request,queryset):
+def update_to_ranking_action(modeladmin, request, queryset) -> None:
     update_bo_type_action(queryset,BestofType.RANKING)
     modeladmin.message_user(request,_("Les matchs ont bien été mis à jour"))
 
 update_bo_type_action_list = [
-    update_to_Bo1_action,
-    update_to_Bo3_action,
-    update_to_Bo5_action,
-    update_to_Bo7_action,
+    update_to_bo1_action,
+    update_to_bo3_action,
+    update_to_bo5_action,
+    update_to_bo7_action,
     update_to_ranking_action
 ]
 
@@ -856,7 +874,9 @@ class RoundNumberFilter(admin.SimpleListFilter):
     parameter_name = "round_number"
 
     def lookups(self, request, model_admin):
-        return [(str(i),f"Round {i}") for i in set(model_admin.get_queryset(request).values_list("round_number", flat=True))]
+        return [(str(i),f"Round {i}")
+                for i in set(model_admin.get_queryset(request).values_list("round_number",
+                                                                           flat=True))]
 
     def queryset(self, request, queryset):
         if self.value():
@@ -905,11 +925,17 @@ class GroupTeamsInline(admin.TabularInline):
     model = Seeding
     extra = 1
 
-    def formfield_for_foreignkey(self, db_field: ForeignKey[Any], request: HttpRequest | None, **kwargs: Any) -> ModelChoiceField | None:
+    def formfield_for_foreignkey(self, db_field: ForeignKey[Any], request: HttpRequest | None,
+                                 **kwargs: Any) -> ModelChoiceField | None:
         if db_field.name == "team":
             resolved = resolve(request.path_info)
             if "object_id" in resolved.kwargs:
-                kwargs["queryset"] = Team.objects.filter(tournament=self.parent_model.objects.get(pk=resolved.kwargs["object_id"]).tournament,validated=True).order_by("name")
+                kwargs["queryset"] = Team.objects.filter(
+                    tournament=self.parent_model.objects.get(
+                        pk=resolved.kwargs["object_id"],
+                    ).tournament,
+                    validated=True,
+                ).order_by("name")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 class ScoreInline(admin.TabularInline):
@@ -920,7 +946,12 @@ class ScoreInline(admin.TabularInline):
         if db_field.name == "team":
             resolved = resolve(request.path_info)
             if "object_id" in resolved.kwargs:
-                kwargs["queryset"] = Team.objects.filter(tournament=self.parent_model.objects.get(pk=resolved.kwargs["object_id"]).get_tournament(),validated=True).order_by("name")
+                kwargs["queryset"] = Team.objects.filter(
+                    tournament=self.parent_model.objects.get(
+                        pk=resolved.kwargs["object_id"],
+                    ).get_tournament(),
+                    validated=True,
+                ).order_by("name")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 class TournamentEventFilter(admin.SimpleListFilter):
@@ -960,7 +991,12 @@ class GroupAdmin(admin.ModelAdmin):
         for group in queryset:
             matchs_status = GroupMatch.objects.filter(group=group).values_list("status", flat=True)
             if MatchStatus.ONGOING in matchs_status or MatchStatus.COMPLETED in matchs_status:
-                self.message_user(request,_("Impossible de créer les matchs, des matchs existent déjà et sont en cours ou terminés."),messages.ERROR)
+                self.message_user(
+                    request,
+                    # pylint: disable-next=line-too-long
+                    _("Impossible de créer les matchs, des matchs existent déjà et sont en cours ou terminés."),
+                    messages.ERROR,
+                )
                 return
 
             create_group_matchs(group)
@@ -987,13 +1023,24 @@ class GroupMatchAdmin(admin.ModelAdmin):
         for match in queryset:
             if match.status != MatchStatus.COMPLETED:
                 for team in match.get_teams():
-                    team_matchs = GroupMatch.objects.filter(teams=team,round_number__lt=match.round_number)
+                    team_matchs = GroupMatch.objects.filter(
+                        teams=team,round_number__lt=match.round_number,
+                    )
                     for team_match in team_matchs:
                         if team_match.status == MatchStatus.ONGOING:
-                            self.message_user(request,_(f"L'équipe {team.name} est encore dans un match en cours"), messages.ERROR)
+                            self.message_user(
+                                request,
+                                _(f"L'équipe {team.name} est encore dans un match en cours"),
+                                messages.ERROR,
+                            )
                             return
                         if team_match.status == MatchStatus.SCHEDULED:
-                            self.message_user(request,_(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"), messages.ERROR)
+                            self.message_user(
+                                request,
+                                # pylint: disable-next=line-too-long
+                                _(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"),
+                                messages.ERROR,
+                            )
                             return
 
                 launch_match(match)
@@ -1025,8 +1072,10 @@ class MailerAdmin(admin.ModelAdmin):
     # replace the list url with the add one
     def get_urls(self):
         custom_urls = [
-            path('add/', self.admin_site.admin_view(self.add_view), name='tournament_tournamentmailer_add'),
-            path('', self.admin_site.admin_view(self.changelist_view), name='tournament_tournamentmailer_changelist'),
+            path('add/', self.admin_site.admin_view(self.add_view),
+                 name='tournament_tournamentmailer_add'),
+            path('', self.admin_site.admin_view(self.changelist_view),
+                 name='tournament_tournamentmailer_changelist'),
         ]
         return custom_urls
 
@@ -1063,45 +1112,61 @@ class BracketAdmin(admin.ModelAdmin):
     @admin.action(description=_("Créer les matchs"))
     def create_empty_knockout_matchs_action(self,request,queryset):
         for bracket in queryset:
-            if any([MatchStatus.SCHEDULED != m.status for m in KnockoutMatch.objects.filter(bracket=bracket)]):
-                self.message_user(request,_("Des matchs existent déjà et sont en cours ou terminés"))
+            if any(MatchStatus.SCHEDULED != m.status
+                   for m in KnockoutMatch.objects.filter(bracket=bracket)):
+                self.message_user(request,
+                                  _("Des matchs existent déjà et sont en cours ou terminés"))
 
             create_empty_knockout_matchs(bracket)
             self.message_user(request,_("Matchs créer avec succès"))
 
     @admin.action(description=_("Remplir les matchs"))
-    def fill_knockout_matchs_action(self,request,queryset):
-        for bracket in queryset:
-            # TODO: Fix this
-            # fill_knockout_matchs(bracket)
-            pass
+    def fill_knockout_matchs_action(self, request, queryset):
+        # for bracket in queryset:
+        #     # TODO: Fix this
+        #     fill_knockout_matchs(bracket)
+        #     pass
+        pass
 
 admin.site.register(Bracket, BracketAdmin)
 
 class KnockoutMatchAdmin(admin.ModelAdmin):
     """Admin handle for Knockout matchs"""
 
-    list_display = ("id", "bracket", "status","bracket_set","round_number","index_in_round","bo_type",)
+    list_display = ("id", "bracket", "status", "bracket_set", "round_number", "index_in_round",
+                    "bo_type")
     inlines = [ScoreInline]
     actions = [
         "launch_knockout_matchs_action",
         *update_bo_type_action_list
     ]
 
-    list_filter = [ "bracket__tournament", "bracket", "bracket_set", BracketMatchFilter, "index_in_round", "status"]
+    list_filter = ["bracket__tournament", "bracket", "bracket_set", BracketMatchFilter,
+                   "index_in_round", "status"]
 
     @admin.action(description=_("Lancer les matchs"))
-    def launch_knockout_matchs_action(self,request,queryset):
+    def launch_knockout_matchs_action(self, request,queryset):
         for match in queryset:
             if match.status != MatchStatus.COMPLETED:
                 for team in match.get_teams():
-                    team_matchs = KnockoutMatch.objects.filter(teams=team,round_number__gt=match.round_number)
+                    team_matchs = KnockoutMatch.objects.filter(
+                        teams=team,round_number__gt=match.round_number,
+                    )
                     for team_match in team_matchs:
                         if team_match.status == MatchStatus.ONGOING:
-                            self.message_user(request,_(f"L'équipe {team.name} est encore dans un match en cours"), messages.ERROR)
+                            self.message_user(
+                                request,
+                                _(f"L'équipe {team.name} est encore dans un match en cours"),
+                                messages.ERROR,
+                            )
                             return
                         if team_match.status == MatchStatus.SCHEDULED:
-                            self.message_user(request,_(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"), messages.ERROR)
+                            self.message_user(
+                                request,
+                                # pylint: disable-next=line-too-long
+                                _(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"),
+                                messages.ERROR,
+                            )
                             return
 
                 launch_match(match)
@@ -1114,11 +1179,14 @@ class SwissSeedingInline(admin.TabularInline):
     model = SwissSeeding
     extra = 0
 
-    def formfield_for_foreignkey(self, db_field: ForeignKey[Any], request: HttpRequest | None, **kwargs: Any) -> ModelChoiceField | None:
+    def formfield_for_foreignkey(self, db_field: ForeignKey[Any], request: HttpRequest | None,
+                                 **kwargs: Any) -> ModelChoiceField | None:
         if db_field.name == "team":
             resolved = resolve(request.path_info)
             if "object_id" in resolved.kwargs:
-                kwargs["queryset"] = Team.objects.filter(tournament=self.parent_model.objects.get(pk=resolved.kwargs["object_id"]).tournament).order_by("name")
+                kwargs["queryset"] = Team.objects.filter(tournament=self.parent_model.objects.get(
+                    pk=resolved.kwargs["object_id"],
+                ).tournament).order_by("name")
         return super().formfield_for_foreignkey(db_field,request,**kwargs)
 
 class SwissRoundAdmin(admin.ModelAdmin):
@@ -1135,8 +1203,9 @@ class SwissRoundAdmin(admin.ModelAdmin):
     def create_swiss_matchs_action(self,request,queryset):
         for swiss in queryset:
             matchs_status = SwissMatch.objects.filter(swiss=swiss).values_list("status", flat=True)
-            if any([status != MatchStatus.SCHEDULED for status in matchs_status]):
-                self.message_user(request,_("Des matchs existent déjà et sont en cours ou terminés"))
+            if any(status != MatchStatus.SCHEDULED for status in matchs_status):
+                self.message_user(request,
+                                  _("Des matchs existent déjà et sont en cours ou terminés"))
                 return
 
             create_swiss_matchs(swiss)
@@ -1161,13 +1230,23 @@ class SwissMatchAdmin(admin.ModelAdmin):
         for match in queryset:
             if match.status != MatchStatus.COMPLETED:
                 for team in match.get_teams():
-                    team_matchs = SwissMatch.objects.filter(teams=team,round_number__lt=match.round_number)
+                    team_matchs = SwissMatch.objects.filter(teams=team,
+                                                            round_number__lt=match.round_number)
                     for team_match in team_matchs:
                         if team_match.status == MatchStatus.ONGOING:
-                            self.message_user(request,_(f"L'équipe {team.name} est encore dans un match en cours"), messages.ERROR)
+                            self.message_user(
+                                request,
+                                _(f"L'équipe {team.name} est encore dans un match en cours"),
+                                messages.ERROR,
+                            )
                             return
                         if team_match.status == MatchStatus.SCHEDULED:
-                            self.message_user(request,_(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"), messages.ERROR)
+                            self.message_user(
+                                request,
+                                # pylint: disable-next=line-too-long
+                                _(f"L'équipe {team.name} n'a pas encore joué un ou des matchs des rounds précédent"),
+                                messages.ERROR,
+                            )
                             return
 
                 launch_match(match)
@@ -1208,7 +1287,7 @@ class SeatSlotForm(forms.ModelForm):
         # Ensure that the seats are all in the same event
         if seats:
             event = seats.first().event
-            if not all([seat.event.id == event.id for seat in seats]):
+            if not all(seat.event.id == event.id for seat in seats):
                 raise ValidationError(
                 _("Les places doivent être dans le même événement")
                 )

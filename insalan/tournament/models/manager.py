@@ -69,7 +69,7 @@ class Manager(models.Model):
         exist in any team of any tournament of the event
         """
         user = self.user
-        tourney = self.get_team().get_tournament()
+        tourney = self.get_team().get_tournament()  # pylint: disable=no-member
         if isinstance(tourney, tournament.EventTournament):
             event = tourney.get_event()
             if not validators.unique_event_registration_validator(user,event, manager=self.id):
@@ -77,6 +77,4 @@ class Manager(models.Model):
                     _("Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement")
                 )
             if not validators.tournament_announced(tourney):
-                raise ValidationError(
-                    _("Tournoi non annoncé")
-                )
+                raise ValidationError(_("Tournoi non annoncé"))

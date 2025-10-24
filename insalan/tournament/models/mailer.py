@@ -8,7 +8,7 @@ from insalan.settings import EMAIL_AUTH
 class TournamentMailer(models.Model):
     """
     The TournamentMailer model is used to send emails to players of a tournament with filters.
-    
+
     The filters are:
     - tournament: the tournament of the players
     - team_validated: if the players are in validated teams
@@ -73,10 +73,11 @@ class TournamentMailer(models.Model):
         upload_to="mail-attachments",
     )
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         """Override default save of TournamentMailer"""
         if self.mail != "":
-            return super().save(*args, **kwargs)
+            super().save(*args, **kwargs)
+            return
         # get every players of the ongoing event
         players = Player.objects.filter(team__tournament__event__ongoing=True)
         # if the tournament is specified, filter by tournament

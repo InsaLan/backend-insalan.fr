@@ -106,7 +106,7 @@ class SubstituteRegistration(generics.RetrieveAPIView):
             }, status=status.HTTP_403_FORBIDDEN)
 
         if "name_in_game" in data:
-            if(valid_name(substitute.team.tournament.game, data["name_in_game"])):
+            if valid_name(substitute.team.tournament.game, data["name_in_game"]):
                 substitute.name_in_game = data["name_in_game"]
             else:
                 return Response(
@@ -116,7 +116,7 @@ class SubstituteRegistration(generics.RetrieveAPIView):
 
         try:
             substitute.save()
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             return Response(
                 {"player": str(exc)},
                 status=status.HTTP_400_BAD_REQUEST
@@ -134,6 +134,7 @@ class SubstituteRegistration(generics.RetrieveAPIView):
                 properties={
                     "err": openapi.Schema(
                         type=openapi.TYPE_STRING,
+                        # pylint: disable-next=line-too-long
                         description=_("Vous n'avez pas la permission de supprimer cette inscription")
                     )
                 }
@@ -271,7 +272,10 @@ class SubstituteRegistrationList(generics.ListCreateAPIView):
         if isinstance(tournament, EventTournament):
             if "password" not in data:
                 raise BadRequest()
-            if not check_password(data["password"], Team.objects.get(pk=data["team"]).get_password()):
+            if not check_password(
+                data["password"],
+                Team.objects.get(pk=data["team"]).get_password(),
+            ):
                 return Response(
                     { "password": _("Mot de passe invalide.")},
                     status=status.HTTP_400_BAD_REQUEST
@@ -279,7 +283,10 @@ class SubstituteRegistrationList(generics.ListCreateAPIView):
         elif tournament.password is not None:
             if "password" not in data:
                 raise BadRequest()
-            if not check_password(data["password"], Team.objects.get(pk=data["team"]).get_password()):
+            if not check_password(
+                data["password"],
+                Team.objects.get(pk=data["team"]).get_password(),
+            ):
                 return Response(
                     { "password": _("Mot de passe invalide.")},
                     status=status.HTTP_400_BAD_REQUEST

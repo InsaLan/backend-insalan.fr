@@ -1,9 +1,6 @@
 """Serializers for our objects"""
 
-# Disable lints:
-# "Too few public methods"
-# pylint: disable=R0903
-
+import sys
 from collections import Counter
 from math import ceil
 
@@ -184,7 +181,7 @@ class GroupSerializer(serializers.ModelSerializer):
         tiebreak_scores: dict[str, int] = data.pop("get_tiebreaks", {})
 
         for team in teams:
-            if (Seeding.objects.filter(team=team).exclude(group=self.instance).exists()):
+            if Seeding.objects.filter(team=team).exclude(group=self.instance).exists():
                 raise serializers.ValidationError(_(f"L'équipe {Team.objects.get(pk=team).name}\
                     est déjà dans une autre poule."))
 
@@ -201,7 +198,9 @@ class GroupSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(_("Les seeds doivent être unique."))
 
         if max(seeding.values()) > len(teams):
-            raise serializers.ValidationError(_(f"Le seed maximum ne peut pas être supérieur à {len(teams)}."))
+            raise serializers.ValidationError(
+                _(f"Le seed maximum ne peut pas être supérieur à {len(teams)}.")
+            )
 
         data["teams"] = teams
         data["seeding"] = { int(k): v for k,v in seeding.items() }
@@ -228,7 +227,9 @@ class GroupSerializer(serializers.ModelSerializer):
         for old_seed in Seeding.objects.filter(group=instance).exclude(team__in=teams):
             old_seed.delete()
 
-        for old_tiebreak in GroupTiebreakScore.objects.filter(group=instance).exclude(team__in=teams):
+        for old_tiebreak in GroupTiebreakScore.objects.filter(group=instance).exclude(
+            team__in=teams,
+        ):
             old_tiebreak.delete()
 
         return instance
@@ -515,7 +516,6 @@ class CasterSerializer(serializers.ModelSerializer):
 
 
 class EventSerializer(serializers.ModelSerializer):
-    # pylint: disable=R0903
     """Serializer for the tournament Event"""
 
     tournaments = serializers.ListField(required=False, read_only=True, source="get_tournaments_id")
@@ -564,7 +564,7 @@ class EventTournamentSerializer(serializers.ModelSerializer):
     casters = CasterSerializer(many=True, source="get_casters")
     groups = serializers.ListField(required=False, source="get_groups_id")
     brackets = serializers.ListField(required=False, source="get_brackets_id")
-    swissRounds = serializers.ListField(required=False, source="get_swissRounds_id")
+    swissRounds = serializers.ListField(required=False, source="get_swiss_rounds_id")
 
     class Meta:
         """Meta options of the serializer"""
@@ -595,7 +595,7 @@ class BaseTournamentSerializer(serializers.ModelSerializer):
     validated_teams = serializers.IntegerField(read_only=True, source="get_validated_teams")
     groups = serializers.ListField(required=False, source="get_groups_id")
     brackets = serializers.ListField(required=False, source="get_brackets_id")
-    swissRounds = serializers.ListField(required=False, source="get_swissRounds_id")
+    swissRounds = serializers.ListField(required=False, source="get_swiss_rounds_id")
 
     class Meta:
         """Meta options of the serializer"""
@@ -642,8 +642,11 @@ class TeamSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(_("Ce tournoi n'est pas encore annoncé"))
         if tournament_registration_full(data["tournament"]):
             raise serializers.ValidationError(_("Ce tournoi est complet"))
-        if "password" in data and not private_tournament_password_matching(data["tournament"], data["password"]):
-            raise serializers.ValidationError(_("Le mot de passe ne correspond pas au mot de passe du tournoi"))
+        if ("password" in data and
+            not private_tournament_password_matching(data["tournament"], data["password"])):
+            raise serializers.ValidationError(
+                _("Le mot de passe ne correspond pas au mot de passe du tournoi")
+            )
         for user in (
             data.get("get_players_id", [])
             + data.get("get_managers_id", [])
@@ -1162,8 +1165,8 @@ class TeamSeedListSerializer(serializers.ListSerializer):
             try:
                 team = teams.get(id=team_id)
                 ret.append(self.child.update(team, seed))
-            except:
-                pass
+            except Exception as exception:  # pylint: disable=broad-exception-caught
+                print(exception, file=sys.stderr)
 
         return ret
 

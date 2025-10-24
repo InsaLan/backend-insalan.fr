@@ -61,7 +61,8 @@ class TeamList(generics.ListCreateAPIView):
                 }
             )
 
-        if self.queryset.filter(name__exact=request.data["name"], tournament=request.data["tournament"]).exists():
+        if self.queryset.filter(name__exact=request.data["name"],
+                                tournament=request.data["tournament"]).exists():
             return Response({
                 "name": _("Ce nom d'équipe est déjà pris.")
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -110,9 +111,7 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
         }
     )
     def patch(self, request, *args, **kwargs):
-        """
-        Patch a team
-        """
+        """Patch a team."""
         user = request.user
         data = request.data
 
@@ -157,8 +156,12 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
             for uid in removed:
                 player = Player.objects.get(id=uid)
                 # if player hasn't paid, remove him from the team
-                if player.as_user().id != user.id and player.payment_status == PaymentStatus.NOT_PAID:
-                    MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"]).send_kick_mail(player.as_user(), team.name)
+                if (player.as_user().id != user.id and
+                    player.payment_status == PaymentStatus.NOT_PAID):
+                    MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"]).send_kick_mail(
+                        player.as_user(),
+                        team.name,
+                    )
                     player.delete()
 
         # manager edit
@@ -169,8 +172,12 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
             for uid in removed:
                 manager = Manager.objects.get(id=uid)
                 # if manager hasn't paid, remove him from the team
-                if manager.as_user().id != user.id and manager.payment_status == PaymentStatus.NOT_PAID:
-                    MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"]).send_kick_mail(manager.as_user(), team.name)
+                if (manager.as_user().id != user.id and
+                    manager.payment_status == PaymentStatus.NOT_PAID):
+                    MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"]).send_kick_mail(
+                        manager.as_user(),
+                        team.name,
+                    )
                     manager.delete()
 
         # substitute edit
@@ -181,8 +188,12 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
             for uid in removed:
                 substitute = Substitute.objects.get(id=uid)
                 # if substitute hasn't paid, remove him from the team
-                if substitute.as_user().id != user.id and substitute.payment_status == PaymentStatus.NOT_PAID:
-                    MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"]).send_kick_mail(substitute.as_user(), team.name)
+                if (substitute.as_user().id != user.id and
+                    substitute.payment_status == PaymentStatus.NOT_PAID):
+                    MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"]).send_kick_mail(
+                        substitute.as_user(),
+                        team.name,
+                    )
                     substitute.delete()
 
         if "seat_slot" in data:
@@ -222,17 +233,29 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
         players = []
         for player in serializer["players"]:
             players.append(Player.objects.get(id=player))
-        serializer["players"] = serializers.FullDerefPlayerSerializer(players, many=True, context={"request": request}).data
+        serializer["players"] = serializers.FullDerefPlayerSerializer(
+            players,
+            many=True,
+            context={"request": request},
+        ).data
 
         managers = []
         for manager in serializer["managers"]:
             managers.append(Manager.objects.get(id=manager))
-        serializer["managers"] = serializers.FullDerefManagerSerializer(managers, many=True, context={"request": request}).data
+        serializer["managers"] = serializers.FullDerefManagerSerializer(
+            managers,
+            many=True,
+            context={"request": request},
+        ).data
 
         substitutes = []
         for substitute in serializer["substitutes"]:
             substitutes.append(Substitute.objects.get(id=substitute))
-        serializer["substitutes"] = serializers.FullDerefSubstituteSerializer(substitutes, many=True, context={"request": request}).data
+        serializer["substitutes"] = serializers.FullDerefSubstituteSerializer(
+            substitutes,
+            many=True,
+            context={"request": request},
+        ).data
 
         return Response(serializer, status=status.HTTP_200_OK)
 
@@ -289,7 +312,7 @@ class AdminTeamSeeding(generics.UpdateAPIView):
     permission_classes = [permissions.IsAdminUser]
     pagination_class = None
 
-    def patch(self, request):
+    def patch(self, request, *args, **kwargs):
         new_seeding = self.get_serializer(self.get_queryset(),data=request.data, many=True)
         if not new_seeding.is_valid():
             raise BadRequest(_("Les données sont invalides."))

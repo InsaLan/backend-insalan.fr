@@ -1,20 +1,40 @@
 import math
-from ..models import Group, GroupMatch, Team, BaseTournament, Seeding, GroupTiebreakScore, BestofType
 
-def generate_groups(tournament: BaseTournament, count: int, team_per_group: int, names: list[str], use_seeding: bool):
+from ..models import (
+    BaseTournament,
+    BestofType,
+    Group,
+    GroupMatch,
+    GroupTiebreakScore,
+    Team,
+    Seeding,
+)
+
+
+def generate_groups(tournament: BaseTournament, count: int, team_per_group: int,
+                    names: list[str], use_seeding: bool):
     if use_seeding:
-        teams = list(Team.objects.filter(tournament=tournament, validated=True, seed__gt=0).order_by("seed")) + list(Team.objects.filter(tournament=tournament,validated=True, seed=0))
+        teams = list(Team.objects.filter(
+            tournament=tournament,
+            validated=True,
+            seed__gt=0,
+        ).order_by("seed")) + list(Team.objects.filter(
+            tournament=tournament,
+            validated=True,
+            seed=0,
+        ))
     else:
         teams = list(Team.objects.filter(tournament=tournament, validated=True))
     teams += [None]*(tournament.maxTeam - len(teams))
 
     for i in range(count):
-        group = Group.objects.create(tournament=tournament, name=names[i], round_count=team_per_group-1)
+        group = Group.objects.create(tournament=tournament, name=names[i],
+                                     round_count=team_per_group - 1)
 
         for j in range(team_per_group):
-            team = teams[i+count*j]
-            if team != None:
-                Seeding.objects.create(group=group, team=team, seeding=j+1)
+            team = teams[i + count * j]
+            if team is not None:
+                Seeding.objects.create(group=group, team=team, seeding=j + 1)
                 GroupTiebreakScore.objects.create(group=group, team=team)
 
 def create_group_matchs(group: Group, bo_type: BestofType = BestofType.BO1):
@@ -31,12 +51,17 @@ def create_group_matchs(group: Group, bo_type: BestofType = BestofType.BO1):
     for round_idx in range(nb_rounds):
         matchs = []
         for match_idx in range(nb_matchs):
-            matchs.append(GroupMatch.objects.create(round_number=round_idx+1,index_in_round=match_idx+1,group=group, bo_type=bo_type))
-        
+            matchs.append(GroupMatch.objects.create(
+                round_number=round_idx + 1,
+                index_in_round=match_idx + 1,
+                group=group,
+                bo_type=bo_type,
+            ))
+
         matchs += matchs[::-1]
 
         for i,team in enumerate(teams):
-            if team != None:
+            if team is not None:
                 matchs[i%(nb_matchs*2)].teams.add(team)
 
         if len(teams) > 2:

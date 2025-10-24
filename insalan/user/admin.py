@@ -34,8 +34,9 @@ class EmailActivatedFilter(SimpleListFilter):
             # if true, return users with email active permission
             if self.value() == 'True':
                 return queryset.filter(user_permissions__codename='email_active')
-            elif self.value() == 'False':
+            if self.value() == 'False':
                 return queryset.exclude(user_permissions__codename='email_active')
+            assert False, f"unreachable path: unexpected value {repr(self.value())}"
         else:
             return queryset
 
@@ -121,14 +122,18 @@ class CustomUserAdmin(UserAdmin):
         if self.fieldsets:
             if obj.has_perm("email_active"):
                 modified_fieldsets = copy.deepcopy(self.fieldsets)
-                modified_fieldsets[2][1]['fields'] = tuple(filter(lambda x: x != 'confirmation', modified_fieldsets[2][1]['fields']))
+                modified_fieldsets[2][1]['fields'] = tuple(filter(
+                    lambda x: x != 'confirmation',
+                    modified_fieldsets[2][1]['fields']
+                ))
                 return modified_fieldsets
-            else:
-                return self.fieldsets
+            return self.fieldsets
         return super().get_fieldsets(request, obj)
 
     def get_number_of_registration(self, obj):
-        return Player.objects.filter(user=obj).count() + Manager.objects.filter(user=obj).count() + Substitute.objects.filter(user=obj).count()
+        return Player.objects.filter(user=obj).count() + \
+               Manager.objects.filter(user=obj).count() + \
+               Substitute.objects.filter(user=obj).count()
     get_number_of_registration.short_description = 'Number of registrations'
 
     def get_urls(self):
@@ -137,18 +142,18 @@ class CustomUserAdmin(UserAdmin):
         """
         return [
             path(
-                "<id>/resend/",
+                "<int:user_id>/resend/",
                 self.admin_site.admin_view(self.resend_email),
                 name="auth_user_resend_email",
             ),
         ] + super().get_urls()
 
     @sensitive_post_parameters_m
-    def resend_email(self, request, id, form_url=""):
+    def resend_email(self, request, user_id: int):
         """
         Resend the email to the user
         """
-        user = User.objects.get(pk=id)
+        user = User.objects.get(pk=user_id)
         if not self.has_change_permission(request, user):
             raise PermissionDenied
         if user is None:
@@ -156,7 +161,7 @@ class CustomUserAdmin(UserAdmin):
                 _("%(name)s object with primary key %(key)r does not exist.")
                 % {
                     "name": self.opts.verbose_name,
-                    "key": escape(id),
+                    "key": escape(user_id),
                 }
             )
         if user.has_perm("email_active"):
@@ -168,17 +173,15 @@ class CustomUserAdmin(UserAdmin):
                     args=(user.pk,),
                 )
             )
-        else:
-            MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_email_confirmation(user)
-            msg = _("The confirmation email was resent.")
-            messages.success(request, msg)
-            return HttpResponseRedirect(
-                reverse(
-                    f"{self.admin_site.name}:{user._meta.app_label}_{user._meta.model_name}_change",
-                    args=(user.pk,),
-                )
+        MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_email_confirmation(user)
+        msg = _("The confirmation email was resent.")
+        messages.success(request, msg)
+        return HttpResponseRedirect(
+            reverse(
+                f"{self.admin_site.name}:{user._meta.app_label}_{user._meta.model_name}_change",
+                args=(user.pk,),
             )
-
+        )
 
 
 admin.site.register(User, CustomUserAdmin)

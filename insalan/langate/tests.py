@@ -5,7 +5,15 @@ Langate unit tests
 from django.test import TestCase
 from django.utils.translation import gettext_lazy as _
 
-from insalan.tournament.models import Event, Game, EventTournament, Player, Team, Manager, PaymentStatus
+from insalan.tournament.models import (
+    Event,
+    EventTournament,
+    Game,
+    Manager,
+    PaymentStatus,
+    Player,
+    Team,
+)
 from insalan.user.models import User
 
 from .models import SimplifiedUserData, LangateReply

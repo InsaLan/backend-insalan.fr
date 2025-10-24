@@ -1,9 +1,5 @@
 """Langate models"""
 
-# Disable lints:
-# "Too few public methods"
-# pylint: disable=R0903
-
 from django.db import models
 
 from insalan.user.models import User
@@ -27,12 +23,14 @@ class SimplifiedUserData:
 
     @classmethod
     def new(cls, user: User):
+        # pylint: disable=line-too-long
         """
         Create a simplified version of a user's information
 
         See:
          - https://docs.djangoproject.com/en/4.1/topics/auth/customizing/#django.contrib.auth.models.AbstractBaseUser
         """
+        # pylint: enable=line-too-long
         s_user_data = cls()
         s_user_data.username = user.get_username()
         s_user_data.first_name = user.first_name

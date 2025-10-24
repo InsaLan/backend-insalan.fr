@@ -28,7 +28,7 @@ class EventTournamentTestCase(TestCase):
         This class tests the EventTournament class and its methods.
         It verifies that the class can be created, that it has the correct
         attributes, and that it can be saved to the database.
-        
+
         For fields that are related to BaseTournament, see the
         BaseTournamentTestCase class.
     """
@@ -125,7 +125,11 @@ class EventTournamentTestCase(TestCase):
         game = Game.objects.create(name="Fortnite")
 
         trnm_one = EventTournament.objects.create(
-            event=event_one, game=game, player_price_online=23.3, manager_price_online=3, substitute_price_online=3
+            event=event_one,
+            game=game,
+            player_price_online=23.3,
+            manager_price_online=3,
+            substitute_price_online=3,
         )
         self.assertEqual(trnm_one.player_price_online, 23.3)
 
@@ -405,7 +409,11 @@ class TournamentFullDerefEndpoint(TestCase):
             game=game_obj,
             is_announced=False,
         )
-        team_one = Team.objects.create(name="Team One", tournament=tourneyobj_one, password=make_password("strongpwd"))
+        team_one = Team.objects.create(
+            name="Team One",
+            tournament=tourneyobj_one,
+            password=make_password("strongpwd"),
+        )
         Player.objects.create(user=uobj_one, team=team_one)
         Player.objects.create(user=uobj_two, team=team_one)
         Manager.objects.create(user=uobj_three, team=team_one)

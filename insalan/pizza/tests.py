@@ -685,7 +685,7 @@ class TestExportOrderGet(TestCase):
         )
 
         self.export = PizzaExport.objects.create(time_slot=self.time_slot)
-        
+
     def test_export_get(self) -> None:
         """Test the export get endpoint."""
         client = APIClient()
@@ -695,7 +695,7 @@ class TestExportOrderGet(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], self.export.id)
-        
+
     def test_export_get_unauthorized(self) -> None:
         """Test the export get endpoint with unauthorized user."""
         client = APIClient()
@@ -703,7 +703,7 @@ class TestExportOrderGet(TestCase):
             reverse("export/detail", kwargs={"pk": self.export.id})
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        
+
     def test_export_get_not_found(self) -> None:
         """Test the export get endpoint with wrong id."""
         client = APIClient()
