@@ -1,10 +1,16 @@
-# Covering django.contrib.admin.AdminSite.get_app_list
-from django.contrib import admin
+"""Covering django.contrib.admin.AdminSite.get_app_list."""
 
-ADMIN_ORDERING = []
+from typing import Any
+
+from django.contrib import admin
+from django.http import HttpRequest
+
+
+ADMIN_ORDERING: list[tuple[str, list[str]]] = []
+
 
 # Creating a sort function
-def get_app_list(self, request, app_label=None):
+def get_app_list(self: admin.AdminSite, request: HttpRequest, app_label: None = None) -> list[Any]:
     app_dict = self._build_app_dict(request, app_label)
 
     ordering = []
@@ -29,4 +35,5 @@ def get_app_list(self, request, app_label=None):
 
     return app_list
 
-admin.AdminSite.get_app_list = get_app_list
+
+admin.AdminSite.get_app_list = get_app_list  # type: ignore[method-assign]
