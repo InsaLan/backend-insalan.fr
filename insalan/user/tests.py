@@ -2,7 +2,6 @@
 import json
 import re
 
-from typing import Dict
 from django.test import TestCase
 from django.core import mail
 from django.utils.translation import gettext_lazy as _
@@ -19,7 +18,7 @@ class UserTestCase(TestCase):
     Tests of the User model
     """
 
-    def setUp(self):
+    def setUp(self) -> None:
         """
         Create some base users to do operations on
         """
@@ -54,7 +53,7 @@ class UserTestCase(TestCase):
             password="ThisIsPassword",
         )
 
-    def test_get_existing_full_user(self):
+    def test_get_existing_full_user(self) -> None:
         """
         Test getting all the fields of an already created user
         """
@@ -68,7 +67,7 @@ class UserTestCase(TestCase):
         self.assertTrue(u.is_active)
         self.assertFalse(u.is_staff)
 
-    def test_get_existing_minimal_user(self):
+    def test_get_existing_minimal_user(self) -> None:
         """
         Test getting all the fields of an user created with only the required fields
         """
@@ -82,14 +81,14 @@ class UserTestCase(TestCase):
         self.assertTrue(u.is_active)
         self.assertFalse(u.is_staff)
 
-    def test_get_non_existing_user(self):
+    def test_get_non_existing_user(self) -> None:
         """
         Test that getting an user which does not exist throws an `User.DoesNotExist` error
         """
         with self.assertRaises(User.DoesNotExist):
             User.objects.get(username="idontexist")
 
-    def test_emojis_in_status(self):
+    def test_emojis_in_status(self) -> None:
         """
         Test if the user can put emojis in their status
         """
@@ -106,7 +105,7 @@ class UserEndToEndTestCase(TestCase):
 
     client: APIClient
 
-    def setUp(self):
+    def setUp(self) -> None:
         """
         Create a player to test getters
         """
@@ -122,12 +121,12 @@ class UserEndToEndTestCase(TestCase):
         user.user_permissions.add(Permission.objects.get(codename="email_active"))
 
 
-    def test_register_invalid_data(self):
+    def test_register_invalid_data(self) -> None:
         """
         Test trying to register a few invalid users
         """
 
-        def send_invalid_data(data):
+        def send_invalid_data(data: dict[str, str]) -> None:
             request = self.client.post("/v1/user/register/", data, format="json")
             self.assertEqual(request.status_code, 400)
         send_invalid_data({})
@@ -135,12 +134,13 @@ class UserEndToEndTestCase(TestCase):
         send_invalid_data({"username": "newuser", "password": "1234"})
         send_invalid_data({"username": "newuser", "email": "email@example.com"})
 
-    def test_register_valid_account(self):
+    def test_register_valid_account(self) -> None:
         """
         Test registering valid users
         """
 
-        def send_valid_data(data, check_fields: list | None = None) -> None:
+        def send_valid_data(data: dict[str, str],
+                            check_fields: list[tuple[str, str | bool]] | None = None) -> None:
             """
             Helper function that will request a register and check its output
             """
@@ -151,7 +151,7 @@ class UserEndToEndTestCase(TestCase):
 
             self.assertEqual(request.status_code, 201)
 
-            created_data: Dict = request.data
+            created_data: dict[str, str | bool] = request.data
             for k, v in check_fields:
                 self.assertEqual(created_data[k], v)
 
@@ -198,12 +198,12 @@ class UserEndToEndTestCase(TestCase):
             ],
         )
 
-    def test_register_bot_account(self):
+    def test_register_bot_account(self) -> None:
         """
         Test registering valid users
         """
 
-        def send_bot_data(data):
+        def send_bot_data(data: dict[str, str]) -> None:
             """
             Helper function that will request a register and check its output
             """
@@ -221,19 +221,20 @@ class UserEndToEndTestCase(TestCase):
                 "name": "je suis un bot"
             })
 
-    def test_register_read_only_fields(self):
+    def test_register_read_only_fields(self) -> None:
         """
         Test that the read-only register fields are indeed read-only
         """
 
-        def send_valid_data(data, check_fields: list | None = None) -> None:
+        def send_valid_data(data: dict[str, str],
+                            check_fields: list[tuple[str, str | bool]] | None = None) -> None:
             if check_fields is None:
                 check_fields = []
             request = self.client.post("/v1/user/register/", data, format="json")
 
             self.assertEqual(request.status_code, 201)
 
-            created_data: Dict = request.data
+            created_data: dict[str, str | bool] = request.data
             for k, v in check_fields:
                 self.assertEqual(created_data[k], v)
 
@@ -278,7 +279,7 @@ class UserEndToEndTestCase(TestCase):
             ],
         )
 
-    def test_register_email_is_sent(self):
+    def test_register_email_is_sent(self) -> None:
         """
         Test that an email is sent upon registration
         """
@@ -296,7 +297,7 @@ class UserEndToEndTestCase(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, ["postman@example.com"])
 
-    def test_register_can_confirm_email(self):
+    def test_register_can_confirm_email(self) -> None:
         """
         Test that an user can confirm their email with the link they received
         """
@@ -317,6 +318,7 @@ class UserEndToEndTestCase(TestCase):
             ".*https?://[^ ]*/(?P<user_pk>[^ /]*)/(?P<token>[^ /]*)/",
             mail.outbox[0].body,
         )
+        assert match is not None
 
         match_user_pk = match["user_pk"]
         token = match["token"]
@@ -328,7 +330,7 @@ class UserEndToEndTestCase(TestCase):
 
         self.assertTrue(User.objects.get(username=data["username"]).is_email_active())
 
-    def test_can_confirm_email_only_once(self):
+    def test_can_confirm_email_only_once(self) -> None:
         """
         Test that an user can confirm their email only once
         """
@@ -347,6 +349,7 @@ class UserEndToEndTestCase(TestCase):
             ".*https?://[^ ]*/(?P<user_pk>[^ /]*)/(?P<token>[^ /]*)/",
             mail.outbox[0].body,
         )
+        assert match is not None
 
         match_user_pk = match["user_pk"]
         token = match["token"]
@@ -357,7 +360,7 @@ class UserEndToEndTestCase(TestCase):
         request = self.client.get(f"/v1/user/confirm/{match_user_pk}/{token}/")
         self.assertEqual(request.status_code, 400)
 
-    def test_confirmation_email_is_token_checked(self):
+    def test_confirmation_email_is_token_checked(self) -> None:
         """
         Test that the token sent to an user for their email confirmation is really checked
         """
@@ -375,6 +378,7 @@ class UserEndToEndTestCase(TestCase):
             ".*https?://[^ ]*/(?P<username>[^ /]*)/(?P<token>[^ /]*)/",
             mail.outbox[0].body,
         )
+        assert match is not None
 
         username = match["username"]
         token = match["token"]
@@ -386,12 +390,12 @@ class UserEndToEndTestCase(TestCase):
 
         self.assertEqual(request.status_code, 400)
 
-    def test_login_invalid_account(self):
+    def test_login_invalid_account(self) -> None:
         """
         Try to login with invalid requests
         """
 
-        def send_valid_data(data):
+        def send_valid_data(data: dict[str, str]) -> None:
             request = self.client.post("/v1/user/login/", data, format="json")
 
             self.assertEqual(request.status_code, 404)
@@ -407,7 +411,7 @@ class UserEndToEndTestCase(TestCase):
             }
         )
 
-    def test_login_not_active_account(self):
+    def test_login_not_active_account(self) -> None:
         """
         Test trying to login to an account which email is not already activated
         """
@@ -415,7 +419,7 @@ class UserEndToEndTestCase(TestCase):
             username="newplayer", email="test@test.com", password="1111qwer!"
         )
 
-        def send_valid_data(data):
+        def send_valid_data(data: dict[str, str]) -> None:
             self.client.post("/v1/user/login/", data, format="json")
 
             self.assertRaises(serializers.ValidationError)
@@ -427,7 +431,7 @@ class UserEndToEndTestCase(TestCase):
             }
         )
 
-    def test_login_email_not_confirmed_account(self):
+    def test_login_email_not_confirmed_account(self) -> None:
         """
         Test trying to login to an account which email is not already activated
         """
@@ -438,7 +442,7 @@ class UserEndToEndTestCase(TestCase):
             is_active=True,
         )
 
-        def send_valid_data(data):
+        def send_valid_data(data: dict[str, str]) -> None:
             request = self.client.post("/v1/user/login/", data, format="json")
 
             self.assertEqual(request.status_code, 403)
@@ -450,7 +454,7 @@ class UserEndToEndTestCase(TestCase):
             }
         )
 
-    def test_login_account(self):
+    def test_login_account(self) -> None:
         """
         Test that when everything is ok, an user is able to login
         """
@@ -462,8 +466,7 @@ class UserEndToEndTestCase(TestCase):
         )
         user.user_permissions.add(Permission.objects.get(codename="email_active"))
 
-
-        def send_valid_data(data):
+        def send_valid_data(data: dict[str, str]) -> None:
             request = self.client.post("/v1/user/login/", data, format="json")
 
             self.assertTrue("sessionid" in self.client.cookies)
@@ -475,7 +478,7 @@ class UserEndToEndTestCase(TestCase):
             }
         )
 
-    def test_can_resend_confirmation_email(self):
+    def test_can_resend_confirmation_email(self) -> None:
         """
         Test that an user can request another confirmation email when
         requesting the right route
@@ -505,7 +508,7 @@ class UserEndToEndTestCase(TestCase):
 
         self.assertEqual(len(mail.outbox), 3)
 
-    def test_cant_resend_confirmation_if_already_valid(self):
+    def test_cant_resend_confirmation_if_already_valid(self) -> None:
         """
         Test that an user cannot resend a confirmation email if they already
         confirmed their email
@@ -524,7 +527,7 @@ class UserEndToEndTestCase(TestCase):
 
         self.assertEqual(request.status_code, 400)
 
-    def test_cant_resend_confirmation_if_nonexisting_user(self):
+    def test_cant_resend_confirmation_if_nonexisting_user(self) -> None:
         """
         Test that we cannot resend a confirmation email for a non existing user
         without crashing the server
@@ -535,7 +538,7 @@ class UserEndToEndTestCase(TestCase):
 
         self.assertEqual(request.status_code, 400)
 
-    def test_dont_crash_resend_confirmation_if_empty(self):
+    def test_dont_crash_resend_confirmation_if_empty(self) -> None:
         """
         Test that server doesn't crash if ask to resend an email without any
         valid data in request
@@ -544,7 +547,7 @@ class UserEndToEndTestCase(TestCase):
 
         self.assertEqual(request.status_code, 400)
 
-    def test_can_reset_password(self):
+    def test_can_reset_password(self) -> None:
         """
         Test that an user can reset their password (full workflow)
         """
@@ -559,6 +562,7 @@ class UserEndToEndTestCase(TestCase):
             ".*https?://[^ ]*/(?P<user_pk>[^ &]*)/(?P<token>[^ /]*)/",
             mail.outbox[0].body,
         )
+        assert match is not None
 
         user_pk = match["user_pk"]
         token = match["token"]
@@ -592,7 +596,7 @@ class UserEndToEndTestCase(TestCase):
         request = self.client.post("/v1/user/login/", login_data, format="json")
         self.assertEqual(request.status_code, 404)
 
-    def test_can_reset_password_only_once(self):
+    def test_can_reset_password_only_once(self) -> None:
         """
         Test that an user can reset their password only once with a token
         """
@@ -607,6 +611,7 @@ class UserEndToEndTestCase(TestCase):
             ".*https?://[^ ]*/(?P<user_pk>[^ &]*)/(?P<token>[^ /]*)/",
             mail.outbox[0].body,
         )
+        assert match is not None
 
         user_pk = match["user_pk"]
         token = match["token"]
@@ -635,7 +640,7 @@ class UserEndToEndTestCase(TestCase):
         )
         self.assertEqual(request.status_code, 400)
 
-    def test_password_reset_is_token_checked(self):
+    def test_password_reset_is_token_checked(self) -> None:
         """
         Test that the password reset token is actually checked
         """
@@ -649,6 +654,7 @@ class UserEndToEndTestCase(TestCase):
             ".*https?://[^ ]*/(?P<user_pk>[^ &]*)/(?P<token>[^ /]*)/",
             mail.outbox[0].body,
         )
+        assert match is not None
 
         user_pk = match["user_pk"]
         token = match["token"]
@@ -668,7 +674,7 @@ class UserEndToEndTestCase(TestCase):
         )
         self.assertEqual(request.status_code, 400)
 
-    def test_cant_edit_user_if_not_connected(self):
+    def test_cant_edit_user_if_not_connected(self) -> None:
         """
         Test that we can't edit any field if we are not connected
         """
@@ -706,7 +712,7 @@ class UserEndToEndTestCase(TestCase):
         )
         self.assertEqual(request.status_code, 403)
 
-    def test_cant_edit_other_user(self):
+    def test_cant_edit_other_user(self) -> None:
         """
         Test we can't edit any field of another user
         """
@@ -748,7 +754,7 @@ class UserEndToEndTestCase(TestCase):
         )
         self.assertEqual(request.status_code, 403)
 
-    def test_can_edit_self_single_field(self):
+    def test_can_edit_self_single_field(self) -> None:
         """
         Test that we can edit our own fields individually
         """
@@ -831,7 +837,7 @@ class UserEndToEndTestCase(TestCase):
                          "Je suis un fournisseur de la base de donnée épicerie")
 
 
-    def test_password_validation_error_are_caught(self):
+    def test_password_validation_error_are_caught(self) -> None:
         """
         Test that password validation errors does not crashes the server but sends a bad request
         instead
@@ -861,7 +867,7 @@ class UserEndToEndTestCase(TestCase):
         #     User.objects.get(username="randomplayer").check_password("AsDf!621$")
         # )
 
-    def test_can_edit_several_fields_at_once(self):
+    def test_can_edit_several_fields_at_once(self) -> None:
         """
         Test that we can edit our own fields individually
         """
@@ -901,7 +907,7 @@ class UserEndToEndTestCase(TestCase):
         )
         self.assertEqual(User.objects.get(username="randomplayer").first_name, "Kevin")
 
-    def test_is_user_logged_out_on_password_change(self):
+    def test_is_user_logged_out_on_password_change(self) -> None:
         """
         Test that when we change our password, we are logged out
         """
@@ -934,7 +940,7 @@ class UserEndToEndTestCase(TestCase):
             },
         )
 
-    def test_permission_is_removed_when_changing_email(self):
+    def test_permission_is_removed_when_changing_email(self) -> None:
         """
         Test that the email is no-longer considered as confirmed when we change it
         """
