@@ -1,23 +1,26 @@
 """Views for the Payment module"""
 
-from decimal import Decimal
 import json
 import logging
+from decimal import Decimal
+from typing import Any
 
 import requests
 
-from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
-from rest_framework import generics, permissions, status
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.authentication import SessionAuthentication
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import]
+from drf_yasg import openapi  # type: ignore[import]
+
+from rest_framework import generics, permissions, status
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from insalan import settings as app_settings
 from insalan.payment import serializers
+from insalan.user.models import User
 
 from .models import Transaction, Product, Payment, Discount
 from .tokens import Token
@@ -25,7 +28,7 @@ from .tokens import Token
 logger = logging.getLogger(__name__)
 
 
-class ProductList(generics.ListAPIView):
+class ProductList(generics.ListAPIView[Product]):  # pylint: disable=unsubscriptable-object
     """
     Get all products
     """
@@ -34,19 +37,21 @@ class ProductList(generics.ListAPIView):
     queryset = Product.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializers.ProductSerializer,
         }
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Get all products
         """
         return super().get(request, *args, **kwargs)
 
 
-class ProductDetails(generics.RetrieveUpdateDestroyAPIView):
+# pylint: disable-next=unsubscriptable-object
+class ProductDetails(generics.RetrieveUpdateDestroyAPIView[Product]):
     """
     Get, update or delete a product
     """
@@ -55,18 +60,20 @@ class ProductDetails(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializers.ProductSerializer,
         }
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Get a product
         """
         return super().get(request, *args, **kwargs)
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=serializers.ProductSerializer,
         responses={
             200: serializers.ProductSerializer,
@@ -90,13 +97,14 @@ class ProductDetails(generics.RetrieveUpdateDestroyAPIView):
             )
         }
     )
-    def put(self, request, *args, **kwargs):
+    def put(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Update a product
         """
         return super().put(request, *args, **kwargs)
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializers.ProductSerializer,
             404: openapi.Schema(
@@ -110,13 +118,14 @@ class ProductDetails(generics.RetrieveUpdateDestroyAPIView):
             )
         }
     )
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Delete a product
         """
         return super().delete(request, *args, **kwargs)
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=serializers.ProductSerializer,
         responses={
             200: serializers.ProductSerializer,
@@ -140,13 +149,13 @@ class ProductDetails(generics.RetrieveUpdateDestroyAPIView):
             )
         }
     )
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Partially update a product
         """
         return super().patch(request, *args, **kwargs)
 
-class TransactionList(generics.ListAPIView):
+class TransactionList(generics.ListAPIView[Transaction]):  # pylint: disable=unsubscriptable-object
     """
     Get all transactions
     """
@@ -156,7 +165,8 @@ class TransactionList(generics.ListAPIView):
     permission_classes = [permissions.IsAdminUser]
 
 
-class TransactionPerId(generics.RetrieveAPIView):
+# pylint: disable-next=unsubscriptable-object
+class TransactionPerId(generics.RetrieveAPIView[Transaction]):
     """
     Get a transaction by its ID
     """
@@ -166,7 +176,7 @@ class TransactionPerId(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAdminUser]
 
 
-class CreateProduct(generics.CreateAPIView):
+class CreateProduct(generics.CreateAPIView[Product]):  # pylint: disable=unsubscriptable-object
     """
     Create a product
     """
@@ -174,7 +184,8 @@ class CreateProduct(generics.CreateAPIView):
     queryset = Product.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=serializers.ProductSerializer,
         responses={
             200: serializers.ProductSerializer,
@@ -189,18 +200,20 @@ class CreateProduct(generics.CreateAPIView):
             )
         }
     )
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Create a product
         """
         return super().post(request, *args, **kwargs)
+
 
 class Notifications(APIView):
     """
     Notifications view
     """
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -244,7 +257,7 @@ class Notifications(APIView):
             )
         }
     )
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         """Notification POST"""
 
         logger.error("Received notification: %s", request.data)
@@ -394,7 +407,7 @@ class Notifications(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-class PayView(generics.CreateAPIView):
+class PayView(generics.CreateAPIView[Transaction]):  # pylint: disable=unsubscriptable-object
     """
     Pay view
     """
@@ -403,9 +416,10 @@ class PayView(generics.CreateAPIView):
     queryset = Transaction.objects.all()
     serializer_class = serializers.TransactionSerializer
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Process a payment request"""
         token = Token.get_instance()
+        assert isinstance(request.user, User), 'User must be authenticated to access this route.'
         payer = request.user
         data = request.data.copy()
         data["payer"] = payer.id
@@ -423,7 +437,7 @@ class PayView(generics.CreateAPIView):
                     "Failed pre-condition on payment %s. Deleting.", transaction_obj.id
                 )
                 transaction_obj.delete()
-                return JsonResponse(
+                return Response(
                     {"err": _("Préconditions de paiement non remplies")},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
@@ -484,16 +498,17 @@ class PayView(generics.CreateAPIView):
 
             logger.info("Redirectory payment to %s", redirect_url)
 
-            return JsonResponse(
+            return Response(
                 {"success": True, "redirect_url": redirect_url},
                 status=status.HTTP_200_OK,
             )
-        return JsonResponse(
+        return Response(
             {"err": _("Données de transaction invalides")},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -540,6 +555,6 @@ class PayView(generics.CreateAPIView):
             )
         }
     )
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Process a payment request"""
         return super().post(request, *args, **kwargs)

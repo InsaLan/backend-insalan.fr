@@ -6,11 +6,14 @@ designed for other components of the application to come and register custom
 handlers for payment success or failure.
 """
 
+from __future__ import annotations
+
 import logging
+from typing import Type
 
 from django.utils.translation import gettext_lazy as _
 
-from .models import ProductCategory
+from .models import Product, ProductCategory, Transaction
 
 
 class PaymentCallbackSystem:
@@ -19,11 +22,12 @@ class PaymentCallbackSystem:
     """
 
     # The dictionary of hooks
-    __HOOKS = {}
+    __HOOKS: dict[ProductCategory, Type[PaymentHooks]] = {}
     __logger = logging.getLogger("insalan.payment.hooks.PaymentCallbackSystem")
 
     @classmethod
-    def register_handler(cls, prodcat, handler, overwrite=False):
+    def register_handler(cls, prodcat: ProductCategory, handler: Type[PaymentHooks],
+                         overwrite: bool = False) -> None:
         """
         Register a handler for a product category
 
@@ -53,7 +57,7 @@ class PaymentCallbackSystem:
         cls.__HOOKS[prodcat] = handler
 
     @classmethod
-    def retrieve_handler(cls, prodcat):
+    def retrieve_handler(cls, prodcat: ProductCategory) -> Type[PaymentHooks] | None:
         """
         Retrieve a handler class for a product category
 
@@ -72,7 +76,7 @@ class PaymentHooks:
     """
 
     @staticmethod
-    def prepare_transaction(_transaction, _product, _count) -> bool:
+    def prepare_transaction(_transaction: Transaction, _product: Product, _count: int) -> bool:
         """
         Prepare things that may have to be created prior to payment
 
@@ -80,9 +84,10 @@ class PaymentHooks:
         This hook is ran by the payment view exactly right before forwarding the
         user to HelloAsso.
         """
+        raise NotImplementedError()
 
     @staticmethod
-    def payment_success(_transaction, _product, _count):
+    def payment_success(_transaction: Transaction, _product: Product, _count: int) -> None:
         """
         Payment Success Handler
 
@@ -94,7 +99,7 @@ class PaymentHooks:
         """
 
     @staticmethod
-    def payment_failure(_transaction, _product, _count):
+    def payment_failure(_transaction: Transaction, _product: Product, _count: int) -> None:
         """
         Payment Failure Handler
 
@@ -104,7 +109,7 @@ class PaymentHooks:
         """
 
     @staticmethod
-    def payment_refunded(_transaction, _product, _count):
+    def payment_refunded(_transaction: Transaction, _product: Product, _count: int) -> None:
         """
         Payment Refund Handler
 
@@ -112,6 +117,3 @@ class PaymentHooks:
         transaction. By this point, you can safely assume that the payment has
         been refunded on the side of helloasso.
         """
-
-
-# vim: set tw=80:

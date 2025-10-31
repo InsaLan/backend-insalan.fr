@@ -1,19 +1,31 @@
 """Payment Models"""
-from decimal import Decimal
-from datetime import datetime
+
+from __future__ import annotations
+
 import itertools
 import logging
 import uuid
+from datetime import datetime
+from decimal import Decimal
+from typing import Any, Callable, Type, TYPE_CHECKING
 
 from django.db import models
+from django.db.models import CharField, ForeignKey
+from django.db.models.query import QuerySet
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.core.validators import MinValueValidator
 from rest_framework.serializers import ValidationError
 
-from insalan.pizza.models import TimeSlot
+from insalan.pizza.models import Pizza, TimeSlot
 from insalan.tournament.models import EventTournament
 from insalan.user.models import User
+
+if TYPE_CHECKING:
+    from django.db.models import Combinable
+    from django.db.models.manager import RelatedManager
+
+    from .hooks import PaymentHooks
 
 
 logger = logging.getLogger(__name__)
@@ -40,18 +52,28 @@ class ProductCategory(models.TextChoices):
 class Product(models.Model):
     """Object to represent in database anything sellable"""
 
+    # Related  references defined in the Pizza model.
+    player_pizza_product_reference: RelatedManager[Pizza]
+    staff_pizza_product_reference: RelatedManager[Pizza]
+    external_pizza_product_reference: RelatedManager[Pizza]
+
+    # Related  references defined in the EventTournament model.
+    manager_product_reference: RelatedManager[EventTournament]
+    substitute_product_reference: RelatedManager[EventTournament]
+    player_product_reference: RelatedManager[EventTournament]
+
     price = models.DecimalField(
         null=False, max_digits=5, decimal_places=2, verbose_name=_("prix")
     )
-    name = models.CharField(
+    name = CharField(
         max_length=1024,
         verbose_name=_("intitulé")
     )
-    desc = models.CharField(
+    desc = CharField(
         max_length=1024,
         verbose_name=_("description")
     )
-    category = models.CharField(
+    category: CharField[ProductCategory, ProductCategory] = CharField(  # type: ignore[assignment]
         max_length=20,
         blank=False,
         null=False,
@@ -59,14 +81,14 @@ class Product(models.Model):
         default=ProductCategory.PIZZA,
         choices=ProductCategory.choices,
     )
-    associated_tournament = models.ForeignKey(
+    associated_tournament = ForeignKey(
         EventTournament,
         on_delete=models.CASCADE,
         verbose_name=_("Tournoi associé"),
         null=True,
         blank=True,
     )
-    associated_timeslot = models.ForeignKey(
+    associated_timeslot = ForeignKey(
         TimeSlot,
         on_delete=models.CASCADE,
         verbose_name=_("Créneau associé"),
@@ -87,11 +109,9 @@ class Product(models.Model):
         """Returns whether or not the product can be bought now"""
         return self.available_from <= timezone.now() <= self.available_until
 
-    def __str__(self):
-        """
-        Return the name of the product
-        """
-        return str(self.name)
+    def __str__(self) -> str:
+        """Return the name of the product."""
+        return self.name
 
 
 class Payment(models.Model):
@@ -108,7 +128,7 @@ class Payment(models.Model):
     id = models.IntegerField(
         primary_key=True, editable=False, verbose_name=_("Identifiant du paiement")
     )
-    transaction = models.ForeignKey(
+    transaction = ForeignKey(
         "Transaction", on_delete=models.CASCADE, verbose_name=_("Transaction")
     )
     amount = models.DecimalField(
@@ -133,13 +153,13 @@ class Transaction(models.Model):
         ordering = ["-last_modification_date"]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    payer = models.ForeignKey(
+    payer = ForeignKey(
         User, null=True, on_delete=models.SET_NULL, verbose_name=_("Utilisateur")
     )
     products = models.ManyToManyField(
         Product, through="ProductCount"
     )  # A transaction can be composed of n products
-    payment_status = models.CharField(
+    payment_status = CharField(
         max_length=10,
         blank=True,
         default=TransactionStatus.PENDING,
@@ -176,7 +196,7 @@ class Transaction(models.Model):
     )
 
     @staticmethod
-    def new(**data):
+    def new(**data: Any) -> Transaction:
         """create a new transaction based on products id list and a payer"""
         fields = {}
         fields["creation_date"] = timezone.make_aware(datetime.now())
@@ -212,12 +232,16 @@ class Transaction(models.Model):
         transaction.synchronize_amount()
         return transaction
 
-    def product_callback(self, key):
+    def product_callback(
+        self,
+        key: Callable[[Type[PaymentHooks]], Callable[[Transaction, Product, int], None]],
+    ) -> None:
         """Call a product callback on the list of product"""
         # pylint: disable-next=import-outside-toplevel
         from insalan.payment.hooks import PaymentCallbackSystem
 
         for proccount in ProductCount.objects.filter(transaction=self):
+            assert proccount.product is not None
             # Get callback class
             cls = PaymentCallbackSystem.retrieve_handler(proccount.product.category)
             if cls is None:
@@ -232,6 +256,7 @@ class Transaction(models.Model):
         from insalan.payment.hooks import PaymentCallbackSystem
 
         for proccount in ProductCount.objects.filter(transaction=self):
+            assert proccount.product is not None
             # Get callback class
             cls = PaymentCallbackSystem.retrieve_handler(proccount.product.category)
             if cls is None:
@@ -244,19 +269,19 @@ class Transaction(models.Model):
 
         return True
 
-    def run_success_hooks(self):
+    def run_success_hooks(self) -> None:
         """Run the success hooks on all products"""
         self.product_callback(lambda cls: cls.payment_success)
 
-    def run_refunded_hooks(self):
+    def run_refunded_hooks(self) -> None:
         """Run the refund hooks on all products"""
         self.product_callback(lambda cls: cls.payment_refunded)
 
-    def run_failure_hooks(self):
+    def run_failure_hooks(self) -> None:
         """Run the failure hooks on all products"""
         self.product_callback(lambda cls: cls.payment_failure)
 
-    def refund_transaction(self, _requester="") -> tuple[bool, str]:
+    def refund_transaction(self, _requester: str = "") -> tuple[bool, str]:
         """
         Refund this transaction
 
@@ -319,20 +344,21 @@ class Transaction(models.Model):
         self.touch()
         self.save()
 
-        return (False, "")
+        return False, ""
 
-    def synchronize_amount(self):
+    def synchronize_amount(self) -> None:
         """Recompute the amount from the product list"""
         self.amount = Decimal(0.00)
         for proc in ProductCount.objects.filter(transaction=self):
+            assert proc.product is not None
             self.amount += proc.product.price * proc.count
         self.save()
 
-    def touch(self):
+    def touch(self) -> None:
         """Update the last modification date of the transaction"""
         self.last_modification_date = timezone.make_aware(datetime.now())
 
-    def validate_transaction(self):
+    def validate_transaction(self) -> None:
         """set payment_statut to validated"""
         if self.payment_status != TransactionStatus.PENDING:
             if self.payment_status != TransactionStatus.SUCCEEDED:
@@ -349,7 +375,7 @@ class Transaction(models.Model):
         logger.info("Transaction %s succeeded", self.id)
         self.run_success_hooks()
 
-    def fail_transaction(self):
+    def fail_transaction(self) -> None:
         """set payment_statut to failed and update last_modification_date"""
         if self.payment_status != TransactionStatus.PENDING:
             if self.payment_status != TransactionStatus.FAILED:
@@ -362,11 +388,11 @@ class Transaction(models.Model):
         logger.info("Transaction %s failed", self.id)
         self.run_failure_hooks()
 
-    def get_products(self):
-        return self.products
+    def get_products(self) -> QuerySet[Product]:
+        return self.products.all()
 
-    def get_products_id(self):
-        return [product.id for product in self.products]
+    def get_products_id(self) -> list[int]:
+        return [product.id for product in self.products.all()]
 
 
 class ProductCount(models.Model):
@@ -383,13 +409,13 @@ class ProductCount(models.Model):
             )
         ]
 
-    transaction = models.ForeignKey(
+    transaction = ForeignKey(
         Transaction,
         on_delete=models.CASCADE,
         editable=False,
         verbose_name=_("Transaction"),
     )
-    product = models.ForeignKey(
+    product: ForeignKey[Product | Combinable | None, Product | None] = ForeignKey(
         Product,
         on_delete=models.SET_NULL,
         editable=False,
@@ -417,10 +443,10 @@ class Discount(models.Model):
         verbose_name_plural = _("Réductions")
 
     id: int
-    user = models.ForeignKey(
+    user = ForeignKey(
         User, null=True, on_delete=models.SET_NULL, verbose_name=_("Utilisateur")
     )
-    product = models.ForeignKey(
+    product = ForeignKey(
         Product, null=True, on_delete=models.SET_NULL, verbose_name=_("Produit")
     )
     discount = models.DecimalField(
@@ -430,7 +456,7 @@ class Discount(models.Model):
         verbose_name=_("Réduction"),
         validators=[MinValueValidator(Decimal('0.01'))]
     )
-    reason = models.CharField(max_length=200, verbose_name=_("Motif"))
+    reason = CharField(max_length=200, verbose_name=_("Motif"))
     creation_date = models.DateTimeField(
         verbose_name=_("Date de création"),
         editable=False,
@@ -444,7 +470,7 @@ class Discount(models.Model):
         blank=True
     )
 
-    def use(self):
+    def use(self) -> None:
         """Use the discount"""
         if self.used:
             raise DiscountAlreadyUsedError("Discount already used")
