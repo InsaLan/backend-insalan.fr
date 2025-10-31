@@ -9,12 +9,25 @@ It includes the following models:
   and delivery status.
 """
 
+from __future__ import annotations
+
+from typing import Any, cast, TYPE_CHECKING
+
+from django.contrib.postgres.fields import ArrayField
 from django.core.validators import FileExtensionValidator
 from django.db import models
+from django.db.models import ForeignKey
+from django.db.models.query import QuerySet
 from django.utils.translation import gettext_lazy as _
-from django.contrib.postgres.fields import ArrayField
 
 from insalan.components.image_field import ImageField
+
+if TYPE_CHECKING:
+    from django.db.models import Combinable
+    from django_stubs_ext import ValuesQuerySet
+
+    from insalan.payment.models import Product
+    from insalan.user.models import User
 
 
 class PaymentMethod(models.TextChoices):
@@ -39,16 +52,16 @@ class Pizza(models.Model):
         ordering = ["id"]
 
     id: int
-    name: models.CharField = models.CharField(
+    name = models.CharField(
         max_length=200, verbose_name=_("Nom de la pizza")
     )
-    ingredients: models.CharField = ArrayField(
+    ingredients = ArrayField(
         models.CharField(max_length=200, verbose_name=_("Ingrédient")),
         verbose_name=_("Ingrédients"),
         blank=True,
         null=True,
     )
-    allergens: models.CharField = ArrayField(
+    allergens = ArrayField(
         models.CharField(max_length=200, verbose_name=_("Allergène")),
         verbose_name = _("Allergènes"),
         blank=True,
@@ -79,51 +92,51 @@ class TimeSlot(models.Model):
         ordering = ["id"]
 
     id: int
-    delivery_time: models.DateTimeField = models.DateTimeField(
+    delivery_time = models.DateTimeField(
         verbose_name=_("Heure de livraison")
     )
-    start: models.DateTimeField = models.DateTimeField(
+    start = models.DateTimeField(
         verbose_name=_("Début des commandes")
     )
-    end: models.DateTimeField = models.DateTimeField(
+    end = models.DateTimeField(
         verbose_name=_("Fin des commandes")
     )
-    pizza: models.ManyToManyField = models.ManyToManyField(
+    pizza = models.ManyToManyField(
         "pizza.Pizza",
         verbose_name=_("Pizzas disponibles"),
         related_name="pizzas",
     )
-    pizza_max: models.IntegerField = models.IntegerField(
+    pizza_max = models.IntegerField(
         verbose_name=_("Nombre maximum de pizzas")
     )
-    public: models.BooleanField = models.BooleanField(
+    public = models.BooleanField(
         verbose_name=_("Créneau ouvert à tous"),
         default=True
     )
-    ended: models.BooleanField = models.BooleanField(
+    ended = models.BooleanField(
         verbose_name=_("Créneau terminé"),
         default=False
     )
-    player_price: models.FloatField = models.DecimalField(
+    player_price = models.DecimalField(
         verbose_name=_("Prix pour les joueurs"),
         default=0.0,
         max_digits=5,
         decimal_places=2,
     )
-    staff_price: models.FloatField = models.DecimalField(
+    staff_price = models.DecimalField(
         verbose_name=_("Prix pour les staffs"),
         default=0.0,
         max_digits=5,
         decimal_places=2,
     )
-    external_price: models.FloatField = models.DecimalField(
+    external_price = models.DecimalField(
         verbose_name=_("Prix pour les externes"),
         default=0.0,
         max_digits=5,
         decimal_places=2,
     )
 
-    player_product: models.ForeignKey = models.ForeignKey(
+    player_product: ForeignKey[Product | None | Combinable, Product | None] = ForeignKey(
         "payment.Product",
         related_name="player_pizza_product_reference",
         null=True,
@@ -131,7 +144,7 @@ class TimeSlot(models.Model):
         verbose_name=_("Produit pour les joueurs"),
         on_delete=models.SET_NULL,
     )
-    staff_product: models.ForeignKey = models.ForeignKey(
+    staff_product: ForeignKey[Product | None | Combinable, Product | None] = ForeignKey(
         "payment.Product",
         related_name="staff_pizza_product_reference",
         null=True,
@@ -139,7 +152,7 @@ class TimeSlot(models.Model):
         verbose_name=_("Produit pour les staffs"),
         on_delete=models.SET_NULL,
     )
-    external_product: models.ForeignKey = models.ForeignKey(
+    external_product: ForeignKey[Product | None | Combinable, Product | None]   = ForeignKey(
         "payment.Product",
         related_name="external_pizza_product_reference",
         null=True,
@@ -151,7 +164,7 @@ class TimeSlot(models.Model):
     def __str__(self) -> str:
         return f"{self.delivery_time.strftime('%A %d %B %Y %H:%M')}"
 
-    def save(self, *args, **kwargs):
+    def save(self, *args: Any, **kwargs: Any) -> None:
 
         # pylint: disable=import-outside-toplevel
         from insalan.payment.models import Product, ProductCategory
@@ -162,9 +175,9 @@ class TimeSlot(models.Model):
 
         if not self.player_product:
             self.player_product = Product.objects.create(
-                name=_(f"Pizza {self.delivery_time} - Joueurs"),
+                name=cast(str, _(f"Pizza {self.delivery_time} - Joueurs")),
                 price=self.player_price,
-                desc=_(f"Pizza {self.delivery_time} - Joueurs"),
+                desc=cast(str, _(f"Pizza {self.delivery_time} - Joueurs")),
                 category=ProductCategory.PIZZA,
                 associated_timeslot=self,
                 available_from=self.start,
@@ -178,9 +191,9 @@ class TimeSlot(models.Model):
 
         if not self.staff_product:
             self.staff_product = Product.objects.create(
-                name=_(f"Pizza {self.delivery_time} - Staffs"),
+                name=cast(str, _(f"Pizza {self.delivery_time} - Staffs")),
                 price=self.staff_price,
-                desc=_(f"Pizza {self.delivery_time} - Staffs"),
+                desc=cast(str, _(f"Pizza {self.delivery_time} - Staffs")),
                 category=ProductCategory.PIZZA,
                 associated_timeslot=self,
                 available_from=self.start,
@@ -194,9 +207,9 @@ class TimeSlot(models.Model):
 
         if not self.external_product:
             self.external_product = Product.objects.create(
-                name=_(f"Pizza {self.delivery_time} - Externes"),
+                name=cast(str, _(f"Pizza {self.delivery_time} - Externes")),
                 price=self.external_price,
-                desc=_(f"Pizza {self.delivery_time} - Externes"),
+                desc=cast(str, _(f"Pizza {self.delivery_time} - Externes")),
                 category=ProductCategory.PIZZA,
                 associated_timeslot=self,
                 available_from=self.start,
@@ -212,7 +225,7 @@ class TimeSlot(models.Model):
         if need_save:
             self.save()
 
-    def get_orders_id(self) -> list[int]:
+    def get_orders_id(self) -> ValuesQuerySet[Order, int]:
         """
         retrieve orders associated to a timeslot with their id
         """
@@ -236,50 +249,50 @@ class Order(models.Model):
         ordering = ["id"]
 
     id: int
-    user: models.CharField = models.CharField(
+    user = models.CharField(
         verbose_name=_("Utilisateur"),
         max_length=200,
         blank=True,
     )
-    user_obj: models.ForeignKey = models.ForeignKey(
+    user_obj: models.ForeignKey[User | None | Combinable, User | None] = models.ForeignKey(
         "user.user",
         verbose_name=_("Utilisateur du site"),
         on_delete=models.CASCADE,
         null=True,
         blank=True,
     )
-    time_slot: models.ForeignKey = models.ForeignKey(
+    time_slot = models.ForeignKey(
         "pizza.TimeSlot",
         verbose_name=_("Créneau de commande"),
         on_delete=models.CASCADE,
     )
-    pizza: models.ManyToManyField = models.ManyToManyField(
+    pizza = models.ManyToManyField(
         "pizza.Pizza",
         verbose_name=_("Pizzas commandées"),
         related_name="pizza_order",
         through='PizzaOrder',
     )
-    payment_method: models.CharField = models.CharField(
+    payment_method = models.CharField(
         verbose_name=_("Moyen de paiement"),
         max_length=2,
         choices=PaymentMethod.choices,
         default=PaymentMethod.CB,
     )
-    price: models.FloatField = models.FloatField(verbose_name=_("Prix"))
-    paid: models.BooleanField = models.BooleanField(
+    price = models.FloatField(verbose_name=_("Prix"))
+    paid = models.BooleanField(
         verbose_name=_("Payé"),
         default=False
     )
-    delivered: models.BooleanField = models.BooleanField(
+    delivered = models.BooleanField(
         verbose_name=_("Livrée"),
         default=False
     )
-    delivery_date: models.DateField = models.DateField(
+    delivery_date = models.DateField(
         verbose_name=_("Date de livraison"),
         default=None,
         null=True,
     )
-    created_at: models.DateTimeField = models.DateTimeField(
+    created_at = models.DateTimeField(
         verbose_name=_("Date de création"),
         auto_now_add=True,
     )
@@ -297,7 +310,8 @@ class Order(models.Model):
         if self.user_obj:
             return self.user_obj.username  # pylint: disable=no-member
         return self.user
-    get_username.short_description = _('Utilisateur')
+    get_username.short_description = _('Utilisateur')  # type: ignore[attr-defined]
+
 
 class PizzaExport(models.Model):
     """
@@ -311,16 +325,16 @@ class PizzaExport(models.Model):
         ordering = ["id"]
 
     id: int
-    time_slot: models.ForeignKey = models.ForeignKey(
+    time_slot = models.ForeignKey(
         "pizza.TimeSlot",
         verbose_name=_("Créneau de commande"),
         on_delete=models.CASCADE,
     )
-    created_at: models.DateTimeField = models.DateTimeField(
+    created_at = models.DateTimeField(
         verbose_name=_("Date de création"),
         auto_now_add=True,
     )
-    orders: models.ManyToManyField = models.ManyToManyField(
+    orders = models.ManyToManyField(
         "pizza.Order",
         verbose_name=_("Commandes"),
         related_name="orders",
@@ -329,13 +343,13 @@ class PizzaExport(models.Model):
     def __str__(self) -> str:
         return f"{self.time_slot}"
 
-    def get_orders_id(self) -> list[int]:
+    def get_orders_id(self) -> ValuesQuerySet[Order, int]:
         """
         retrieve orders associated to a timeslot with their id
         """
         return self.orders.all().values_list("id", flat=True)
 
-    def get_orders(self) -> list[Order]:
+    def get_orders(self) -> QuerySet[Order]:
         """
         retrieve orders associated to a timeslot
         """
