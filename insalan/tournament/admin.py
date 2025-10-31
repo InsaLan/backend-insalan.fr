@@ -1,10 +1,13 @@
 """Admin handlers for the tournament module"""
 
 import json
-from typing import Any
+from typing import Any, cast, Type, TypeVar
 
 from django import forms
+from django.db.models import ForeignKey
+from django.db.models.query import QuerySet
 from django.contrib import admin, messages
+from django.contrib.admin import helpers, ModelAdmin
 from django.contrib.admin.options import IS_POPUP_VAR
 from django.contrib.auth import password_validation
 from django.contrib.auth.forms import (
@@ -14,19 +17,19 @@ from django.contrib.auth.forms import (
 )
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db.models.fields.related import ForeignKey
-from django.db.models.query import QuerySet
-from django.forms.models import ModelChoiceField
-from django.http import Http404, HttpResponseRedirect
-from django.http.request import HttpRequest
+from django.forms.models import ModelForm, ModelChoiceField
+from django.forms.renderers import BaseRenderer
+from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
 from django.template.response import TemplateResponse
-from django.urls import path, resolve, reverse
+from django.urls import path, resolve, reverse, URLPattern
 from django.utils.decorators import method_decorator
 from django.utils.html import escape
+from django.utils.safestring import SafeString
 from django.utils.translation import gettext as _
 from django.views.decorators.debug import sensitive_post_parameters
 from django.db.models import Q
 
+from insalan.admin import ADMIN_ORDERING
 from insalan.mailer import MailManager
 from insalan.tournament.manage import (
     create_empty_knockout_matchs,
@@ -34,7 +37,7 @@ from insalan.tournament.manage import (
     create_swiss_matchs,
     launch_match,
 )
-from insalan.admin import ADMIN_ORDERING
+from insalan.utils import FieldSets
 
 from .models import (
     BestofType,
@@ -65,6 +68,7 @@ from .models import (
     TournamentMailer,
 )
 
+
 sensitive_post_parameters_m = method_decorator(sensitive_post_parameters())
 
 ADMIN_ORDERING += [
@@ -93,16 +97,18 @@ ADMIN_ORDERING += [
     ]),
 ]
 
+
 class SeatCanvasWidget(forms.Widget):
-    """
-    Custom widget for the seat canvas
-    """
-    def render(self, name, value, attrs=None, renderer=None):
+    """Custom widget for the seat canvas."""
+
+    def render(self, name: str, value: Any, attrs: dict[str, Any] | None = None,
+               renderer: BaseRenderer | None = None) -> SafeString:
         element_id = attrs["id"] if attrs else "id_" + name
-        return (
+        return SafeString(
             f'<input id="{element_id}" type="hidden" name="{name}" value="" />'
             '<canvas id="seat_canvas" width="900" height="900" />'
         )
+
 
 class SeatCanvas(forms.Field):
     """
@@ -110,20 +116,20 @@ class SeatCanvas(forms.Field):
     """
     widget = SeatCanvasWidget
 
-    def clean(self, value):
+    def clean(self, value: Any) -> Any:
         if value is None:
             return None
         value = json.loads(value)
         return value
 
-class EventForm(forms.ModelForm):
-    """
-    Custom form for the Event model
-    """
+
+class EventForm(ModelForm[Event]):  # pylint: disable=unsubscriptable-object
+    """Custom form for the Event model."""
+
     seats = SeatCanvas()
     canvas_params = forms.JSONField(widget=forms.HiddenInput, required=False)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
         seats = Seat.objects.filter(event=self.instance)
@@ -134,7 +140,7 @@ class EventForm(forms.ModelForm):
         }
         self.fields["canvas_params"].initial = data
 
-    def save(self, commit: bool = True):
+    def save(self, commit: bool = True) -> Event:
         """Override the save method to save seats related with the event."""
         if not self.instance.pk:
             # Force saving the instance otherwise the seats cannot be created
@@ -170,7 +176,8 @@ class EventForm(forms.ModelForm):
         model = Event
         fields = "__all__"
 
-class EventAdmin(admin.ModelAdmin):
+
+class EventAdmin(ModelAdmin[Event]):  # pylint: disable=unsubscriptable-object
     """Admin handler for Events"""
 
     form = EventForm
@@ -190,11 +197,12 @@ class EventAdmin(admin.ModelAdmin):
 
 admin.site.register(Event, EventAdmin)
 
-class GameForm(forms.ModelForm):
+
+class GameForm(ModelForm[Game]):  # pylint: disable=unsubscriptable-object
     """
     Custom form for the Game model
     """
-    def clean(self) -> dict[str, Any] | None:
+    def clean(self) -> None:
         # if players_per_team changed, reset associated seat_slots
         new_players_per_team = self.cleaned_data.get("players_per_team")
         if (new_players_per_team is not None and
@@ -211,7 +219,7 @@ class GameForm(forms.ModelForm):
         fields = "__all__"
 
 
-class GameAdmin(admin.ModelAdmin):
+class GameAdmin(admin.ModelAdmin[Game]):  # pylint: disable=unsubscriptable-object
     """Admin handler for Games"""
     form = GameForm
 
@@ -221,6 +229,7 @@ class GameAdmin(admin.ModelAdmin):
 
 admin.site.register(Game, GameAdmin)
 
+
 class EventTournamentFilter(admin.SimpleListFilter):
     """
     This filter is used to only show tournaments from the selected event
@@ -228,13 +237,17 @@ class EventTournamentFilter(admin.SimpleListFilter):
     title = _('Event')
     parameter_name = 'event'
 
-    def lookups(self, request, model_admin):
+    # pylint: disable-next=unsubscriptable-object
+    def lookups(self, request: HttpRequest, model_admin: ModelAdmin[EventTournament]
+                ) -> list[tuple[int, str]]:
         return [(event.id, event.name) for event in Event.objects.all()]
 
-    def queryset(self, request, queryset):
+    def queryset(self, request: HttpRequest, queryset: QuerySet[EventTournament]
+                 ) -> QuerySet[EventTournament]:
         if self.value():
             return queryset.filter(event__id=self.value())
         return queryset
+
 
 class GameTournamentFilter(admin.SimpleListFilter):
     """
@@ -243,21 +256,27 @@ class GameTournamentFilter(admin.SimpleListFilter):
     title = _('Game')
     parameter_name = 'game'
 
-    def lookups(self, request, model_admin):
+    # pylint: disable-next=unsubscriptable-object
+    def lookups(self, request: HttpRequest, model_admin: ModelAdmin[EventTournament]
+                ) -> list[tuple[int, str]]:
         return [(game.id, game.name) for game in Game.objects.all()]
 
-    def queryset(self, request, queryset):
+    def queryset(self, request: HttpRequest, queryset: QuerySet[EventTournament]
+                 ) -> QuerySet[EventTournament]:
         if self.value():
             return queryset.filter(game__id=self.value())
         return queryset
+
 
 class SeatSlotSelection(forms.Widget):
     """
     Custom widget for listing seat slots and allowing selection
     """
-    def render(self, name, value, attrs=None, renderer=None):
+
+    def render(self, name: str, value: Any, attrs: dict[str, Any] | None = None,
+               renderer: BaseRenderer | None = None) -> SafeString:
         # pylint: disable=line-too-long
-        return (
+        return SafeString(
             '<div style="display: flex; flex-direction: row;" >'
                 '<div style="display: flex; flex-direction: column; justify-content: center;" >'
                     '<input type="button" id="id_slot_selection_create" value="Créer un slot" />'
@@ -270,15 +289,14 @@ class SeatSlotSelection(forms.Widget):
         # pylint: enable=line-too-long
 
 
-class TournamentForm(forms.ModelForm):
-    """
-    Custom form for the Tournament model
-    """
+class EventTournamentForm(ModelForm[EventTournament]):  # pylint: disable=unsubscriptable-object
+    """Custom form for the Tournament model."""
+
     seat_slots = SeatCanvas()
     slot_selection = forms.Field(widget=SeatSlotSelection(), required=False)
     canvas_params = forms.JSONField(widget=forms.HiddenInput, required=False)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
         seats = Seat.objects.filter(event=self.instance.event)
@@ -369,23 +387,28 @@ class TournamentForm(forms.ModelForm):
         fields = "__all__"
 
 
-class TournamentAdmin(admin.ModelAdmin):
+# pylint: disable-next=unsubscriptable-object
+class EventTournamentAdmin(admin.ModelAdmin[EventTournament]):
     """Admin handler for Tournaments"""
 
     list_display = ("id", "name", "event", "game", "is_announced", "cashprizes", "get_occupancy")
     search_fields = ["name", "event__name", "game__name"]
 
-    list_filter = (EventTournamentFilter,GameTournamentFilter)
+    list_filter = (EventTournamentFilter, GameTournamentFilter)
 
-    def get_form(self, request, obj=None, change=False, **kwargs):
-        """
-        Use TournamentForm only for editing an existing tournament.
-        """
+    def get_form(
+        self,
+        request: HttpRequest,
+        obj: EventTournament | None = None,
+        change: bool = False,
+        **kwargs: Any,
+    ) -> Type[ModelForm[EventTournament]]:  # pylint: disable=unsubscriptable-object
+        """Use TournamentForm only for editing an existing tournament."""
         if obj is not None:
-            kwargs["form"] = TournamentForm
+            kwargs["form"] = EventTournamentForm
         return super().get_form(request, obj, change, **kwargs)
 
-    def get_occupancy(self, obj):
+    def get_occupancy(self, obj: EventTournament) -> str:
         """
         Returns the occupancy of the tournament
         """
@@ -394,7 +417,7 @@ class TournamentAdmin(admin.ModelAdmin):
             validated=True,
         ).count()) + " / " + str(obj.maxTeam)
 
-    get_occupancy.short_description = 'Remplissage'
+    get_occupancy.short_description = 'Remplissage'  # type: ignore[attr-defined]
 
     class Media:
         css = {
@@ -405,16 +428,18 @@ class TournamentAdmin(admin.ModelAdmin):
             'js/tournament_seat_canvas.js',
         )
 
-admin.site.register(EventTournament, TournamentAdmin)
+admin.site.register(EventTournament, EventTournamentAdmin)
 
-class PrivateTournamentAdmin(admin.ModelAdmin):
+
+# pylint: disable-next=unsubscriptable-object
+class PrivateTournamentAdmin(admin.ModelAdmin[PrivateTournament]):
     """
     Admin handler for PrivateTournament
     """
     list_display = ("id", "name", "game", "get_occupancy")
     search_fields = ["name", "game__name"]
 
-    def get_occupancy(self, obj):
+    def get_occupancy(self, obj: PrivateTournament) -> str:
         """
         Returns the occupancy of the tournament
         """
@@ -423,11 +448,13 @@ class PrivateTournamentAdmin(admin.ModelAdmin):
             validated=True,
         ).count()) + " / " + str(obj.maxTeam)
 
-    get_occupancy.short_description = 'Remplissage'
+    get_occupancy.short_description = 'Remplissage'  # type: ignore[attr-defined]
+
 
 admin.site.register(PrivateTournament, PrivateTournamentAdmin)
 
-class TeamForm(forms.ModelForm):
+
+class TeamForm(ModelForm[Team]):  # pylint: disable=unsubscriptable-object
     """Form for Team"""
     password = ReadOnlyPasswordHashField(
         label=_("Password"),
@@ -443,28 +470,31 @@ class TeamForm(forms.ModelForm):
         model = Team
         fields = "__all__"
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         password = self.fields.get("password")
         if password:
             password.help_text = password.help_text.format(
                 f"../../{self.instance.pk}/password/"
             )
-        user_permissions = self.fields.get("user_permissions")
+        user_permissions = cast(
+            ModelChoiceField | None,
+            self.fields.get("user_permissions"),
+        )
         if user_permissions:
-            user_permissions.queryset = user_permissions.queryset.select_related(
-                "content_type"
-            )
+            assert user_permissions.queryset is not None
+            user_permissions.queryset = user_permissions.queryset.select_related("content_type")
 
-        seat_slot = self.fields.get("seat_slot")
-        if (seat_slot and self.instance.tournament):
+        seat_slot = cast(ModelChoiceField | None, self.fields.get("seat_slot"))
+        if seat_slot and self.instance.tournament:
+            assert seat_slot.queryset is not None
             seat_slot.queryset = seat_slot.queryset.filter(
                 tournament=self.instance.tournament
             ).filter(
                 Q(team=None) | Q(team=self.instance)
             )
 
-    def clean(self):
+    def clean(self) -> Any:
         """
         validate seat slot
         """
@@ -485,7 +515,8 @@ class TeamForm(forms.ModelForm):
 
         return self.cleaned_data
 
-class TeamCreationForm(forms.ModelForm):
+
+class TeamCreationForm(ModelForm[Team]):  # pylint: disable=unsubscriptable-object
     """
     A form that creates a team, from the given username, tournament, validation and password.
     """
@@ -514,16 +545,16 @@ class TeamCreationForm(forms.ModelForm):
         fields = ("name", "tournament", "validated", "seed")
         field_classes = {"name": UsernameField}
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         # pylint: disable-next=no-member
-        if self._meta.model.name in self.fields:
+        if self._meta.model.name in self.fields:  # type: ignore[comparison-overlap]
             # pylint: disable-next=no-member
-            self.fields[self._meta.model.name].widget.attrs[
+            self.fields[self._meta.model.name].widget.attrs[  # type: ignore[index]
                 "autofocus"
             ] = True
 
-    def clean_password2(self):
+    def clean_password2(self) -> str:
         """
         Check that the two password entries match
         """
@@ -534,10 +565,11 @@ class TeamCreationForm(forms.ModelForm):
                 self.error_messages["password_mismatch"],
                 code="password_mismatch",
             )
+        assert isinstance(password2, str)
         return password2
 
-    def _post_clean(self):
-        super()._post_clean()
+    def _post_clean(self) -> None:
+        super()._post_clean()  # type: ignore[misc]
         # Validate the password after self.instance is updated with form data
         # by super().
         password = self.cleaned_data.get("password2")
@@ -547,17 +579,18 @@ class TeamCreationForm(forms.ModelForm):
             except ValidationError as error:
                 self.add_error("password2", error)
 
-    def save(self, commit=True):
+    def save(self, commit: bool = True) -> Team:
         """
         Save the provided password in hashed format
         """
-        user = super().save(commit=False)
-        user.password = make_password(self.cleaned_data["password1"])
+        team = super().save(commit=False)
+        team.password = make_password(self.cleaned_data["password1"])
         if commit:
-            user.save()
+            team.save()
             if hasattr(self, "save_m2m"):
                 self.save_m2m()
-        return user
+        return team
+
 
 class TeamTournamentFilter(admin.SimpleListFilter):
     """
@@ -566,14 +599,16 @@ class TeamTournamentFilter(admin.SimpleListFilter):
     title = _('Tournoi')
     parameter_name = 'tournament'
 
-    def lookups(self, request, model_admin):
+    # pylint: disable-next=unsubscriptable-object
+    def lookups(self, request: HttpRequest, model_admin: ModelAdmin[Team]) -> list[tuple[int, str]]:
         return [(tournament.id, tournament.name)
                 for tournament in EventTournament.objects.filter(event__ongoing=True)]
 
-    def queryset(self, request, queryset):
+    def queryset(self, request: HttpRequest, queryset: QuerySet[Team]) -> QuerySet[Team]:
         if self.value():
             return queryset.filter(tournament__id=self.value())
         return queryset
+
 
 class ValidatedFilter(admin.SimpleListFilter):
     """
@@ -582,20 +617,23 @@ class ValidatedFilter(admin.SimpleListFilter):
     title = _('Validation')
     parameter_name = 'validated'
 
-    def lookups(self, request, model_admin):
+    # pylint: disable-next=unsubscriptable-object
+    def lookups(self, request: HttpRequest, model_admin: ModelAdmin[Team]
+                ) -> list[tuple[bool, str]]:
         return [(True, 'Validé'), (False, 'Non Validé')]
 
-    def queryset(self, request, queryset):
+    def queryset(self, request: HttpRequest, queryset: QuerySet[Team]) -> QuerySet[Team]:
         if self.value():
             return queryset.filter(validated=self.value())
         return queryset
 
-class TeamAdmin(admin.ModelAdmin):
+
+class TeamAdmin(admin.ModelAdmin[Team]):  # pylint: disable=unsubscriptable-object
     """Admin handler for Team"""
 
     list_display = ("id", "name", "tournament", "validated", "get_quota")
     search_fields = ["name", "tournament__name"]
-    add_fieldsets = (
+    add_fieldsets: FieldSets = (
         (
             None,
             {
@@ -608,17 +646,23 @@ class TeamAdmin(admin.ModelAdmin):
     add_form = TeamCreationForm
     change_team_password_template = None
 
-    list_filter = (TeamTournamentFilter,ValidatedFilter)
+    list_filter = (TeamTournamentFilter, ValidatedFilter)
 
-    def get_quota(self, obj) -> str:
+    def get_quota(self, obj: Team) -> str:
         """Returns the quota of the team."""
         return str(Player.objects.filter(team=obj).count()) + " / " + str(
             obj.tournament.game.players_per_team,
         )
 
-    get_quota.short_description = 'Nombre de Joueurs'
+    get_quota.short_description = 'Nombre de Joueurs'  # type: ignore[attr-defined]
 
-    def get_form(self, request, obj=None, change=False, **kwargs):
+    def get_form(
+        self,
+        request: HttpRequest,
+        obj: Team | None = None,
+        change: bool = False,
+        **kwargs: Any,
+    ) -> Type[ModelForm[Team]]:  # pylint: disable=unsubscriptable-object
         """
         Use special form during user creation
         """
@@ -628,23 +672,25 @@ class TeamAdmin(admin.ModelAdmin):
         defaults.update(kwargs)
         return super().get_form(request, obj, change, **defaults)
 
-    def get_fieldsets(self, request, obj=None):
+    def get_fieldsets(self, request: HttpRequest, obj: Team | None = None) -> FieldSets:
         if not obj:
             return self.add_fieldsets
         return super().get_fieldsets(request, obj)
 
-    def get_urls(self):
+    def get_urls(self) -> list[URLPattern]:
         return [
             path(
-                "<team_id>/password/",
+                "<int:team_id>/password/",
                 self.admin_site.admin_view(self.team_change_password),
                 name="auth_team_password_change",
             ),
         ] + super().get_urls()
+    # The Django password form was made for the user but it magically work with our team model.
     change_password_form = AdminPasswordChangeForm
 
     @sensitive_post_parameters_m
-    def team_change_password(self, request, team_id, *args, form_url="", **kwargs):
+    def team_change_password(self, request: HttpRequest, team_id: int, *args: Any,
+                             form_url: str = "", **kwargs: Any) -> HttpResponse:
         """Change the password of a team"""
         team = Team.objects.get(pk=team_id)
         if not self.has_change_permission(request, team):
@@ -658,7 +704,7 @@ class TeamAdmin(admin.ModelAdmin):
                 }
             )
         if request.method == "POST":
-            form = self.change_password_form(team, request.POST)
+            form = self.change_password_form(team, request.POST)  # type: ignore[arg-type]
             if form.is_valid():
                 if form.cleaned_data["password1"] != form.cleaned_data["password2"]:
                     msg = _("The two password fields didn't match.")
@@ -672,7 +718,7 @@ class TeamAdmin(admin.ModelAdmin):
                     )
                 team.password = make_password(form.cleaned_data["password1"])
                 team.save()
-                change_message = self.construct_change_message(request, form, None)
+                change_message = self.construct_change_message(request, form, [])
                 self.log_change(request, team, change_message)
                 msg = _("Password changed successfully.")
                 messages.success(request, msg)
@@ -684,10 +730,10 @@ class TeamAdmin(admin.ModelAdmin):
                     )
                 )
         else:
-            form = self.change_password_form(team)
+            form = self.change_password_form(team)  # type: ignore[arg-type]
 
         fieldsets = [(None, {"fields": list(form.base_fields)})]
-        admin_form = admin.helpers.AdminForm(form, fieldsets, {})
+        admin_form = helpers.AdminForm(form, fieldsets, {})  # type: ignore[arg-type]
 
         context = {
             "title": _("Change password: %s") % escape(team.name),
@@ -719,6 +765,10 @@ class TeamAdmin(admin.ModelAdmin):
 
 admin.site.register(Team, TeamAdmin)
 
+
+ManagerOrPlayerOrSubstitute = TypeVar("ManagerOrPlayerOrSubstitute", Manager, Player, Substitute)
+
+
 class EventFilter(admin.SimpleListFilter):
     """
     This filter is used to only show players from the selected event
@@ -726,13 +776,17 @@ class EventFilter(admin.SimpleListFilter):
     title = _('Event')
     parameter_name = 'event'
 
-    def lookups(self, request, model_admin):
+    # pylint: disable-next=unsubscriptable-object
+    def lookups(self, request: HttpRequest, model_admin: ModelAdmin[ManagerOrPlayerOrSubstitute]
+                ) -> list[tuple[int, str]]:
         return [(event.id, event.name) for event in Event.objects.all()]
 
-    def queryset(self, request, queryset):
+    def queryset(self, request: HttpRequest, queryset: QuerySet[ManagerOrPlayerOrSubstitute]
+                 ) -> QuerySet[ManagerOrPlayerOrSubstitute]:
         if self.value():
             return queryset.filter(team__tournament__event__id=self.value())
         return queryset
+
 
 class OngoingTournamentFilter(admin.SimpleListFilter):
     """
@@ -741,14 +795,18 @@ class OngoingTournamentFilter(admin.SimpleListFilter):
     title = _('Tournament')
     parameter_name = 'tournament'
 
-    def lookups(self, request, model_admin):
+    # pylint: disable-next=unsubscriptable-object
+    def lookups(self, request: HttpRequest, model_admin: ModelAdmin[ManagerOrPlayerOrSubstitute]
+                ) -> list[tuple[int, str]]:
         return [(tournament.id, tournament.name)
                 for tournament in EventTournament.objects.filter(event__ongoing=True)]
 
-    def queryset(self, request, queryset):
+    def queryset(self, request: HttpRequest, queryset: QuerySet[ManagerOrPlayerOrSubstitute]
+                 ) -> QuerySet[ManagerOrPlayerOrSubstitute]:
         if self.value():
             return queryset.filter(team__tournament__id=self.value())
         return queryset
+
 
 class PaymentStatusFilter(admin.SimpleListFilter):
     """
@@ -757,107 +815,148 @@ class PaymentStatusFilter(admin.SimpleListFilter):
     title = _('Payment Status')
     parameter_name = 'payment_status'
 
-    def lookups(self, request, model_admin):
+    # pylint: disable-next=unsubscriptable-object
+    def lookups(self, request: HttpRequest, model_admin: ModelAdmin[ManagerOrPlayerOrSubstitute]
+                ) -> list[tuple[str, str]]:
         return [(payment_status[0], payment_status[1]) for payment_status in PaymentStatus.choices]
 
-    def queryset(self, request, queryset):
+    def queryset(self, request: HttpRequest, queryset: QuerySet[ManagerOrPlayerOrSubstitute]
+                 ) -> QuerySet[ManagerOrPlayerOrSubstitute]:
         if self.value():
             return queryset.filter(payment_status=self.value())
         return queryset
 
-class PlayerAdmin(admin.ModelAdmin):
+
+class PlayerAdmin(admin.ModelAdmin[Player]):  # pylint: disable=unsubscriptable-object
     """Admin handler for Player Registrations"""
 
     list_display = ("id", "user", "name_in_game", "team", "payment_status", "get_tournament")
     search_fields = ["user__username", "team__name", "name_in_game"]
 
-    list_filter = (EventFilter,OngoingTournamentFilter,PaymentStatusFilter)
+    list_filter = (EventFilter, OngoingTournamentFilter, PaymentStatusFilter)
 
-    def get_tournament(self, obj):
-        """
-        Returns the tournament of the player
-        """
+    def get_tournament(self, obj: Player) -> str:
+        """Returns the tournament name of the player."""
         return obj.team.tournament.name
 
-    get_tournament.short_description = 'Tournament'
+    get_tournament.short_description = 'Tournament'  # type: ignore[attr-defined]
 
 admin.site.register(Player, PlayerAdmin)
 
 
-class ManagerAdmin(admin.ModelAdmin):
+class ManagerAdmin(admin.ModelAdmin[Manager]):  # pylint: disable=unsubscriptable-object
     """Admin handler for Manager Registrations"""
 
     list_display = ("id", "user", "team", "payment_status", "get_tournament")
     search_fields = ["user__username", "team__name"]
 
-    list_filter = (EventFilter,OngoingTournamentFilter,PaymentStatusFilter)
+    list_filter = (EventFilter, OngoingTournamentFilter, PaymentStatusFilter)
 
-    def get_tournament(self, obj):
-        """
-        Returns the tournament of the manager
-        """
+    def get_tournament(self, obj: Manager) -> str:
+        """Returns the tournament name of the manager."""
         return obj.team.tournament.name
 
-    get_tournament.short_description = 'Tournament'
+    get_tournament.short_description = 'Tournament'  # type: ignore[attr-defined]
 
 
 admin.site.register(Manager, ManagerAdmin)
 
-class CasterAdmin(admin.ModelAdmin):
+
+class CasterAdmin(admin.ModelAdmin[Caster]):  # pylint: disable=unsubscriptable-object
     """Admin handler for tournament Casters"""
 
     list_display = ("id", "name", "tournament")
     search_fields = ["name", "tournament__name"]
 
+
 admin.site.register(Caster, CasterAdmin)
 
-class SubstituteAdmin(admin.ModelAdmin):
+
+class SubstituteAdmin(admin.ModelAdmin[Substitute]):  # pylint: disable=unsubscriptable-object
     """Admin handler for Substitute Registrations"""
 
     list_display = ("id", "user", "name_in_game", "team", "payment_status", "get_tournament")
     search_fields = ["user__username", "team__name", "name_in_game"]
 
-    list_filter = (EventFilter,PaymentStatusFilter)
+    list_filter = (EventFilter, OngoingTournamentFilter, PaymentStatusFilter)
 
-    def get_tournament(self, obj):
-        """
-        Returns the tournament of the substitute
-        """
+    def get_tournament(self, obj: Substitute) -> str:
+        """Returns the tournament name of the substitute."""
         return obj.team.tournament.name
 
-    get_tournament.short_description = 'Tournament'
+    get_tournament.short_description = 'Tournament'  # type: ignore[attr-defined]
 
 
 admin.site.register(Substitute, SubstituteAdmin)
 
 
-def update_bo_type_action(queryset,new_bo_type):
+GroupMatchOrKnockoutMatchOrSwissMatch = TypeVar(
+    "GroupMatchOrKnockoutMatchOrSwissMatch",
+    GroupMatch,
+    KnockoutMatch,
+    SwissMatch,
+)
+
+
+def update_bo_type_action(queryset: QuerySet[GroupMatchOrKnockoutMatchOrSwissMatch],
+                          new_bo_type: BestofType) -> None:
     queryset.update(bo_type=new_bo_type)
 
+
 @admin.action(description=_("Passer en Bo1"))
-def update_to_bo1_action(modeladmin, request, queryset) -> None:
-    update_bo_type_action(queryset,BestofType.BO1)
-    modeladmin.message_user(request,_("Les matchs ont bien été mis à jour"))
+def update_to_bo1_action(
+    # pylint: disable-next=unsubscriptable-object
+    modeladmin: ModelAdmin[GroupMatchOrKnockoutMatchOrSwissMatch],
+    request: HttpRequest,
+    queryset: QuerySet[GroupMatchOrKnockoutMatchOrSwissMatch],
+) -> None:
+    update_bo_type_action(queryset, BestofType.BO1)
+    modeladmin.message_user(request, _("Les matchs ont bien été mis à jour"))
+
 
 @admin.action(description=_("Passer en Bo3"))
-def update_to_bo3_action(modeladmin, request, queryset) -> None:
-    update_bo_type_action(queryset,BestofType.BO3)
-    modeladmin.message_user(request,_("Les matchs ont bien été mis à jour"))
+def update_to_bo3_action(
+    # pylint: disable-next=unsubscriptable-object
+    modeladmin: ModelAdmin[GroupMatchOrKnockoutMatchOrSwissMatch],
+    request: HttpRequest,
+    queryset: QuerySet[GroupMatchOrKnockoutMatchOrSwissMatch],
+) -> None:
+    update_bo_type_action(queryset, BestofType.BO3)
+    modeladmin.message_user(request, _("Les matchs ont bien été mis à jour"))
+
 
 @admin.action(description=_("Passer en Bo5"))
-def update_to_bo5_action(modeladmin, request, queryset) -> None:
-    update_bo_type_action(queryset,BestofType.BO5)
-    modeladmin.message_user(request,_("Les matchs ont bien été mis à jour"))
+def update_to_bo5_action(
+    # pylint: disable-next=unsubscriptable-object
+    modeladmin: ModelAdmin[GroupMatchOrKnockoutMatchOrSwissMatch],
+    request: HttpRequest,
+    queryset: QuerySet[GroupMatchOrKnockoutMatchOrSwissMatch],
+) -> None:
+    update_bo_type_action(queryset, BestofType.BO5)
+    modeladmin.message_user(request, _("Les matchs ont bien été mis à jour"))
+
 
 @admin.action(description=_("Passer en Bo7"))
-def update_to_bo7_action(modeladmin, request, queryset) -> None:
-    update_bo_type_action(queryset,BestofType.BO7)
-    modeladmin.message_user(request,_("Les matchs ont bien été mis à jour"))
+def update_to_bo7_action(
+    # pylint: disable-next=unsubscriptable-object
+    modeladmin: ModelAdmin[GroupMatchOrKnockoutMatchOrSwissMatch],
+    request: HttpRequest,
+    queryset: QuerySet[GroupMatchOrKnockoutMatchOrSwissMatch],
+) -> None:
+    update_bo_type_action(queryset, BestofType.BO7)
+    modeladmin.message_user(request, _("Les matchs ont bien été mis à jour"))
+
 
 @admin.action(description=_("Passer à un classement"))
-def update_to_ranking_action(modeladmin, request, queryset) -> None:
-    update_bo_type_action(queryset,BestofType.RANKING)
-    modeladmin.message_user(request,_("Les matchs ont bien été mis à jour"))
+def update_to_ranking_action(
+    # pylint: disable-next=unsubscriptable-object
+    modeladmin: ModelAdmin[GroupMatchOrKnockoutMatchOrSwissMatch],
+    request: HttpRequest,
+    queryset: QuerySet[GroupMatchOrKnockoutMatchOrSwissMatch],
+) -> None:
+    update_bo_type_action(queryset, BestofType.RANKING)
+    modeladmin.message_user(request, _("Les matchs ont bien été mis à jour"))
+
 
 update_bo_type_action_list = [
     update_to_bo1_action,
@@ -868,17 +967,26 @@ update_bo_type_action_list = [
 ]
 
 
+GroupMatchOrSwissMatch = TypeVar("GroupMatchOrSwissMatch", GroupMatch, SwissMatch)
+
+
 class RoundNumberFilter(admin.SimpleListFilter):
     """Filter for group and swiss match round number"""
     title = _("numéro de round")
     parameter_name = "round_number"
 
-    def lookups(self, request, model_admin):
-        return [(str(i),f"Round {i}")
+    def lookups(
+        self,
+        request: HttpRequest,
+        # pylint: disable-next=unsubscriptable-object
+        model_admin: ModelAdmin[GroupMatchOrSwissMatch],
+    ) -> list[tuple[str, str]]:
+        return [(str(i), f"Round {i}")
                 for i in set(model_admin.get_queryset(request).values_list("round_number",
                                                                            flat=True))]
 
-    def queryset(self, request, queryset):
+    def queryset(self, request: HttpRequest, queryset: QuerySet[GroupMatchOrSwissMatch]
+                 ) -> QuerySet[GroupMatchOrSwissMatch]:
         if self.value():
             return queryset.filter(round_number=self.value())
         return queryset
@@ -889,7 +997,9 @@ class BracketMatchFilter(admin.SimpleListFilter):
     title = _("niveau dans l'arbre")
     parameter_name = "round_number"
 
-    def lookups(self, request, model_admin):
+    # pylint: disable-next=unsubscriptable-object
+    def lookups(self, request: HttpRequest, model_admin: ModelAdmin[KnockoutMatch]
+                ) -> list[tuple[str, str]]:
         lookup = {
             "W0" : "Grande finale",
             "W1" : "Finale winner",
@@ -912,21 +1022,24 @@ class BracketMatchFilter(admin.SimpleListFilter):
 
         for tour,round_number in enumerate(range(2*(max_depth-1),1,-1)):
             lookup["L" + str(round_number)] = f"Tour {tour+1} looser"
-        return lookup.items()
+        return list(lookup.items())
 
-    def queryset(self, request, queryset):
-        if self.value():
-            br_set = BracketSet.WINNER if self.value()[0] == "W" else BracketSet.LOOSER
-            return queryset.filter(round_number=self.value()[1:],bracket_set=br_set)
+    def queryset(self, request: HttpRequest, queryset: QuerySet[KnockoutMatch]
+                 ) -> QuerySet[KnockoutMatch]:
+        value = self.value()
+        if value:
+            br_set = BracketSet.WINNER if value[0] == "W" else BracketSet.LOOSER
+            return queryset.filter(round_number=value[1:], bracket_set=br_set)
         return queryset
 
 
-class GroupTeamsInline(admin.TabularInline):
+# pylint: disable-next=unsubscriptable-object
+class GroupTeamsInline(admin.TabularInline[Seeding, Group]):
     model = Seeding
     extra = 1
 
-    def formfield_for_foreignkey(self, db_field: ForeignKey[Any], request: HttpRequest | None,
-                                 **kwargs: Any) -> ModelChoiceField | None:
+    def formfield_for_foreignkey(self, db_field: ForeignKey[Any, Any], request: HttpRequest,
+                                 **kwargs: Any) -> ModelChoiceField:
         if db_field.name == "team":
             resolved = resolve(request.path_info)
             if "object_id" in resolved.kwargs:
@@ -938,11 +1051,14 @@ class GroupTeamsInline(admin.TabularInline):
                 ).order_by("name")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-class ScoreInline(admin.TabularInline):
+
+# pylint: disable=unsubscriptable-object
+class ScoreInline(admin.TabularInline[Score, GroupMatchOrKnockoutMatchOrSwissMatch]):
     model = Score
     extra = 0
 
-    def formfield_for_foreignkey(self, db_field: ForeignKey[Any], request, **kwargs):
+    def formfield_for_foreignkey(self, db_field: ForeignKey[Any, Any], request: HttpRequest,
+                                 **kwargs: Any) -> ModelChoiceField:
         if db_field.name == "team":
             resolved = resolve(request.path_info)
             if "object_id" in resolved.kwargs:
@@ -954,40 +1070,43 @@ class ScoreInline(admin.TabularInline):
                 ).order_by("name")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
+
+BracketOrGroupOrSwissRound = TypeVar("BracketOrGroupOrSwissRound", Bracket, Group, SwissRound)
+
+
 class TournamentEventFilter(admin.SimpleListFilter):
-    """
-    This filter is used to only show tournaments from the selected event
-    """
+    """This filter is used to only show tournaments from the selected event."""
     title = _('Event')
     parameter_name = 'event'
 
-    def lookups(self, request, model_admin):
+    def lookups(self, request: HttpRequest, model_admin: ModelAdmin[BracketOrGroupOrSwissRound]
+                ) -> list[tuple[int, str]]:
         return [(event.id, event.name) for event in Event.objects.all()]
 
-    def queryset(self, request, queryset):
-        if self.value():
+    def queryset(self, request: HttpRequest, queryset: QuerySet[BracketOrGroupOrSwissRound]
+                 ) -> QuerySet[BracketOrGroupOrSwissRound]:
+        value = self.value()
+        if value:
             for obj in queryset:
-                if (
-                    not isinstance(obj.tournament, EventTournament)
-                    or obj.tournament.event.id != int(self.value())
-                ):
+                if (not isinstance(obj.tournament, EventTournament) or
+                    obj.tournament.event.id != int(value)):
                     queryset = queryset.exclude(id=obj.id)
             return queryset
         return queryset
 
 
-class GroupAdmin(admin.ModelAdmin):
+class GroupAdmin(admin.ModelAdmin[Group]):  # pylint: disable=unsubscriptable-object
     """Admin handler for Groups"""
 
     list_display = ("id", "name", "tournament")
-    search_fields = ["name","tournament"]
+    search_fields = ["name", "tournament"]
     inlines = [GroupTeamsInline]
     actions = ["create_group_matchs_action"]
 
-    list_filter = ["tournament",TournamentEventFilter,"tournament__game"]
+    list_filter = ["tournament", TournamentEventFilter, "tournament__game"]
 
     @admin.action(description=_("Créer les matchs des poules"))
-    def create_group_matchs_action(self,request,queryset):
+    def create_group_matchs_action(self, request: HttpRequest, queryset: QuerySet[Group]) -> None:
         for group in queryset:
             matchs_status = GroupMatch.objects.filter(group=group).values_list("status", flat=True)
             if MatchStatus.ONGOING in matchs_status or MatchStatus.COMPLETED in matchs_status:
@@ -1002,24 +1121,27 @@ class GroupAdmin(admin.ModelAdmin):
             create_group_matchs(group)
             self.message_user(request,_("Matchs créés avec succes"))
 
+
 admin.site.register(Group, GroupAdmin)
 
-class GroupMatchAdmin(admin.ModelAdmin):
+
+class GroupMatchAdmin(admin.ModelAdmin[GroupMatch]):  # pylint: disable=unsubscriptable-object
     """Admin handle for group matchs"""
 
-    list_display = ("id", "group", "status","round_number","index_in_round","bo_type",)
-    search_fields = ["index_in_round","round_number"]
+    list_display = ("id", "group", "status", "round_number", "index_in_round", "bo_type", )
+    search_fields = ["index_in_round", "round_number"]
     # filter_horizontal = ("teams",)
     inlines = [ScoreInline]
     actions = [
         "launch_group_matchs_action",
-        *update_bo_type_action_list
+        *update_bo_type_action_list  # type: ignore[list-item]
     ]
 
-    list_filter = ["group__tournament","group",RoundNumberFilter,"index_in_round","status"]
+    list_filter = ["group__tournament", "group", RoundNumberFilter, "index_in_round", "status"]
 
     @admin.action(description=_("Lancer les matchs"))
-    def launch_group_matchs_action(self,request,queryset):
+    def launch_group_matchs_action(self, request: HttpRequest, queryset: QuerySet[GroupMatch]
+                                   ) -> None:
         for match in queryset:
             if match.status != MatchStatus.COMPLETED:
                 for team in match.get_teams():
@@ -1049,20 +1171,28 @@ class GroupMatchAdmin(admin.ModelAdmin):
 
 admin.site.register(GroupMatch, GroupMatchAdmin)
 
-class MailerAdmin(admin.ModelAdmin):
+
+class MailerAdmin(admin.ModelAdmin[TournamentMailer]):  # pylint: disable=unsubscriptable-object
     """
     Admin handler for TournamentMailer
     """
     exclude = ('mail', 'number')
     list_display = ('mail', 'number')
 
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(self, request: HttpRequest, _obj: TournamentMailer | None = None
+                              ) -> bool:
         return False
 
-    def has_delete_permission(self, request, obj=None):
+    def has_delete_permission(self, request: HttpRequest, _obj: TournamentMailer | None = None
+                              ) -> bool:
         return False
 
-    def add_view(self, request, form_url="", extra_context=None):
+    def add_view(
+        self,
+        request: HttpRequest,
+        form_url: str = "",
+        extra_context: dict[str, Any] | None = None,  # pylint: disable=unused-argument
+    ) -> HttpResponse:
         return self.changeform_view(request, None, form_url, {
             'show_save_and_add_another': False,
             'show_save_and_continue': False,
@@ -1070,7 +1200,7 @@ class MailerAdmin(admin.ModelAdmin):
     })
 
     # replace the list url with the add one
-    def get_urls(self):
+    def get_urls(self) -> list[URLPattern]:
         custom_urls = [
             path('add/', self.admin_site.admin_view(self.add_view),
                  name='tournament_tournamentmailer_add'),
@@ -1079,7 +1209,7 @@ class MailerAdmin(admin.ModelAdmin):
         ]
         return custom_urls
 
-    def get_queryset(self, request: HttpRequest) -> QuerySet:
+    def get_queryset(self, request: HttpRequest) -> QuerySet[TournamentMailer]:
         # remove everything from the queryset
         TournamentMailer.objects.all().delete()
 
@@ -1094,23 +1224,31 @@ class MailerAdmin(admin.ModelAdmin):
         # return the queryset
         return TournamentMailer.objects.all()
 
-    def response_add(self, request, obj, post_url_continue=None):
+    def response_add(
+        self,
+        request: HttpRequest,
+        _obj: TournamentMailer,
+        post_url_continue: str | None = None,  # pylint: disable=unused-argument
+    ) -> HttpResponse:
         messages.info(request, _("Le mail est en cours d'envoi"))
         return HttpResponseRedirect(reverse('admin:tournament_tournamentmailer_changelist'))
 
+
 admin.site.register(TournamentMailer, MailerAdmin)
 
-class BracketAdmin(admin.ModelAdmin):
+
+class BracketAdmin(admin.ModelAdmin[Bracket]):  # pylint: disable=unsubscriptable-object
     """Admin handle for Brackets"""
 
     list_display = ("id", "name", "tournament")
-    search_fields = ["name","tournament","tournament","tournament__game"]
+    search_fields = ["name", "tournament", "tournament", "tournament__game"]
     actions = ["create_empty_knockout_matchs_action"]
 
-    list_filter = ["tournament",TournamentEventFilter,"tournament__game"]
+    list_filter = ["tournament", TournamentEventFilter, "tournament__game"]
 
     @admin.action(description=_("Créer les matchs"))
-    def create_empty_knockout_matchs_action(self,request,queryset):
+    def create_empty_knockout_matchs_action(self, request: HttpRequest, queryset: QuerySet[Bracket]
+                                            ) -> None:
         for bracket in queryset:
             if any(MatchStatus.SCHEDULED != m.status
                    for m in KnockoutMatch.objects.filter(bracket=bracket)):
@@ -1121,16 +1259,19 @@ class BracketAdmin(admin.ModelAdmin):
             self.message_user(request,_("Matchs créer avec succès"))
 
     @admin.action(description=_("Remplir les matchs"))
-    def fill_knockout_matchs_action(self, request, queryset):
+    def fill_knockout_matchs_action(self, request: HttpRequest, queryset: QuerySet[Bracket]
+                                    ) -> None:
         # for bracket in queryset:
         #     # TODO: Fix this
         #     fill_knockout_matchs(bracket)
         #     pass
         pass
 
+
 admin.site.register(Bracket, BracketAdmin)
 
-class KnockoutMatchAdmin(admin.ModelAdmin):
+
+class KnockoutMatchAdmin(admin.ModelAdmin[KnockoutMatch]):  # pylint: disable=unsubscriptable-object
     """Admin handle for Knockout matchs"""
 
     list_display = ("id", "bracket", "status", "bracket_set", "round_number", "index_in_round",
@@ -1138,14 +1279,15 @@ class KnockoutMatchAdmin(admin.ModelAdmin):
     inlines = [ScoreInline]
     actions = [
         "launch_knockout_matchs_action",
-        *update_bo_type_action_list
+        *update_bo_type_action_list  # type: ignore[list-item]
     ]
 
     list_filter = ["bracket__tournament", "bracket", "bracket_set", BracketMatchFilter,
                    "index_in_round", "status"]
 
     @admin.action(description=_("Lancer les matchs"))
-    def launch_knockout_matchs_action(self, request,queryset):
+    def launch_knockout_matchs_action(self, request: HttpRequest, queryset: QuerySet[KnockoutMatch]
+                                      ) -> None:
         for match in queryset:
             if match.status != MatchStatus.COMPLETED:
                 for team in match.get_teams():
@@ -1175,21 +1317,23 @@ class KnockoutMatchAdmin(admin.ModelAdmin):
 
 admin.site.register(KnockoutMatch, KnockoutMatchAdmin)
 
-class SwissSeedingInline(admin.TabularInline):
+
+class SwissSeedingInline(admin.TabularInline[SwissSeeding, SwissRound]):
     model = SwissSeeding
     extra = 0
 
-    def formfield_for_foreignkey(self, db_field: ForeignKey[Any], request: HttpRequest | None,
-                                 **kwargs: Any) -> ModelChoiceField | None:
+    def formfield_for_foreignkey(self, db_field: ForeignKey[Any, Any], request: HttpRequest,
+                                 **kwargs: Any) -> ModelChoiceField:
         if db_field.name == "team":
             resolved = resolve(request.path_info)
             if "object_id" in resolved.kwargs:
                 kwargs["queryset"] = Team.objects.filter(tournament=self.parent_model.objects.get(
                     pk=resolved.kwargs["object_id"],
                 ).tournament).order_by("name")
-        return super().formfield_for_foreignkey(db_field,request,**kwargs)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-class SwissRoundAdmin(admin.ModelAdmin):
+
+class SwissRoundAdmin(admin.ModelAdmin[SwissRound]):  # pylint: disable=unsubscriptable-object
     """Admin handle for Swiss Round"""
 
     list_display = ("id", "tournament")
@@ -1197,10 +1341,11 @@ class SwissRoundAdmin(admin.ModelAdmin):
     inlines = [SwissSeedingInline]
     actions = ["create_swiss_matchs_action"]
 
-    list_filter = ["tournament","tournament__game",TournamentEventFilter]
+    list_filter = ["tournament", "tournament__game", TournamentEventFilter]
 
     @admin.action(description=_("Créer les matchs du système suisse"))
-    def create_swiss_matchs_action(self,request,queryset):
+    def create_swiss_matchs_action(self, request: HttpRequest, queryset: QuerySet[SwissRound]
+                                   ) -> None:
         for swiss in queryset:
             matchs_status = SwissMatch.objects.filter(swiss=swiss).values_list("status", flat=True)
             if any(status != MatchStatus.SCHEDULED for status in matchs_status):
@@ -1211,22 +1356,26 @@ class SwissRoundAdmin(admin.ModelAdmin):
             create_swiss_matchs(swiss)
             self.message_user(request,_("Matchs créés avec succès"))
 
-admin.site.register(SwissRound,SwissRoundAdmin)
 
-class SwissMatchAdmin(admin.ModelAdmin):
+admin.site.register(SwissRound, SwissRoundAdmin)
+
+
+class SwissMatchAdmin(admin.ModelAdmin[SwissMatch]):  # pylint: disable=unsubscriptable-object
     """Admin handle for Swiss matchs"""
 
-    list_display = ("id","swiss","status","round_number","index_in_round","bo_type","score_group")
+    list_display = ("id", "swiss", "status", "round_number", "index_in_round", "bo_type",
+                    "score_group")
     inlines = [ScoreInline]
     actions = [
         "launch_swiss_matchs_action",
-        *update_bo_type_action_list
+        *update_bo_type_action_list  # type: ignore[list-item]
     ]
 
-    list_filter = ["swiss__tournament","swiss",RoundNumberFilter,"index_in_round","status"]
+    list_filter = ["swiss__tournament", "swiss", RoundNumberFilter, "index_in_round", "status"]
 
     @admin.action(description=_("Lancer les matchs"))
-    def launch_swiss_matchs_action(self,request,queryset):
+    def launch_swiss_matchs_action(self, request: HttpRequest, queryset: QuerySet[SwissMatch]
+                                   ) -> None:
         for match in queryset:
             if match.status != MatchStatus.COMPLETED:
                 for team in match.get_teams():
@@ -1255,7 +1404,7 @@ class SwissMatchAdmin(admin.ModelAdmin):
 admin.site.register(SwissMatch, SwissMatchAdmin)
 
 
-class SeatAdmin(admin.ModelAdmin):
+class SeatAdmin(admin.ModelAdmin[Seat]):  # pylint: disable=unsubscriptable-object
     """Admin handler for Seating"""
 
     list_display = ("id", "event", "x", "y")
@@ -1265,12 +1414,13 @@ class SeatAdmin(admin.ModelAdmin):
 
 admin.site.register(Seat, SeatAdmin)
 
-class SeatSlotForm(forms.ModelForm):
+
+class SeatSlotForm(ModelForm[SeatSlot]):  # pylint: disable=unsubscriptable-object
     class Meta:
         model = SeatSlot
         fields = ['tournament', 'seats']
 
-    def clean(self):
+    def clean(self) -> dict[str, Any]:
         """
         Validation for seat slot
         """
@@ -1304,13 +1454,14 @@ class SeatSlotForm(forms.ModelForm):
         return self.cleaned_data
 
 
-class SeatSlotAdmin(admin.ModelAdmin):
+class SeatSlotAdmin(admin.ModelAdmin[SeatSlot]):  # pylint: disable=unsubscriptable-object
     """Admin handler for SeatSlot"""
     list_display = ("id", "get_seats")
     form = SeatSlotForm
 
     @admin.display(description="Seats")
-    def get_seats(self, obj):
+    def get_seats(self, obj: SeatSlot) -> str:
         return ", ".join([f"({seat.x}, {seat.y})" for seat in obj.seats.all()])
+
 
 admin.site.register(SeatSlot, SeatSlotAdmin)

@@ -20,7 +20,7 @@ from insalan.user.models import User
 class ManagerTestCase(TestCase):
     """Manager Unit Test Class"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Setup method for Manager Unit Tests"""
 
         # Basic setup for a one-tournamnent game event
@@ -60,7 +60,7 @@ class ManagerTestCase(TestCase):
         Player.objects.create(team=team_one, user=another_player)
         Manager.objects.create(team=team_one, user=random_player)
 
-    def test_get_user_of_manager(self):
+    def test_get_user_of_manager(self) -> None:
         """Check the conversion between user and manager"""
         user = User.objects.get(username="randomplayer")
 
@@ -79,7 +79,7 @@ class ManagerTestCase(TestCase):
         self.assertTrue(found_user.is_active)
         self.assertFalse(found_user.is_staff)
 
-    def test_get_manager_team_not_none(self):
+    def test_get_manager_team_not_none(self) -> None:
         """Check that a manager gives a non null team"""
         user = User.objects.get(username="randomplayer")
 
@@ -90,14 +90,14 @@ class ManagerTestCase(TestCase):
         team = manager.get_team()
         self.assertIsNotNone(team)
 
-    def test_not_manager(self):
+    def test_not_manager(self) -> None:
         """Check that a non-manager cannot become managers"""
         user = User.objects.get(username="testplayer")
 
         managers = Manager.objects.filter(user=user)
         self.assertEqual(0, len(managers))
 
-    def test_get_player_team_correct(self):
+    def test_get_player_team_correct(self) -> None:
         """Check that a manager gives the correct team"""
         user = User.objects.get(username="randomplayer")
         event = Event.objects.get(year=2023, month=3)
@@ -113,7 +113,7 @@ class ManagerTestCase(TestCase):
         self.assertEqual(team.get_name(), "La Team Test")
         self.assertEqual(team.get_tournament(), trnm)
 
-    def test_one_manager_many_teams_same_event_same_tournament_same_team(self):
+    def test_one_manager_many_teams_same_event_same_tournament_same_team(self) -> None:
         """Test the collision of duplicate managers"""
         # Basic setup for a one-tournamnent game event
         event = Event.objects.create(
@@ -146,7 +146,7 @@ class ManagerTestCase(TestCase):
             IntegrityError, Manager.objects.create, user=fella, team=team_one
         )
 
-    def test_one_manager_many_teams_same_event_same_tournament_diff_team(self):
+    def test_one_manager_many_teams_same_event_same_tournament_diff_team(self) -> None:
         """Test the collision of duplicate managers"""
         # Basic setup for a one-tournamnent game event
         event = Event.objects.create(
@@ -178,7 +178,7 @@ class ManagerTestCase(TestCase):
 
         self.assertRaises(ValidationError, man2.full_clean)
 
-    def test_one_manager_many_teams_same_event_diff_tournament_diff_team(self):
+    def test_one_manager_many_teams_same_event_diff_tournament_diff_team(self) -> None:
         """Test the collision of duplicate managers"""
         # Basic setup for a one-tournamnent game event
         event = Event.objects.create(
@@ -222,7 +222,7 @@ class ManagerTestCase(TestCase):
         self.assertRaises(ValidationError, man2.full_clean)
 
 
-    def test_one_manager_many_teams_diff_event_diff_tournament_diff_team(self):
+    def test_one_manager_many_teams_diff_event_diff_tournament_diff_team(self) -> None:
         """Test the non collision of duplicate managers in different teams
         of different tournament of different event"""
         # Basic setup for a one-tournamnent game event
@@ -260,7 +260,7 @@ class ManagerTestCase(TestCase):
         man2 = Manager(user=fella, team=team_two)
         man2.full_clean()
 
-    def test_manager_team_deletion(self):
+    def test_manager_team_deletion(self) -> None:
         """Verify the behaviour of a Manager when their team gets deleted"""
         user_obj = User.objects.get(username="testplayer")
         event = Event.objects.create(
@@ -279,7 +279,7 @@ class ManagerTestCase(TestCase):
 
         self.assertRaises(Manager.DoesNotExist, Manager.objects.get, id=play_obj.id)
 
-    def test_user_deletion(self):
+    def test_user_deletion(self) -> None:
         """Verify that a Manager registration is deleted along with its user"""
         user_obj = User.objects.get(username="testplayer")
         event = Event.objects.create(
@@ -299,7 +299,7 @@ class ManagerTestCase(TestCase):
 
         self.assertRaises(Manager.DoesNotExist, Manager.objects.get, id=man_obj.id)
 
-    def test_payment_status_default(self):
+    def test_payment_status_default(self) -> None:
         """Verify what the default status of payment on a new manager is"""
         robert = User.objects.all()[0]
         team = Team.objects.all()[0]
@@ -308,7 +308,7 @@ class ManagerTestCase(TestCase):
 
         self.assertEqual(PaymentStatus.NOT_PAID, man_reg.payment_status)
 
-    def test_payment_status_set(self):
+    def test_payment_status_set(self) -> None:
         """Verify that we can set a status for a Manager at any point"""
         robert = User.objects.all()[0]
         team = Team.objects.all()[0]
@@ -321,7 +321,7 @@ class ManagerTestCase(TestCase):
 
         self.assertEqual(PaymentStatus.PAY_LATER, man_reg.payment_status)
 
-    def test_delete_manager(self):
+    def test_delete_manager(self) -> None:
         """
         Test the delete method of the Manager API
         """
@@ -343,7 +343,7 @@ class ManagerTestCase(TestCase):
         # check data
         self.assertRaises(Manager.DoesNotExist, Manager.objects.get, id=manager.id)
 
-    def test_delete_manager_not_owner(self):
+    def test_delete_manager_not_owner(self) -> None:
         """
         Test the delete method of the Manager API when the user is not related to the manager
         """

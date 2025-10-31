@@ -1,15 +1,22 @@
 """
 This module contains the admin configuration for the Ticket model in the Insalan application.
 """
+
+from __future__ import annotations
+
+from typing import Any
+
+from django.db.models.query import QuerySet
+from django.contrib import admin, messages
+from django.contrib.admin import ModelAdmin
+from django.http import HttpRequest
 from django.utils.translation import gettext as _
-from django.contrib import admin
-from django.contrib import messages
 
 from insalan.settings import EMAIL_AUTH
 from insalan.mailer import MailManager
 from insalan.tournament.models.tournament import EventTournament
-from .models import Ticket
 
+from .models import Ticket
 
 
 class OngoingTournamentFilter(admin.SimpleListFilter):
@@ -19,17 +26,17 @@ class OngoingTournamentFilter(admin.SimpleListFilter):
     title = _('Tournament')
     parameter_name = 'tournament'
 
-    def lookups(self, request, model_admin):
+    def lookups(self, request: HttpRequest, model_admin: ModelAdmin[Any]) -> list[tuple[int, str]]:
         return [(tournament.id, tournament.name)
                 for tournament in EventTournament.objects.filter(event__ongoing=True)]
 
-    def queryset(self, request, queryset):
+    def queryset(self, request: HttpRequest, queryset: QuerySet[Ticket]) -> QuerySet[Ticket]:
         if self.value():
             return queryset.filter(tournament_id=self.value())
         return queryset
 
 
-class TicketAdmin(admin.ModelAdmin):
+class TicketAdmin(ModelAdmin[Ticket]):  # pylint: disable=unsubscriptable-object
     """
     Admin class for the Ticket model
     """
@@ -39,13 +46,15 @@ class TicketAdmin(admin.ModelAdmin):
     actions = ["send_tickets_to_mail"]
 
     @admin.action(description=_("Envoyer les tickets par mail"))
-    def send_tickets_to_mail(self, request, queryset):
+    def send_tickets_to_mail(self, request: HttpRequest, queryset: QuerySet[Ticket]) -> None:
         """
         Action to send tickets to mail
         """
         for ticket in queryset:
             if ticket.status == Ticket.Status.VALID:
-                MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"]).send_ticket_mail(
+                mailer = MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"])
+                assert mailer is not None
+                mailer.send_ticket_mail(
                     ticket.user,
                     ticket,
                 )

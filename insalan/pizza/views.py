@@ -4,44 +4,54 @@
     - missing tests
 """
 
-from django.http import JsonResponse
-from django.utils.translation import gettext_lazy as _
-from django.utils import timezone
+from typing import Any, Type
+
 from django.core.exceptions import ValidationError
+from django.db.models.query import QuerySet
+from django.http import HttpResponse, JsonResponse
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import]
+from drf_yasg import openapi  # type: ignore[import]
 
 from rest_framework import generics, permissions, status
-from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.request import Request
+from rest_framework.response import Response
 from rest_framework.serializers import Serializer
-
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+from rest_framework.views import APIView
 
 from insalan.pizza import serializers
+
 from .models import Pizza, TimeSlot, Order, PizzaExport
+
 
 class ReadOnly(permissions.BasePermission):
     """Read-Only permissions"""
-    def has_permission(self, request, _view):
+
+    def has_permission(self, request: Request, _view: APIView) -> bool:
         return request.method in permissions.SAFE_METHODS
+
 
 class PizzaPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = "page_size"
     max_page_size = 100
 
-class PizzaList(generics.ListCreateAPIView):
+
+class PizzaList(generics.ListCreateAPIView[Pizza]):  # pylint: disable=unsubscriptable-object
     """List all pizzas id"""
     pagination_class = None
     queryset = Pizza.objects.all()
     permission_classes = [permissions.IsAdminUser | ReadOnly]
 
-    def get_serializer_class(self):
+    def get_serializer_class(self) -> Type[Serializer[Pizza]]:
         if self.request.method == "GET":
             return serializers.PizzaIdSerializer
         return serializers.PizzaSerializer
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             201: serializers.PizzaSerializer,
             400: openapi.Schema(
@@ -65,11 +75,11 @@ class PizzaList(generics.ListCreateAPIView):
 
             }
         )
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Create a pizza."""
         return super().post(request, *args, **kwargs)
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: openapi.Schema(
                 type=openapi.TYPE_ARRAY,
@@ -79,11 +89,12 @@ class PizzaList(generics.ListCreateAPIView):
             ),
         }
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Get all pizzas."""
         return super().get(request, *args, **kwargs)
 
-class PizzaListFull(generics.ListAPIView):
+
+class PizzaListFull(generics.ListAPIView[Pizza]):  # pylint: disable=unsubscriptable-object
     """List all pizzas"""
     pagination_class = None
     queryset = Pizza.objects.all()
@@ -91,14 +102,15 @@ class PizzaListFull(generics.ListAPIView):
     permission_classes = [ReadOnly]
 
 
-class PizzaDetail(generics.RetrieveUpdateDestroyAPIView):
+# pylint: disable-next=unsubscriptable-object
+class PizzaDetail(generics.RetrieveUpdateDestroyAPIView[Pizza]):
     """Find a pizza by its id"""
     pagination_class = None
     queryset = Pizza.objects.all()
     serializer_class = serializers.PizzaSerializer
     permission_classes = [permissions.IsAdminUser | ReadOnly]
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializers.PizzaSerializer,
             404: openapi.Schema(
@@ -112,11 +124,11 @@ class PizzaDetail(generics.RetrieveUpdateDestroyAPIView):
             )
         }
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Get a pizza by its id."""
         return super().get(request, *args, **kwargs)
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializers.PizzaSerializer,
             403: openapi.Schema(
@@ -139,11 +151,11 @@ class PizzaDetail(generics.RetrieveUpdateDestroyAPIView):
             )
         }
     )
-    def put(self, request, *args, **kwargs):
+    def put(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Update a pizza."""
         return super().put(request, *args, **kwargs)
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializers.PizzaSerializer,
             403: openapi.Schema(
@@ -166,11 +178,11 @@ class PizzaDetail(generics.RetrieveUpdateDestroyAPIView):
             )
         }
     )
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Partially update a pizza."""
         return super().patch(request, *args, **kwargs)
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             403: openapi.Schema(
                 type=openapi.TYPE_OBJECT,
@@ -192,22 +204,22 @@ class PizzaDetail(generics.RetrieveUpdateDestroyAPIView):
             )
         }
     )
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Delete a pizza."""
         return super().delete(request, *args, **kwargs)
 
 
-class PizzaSearch(generics.ListAPIView):
+class PizzaSearch(generics.ListAPIView[Pizza]):  # pylint: disable=unsubscriptable-object
     """Search a pizza by its name"""
     pagination_class = None
     serializer_class = serializers.PizzaSerializer
     permission_classes = [ReadOnly]
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[Pizza]:
         partial_name = self.request.query_params.get("q", None)
-        return Pizza.objects.filter(name__contains=partial_name)
+        return Pizza.objects.filter(name__contains=partial_name)  # type: ignore[misc]
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         manual_parameters=[
             openapi.Parameter(
                 "q",
@@ -251,20 +263,21 @@ class PizzaSearch(generics.ListAPIView):
             ),
         }
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Search a pizza by its name
         """
         return super().get(request, *args, **kwargs)
 
-class PizzaListByTimeSlot(generics.ListAPIView):
+
+class PizzaListByTimeSlot(generics.ListAPIView[TimeSlot]):  # pylint: disable=unsubscriptable-object
     """Group pizzas by timeslot"""
     pagination_class = PizzaPagination
     serializer_class = serializers.PizzaByTimeSlotSerializer
     queryset = TimeSlot.objects.all()
-    permission_classes = [ permissions.IsAdminUser ]
+    permission_classes = [permissions.IsAdminUser]
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: openapi.Schema(
                 # array of serializers.PizzaByTimeSlotSerializer
@@ -309,20 +322,22 @@ class PizzaListByTimeSlot(generics.ListAPIView):
             )
         }
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Get pizzas ordered for a timeslot
         """
         return super().get(request, *args, **kwargs)
 
-class PizzaListByGivenTimeSlot(generics.RetrieveAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class PizzaListByGivenTimeSlot(generics.RetrieveAPIView[TimeSlot]):
     """Group pizzas by timeslot"""
     pagination_class = None
     permission_classes = [ReadOnly]
     serializer_class = serializers.PizzaByTimeSlotSerializer
     queryset = TimeSlot.objects.all()
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializers.PizzaByTimeSlotSerializer,
             404: openapi.Schema(
@@ -336,7 +351,7 @@ class PizzaListByGivenTimeSlot(generics.RetrieveAPIView):
             )
         }
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Get pizzas ordered for a timeslot
         """
@@ -347,18 +362,19 @@ class PizzaListByGivenTimeSlot(generics.RetrieveAPIView):
         # only return the pizzas ordered
         return Response(serializer.data)
 
-class TimeSlotList(generics.ListCreateAPIView):
+
+class TimeSlotList(generics.ListCreateAPIView[TimeSlot]):  # pylint: disable=unsubscriptable-object
     """List all timeslots"""
     pagination_class = PizzaPagination
     queryset = TimeSlot.objects.all()
     permission_classes = [permissions.IsAdminUser | ReadOnly]
 
-    def get_serializer_class(self):
+    def get_serializer_class(self) -> Type[Serializer[TimeSlot]]:
         if self.request.method == "GET":
             return serializers.TimeSlotIdSerializer
         return serializers.TimeSlotSerializer
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             201: serializers.TimeSlotSerializer,
             400: openapi.Schema(
@@ -372,13 +388,13 @@ class TimeSlotList(generics.ListCreateAPIView):
             )
         }
     )
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Create a timeslot
         """
         return super().post(request, *args, **kwargs)
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: openapi.Schema(
                 type=openapi.TYPE_ARRAY,
@@ -388,14 +404,14 @@ class TimeSlotList(generics.ListCreateAPIView):
             ),
         }
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Get all timeslots
         """
         return super().get(request, *args, **kwargs)
 
 
-class TimeSlotListFull(generics.ListAPIView):
+class TimeSlotListFull(generics.ListAPIView[TimeSlot]):  # pylint: disable=unsubscriptable-object
     """List all timeslots"""
     pagination_class = PizzaPagination
     queryset = TimeSlot.objects.all()
@@ -403,13 +419,14 @@ class TimeSlotListFull(generics.ListAPIView):
     permission_classes = [ReadOnly]
 
 
-class TimeSlotDetail(generics.RetrieveAPIView, generics.DestroyAPIView):
+# pylint: disable-next=unsubscriptable-object
+class TimeSlotDetail(generics.RetrieveAPIView[TimeSlot], generics.DestroyAPIView[TimeSlot]):
     """Find a timeslot by its id"""
     queryset = TimeSlot.objects.all()
     permission_classes = [permissions.IsAdminUser]
     serializer_class = serializers.TimeSlotSerializer
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializers.TimeSlotSerializer,
             404: openapi.Schema(
@@ -423,7 +440,7 @@ class TimeSlotDetail(generics.RetrieveAPIView, generics.DestroyAPIView):
             )
         }
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         if not TimeSlot.objects.filter(id=self.kwargs["pk"]).exists():
             return Response({"detail": _("Not found.")}, status=404)
         timeslot = TimeSlot.objects.get(id=self.kwargs["pk"])
@@ -444,7 +461,7 @@ class TimeSlotDetail(generics.RetrieveAPIView, generics.DestroyAPIView):
 
         return Response(serializer)
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializers.TimeSlotSerializer,
             404: openapi.Schema(
@@ -458,19 +475,20 @@ class TimeSlotDetail(generics.RetrieveAPIView, generics.DestroyAPIView):
             )
         }
     )
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Delete a timeslot
         """
         return super().delete(request, *args, **kwargs)
 
-class NextTimeSlot(generics.ListAPIView):
+
+class NextTimeSlot(generics.ListAPIView[TimeSlot]):  # pylint: disable=unsubscriptable-object
     """Find the timeslot in the same day"""
     queryset = TimeSlot.objects.all()
     permission_classes = [ReadOnly]
     serializer_class = serializers.TimeSlotSerializer
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         # select incoming timeslot and currents timeslot in the same day
         timeslot = TimeSlot.objects.filter(
             delivery_time__gte=timezone.now().date()
@@ -488,17 +506,18 @@ class NextTimeSlot(generics.ListAPIView):
 
         return Response(serializers_data)
 
-class OrderList(generics.ListCreateAPIView):
+
+class OrderList(generics.ListCreateAPIView[Order]):  # pylint: disable=unsubscriptable-object
     """List all orders"""
     queryset = Order.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
-    def get_serializer_class(self):
+    def get_serializer_class(self) -> Type[Serializer[Order]]:
         if self.request.method == "GET":
             return serializers.OrderIdSerializer
         return serializers.CreateOrderSerializer
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializers.OrderIdSerializer,
             201: serializers.OrderIdSerializer,
@@ -513,7 +532,7 @@ class OrderList(generics.ListCreateAPIView):
             )
         }
     )
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> HttpResponse:
         """Create an order."""
         try:
             return super().post(request, *args, **kwargs)
@@ -521,24 +540,29 @@ class OrderList(generics.ListCreateAPIView):
             return JsonResponse({"err": str(err)},
                                 status=status.HTTP_400_BAD_REQUEST)
 
-class OrderListFull(generics.ListAPIView):
+
+class OrderListFull(generics.ListAPIView[Order]):  # pylint: disable=unsubscriptable-object
     """List all orders"""
+
     queryset = Order.objects.all()
     serializer_class = serializers.OrderSerializer
     permission_classes = [ permissions.IsAdminUser]
 
-class OrderDetail(generics.RetrieveUpdateDestroyAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class OrderDetail(generics.RetrieveUpdateDestroyAPIView[Order]):
     """Find an order by its id"""
+
     queryset = Order.objects.all()
     permission_classes = [ permissions.IsAdminUser ]
     queryset = Order.objects.all()
 
-    def get_serializer_class(self):
+    def get_serializer_class(self) -> Type[Serializer[Order]]:
         if self.request.method == "GET":
             return serializers.OrderSerializer
         return serializers.CreateOrderSerializer
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializers.OrderSerializer,
             404: openapi.Schema(
@@ -552,7 +576,7 @@ class OrderDetail(generics.RetrieveUpdateDestroyAPIView):
             )
         }
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         if not Order.objects.filter(id=self.kwargs["pk"]).exists():
             return Response({"detail": _("Not found.")}, status=404)
         order = Order.objects.get(id=self.kwargs["pk"])
@@ -567,7 +591,7 @@ class OrderDetail(generics.RetrieveUpdateDestroyAPIView):
 
         return Response(serializer)
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -590,7 +614,7 @@ class OrderDetail(generics.RetrieveUpdateDestroyAPIView):
             )
         }
     )
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         if not Order.objects.filter(id=self.kwargs["pk"]).exists():
             return Response({"detail": _("Not found.")}, status=404)
         order = Order.objects.get(id=self.kwargs["pk"])
@@ -610,7 +634,7 @@ class OrderDetail(generics.RetrieveUpdateDestroyAPIView):
 
         return Response({"detail": _("Bad request.")}, status=400)
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializers.OrderSerializer,
             404: openapi.Schema(
@@ -624,13 +648,13 @@ class OrderDetail(generics.RetrieveUpdateDestroyAPIView):
             )
         }
     )
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Delete an order
         """
         return super().delete(request, *args, **kwargs)
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -653,20 +677,22 @@ class OrderDetail(generics.RetrieveUpdateDestroyAPIView):
             )
         }
     )
-    def put(self, request, *args, **kwargs):
+    def put(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Update an order
         """
         return super().put(request, *args, **kwargs)
 
-class ExportOrder(generics.ListCreateAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class ExportOrder(generics.ListCreateAPIView[PizzaExport]):
     """Export an order"""
     queryset = PizzaExport.objects.all()
     permission_classes = [ permissions.IsAdminUser ]
     # body is expected to be empty
     serializer_class = Serializer
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: openapi.Schema(
                 type=openapi.TYPE_ARRAY,
@@ -699,7 +725,7 @@ class ExportOrder(generics.ListCreateAPIView):
             )
         }
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         if not TimeSlot.objects.filter(id=self.kwargs["pk"]).exists():
             return Response({"detail": _("Not found.")}, status=404)
         export = PizzaExport.objects.filter(time_slot=self.kwargs["pk"])
@@ -721,7 +747,7 @@ class ExportOrder(generics.ListCreateAPIView):
 
         return Response(serializer)
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: openapi.Schema(
                 type=openapi.TYPE_ARRAY,
@@ -754,7 +780,7 @@ class ExportOrder(generics.ListCreateAPIView):
             )
         }
     )
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         if not TimeSlot.objects.filter(id=self.kwargs["pk"]).exists():
             return Response({"detail": _("Not found.")}, status=404)
         timeslot = TimeSlot.objects.get(id=self.kwargs["pk"])
@@ -773,9 +799,11 @@ class ExportOrder(generics.ListCreateAPIView):
             export.orders.set(orders)
 
         # return the export (using get)
-        return self.get(request, *args, **kwargs)
+        return self.get(request, *args, **kwargs)  # type: ignore [no-any-return]
 
-class ExportOrderDetails(generics.RetrieveDestroyAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class ExportOrderDetails(generics.RetrieveDestroyAPIView[PizzaExport]):
     """Delete an export by its id."""
 
     pagination_class = None
@@ -783,7 +811,7 @@ class ExportOrderDetails(generics.RetrieveDestroyAPIView):
     permission_classes = [permissions.IsAdminUser]
     serializer_class = serializers.PizzaExportSerializer
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: openapi.Schema(
                 type=openapi.TYPE_OBJECT,
@@ -813,7 +841,7 @@ class ExportOrderDetails(generics.RetrieveDestroyAPIView):
             )
         }
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Get an export by its id."""
         if not PizzaExport.objects.filter(id=self.kwargs["pk"]).exists():
             return Response({"detail": _("Not found.")}, status=404)
@@ -832,7 +860,7 @@ class ExportOrderDetails(generics.RetrieveDestroyAPIView):
         serializer["orders"] = pizza_count
         return Response(serializer)
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             204: openapi.Response(description=_("Export supprimé.")),
             403: openapi.Schema(
@@ -855,6 +883,6 @@ class ExportOrderDetails(generics.RetrieveDestroyAPIView):
             )
         }
     )
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Delete an export."""
         return super().delete(request, *args, **kwargs)

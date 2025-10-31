@@ -1,26 +1,31 @@
+from typing import Any
+
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import BadRequest
 
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import]
+from drf_yasg import openapi  # type: ignore[import]
+
 from rest_framework import generics, permissions, status
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, PermissionDenied
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-
 from insalan.tournament import serializers
+from insalan.user.models import User
 
-from ..models import Group, validate_match_data, GroupMatch, MatchStatus, BaseTournament, Match
+from ..models import Group, validate_match_data, GroupMatch, MatchStatus, BaseTournament
 from ..manage import update_match_score, generate_groups, create_group_matchs, launch_match
 
 from .permissions import ReadOnly
 
-class GroupList(generics.ListCreateAPIView):
+
+class GroupList(generics.ListCreateAPIView[Group]):  # pylint: disable=unsubscriptable-object
     queryset = Group.objects.all().order_by("id")
     serializer_class = serializers.GroupSerializer
     permission_classes = [permissions.IsAdminUser | ReadOnly]
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         data = request.data
 
         multiple = isinstance(data, list)
@@ -34,12 +39,14 @@ class GroupList(generics.ListCreateAPIView):
         return Response(self.get_serializer(saved_groups, many=multiple).data,
                         status=status.HTTP_201_CREATED)
 
-class GroupDetails(generics.RetrieveUpdateDestroyAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class GroupDetails(generics.RetrieveUpdateDestroyAPIView[Group]):
     queryset = Group.objects.all().order_by("id")
     serializer_class = serializers.GroupSerializer
     permission_classes = [permissions.IsAdminUser]
 
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         group = self.get_object()
 
         if GroupMatch.objects.filter(group=group).exclude(status=MatchStatus.SCHEDULED).exists():
@@ -52,11 +59,13 @@ class GroupDetails(generics.RetrieveUpdateDestroyAPIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class GenerateGroups(generics.CreateAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class GenerateGroups(generics.CreateAPIView[Any]):
     serializer_class = serializers.GenerateGroupsSerializer
     permission_classes = [permissions.IsAdminUser]
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         if kwargs["pk"] != request.data["tournament"]:
             raise BadRequest()
 
@@ -70,11 +79,13 @@ class GenerateGroups(generics.CreateAPIView):
 
         return Response(serialized_data, status=status.HTTP_201_CREATED)
 
-class DeleteGroups(generics.DestroyAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class DeleteGroups(generics.DestroyAPIView[BaseTournament]):
     queryset = BaseTournament.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         tournament = self.get_object()
 
         if GroupMatch.objects.filter(group__tournament=tournament).exclude(
@@ -89,11 +100,13 @@ class DeleteGroups(generics.DestroyAPIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class GenerateGroupMatchs(generics.CreateAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class GenerateGroupMatchs(generics.CreateAPIView[Any]):
     serializer_class = serializers.GenerateGroupMatchsSerializer
     permission_classes = [permissions.IsAdminUser]
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         if kwargs["pk"] != request.data["tournament"]:
             raise BadRequest()
 
@@ -108,11 +121,13 @@ class GenerateGroupMatchs(generics.CreateAPIView):
 
         return Response(groups, status=status.HTTP_201_CREATED)
 
-class DeleteGroupMatchs(generics.DestroyAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class DeleteGroupMatchs(generics.DestroyAPIView[BaseTournament]):
     queryset = BaseTournament.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         tournament = self.get_object()
 
         matchs = GroupMatch.objects.filter(group__tournament=tournament)
@@ -127,11 +142,12 @@ class DeleteGroupMatchs(generics.DestroyAPIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class GroupMatchsLaunch(generics.UpdateAPIView):
+
+class GroupMatchsLaunch(generics.UpdateAPIView[Any]): # pylint: disable=unsubscriptable-object
     serializer_class = serializers.LaunchMatchsSerializer
     permission_classes = [permissions.IsAdminUser]
 
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         if kwargs["pk"] != request.data["tournament"]:
             raise BadRequest()
 
@@ -147,20 +163,23 @@ class GroupMatchsLaunch(generics.UpdateAPIView):
         return Response({ "matchs": matchs, "warning": data.validated_data["warning"] },
                         status=status.HTTP_200_OK)
 
-class GroupMatchPatch(generics.UpdateAPIView):
+
+class GroupMatchPatch(generics.UpdateAPIView[GroupMatch]):  # pylint: disable=unsubscriptable-object
     queryset = GroupMatch.objects.all()
     permission_classes = [permissions.IsAdminUser]
     serializer_class = serializers.GroupMatchSerializer
     lookup_url_kwarg = "match_id"
 
-class GroupMatchScore(generics.UpdateAPIView):
+
+class GroupMatchScore(generics.UpdateAPIView[GroupMatch]):  # pylint: disable=unsubscriptable-object
     """Update score of a group match"""
 
     queryset = GroupMatch.objects.all().order_by("id")
     serializer_class = serializers.GroupMatchSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -209,7 +228,7 @@ class GroupMatchScore(generics.UpdateAPIView):
             )
         }
     )
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         user = request.user
         data = request.data
 
@@ -218,10 +237,11 @@ class GroupMatchScore(generics.UpdateAPIView):
         except GroupMatch.DoesNotExist as e:
             raise NotFound() from e
 
+        assert isinstance(user, User), 'User must be authenticated to access this route.'
         if not match.is_user_in_match(user):
             raise PermissionDenied()
 
-        if match.status != Match.MatchStatus.ONGOING:
+        if match.status != MatchStatus.ONGOING:
             return Response({"status" : "Le match n'est pas en cours"},
                             status=status.HTTP_400_BAD_REQUEST)
 

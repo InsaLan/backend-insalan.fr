@@ -23,7 +23,7 @@ class ContentTestCase(TestCase):
     """
     Test case for the Content model.
     """
-    def test_content_with_constants(self):
+    def test_content_with_constants(self) -> None:
         """test that we can create a content using constant"""
         Constant.objects.create(name="a", value="je suis la valeur a")
         Constant.objects.create(name="b", value="je suis la valeur b")
@@ -31,7 +31,7 @@ class ContentTestCase(TestCase):
             name="content_a", content="j'appelle la constante ${a} et la constante ${b}"
         )
 
-    def test_content_with_unknow_constants(self):
+    def test_content_with_unknow_constants(self) -> None:
         """test that a ValidationError is raised in case of unknown constant used in a content"""
         Constant.objects.create(name="a", value="je suis la valeur a")
         Content.objects.create(
@@ -39,7 +39,7 @@ class ContentTestCase(TestCase):
         )
         self.assertRaises(ValidationError)
 
-    def test_display_undefined_constant_list(self):
+    def test_display_undefined_constant_list(self) -> None:
         """
         Test that a ValidationError raised by the usage of unknown constants give the correct list
         of undefined constants
@@ -50,7 +50,7 @@ class ContentTestCase(TestCase):
         )
         self.assertRaisesMessage(
             ValidationError,
-            _("Des constantes non définies sont utilisées: inconnue, random"),
+            str(_("Des constantes non définies sont utilisées: inconnue, random")),
         )
 
     def test_create_two_contents_with_same_name(self) -> None:
@@ -75,26 +75,26 @@ class FileModelTestCase(TestCase):
     Test the File model
     """
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.file = File.objects.create(
             name="Test File",
             file="test_file.txt"
         )
 
-    def test_file_creation(self):
+    def test_file_creation(self) -> None:
         """
         Test that a File object is created successfully
         """
         self.assertEqual(self.file.name, "Test File")
         self.assertEqual(self.file.file, "test_file.txt")
 
-    def test_file_str_method(self):
+    def test_file_str_method(self) -> None:
         """
         Test the __str__ method of the File model
         """
         self.assertEqual(str(self.file), "[File] Test File")
 
-    def test_file_upload_path(self):
+    def test_file_upload_path(self) -> None:
         """
         Test the upload path of the file
         """
@@ -104,11 +104,11 @@ class FileFetchTests(APITestCase):
     """
     Test case for the FileFetch view.
     """
-    def setUp(self):
+    def setUp(self) -> None:
         self.file1 = File.objects.create(name="file1", file="test_file.txt")
         self.file2 = File.objects.create(name="file2", file="test_file.txt")
 
-    def test_get_all_files(self):
+    def test_get_all_files(self) -> None:
         """Test that we can get all files"""
         url = reverse('file/list')
         response = self.client.get(url)
@@ -119,7 +119,7 @@ class FileFetchTests(APITestCase):
             file_data['file'] = file_data['file'].replace('http://testserver', '')
         self.assertEqual(response.data, serializer.data)
 
-    def test_get_file_by_name(self):
+    def test_get_file_by_name(self) -> None:
         """Test that we can get a file by its name"""
         url = reverse('file/name', kwargs={'name': self.file1.name})
         response = self.client.get(url)
@@ -131,13 +131,13 @@ class FileFetchTests(APITestCase):
         self.assertEqual(response.data, [serializer.data])
 
 class FullListTestCase(APITestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.url = reverse('full/list')
         self.constant = Constant.objects.create(name="Test Constant", value="Test Value")
         self.content = Content.objects.create(name="Test Content", content="Test Content")
         self.file = File.objects.create(name="Test File", file="test_file.txt")
 
-    def test_full_list(self):
+    def test_full_list(self) -> None:
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("constants", response.data)

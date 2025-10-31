@@ -1,7 +1,7 @@
 from math import ceil
 from ..models import Bracket, KnockoutMatch, BracketType, BracketSet, BestofType
 
-def create_empty_knockout_matchs(bracket: Bracket, bo_type: BestofType = BestofType.BO1):
+def create_empty_knockout_matchs(bracket: Bracket, bo_type: BestofType = BestofType.BO1) -> None:
     depth = bracket.get_depth()
 
     for match in KnockoutMatch.objects.filter(bracket=bracket):
@@ -37,7 +37,7 @@ def create_empty_knockout_matchs(bracket: Bracket, bo_type: BestofType = BestofT
             bo_type=bo_type,
         )
 
-def update_next_knockout_match(match):
+def update_next_knockout_match(match: KnockoutMatch) -> None:
     winners, loosers = match.get_winners_loosers()
     winners_count = len(winners)
     depth = match.bracket.get_depth()

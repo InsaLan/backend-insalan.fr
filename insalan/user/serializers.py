@@ -1,5 +1,6 @@
 """Data Serializers for the InsaLan User module"""
-# pylint: disable=too-few-public-methods
+
+from typing import Any, cast
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import Group, Permission
@@ -15,7 +16,7 @@ from insalan.settings import EMAIL_AUTH
 
 from .models import User
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer[User]):
     """Serializer for an User"""
 
     class Meta:
@@ -26,7 +27,7 @@ class UserSerializer(serializers.ModelSerializer):
         # fields = ['url', 'username', 'email', 'groups']
 
 
-class UserRegisterSerializer(serializers.ModelSerializer):
+class UserRegisterSerializer(serializers.ModelSerializer[User]):
     """Serializer for a register for submission"""
 
     email = serializers.EmailField(
@@ -75,7 +76,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         read_only_fields = ("is_superuser", "is_active", "is_staff")
         write_only_fields = ("name", "password", "password_validation")
 
-    def validate(self, data):
+    def validate(self, data: Any) -> Any:
         """
         Validate user registration (password shall be confirmed)
         """
@@ -86,14 +87,16 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(_("Inscription non conforme"))
         return data
 
-    def create(self, data):
+    def create(self, data: Any) -> User:
         user_object = User.object.create_user(**data)
         user_object.save()
-        MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_email_confirmation(user_object)
+        mailer = MailManager.get_mailer(EMAIL_AUTH["contact"]["from"])
+        assert mailer is not None
+        mailer.send_email_confirmation(user_object)
         return user_object
 
 
-class UserLoginSerializer(serializers.Serializer):
+class UserLoginSerializer(serializers.Serializer[User]):
     """Serializer for a login form submission"""
 
     username = serializers.CharField()
@@ -104,7 +107,7 @@ class UserLoginSerializer(serializers.Serializer):
 
         model = User
 
-    def check_validity(self, data):
+    def check_validity(self, data: dict[str, Any]) -> User | None:
         """
         Checks thats:
             - Username & Password combination gives a good user
@@ -114,7 +117,7 @@ class UserLoginSerializer(serializers.Serializer):
         if user is not None:
             if not user.is_active:
                 raise serializers.ValidationError(_("Compte supprimé"))
-        return user
+        return cast(User | None, user)
 
 
 class PermissionSerializer(serializers.HyperlinkedModelSerializer):

@@ -1,16 +1,20 @@
+from typing import Any
+
 from django.utils.translation import gettext_lazy as _
 
-from rest_framework import generics, permissions
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import]
+from drf_yasg import openapi  # type: ignore[import]
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+from rest_framework import generics, permissions
+from rest_framework.request import Request
+from rest_framework.response import Response
 
 from insalan.tournament import serializers
 
 from ..models import Game
 from .permissions import ReadOnly
 
-class GameList(generics.ListCreateAPIView):
+class GameList(generics.ListCreateAPIView[Game]):  # pylint: disable=unsubscriptable-object
     """List all known games"""
 
     pagination_class = None
@@ -18,7 +22,8 @@ class GameList(generics.ListCreateAPIView):
     serializer_class = serializers.GameSerializer
     permission_classes = [permissions.IsAdminUser | ReadOnly]
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             201: serializer_class,
             400: openapi.Schema(
@@ -41,19 +46,21 @@ class GameList(generics.ListCreateAPIView):
             )
         }
     )
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Create a game"""
         return super().post(request, *args, **kwargs)
 
 
-class GameDetails(generics.RetrieveUpdateDestroyAPIView):
+# pylint: disable-next=unsubscriptable-object
+class GameDetails(generics.RetrieveUpdateDestroyAPIView[Game]):
     """Details about a game"""
 
     serializer_class = serializers.GameSerializer
     queryset = Game.objects.all().order_by("id")
     permission_classes = [permissions.IsAdminUser | ReadOnly]
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializer_class,
             400: openapi.Schema(
@@ -85,11 +92,12 @@ class GameDetails(generics.RetrieveUpdateDestroyAPIView):
             )
         }
     )
-    def put(self, request, *args, **kwargs):
+    def put(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Update a game"""
         return super().put(request, *args, **kwargs)
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             204: openapi.Schema(
                 type=openapi.TYPE_OBJECT,
@@ -120,11 +128,12 @@ class GameDetails(generics.RetrieveUpdateDestroyAPIView):
             )
         }
     )
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Delete a game"""
         return super().delete(request, *args, **kwargs)
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -173,7 +182,7 @@ class GameDetails(generics.RetrieveUpdateDestroyAPIView):
             )
         }
     )
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Partially update a game
         """

@@ -1,21 +1,28 @@
 """
 Module for defining the Ticket model.
 """
+from __future__ import annotations
+
 import uuid
 from io import BytesIO
 from os import path
+from typing import TYPE_CHECKING
 
-from django.db import models
-from django.utils.translation import gettext_lazy as _
-from django.urls import reverse
-from reportlab.pdfgen import canvas
-from reportlab.lib import utils
 import qrcode
+from django.db import models
+from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from PIL import Image
+from qrcode.image.pil import PilImage
+from reportlab.lib import utils
+from reportlab.pdfgen import canvas
 
 from insalan import settings
 from insalan.user.models import User
 from insalan.cms.models import Content
+
+if TYPE_CHECKING:
+    from django.db.models import Combinable
 
 class Ticket(models.Model):
     """
@@ -36,13 +43,13 @@ class Ticket(models.Model):
         verbose_name = _("Ticket")
         verbose_name_plural = _("Tickets")
 
-    token: models.UUIDField = models.UUIDField(
+    token = models.UUIDField(
         verbose_name=_("UUID"), unique=True, default=uuid.uuid4, editable=False
     )
-    user: models.ForeignKey = models.ForeignKey(
+    user: models.ForeignKey[User | Combinable, User] = models.ForeignKey(
         User, verbose_name=_("Utilisateur⋅ice"), on_delete=models.CASCADE
     )
-    status: models.CharField = models.CharField(
+    status = models.CharField(
         verbose_name=_("Statut"),
         max_length=2,
         choices=Status.choices,
@@ -53,13 +60,13 @@ class Ticket(models.Model):
         on_delete=models.CASCADE, blank=False, null=False
     )
 
-class TicketManager(models.Manager):
+class TicketManager(models.Manager[Ticket]):
     """
     Manager for the Ticket model.
     """
 
     @staticmethod
-    def generate_ticket_pdf(ticket):
+    def generate_ticket_pdf(ticket: Ticket) -> bytes:
         """
         Generate a PDF file for a ticket.
         """
@@ -76,7 +83,7 @@ class TicketManager(models.Manager):
 
         # get and resize (to reduce the size of the pdf) the tournament image
         image = Image.open(path.join(settings.MEDIA_ROOT, str(ticket.tournament.logo)))
-        image.thumbnail((page_width*1.5, page_height*1.5), Image.Resampling.BILINEAR)
+        image.thumbnail((int(page_width * 1.5), int(page_height * 1.5)), Image.Resampling.BILINEAR)
         img = utils.ImageReader(image)
         iw, ih = img.getSize()
         aspect = ih / float(iw)
@@ -105,8 +112,8 @@ class TicketManager(models.Manager):
         qr_buffer = BytesIO()
         url = settings.PROTOCOL + "://" + settings.WEBSITE_HOST + \
               reverse("tickets:get", args=[ticket.user.id, ticket.token])
-        img = qrcode.make(url)
-        img.save(qr_buffer)
+        qrcode_img: PilImage = qrcode.make(url)
+        qrcode_img.save(qr_buffer)
         qr = utils.ImageReader(qr_buffer)
         qr_size = 300/850 * page_height
         p.drawImage(qr, page_width/4, 0.117 * page_height, qr_size, qr_size)
@@ -118,10 +125,10 @@ class TicketManager(models.Manager):
         p.drawImage(img, 0.08 * page_width, 0.588 * page_height, im_size, im_size, mask='auto')
 
         # get the color of the logo
-        img = logo.copy()
-        img = img.convert("RGBA")
-        img = img.resize((1, 1), resample=0)
-        color = img.getpixel((0, 0))
+        logo_img = logo.copy()
+        logo_img = logo_img.convert("RGBA")
+        logo_img = logo_img.resize((1, 1), resample=0)
+        color = logo_img.getpixel((0, 0))
 
         # add rectangles to qr code corners with the color of the logo
         p.setFillColorRGB(color[0] / 255, color[1] / 255, color[2] / 255)
@@ -217,7 +224,7 @@ class TicketManager(models.Manager):
         n = 105
         cgv = Content.objects.filter(name="ticket_CGV")
         if cgv:
-            parts = []
+            parts: list[str] = []
             for i in cgv.first().content.split(" "):
                 if len(parts) == 0 or len(parts[-1]) + 1 + len(i) > n:
                     parts.append(i)
@@ -234,7 +241,7 @@ class TicketManager(models.Manager):
         return buffer.getvalue()
 
     @staticmethod
-    def create_pdf_name(ticket):
+    def create_pdf_name(ticket: Ticket) -> str:
         """
         Create the name of the pdf file for a ticket.
         """

@@ -1,16 +1,24 @@
-from typing import List
-from django.db import models
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from django.core.validators import (
     FileExtensionValidator,
     MaxValueValidator,
     MinValueValidator,
     MinLengthValidator,
 )
+from django.db import models
+from django.db.models.query import QuerySet
 from django.utils.translation import gettext_lazy as _
 
 from insalan.components.image_field import ImageField
 
-from . import tournament
+from .tournament import EventTournament
+
+if TYPE_CHECKING:
+    from django.db.models.manager import RelatedManager
+    from django_stubs_ext import ValuesQuerySet
 
 
 class Event(models.Model):
@@ -22,6 +30,8 @@ class Event(models.Model):
     tournaments and InsaLan one year, we can have two events happening
     concurrently.
     """
+
+    eventtournament_set: RelatedManager[EventTournament]
 
     name = models.CharField(
         verbose_name=_("Nom de l'évènement"),
@@ -84,15 +94,17 @@ class Event(models.Model):
         """Format this Event to a str"""
         return f"{self.name} ({self.year}-{self.month:02d})"
 
-    def get_tournaments_id(self) -> List[int]:
+    def get_tournaments_id(self) -> ValuesQuerySet[EventTournament, int]:
         """Return the list of tournaments identifiers for that Event"""
-        return tournament.EventTournament.objects.filter(event=self).values_list("id", flat=True)
+        return EventTournament.objects.filter(  # type: ignore[no-any-return]
+            event=self,
+        ).values_list("id", flat=True)
 
-    def get_tournaments(self) -> List["EventTournament"]:
+    def get_tournaments(self) -> QuerySet[EventTournament]:
         """Return the list of tournaments for that Event"""
-        return tournament.EventTournament.objects.filter(event=self)
+        return EventTournament.objects.filter(event=self)
 
     @staticmethod
-    def get_ongoing_ids() -> List[int]:
+    def get_ongoing_ids() -> ValuesQuerySet[Event, int]:
         """Return the identifiers of ongoing events"""
-        return __class__.objects.filter(ongoing=True).values_list("id", flat=True)
+        return Event.objects.filter(ongoing=True).values_list("id", flat=True)

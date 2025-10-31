@@ -14,12 +14,13 @@ from django.urls import reverse
 from qrcode import make
 from qrcode.image.svg import SvgImage
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+from drf_yasg import openapi  # type: ignore[import]
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import]
 
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.request import Request
 
 from insalan.tournament.models import Player, Substitute, Manager, PaymentStatus
 from insalan.user.models import User
@@ -27,7 +28,8 @@ from insalan.mailer import MailManager
 from insalan.settings import EMAIL_AUTH
 from .models import Ticket, TicketManager
 
-@swagger_auto_schema(
+# The decorator is missing types stubs.
+@swagger_auto_schema(  # type: ignore[misc]
     method='get',
     responses={
         200: openapi.Schema(
@@ -102,17 +104,23 @@ def get(request: HttpRequest, user_id: str, token: str) -> JsonResponse:
                             status=status.HTTP_404_NOT_FOUND)
 
     # Get the team name for the user
-    player = Player.objects.filter(user=user, team__tournament=ticket.tournament)
-    if player.exists():
-        team = player.first().team.name
+    player_query = Player.objects.filter(user=user, team__tournament=ticket.tournament)
+    if player_query.exists():
+        player = player_query.first()
+        assert player is not None
+        team = player.team.name
     else:
-        substitute = Substitute.objects.filter(user=user, team__tournament=ticket.tournament)
-        if substitute.exists():
-            team = substitute.first().team.name
+        substitute_query = Substitute.objects.filter(user=user, team__tournament=ticket.tournament)
+        if substitute_query.exists():
+            substitute = substitute_query.first()
+            assert substitute is not None
+            team = substitute.team.name
         else:
-            manager = Manager.objects.filter(user=user, team__tournament=ticket.tournament)
-            if manager.exists():
-                team = manager.first().team.name
+            manager_query = Manager.objects.filter(user=user, team__tournament=ticket.tournament)
+            if manager_query.exists():
+                manager = manager_query.first()
+                assert manager is not None
+                team = manager.team.name
             else:
                 team = None
 
@@ -128,7 +136,8 @@ def get(request: HttpRequest, user_id: str, token: str) -> JsonResponse:
     )
 
 
-@swagger_auto_schema(
+# The decorator is missing types stubs.
+@swagger_auto_schema(  # type: ignore[misc]
     method='get',
     responses={
         200: openapi.Schema(
@@ -188,7 +197,8 @@ def scan(request: HttpRequest, token: str) -> JsonResponse:
     return JsonResponse({"success": True})
 
 
-@swagger_auto_schema(
+# The decorator is missing types stubs.
+@swagger_auto_schema(  # type: ignore[misc]
     method='get',
     responses={
         200: openapi.Schema(
@@ -226,23 +236,27 @@ def qrcode(request: HttpRequest, token: str) -> HttpResponse:
         return JsonResponse({'err': _("UUID invalide")},
                             status=status.HTTP_400_BAD_REQUEST)
 
+    assert isinstance(request.user, User), 'User must be authenticated to access this route.'
     try:
         Ticket.objects.get(token=uuid.UUID(token), user=request.user)
     except Ticket.DoesNotExist:
         return JsonResponse({'err': _("Ticket non trouvé")},
                             status=status.HTTP_404_NOT_FOUND)
 
-    assert isinstance(request.user, User)
     url = request.build_absolute_uri(
         reverse("tickets:get", args=[request.user.id, token])
     )
-    ticket_qrcode = make(url, image_factory=SvgImage)
+    ticket_qrcode = make(
+        url,
+        image_factory=SvgImage,  # type: ignore[type-abstract]
+    )
     buffer = io.BytesIO()
     ticket_qrcode.save(buffer)
 
     return HttpResponse(buffer.getvalue().decode(), content_type="image/svg+xml")
 
-@swagger_auto_schema(
+# The decorator is missing types stubs.
+@swagger_auto_schema(  # type: ignore[misc]
     method='get',
     responses={
         200: openapi.Schema(
@@ -281,7 +295,7 @@ def qrcode(request: HttpRequest, token: str) -> HttpResponse:
 )
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def generate_pdf(request: HttpRequest, token: str) -> JsonResponse:
+def generate_pdf(request: HttpRequest, token: str) -> HttpResponse:
     """Generate a pdf ticket for the given user id."""
     try:
         ticket = Ticket.objects.get(token=uuid.UUID(token))
@@ -299,7 +313,8 @@ def generate_pdf(request: HttpRequest, token: str) -> JsonResponse:
     pdf = TicketManager.generate_ticket_pdf(ticket)
     return HttpResponse(pdf, content_type='application/pdf')
 
-@swagger_auto_schema(
+# The decorator is missing types stubs.
+@swagger_auto_schema(  # type: ignore[misc]
     method='post',
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
@@ -346,7 +361,7 @@ def generate_pdf(request: HttpRequest, token: str) -> JsonResponse:
 )
 @api_view(["POST"])
 @permission_classes([IsAdminUser])
-def pay(request: HttpRequest) -> JsonResponse:
+def pay(request: Request) -> JsonResponse:
     """
         This view is used to :
         - Mark as paid a registration from it's type and id
@@ -375,7 +390,9 @@ def pay(request: HttpRequest) -> JsonResponse:
             tournament=player.team.tournament,
             status=Ticket.Status.SCANNED,
         )
-        MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_ticket_mail(player.user, ticket)
+        mailer = MailManager.get_mailer(EMAIL_AUTH["contact"]["from"])
+        assert mailer is not None
+        mailer.send_ticket_mail(player.user, ticket)
         return JsonResponse({'success': True})
 
     if data['type'] == 'substitute':
@@ -389,12 +406,14 @@ def pay(request: HttpRequest) -> JsonResponse:
                                 status=status.HTTP_400_BAD_REQUEST)
         substitute.payment_status = PaymentStatus.PAID
         substitute.save()
-        ticket = Ticket.objects.create(user=substitute.user, tournament=substitute.team.tournament)
-        MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_ticket_mail(
-            substitute.user,
-            ticket,
+        ticket = Ticket.objects.create(
+            user=substitute.user,
+            tournament=substitute.team.tournament,
             status=Ticket.Status.SCANNED,
         )
+        mailer = MailManager.get_mailer(EMAIL_AUTH["contact"]["from"])
+        assert mailer is not None
+        mailer.send_ticket_mail(substitute.user, ticket)
         return JsonResponse({'success': True})
 
     if data['type'] == 'manager':
@@ -413,13 +432,16 @@ def pay(request: HttpRequest) -> JsonResponse:
             tournament=manager.team.tournament,
             status=Ticket.Status.SCANNED,
         )
-        MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_ticket_mail(manager.user, ticket)
+        mailer = MailManager.get_mailer(EMAIL_AUTH["contact"]["from"])
+        assert mailer is not None
+        mailer.send_ticket_mail(manager.user, ticket)
         return JsonResponse({'success': True})
 
     return JsonResponse({'err': _("Type invalide")}, status=status.HTTP_400_BAD_REQUEST)
 
 
-@swagger_auto_schema(
+# The decorator is missing types stubs.
+@swagger_auto_schema(  # type: ignore[misc]
     method='get',
     responses={
         200: openapi.Schema(

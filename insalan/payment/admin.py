@@ -1,14 +1,14 @@
 """Payment Admin Panel Code"""
 
-from django.contrib import admin, messages
-
-from django.http import HttpResponse
+from django.contrib import admin
+from django.db.models.query import QuerySet
+from django.http import HttpRequest, HttpResponse
 from django.utils.translation import gettext_lazy as _
 
 from .models import Product, Transaction, Payment, TransactionStatus, Discount
 
 
-class ProductAdmin(admin.ModelAdmin):
+class ProductAdmin(admin.ModelAdmin[Product]):  # pylint: disable=unsubscriptable-object
     """Admin handler for Products"""
 
     list_display = ("id", "price", "name", "desc", "category", "associated_tournament",
@@ -19,40 +19,38 @@ class ProductAdmin(admin.ModelAdmin):
 admin.site.register(Product, ProductAdmin)
 
 
-@admin.action(description=_("Rembourser la transaction"))
-def reimburse_transactions(modeladmin, request, queryset):
-    """Reimburse all selected actions"""
-    for transaction in queryset:
-        (is_err, msg) = transaction.refund_transaction(request.user.username)
-        if is_err:
-            modeladmin.message_user(
-                request, _("Erreur: %(msg)s") % {"msg": msg}, messages.ERROR
-            )
-            break
+# @admin.action(description=_("Rembourser la transaction"))
+# def reimburse_transactions(modeladmin, request, queryset):
+#     """Reimburse all selected actions"""
+#     for transaction in queryset:
+#         (is_err, msg) = transaction.refund_transaction(request.user.username)
+#         if is_err:
+#             model_admin.message_user(
+#                 request, _("Erreur: %(msg)s") % {"msg": msg}, messages.ERROR
+#             )
+#             break
 
 
-class PaymentAdmin(admin.ModelAdmin):
-    """
-    Admin handler for payments"
-    """
+class PaymentAdmin(admin.ModelAdmin[Payment]):  # pylint: disable=unsubscriptable-object
+    """Admin handler for payments."""
 
     list_display = ("id", "amount", "transaction")
 
     actions = ["export"]
 
-    def has_add_permission(self, _request):
+    def has_add_permission(self, _request: HttpRequest) -> bool:
         """Remove the ability to add a payment from the backoffice"""
         return False
 
-    def has_change_permission(self, _request, _obj=None):
+    def has_change_permission(self, _request: HttpRequest, _obj: Payment | None = None) -> bool:
         """Remove the ability to edit a payment from the backoffice"""
         return False
 
-    def has_delete_permission(self, _request, _obj=None):
+    def has_delete_permission(self, _request: HttpRequest, _obj: Payment | None = None) -> bool:
         """Remove the ability to edit a payment from the backoffice"""
         return False
 
-    def export(self, request, queryset):
+    def export(self, request: HttpRequest, queryset: QuerySet[Payment]) -> HttpResponse:
         """
         Export the selected payments to a CSV file
         """
@@ -71,13 +69,13 @@ class PaymentAdmin(admin.ModelAdmin):
         response = HttpResponse(export, content_type="text/csv")
         response["Content-Disposition"] = "attachment; filename=export.csv"
         return response
+    export.short_description = "Exporter les paiements sélectionnés"  # type: ignore[attr-defined]
 
-    export.short_description = "Exporter les paiements sélectionnés"
 
 admin.site.register(Payment, PaymentAdmin)
 
 
-class TransactionAdmin(admin.ModelAdmin):
+class TransactionAdmin(admin.ModelAdmin[Transaction]):  # pylint: disable=unsubscriptable-object
     """
     Admin handler for Transactions
     In the backoffice, Transactions can only be seen, they cannot be add,
@@ -108,22 +106,23 @@ class TransactionAdmin(admin.ModelAdmin):
 
     # actions = [reimburse_transactions]
 
-    def has_add_permission(self, _request):
+    def has_add_permission(self, _request: HttpRequest) -> bool:
         """Remove the ability to add a transaction from the backoffice"""
         return False
 
-    def has_change_permission(self, _request, _obj=None):
+    def has_change_permission(self, _request: HttpRequest, _obj: Transaction | None = None) -> bool:
         """Remove the ability to edit a transaction from the backoffice"""
         return False
 
-    def has_delete_permission(self, _request, _obj=None):
+    def has_delete_permission(self, _request: HttpRequest, _obj: Transaction | None = None) -> bool:
         """Remove the ability to edit a transaction from the backoffice"""
         return False
 
 
 admin.site.register(Transaction, TransactionAdmin)
 
-class DiscountAdmin(admin.ModelAdmin):
+
+class DiscountAdmin(admin.ModelAdmin[Discount]):  # pylint: disable=unsubscriptable-object
     """
     Admin handler for Discounts
     """

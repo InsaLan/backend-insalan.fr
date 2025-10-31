@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator
@@ -7,8 +11,12 @@ from django.utils.translation import gettext_lazy as _
 from insalan.tickets.models import Ticket
 from insalan.user.models import User
 
-from .payement_status import PaymentStatus
 from . import validators, tournament
+from .payement_status import PaymentStatus
+
+if TYPE_CHECKING:
+    from .team import Team
+
 
 class Substitute(models.Model):
     """
@@ -74,7 +82,7 @@ class Substitute(models.Model):
         """Return the current player as a User object"""
         return self.user
 
-    def get_team(self) -> "Team":
+    def get_team(self) -> Team:
         """Return the Team object of the current team"""
         return self.team
 
@@ -82,7 +90,7 @@ class Substitute(models.Model):
         """Return the name_in_game of the player"""
         return self.name_in_game
 
-    def clean(self):
+    def clean(self) -> None:
         """
         Assert that the user associated with the provided substitute does not already
         exist in any team of any tournament of the event

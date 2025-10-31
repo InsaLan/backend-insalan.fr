@@ -1,4 +1,3 @@
-# flake8: noqa E501
 """
 Django settings for insalan project.
 
@@ -11,12 +10,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+import json
 from os import getenv, path
 from pathlib import Path
 from sys import argv
-import json
 
 from django.utils.translation import gettext_lazy as _
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -75,6 +75,7 @@ CSRF_TRUSTED_ORIGINS = [
 # Application definition
 
 INSTALLED_APPS = [
+    "insalan.apps.InsalanConfig",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

@@ -1,16 +1,21 @@
+from collections import OrderedDict
+from typing import Any
+
 from django.core.exceptions import PermissionDenied
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import generics, permissions, status
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import]
+from drf_yasg import openapi  # type: ignore[import]
 
 from insalan.tickets.models import Ticket
 from insalan.user.models import User
 from insalan.tournament import serializers
+from insalan.tournament.serializers import ManagerSerializer, PlayerSerializer
 
 from ..models import (
     Player,
@@ -27,7 +32,9 @@ from ..models import (
 )
 from .permissions import ReadOnly
 
-class PrivateTournamentList(generics.ListAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class PrivateTournamentList(generics.ListAPIView[PrivateTournament]):
     """List all known private tournaments"""
 
     pagination_class = None
@@ -36,7 +43,8 @@ class PrivateTournamentList(generics.ListAPIView):
     permission_classes = [permissions.IsAdminUser | ReadOnly]
 
 
-class TournamentList(generics.ListCreateAPIView):
+# pylint: disable-next=unsubscriptable-object
+class TournamentList(generics.ListCreateAPIView[EventTournament]):
     """List all known tournaments"""
 
     pagination_class = None
@@ -44,7 +52,9 @@ class TournamentList(generics.ListCreateAPIView):
     serializer_class = serializers.EventTournamentSerializer
     permission_classes = [permissions.IsAdminUser | ReadOnly]
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]  # type: ignore[misc]
         responses={
             201: serializer_class,
             400: openapi.Schema(
@@ -67,19 +77,21 @@ class TournamentList(generics.ListCreateAPIView):
             )
         }
     )
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Create a tournament"""
         return super().post(request, *args, **kwargs)
 
 
-class TournamentDetails(generics.RetrieveUpdateDestroyAPIView):
+# pylint: disable-next=unsubscriptable-object
+class TournamentDetails(generics.RetrieveUpdateDestroyAPIView[EventTournament]):
     """Details about a tournament"""
 
     queryset = EventTournament.objects.all().order_by("id")
     serializer_class = serializers.EventTournamentSerializer
     permission_classes = [permissions.IsAdminUser | ReadOnly]
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializer_class,
             404: openapi.Schema(
@@ -93,11 +105,12 @@ class TournamentDetails(generics.RetrieveUpdateDestroyAPIView):
             )
         }
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Get a tournament"""
         return super().get(request, *args, **kwargs)
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializer_class,
             400: openapi.Schema(
@@ -129,11 +142,12 @@ class TournamentDetails(generics.RetrieveUpdateDestroyAPIView):
             )
         }
     )
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Patch a tournament"""
         return super().patch(request, *args, **kwargs)
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             204: openapi.Schema(
                 type=openapi.TYPE_OBJECT,
@@ -164,11 +178,12 @@ class TournamentDetails(generics.RetrieveUpdateDestroyAPIView):
             )
         }
     )
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Delete a tournament"""
         return super().delete(request, *args, **kwargs)
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializer_class,
             400: openapi.Schema(
@@ -200,12 +215,13 @@ class TournamentDetails(generics.RetrieveUpdateDestroyAPIView):
             )
         }
     )
-    def put(self, request, *args, **kwargs):
+    def put(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Put a tournament"""
         return super().put(request, *args, **kwargs)
 
 
-class TournamentDetailsFull(generics.RetrieveAPIView):
+# pylint: disable-next=unsubscriptable-object
+class TournamentDetailsFull(generics.RetrieveAPIView[EventTournament]):
     """Details about a tournament, with full dereferencing of data"""
     serializer_class = serializers.FullDerefEventTournamentSerializer
     queryset = EventTournament.objects.all().prefetch_related(
@@ -218,7 +234,7 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
         "seatslot_set__seats",
     )
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         tourney = self.get_object()
         tourney_serialized = self.get_serializer(tourney).data
 
@@ -265,7 +281,7 @@ class TournamentDetailsFull(generics.RetrieveAPIView):
         return Response(tourney_serialized, status=status.HTTP_200_OK)
 
 
-class TournamentMe(generics.RetrieveAPIView):
+class TournamentMe(generics.RetrieveAPIView[Any]):  # pylint: disable=unsubscriptable-object
     """
     Details on tournament of a logged user
     This endpoint does many requests to the database and should be used wisely
@@ -275,7 +291,8 @@ class TournamentMe(generics.RetrieveAPIView):
     serializer_class = serializers.PlayerSerializer
     pagination_class = None
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: openapi.Schema(
                 type=openapi.TYPE_OBJECT,
@@ -417,10 +434,11 @@ class TournamentMe(generics.RetrieveAPIView):
             )
         }
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         GET handler
         """
+        assert isinstance(request.user, User), 'User must be authenticated to access this route.'
         user: User = request.user
         ongoing_matchs = []
 
@@ -428,11 +446,11 @@ class TournamentMe(generics.RetrieveAPIView):
             raise PermissionDenied()
 
         # retrieve registration as Player
-        players = Player.objects.filter(user=user)
+        players_query = Player.objects.filter(user=user)
 
         # serialize current ongoing match
-        for player in players :
-            ongoing_matchs += player.get_ongoing_match()
+        for player_obj in players_query:
+            ongoing_matchs += player_obj.get_ongoing_match()
 
         if len(ongoing_matchs) > 0:
             if isinstance(ongoing_matchs[0], GroupMatch):
@@ -472,8 +490,10 @@ class TournamentMe(generics.RetrieveAPIView):
             ongoing_match = None
 
         # serialize registration as Player
-        players = serializers.PlayerSerializer(
-            players, context={"request": request}, many=True
+        players: list[OrderedDict[str, Any]] = PlayerSerializer(  # type: ignore[assignment]
+            players_query,
+            context={"request": request},
+            many=True,
         ).data
         for player in players:
             # dereference team
@@ -501,10 +521,12 @@ class TournamentMe(generics.RetrieveAPIView):
             ).token if player["ticket"] is not None else None
 
         # retrieve registration as Manager
-        managers = Manager.objects.filter(user=user)
+        managers_query = Manager.objects.filter(user=user)
         # serialize it
-        managers = serializers.ManagerSerializer(
-            managers, context={"request": request}, many=True
+        managers = ManagerSerializer(
+            managers_query,
+            context={"request": request},
+            many=True,
         ).data
         for manager in managers:
             # dereference team
@@ -532,10 +554,12 @@ class TournamentMe(generics.RetrieveAPIView):
             ).token if manager["ticket"] is not None else None
 
         # retrieve registration as Substitute
-        substitutes = Substitute.objects.filter(user=user)
+        substitutes_query = Substitute.objects.filter(user=user)
         # serialize it
         substitutes = serializers.SubstituteSerializer(
-            substitutes, context={"request": request}, many=True
+            substitutes_query,
+            context={"request": request},
+            many=True,
         ).data
         for substitute in substitutes:
             # dereference team

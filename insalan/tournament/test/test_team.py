@@ -24,7 +24,7 @@ class TeamTestCase(TestCase):
     Tests for the Team model
     """
 
-    def setUp(self):
+    def setUp(self) -> None:
         """
         Set the tests up
         """
@@ -96,7 +96,7 @@ class TeamTestCase(TestCase):
 
         Substitute.objects.create(user=jeanmich, team=team_lalooze)
 
-    def test_team_get_full(self):
+    def test_team_get_full(self) -> None:
         """Get the fields of a Team"""
         team = Team.objects.get(name="LaLooze")
         self.assertIsNotNone(team)
@@ -116,7 +116,7 @@ class TeamTestCase(TestCase):
         self.assertEqual(1, len(team.get_managers()))
         self.assertEqual(0, len(team.get_substitutes()))
 
-    def test_payment_status_default(self):
+    def test_payment_status_default(self) -> None:
         """Verify what the default status of payment on a new player is"""
         robert = User.objects.all()[0]
         team = Team.objects.all()[0]
@@ -125,7 +125,7 @@ class TeamTestCase(TestCase):
 
         self.assertEqual(PaymentStatus.NOT_PAID, play_reg.payment_status)
 
-    def test_payment_status_set(self):
+    def test_payment_status_set(self) -> None:
         """Verify that we can set a status for a Player at any point"""
         robert = User.objects.all()[0]
         team = Team.objects.all()[0]
@@ -138,7 +138,7 @@ class TeamTestCase(TestCase):
 
         self.assertEqual(PaymentStatus.PAY_LATER, play_reg.payment_status)
 
-    def test_get_team_players(self):
+    def test_get_team_players(self) -> None:
         """Get the players of a Team"""
         team = Team.objects.get(name="LaLooze")
         self.assertIsNotNone(team)
@@ -170,7 +170,7 @@ class TeamTestCase(TestCase):
         self.assertEqual(player_gege.get_username(), "amesombre")
         self.assertEqual(player_gege.get_full_name(), "Gérard Levain")
 
-    def test_team_collision_name(self):
+    def test_team_collision_name(self) -> None:
         """Test Name Collision for a Tournament"""
         team = Team.objects.get(name="LaLooze")
         tourney = team.get_tournament()
@@ -184,7 +184,7 @@ class TeamTestCase(TestCase):
             password=make_password("laloozepwd"),
         )
 
-    def test_team_name_too_short(self):
+    def test_team_name_too_short(self) -> None:
         """Verify that a team name cannot be too short"""
         team = Team.objects.get(name="LaLooze")
         team.name = "CC"
@@ -193,7 +193,7 @@ class TeamTestCase(TestCase):
         team.name += "C"
         team.full_clean()
 
-    def test_team_name_too_long(self):
+    def test_team_name_too_long(self) -> None:
         """Verify that a team name cannot be too long"""
         team = Team.objects.get(name="LaLooze")
         team.name = "C" * 43
@@ -208,7 +208,7 @@ class TournamentTeamEndpoints(TestCase):
 
     # TODO Test all endpoints
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Setup method for Tournament Registrations Unit Tests"""
 
         # Basic setup for a one-tournamnent game event
@@ -255,7 +255,7 @@ class TournamentTeamEndpoints(TestCase):
         # Player.objects.create(team=team_one, user=another_player)
         # Manager.objects.create(team=team_one, user=random_player)
 
-    def test_can_create_a_team_with_player(self):
+    def test_can_create_a_team_with_player(self) -> None:
         """Try to create a team with a player"""
         user: User = User.objects.get(username="validemail")
         self.client.force_login(user=user)
@@ -289,7 +289,7 @@ class TournamentTeamEndpoints(TestCase):
         self.assertEqual(player.get_team(), team)
         self.assertEqual(player.get_name_in_game(), "pseudo")
 
-    def test_can_create_a_team_with_manager(self):
+    def test_can_create_a_team_with_manager(self) -> None:
         """Try to create a team with a manager"""
         user: User = User.objects.get(username="validemail")
         self.client.force_login(user=user)
@@ -319,7 +319,7 @@ class TournamentTeamEndpoints(TestCase):
         self.assertEqual(manager.as_user(), user)
         self.assertEqual(manager.get_team(), team)
 
-    def test_can_create_a_team_with_substitute(self):
+    def test_can_create_a_team_with_substitute(self) -> None:
         """Try to create a team with a substitute"""
         user: User = User.objects.get(username="validemail")
         self.client.force_login(user=user)
@@ -353,7 +353,7 @@ class TournamentTeamEndpoints(TestCase):
         self.assertEqual(substitute.get_team(), team)
         self.assertEqual(substitute.get_name_in_game(), "pseudo")
 
-    def test_can_create_a_team_with_valid_email(self):
+    def test_can_create_a_team_with_valid_email(self) -> None:
         """Try to create a team with a valid email"""
         user: User = User.objects.get(username="validemail")
         self.client.force_login(user=user)
@@ -373,7 +373,7 @@ class TournamentTeamEndpoints(TestCase):
 
         self.assertEqual(request.status_code, 201)
 
-    def test_cant_create_a_team_with_no_valid_email(self):
+    def test_cant_create_a_team_with_no_valid_email(self) -> None:
         """Try to create a team with email not validated"""
         user: User = User.objects.get(username="invalidemail")
         self.client.force_login(user=user)
@@ -393,7 +393,7 @@ class TournamentTeamEndpoints(TestCase):
 
         self.assertEqual(request.status_code, 403)
 
-    def test_can_patch_team_captain(self):
+    def test_can_patch_team_captain(self) -> None:
         """Test that we can patch a team"""
         user: User = User.objects.get(username="validemail")
 
@@ -449,7 +449,7 @@ class TournamentTeamEndpoints(TestCase):
         self.assertEqual(len(players), 1)
         self.assertEqual(players[0].id, player.id)
 
-    def test_cant_patch_team_not_captain(self):
+    def test_cant_patch_team_not_captain(self) -> None:
         """Test that we can't patch a team if we're not the captain"""
         user: User = User.objects.get(username="validemail")
 
@@ -492,7 +492,7 @@ class TournamentTeamEndpoints(TestCase):
 
         self.assertEqual(request.status_code, 403)
 
-    def test_can_patch_team_manager(self):
+    def test_can_patch_team_manager(self) -> None:
         """Test that we can patch a team"""
         User.objects.get(username="validemail")
 
@@ -538,7 +538,7 @@ class TournamentTeamEndpoints(TestCase):
         self.assertEqual(team.name, "Nom d'équipe 2")
         self.assertNotEqual(team.password, "password")
 
-    def test_cant_patch_team_substitute(self):
+    def test_cant_patch_team_substitute(self) -> None:
         """Test that we can't patch a team"""
         User.objects.get(username="validemail")
 
@@ -580,7 +580,7 @@ class TournamentTeamEndpoints(TestCase):
 
         self.assertEqual(request.status_code, 403)
 
-    def test_can_patch_seat_slot(self):
+    def test_can_patch_seat_slot(self) -> None:
         user: User = User.objects.get(username="validemail")
 
         self.client.force_login(user=user)
@@ -633,7 +633,7 @@ class TournamentTeamEndpoints(TestCase):
         team = Team.objects.get(id=team.id)
         self.assertEqual(team.seat_slot, seat_slot)
 
-    def test_non_validated_cant_patch_seat_slot(self):
+    def test_non_validated_cant_patch_seat_slot(self) -> None:
         user: User = User.objects.get(username="validemail")
 
         self.client.force_login(user=user)
@@ -677,7 +677,7 @@ class TournamentTeamEndpoints(TestCase):
 
         self.assertEqual(request.status_code, 400)
 
-    def test_cant_patch_seat_slot(self):
+    def test_cant_patch_seat_slot(self) -> None:
         user: User = User.objects.get(username="validemail")
 
         self.client.force_login(user=user)
@@ -752,7 +752,7 @@ class TournamentTeamEndpoints(TestCase):
 
 
 
-    def test_can_join_a_team_with_a_valid_email(self):
+    def test_can_join_a_team_with_a_valid_email(self) -> None:
         """Try to join an existing team with a valid email"""
         user: User = User.objects.get(username="validemail")
         self.client.force_login(user=user)
@@ -795,7 +795,7 @@ class TournamentTeamEndpoints(TestCase):
         self.assertEqual(request.status_code, 201)
 
 
-    def test_cant_join_a_team_with_no_valid_email(self):
+    def test_cant_join_a_team_with_no_valid_email(self) -> None:
         """Try to join an existing team with no valid email"""
         user: User = User.objects.get(username="invalidemail")
         self.client.force_login(user=user)

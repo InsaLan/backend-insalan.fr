@@ -5,15 +5,19 @@ LangateUserView is an API endpoint used by the langate to authenticate and verif
 It handles retrieving and checking user data, and provides a response containing
 all the necessary information for the langate to identify the user.
 """
+
+from typing import Any
+
 from django.utils.translation import gettext_lazy as _
+
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import]
+from drf_yasg import openapi  # type: ignore[import]
 
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.generics import CreateAPIView
+from rest_framework.request import Request
 from rest_framework.response import Response
-
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 
 from insalan.tournament.models import (
     Event,
@@ -30,14 +34,16 @@ from .models import LangateReply, TournamentRegistration
 from .serializers import ReplySerializer
 
 
-class LangateUserView(CreateAPIView):
+# pylint: disable-next=unsubscriptable-object
+class LangateUserView(CreateAPIView[Any]):
     """
     API endpoint used by the langate to authenticate and verify a user's data
     """
     authentication_classes = [SessionAuthentication]
     serializer_class = ReplySerializer
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -82,7 +88,7 @@ class LangateUserView(CreateAPIView):
             ),
         }
     )
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Function to handle retrieving and checking user data
 
@@ -138,21 +144,18 @@ class LangateUserView(CreateAPIView):
 
         # Find a registration
         user_obj = User.objects.get(username=gate_user)
-        regs_pl = Player.objects.filter(user=user_obj)
         regs_pl = [reg
-                   for reg in regs_pl
+                   for reg in Player.objects.filter(user=user_obj)
                    if (isinstance(reg.team.tournament, EventTournament) and
                        reg.team.tournament.event == ev_obj)]
 
-        regs_man = Manager.objects.filter(user=user_obj)
         regs_man = [reg
-                    for reg in regs_man
+                    for reg in Manager.objects.filter(user=user_obj)
                     if (isinstance(reg.team.tournament, EventTournament) and
                         reg.team.tournament.event == ev_obj)]
 
-        regs_sub = Substitute.objects.filter(user=user_obj)
         regs_sub = [reg
-                    for reg in regs_sub
+                    for reg in Substitute.objects.filter(user=user_obj)
                     if (isinstance(reg.team.tournament, EventTournament) and
                     reg.team.tournament.event == ev_obj)]
 

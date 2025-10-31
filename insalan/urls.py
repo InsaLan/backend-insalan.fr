@@ -24,6 +24,8 @@ from rest_framework import permissions
 
 from insalan.mailer import start_scheduler
 from insalan.langate import views as langate_views
+
+
 router = routers.DefaultRouter()
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
@@ -40,8 +42,8 @@ urlpatterns = [
     path("v1/pizza/", include("insalan.pizza.urls")),
 ]
 if getenv("DEV", "1") == "1":
-    from drf_yasg.views import get_schema_view
-    from drf_yasg import openapi
+    from drf_yasg.views import get_schema_view  # type: ignore[import]
+    from drf_yasg import openapi  # type: ignore[import]
 
     SchemaView = get_schema_view(
         openapi.Info(

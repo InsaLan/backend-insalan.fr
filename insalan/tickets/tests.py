@@ -87,7 +87,7 @@ class TicketTestCase(TestCase):
         self.assertEqual(ticket.user, User.objects.get(username="user2"))
         self.assertEqual(ticket.status, Ticket.Status.CANCELLED)
 
-    def test_get_non_existing_tickets(self):
+    def test_get_non_existing_tickets(self) -> None:
         """
         Test that the tickets not created in the `setUp` method do not exist.
         """

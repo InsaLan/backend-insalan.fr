@@ -1,7 +1,11 @@
 """
 Module for the definition of models tied to users
 """
+
+from __future__ import annotations
+
 from datetime import datetime
+from typing import Any
 
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser, PermissionsMixin, Permission
@@ -13,13 +17,19 @@ from django.core.validators import FileExtensionValidator
 
 from insalan.components.image_field import ImageField
 
-class UserManager(BaseUserManager):
+
+class UserManager(BaseUserManager["User"]):
     """
     Managers the User objects (kind of like a serializer but not quite that)
     """
 
-    # pylint: disable-next=unused-argument
-    def create_user(self, email, username, password, password_validation=None, **extra_fields):
+    def create_user(self,
+        email: str,
+        username: str,
+        password: str,
+        password_validation: str | None = None,  # pylint: disable=unused-argument
+        **extra_fields: Any,
+    ) -> User:
         """
         check that all required fields are present and create an user
         """
@@ -40,7 +50,8 @@ class UserManager(BaseUserManager):
         user.save()
         return user
 
-    def create_superuser(self, email, username, password, **extra_fields):
+    def create_superuser(self, email: str, username: str, password: str, **extra_fields: Any
+                         ) -> User:
         """
         Check that all required fields are present and create a superuser
         """
@@ -71,7 +82,7 @@ class User(AbstractUser, PermissionsMixin):
         verbose_name_plural = _("Utilisateur⋅ices")
         permissions = [("email_active", _("L'utilisateur⋅ice a activé son courriel"))]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         AbstractUser.__init__(self, *args, **kwargs)
 
     USERNAME_FIELD = "username"
@@ -102,25 +113,18 @@ class User(AbstractUser, PermissionsMixin):
         verbose_name="Admin of the insalan team", default=False
     )
     is_active = models.BooleanField(default=True)
+    # TODO: Fix typo and use our manager instead of the default one
     object = UserManager()
 
-    def is_email_active(self):
-        """
-        Check if the user has the email_active permission
-        """
+    def is_email_active(self) -> bool:
+        """Check if the user has the email_active permission."""
         return self.has_perm("user.email_active")
 
-    def set_email_active(self, active=True):
-        """
-        Set the email_active permission
-        """
+    def set_email_active(self, active: bool = True) -> None:
+        """Set the email_active permission."""
+        permission = Permission.objects.get(codename="email_active")
         if active:
-            self.user_permissions.add(Permission.objects.get(codename="email_active"))
+            self.user_permissions.add(permission)
         else:
-            self.user_permissions.remove(
-                Permission.objects.get(codename="email_active")
-            )
+            self.user_permissions.remove(permission)
         self.save()
-
-
-# vim: set tw=80 cc=80:

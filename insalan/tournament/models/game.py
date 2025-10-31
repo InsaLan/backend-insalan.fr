@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Callable, TYPE_CHECKING
+
 from django.db import models
 from django.core.validators import (
     MinValueValidator,
@@ -6,11 +10,18 @@ from django.core.validators import (
 from django.utils.translation import gettext_lazy as _
 
 from .name_validator import get_choices, get_validator
+from .tournament import BaseTournament
+
+if TYPE_CHECKING:
+    from django.db.models.manager import RelatedManager
+
 
 class Game(models.Model):
     """
     A Game is the representation of a Game that is being played at InsaLan
     """
+
+    basetournament_set: RelatedManager[BaseTournament]
 
     class Meta:
         """Meta options"""
@@ -85,6 +96,6 @@ class Game(models.Model):
         """Return the maximum number of teams in a match"""
         return self.team_per_match
 
-    def get_name_validator(self):
-        """Return the validators of the game"""
+    def get_name_validator(self) -> Callable[[str], bool] | None:
+        """Return the validators of the game."""
         return get_validator(self.validators)

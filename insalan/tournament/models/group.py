@@ -1,10 +1,23 @@
+from __future__ import annotations
+
 from math import ceil
 from operator import itemgetter
+from typing import TYPE_CHECKING
 
 from django.db import models
+from django.db.models.query import QuerySet
 from django.utils.translation import gettext_lazy as _
 
-from . import team, match, tournament
+from . import match
+from . import team
+from . import tournament
+
+if TYPE_CHECKING:
+    from django_stubs_ext import ValuesQuerySet
+
+    from .team import Team
+    from .tournament import BaseTournament
+
 
 class Group(models.Model):
     name = models.CharField(
@@ -45,19 +58,19 @@ class Group(models.Model):
     def get_name(self) -> str:
         return self.name
 
-    def get_tournament(self) -> "BaseTournament":
+    def get_tournament(self) -> BaseTournament:
         return self.tournament
 
-    def get_teams(self) -> list["Team"]:
+    def get_teams(self) -> QuerySet[Team]:
         return team.Team.objects.filter(pk__in=self.get_teams_id())
 
-    def get_teams_id(self) -> list[int]:
+    def get_teams_id(self) -> ValuesQuerySet[Seeding, int]:
         return Seeding.objects.filter(group=self).values_list("team", flat=True)
 
     def get_teams_seeding_by_id(self) -> dict[int, int]:
         return {seeding.team.id: seeding.seeding for seeding in Seeding.objects.filter(group=self)}
 
-    def get_teams_seeding(self) -> dict["Team", int]:
+    def get_teams_seeding(self) -> dict[Team, int]:
         return {seeding.team: seeding.seeding for seeding in Seeding.objects.filter(group=self)}
 
     def get_sorted_teams(self) -> list[int]:
@@ -92,7 +105,7 @@ class Group(models.Model):
 
         return dict(sorted(leaderboard.items(), key=itemgetter(1), reverse=True))
 
-    def get_matchs(self) -> list["GroupMatch"]:
+    def get_matchs(self) -> QuerySet[GroupMatch]:
         return GroupMatch.objects.filter(group=self)
 
     def get_tiebreaks(self) -> dict[int,int]:
@@ -125,7 +138,7 @@ class GroupMatch(match.Match):
         verbose_name = _("Match de poule")
         verbose_name_plural = _("Matchs de poule")
 
-    def get_tournament(self):
+    def get_tournament(self) -> BaseTournament:
         return self.group.tournament
 
 class GroupTiebreakScore(models.Model):

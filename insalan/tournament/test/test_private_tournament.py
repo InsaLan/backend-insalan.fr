@@ -14,12 +14,12 @@ class PrivateTournamentTestCase(TestCase):
         This class tests the PrivateTournament class and its methods.
         It verifies that the class can be created, that it has the correct
         attributes, and that it can be saved to the database.
-        
+
         For fields that are related to BaseTournament, see the
         BaseTournamentTestCase class.
     """
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up the Tournaments"""
         game_one = Game.objects.create(name="Test Game One")
         game_two = Game.objects.create(name="Test Game Two")
@@ -29,7 +29,7 @@ class PrivateTournamentTestCase(TestCase):
         PrivateTournament.objects.create(name="Tourney 3", game=game_three, start=timezone.now())
         PrivateTournament.objects.create(name="Tourney 4", game=game_three, start=timezone.now())
 
-    def test_create_private_tournament(self):
+    def test_create_private_tournament(self) -> None:
         """Test creation of PrivateTournament"""
         game = Game.objects.create(name="New Game")
         tournament = PrivateTournament.objects.create(
@@ -45,7 +45,7 @@ class PrivateTournamentTestCase(TestCase):
         self.assertTrue(tournament.running)
         self.assertEqual(tournament.rewards, "First place gets a trophy")
 
-    def test_password_min_length(self):
+    def test_password_min_length(self) -> None:
         """Test that password must be at least 3 characters"""
         game = Game.objects.create(name="New Game")
         tournament = PrivateTournament(
@@ -58,7 +58,7 @@ class PrivateTournamentTestCase(TestCase):
         )
         self.assertRaises(ValidationError, tournament.full_clean)
 
-    def test_start_default(self):
+    def test_start_default(self) -> None:
         """Test that start date defaults to now"""
         game = Game.objects.create(name="New Game")
         tournament = PrivateTournament.objects.create(
@@ -70,7 +70,7 @@ class PrivateTournamentTestCase(TestCase):
         )
         self.assertIsNotNone(tournament.start)
 
-    def test_rewards_blank(self):
+    def test_rewards_blank(self) -> None:
         """Test that rewards can be blank"""
         game = Game.objects.create(name="New Game")
         tournament = PrivateTournament.objects.create(
@@ -83,7 +83,7 @@ class PrivateTournamentTestCase(TestCase):
         )
         self.assertEqual(tournament.rewards, "")
 
-    def test_running_default(self):
+    def test_running_default(self) -> None:
         """Test that running defaults to True"""
         game = Game.objects.create(name="New Game")
         tournament = PrivateTournament.objects.create(

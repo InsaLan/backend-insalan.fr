@@ -8,12 +8,12 @@ The models include:
 
 import re
 
-from djongo import models
+from djongo import models  # type: ignore[import]
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 
-def constant_definition_validator(content: str):
+def constant_definition_validator(content: str) -> None:
     """
     Validator to ensure that any used constant in content is defined.
     """
@@ -58,7 +58,8 @@ def constant_definition_validator(content: str):
         )
 
 
-class Content(models.Model):
+# Ignore type error because djongo doesn't have types stubs.
+class Content(models.Model):  # type: ignore[misc]
     """
     Represents markdown content to be placed on website pages.
     """
@@ -81,7 +82,8 @@ class Content(models.Model):
         return f"[Content] {self.name}"
 
 
-class Constant(models.Model):
+# Ignore type error because djongo doesn't have types stubs.
+class Constant(models.Model):  # type: ignore[misc]
     """
     Stores the constant values on the InsaLan website (e.g: date, staff, prices..).
     """
@@ -109,7 +111,9 @@ class Constant(models.Model):
     def __str__(self) -> str:
         return f"[Constant] {self.name}"
 
-class File(models.Model):
+
+# Ignore type error because djongo doesn't have types stubs.
+class File(models.Model):  # type: ignore[misc]
     """
     Represents a file to be placed on website pages.
     """

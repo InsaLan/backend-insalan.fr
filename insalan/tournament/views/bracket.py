@@ -1,21 +1,24 @@
+from typing import Any, cast
+
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import PermissionDenied, BadRequest
 
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import]
+from drf_yasg import openapi  # type: ignore[import]
+
 from rest_framework import generics, permissions, status
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-
 from insalan.tournament import serializers
+from insalan.user.models import User
 
 from ..models import (
     BaseTournament,
     BestofType,
     Bracket,
     KnockoutMatch,
-    Match,
     MatchStatus,
     validate_match_data,
 )
@@ -28,12 +31,13 @@ from ..manage import (
 from .permissions import ReadOnly
 
 
-class BracketDetails(generics.RetrieveUpdateDestroyAPIView):
+# pylint: disable-next=unsubscriptable-object
+class BracketDetails(generics.RetrieveUpdateDestroyAPIView[Bracket]):
     queryset = Bracket.objects.all()
     permission_classes = [permissions.IsAdminUser | ReadOnly]
     serializer_class = serializers.BracketSerializer
 
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         bracket = self.get_object()
 
         if KnockoutMatch.objects.filter(bracket=bracket).exclude(
@@ -48,13 +52,15 @@ class BracketDetails(generics.RetrieveUpdateDestroyAPIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class CreateBracket(generics.CreateAPIView):
+
+# pylint: disable=unsubscriptable-object
+class CreateBracket(generics.CreateAPIView[BaseTournament]):
     queryset = BaseTournament.objects.all()
     permission_classes = [permissions.IsAdminUser]
     serializer_class = serializers.BracketSerializer
 
-    # pylint: disable-next=arguments-differ
-    def post(self, request, pk: int, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        pk: int = self.kwargs["pk"]
         request.data["tournament"] = pk
 
         data = self.get_serializer(data=request.data)
@@ -68,13 +74,15 @@ class CreateBracket(generics.CreateAPIView):
 
         return Response(serializers.BracketField(bracket).data, status=status.HTTP_201_CREATED)
 
-class BracketMatchPatch(generics.UpdateAPIView):
+
+# pylint: disable=unsubscriptable-object
+class BracketMatchPatch(generics.UpdateAPIView[KnockoutMatch]):
     queryset = KnockoutMatch.objects.all()
     permission_classes = [permissions.IsAdminUser]
     serializer_class = serializers.KnockoutMatchSerializer
     lookup_url_kwarg = "match_id"
 
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         response = super().patch(request, *args, **kwargs)
 
         match = self.get_object()
@@ -84,11 +92,12 @@ class BracketMatchPatch(generics.UpdateAPIView):
 
         return response
 
-class BracketMatchsLaunch(generics.UpdateAPIView):
+
+class BracketMatchsLaunch(generics.UpdateAPIView[Any]):
     serializer_class = serializers.LaunchMatchsSerializer
     permission_classes = [permissions.IsAdminUser]
 
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         if kwargs["pk"] != request.data["tournament"]:
             raise BadRequest()
 
@@ -110,14 +119,17 @@ class BracketMatchsLaunch(generics.UpdateAPIView):
             "warning": data.validated_data["warning"],
         }, status=status.HTTP_200_OK)
 
-class BracketMatchScore(generics.GenericAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class BracketMatchScore(generics.GenericAPIView[KnockoutMatch]):
     """Update score of a bracket match"""
 
     queryset = KnockoutMatch.objects.all().order_by("id")
     serializer_class = serializers.KnockoutMatchSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -166,7 +178,7 @@ class BracketMatchScore(generics.GenericAPIView):
             )
         }
     )
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         user = request.user
         data = request.data
 
@@ -175,19 +187,20 @@ class BracketMatchScore(generics.GenericAPIView):
         except KnockoutMatch.DoesNotExist as e:
             raise NotFound() from e
 
+        assert isinstance(user, User), 'User must be authenticated to access this route.'
         if not match.is_user_in_match(user):
             raise PermissionDenied()
 
-        if match.status != Match.MatchStatus.ONGOING:
+        if match.status != MatchStatus.ONGOING:
             return Response({"status" : "Le match n'est pas en cours"},
                             status=status.HTTP_400_BAD_REQUEST)
 
         error_response = validate_match_data(match, data)
         if error_response is not None:
-            return Response({k: _(v) for k,v in error_response.items()},
+            return Response({k: cast(str, _(v)) for k,v in error_response.items()},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        update_match_score(match,data)
+        update_match_score(match, data)
 
         if not match.is_last_match():
             update_next_knockout_match(match)

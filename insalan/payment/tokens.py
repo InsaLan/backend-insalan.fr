@@ -1,12 +1,17 @@
 """Module that helps retrieve a OAuth2 token from HelloAsso"""
+
+from __future__ import annotations
+
 import logging
 import time
+from typing import Any
 
 import requests
 
 from django.utils.translation import gettext_lazy as _
 
 import insalan.settings as app_settings
+
 
 logger = logging.getLogger(__name__)
 
@@ -21,19 +26,19 @@ class Token:
 
     instance = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Token retrieval instance"""
         if Token.instance is None:
             Token.instance = self
 
-        self.expiration_date = None
-        self.bearer_token = None
-        self.refresh_token = None
+        self.expiration_date: float | None = None
+        self.bearer_token: str | None = None
+        self.refresh_token: str | None = None
 
         self.obtain_token()
 
     @classmethod
-    def get_instance(cls):
+    def get_instance(cls) -> Token:
         """Get the potential singleinstance of the Token"""
         if cls.instance is None:
             token = cls()
@@ -41,7 +46,7 @@ class Token:
 
         return cls.instance
 
-    def obtain_token(self, secret=None):
+    def obtain_token(self, secret: str | None = None) -> None:
         """
         Obtain a token, either from the original secret, or from the previous
         refresh token
@@ -94,20 +99,22 @@ class Token:
 
         self.assign_token_data(request.json())
 
-    def assign_token_data(self, data):
+    def assign_token_data(self, data: Any) -> None:
         """Assign data from the json body"""
         # Store our tokens, but also keep track of the refresh time
         self.expiration_date = time.time() + int(data["expires_in"])
         self.bearer_token = data["access_token"]
         self.refresh_token = data["refresh_token"]
 
-    def get_token(self):
+    def get_token(self) -> str:
         """Return the singleton's token"""
         # Should we refresh?
+        assert self.expiration_date is not None
         if time.time() >= self.expiration_date:
             self.refresh()
+        assert self.bearer_token is not None
         return self.bearer_token
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh our HelloAsso token"""
         self.obtain_token(secret=self.refresh_token)

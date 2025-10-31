@@ -1,27 +1,34 @@
-from django.core.exceptions import PermissionDenied, BadRequest
-from django.utils.translation import gettext_lazy as _
+from typing import Any
+
+from django.db.models.query import QuerySet
 from django.contrib.auth.hashers import check_password
+from django.core.exceptions import PermissionDenied, BadRequest
 from django.http import QueryDict
+from django.utils.translation import gettext_lazy as _
+
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import]
+from drf_yasg import openapi  # type: ignore[import]
 
 from rest_framework import generics, status
 from rest_framework.exceptions import NotFound
+from rest_framework.request import Request
 from rest_framework.response import Response
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-
-from insalan.user.models import User
 from insalan.tournament import serializers
+from insalan.user.models import User
 
 from ..models import Manager, Team, PaymentStatus
 
-class ManagerRegistration(generics.RetrieveAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class ManagerRegistration(generics.RetrieveAPIView[Manager]):
     """Show a manager registration"""
 
     serializer_class = serializers.ManagerSerializer
     queryset = Manager.objects.all().order_by("id")
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializer_class,
             403: openapi.Schema(
@@ -44,7 +51,7 @@ class ManagerRegistration(generics.RetrieveAPIView):
             )
         }
     )
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Delete a manager
         """
@@ -81,7 +88,8 @@ class ManagerRegistration(generics.RetrieveAPIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializer_class,
             404: openapi.Schema(
@@ -95,20 +103,23 @@ class ManagerRegistration(generics.RetrieveAPIView):
             )
         }
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Get a manager
         """
         return super().get(request, *args, **kwargs)
 
-class ManagerRegistrationList(generics.ListCreateAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class ManagerRegistrationList(generics.ListCreateAPIView[Manager]):
     """Show all manager registrations"""
 
     pagination_class = None
     serializer_class = serializers.ManagerSerializer
     queryset = Manager.objects.all().order_by("id")
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=serializers.ManagerSerializer,
         responses={
             201: serializer_class,
@@ -136,7 +147,7 @@ class ManagerRegistrationList(generics.ListCreateAPIView):
             )
         }
     )
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         user = request.user
         data = request.data
 
@@ -175,17 +186,19 @@ class ManagerRegistrationList(generics.ListCreateAPIView):
         return super().post(request, *args, **kwargs)
 
 
-class ManagerRegistrationListId(generics.ListAPIView):
+# pylint: disable-next=unsubscriptable-object
+class ManagerRegistrationListId(generics.ListAPIView[Manager]):
     """Find all player registrations of a user from their ID"""
 
     pagination_class = None
     serializer_class = serializers.ManagerIdSerializer
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[Manager]:
         """Obtain the queryset fot this view"""
         return Manager.objects.filter(user_id=self.kwargs["user_id"])
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: openapi.Schema(
                 type=openapi.TYPE_ARRAY,
@@ -213,20 +226,21 @@ class ManagerRegistrationListId(generics.ListAPIView):
             ),
         }
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Get all manager registrations of a user from their ID
         """
         return super().get(request, *args, **kwargs)
 
 
-class ManagerRegistrationListName(generics.ListAPIView):
+# pylint: disable-next=unsubscriptable-object
+class ManagerRegistrationListName(generics.ListAPIView[Manager]):
     """Find all player registrations of a user from their username"""
 
     pagination_class = None
     serializer_class = serializers.ManagerIdSerializer
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[Manager]:
         """Obtain the queryset fot this view"""
         user = None
         try:
@@ -235,7 +249,8 @@ class ManagerRegistrationListName(generics.ListAPIView):
             raise NotFound() from exc
         return Manager.objects.filter(user=user)
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: openapi.Schema(
                 type=openapi.TYPE_ARRAY,
@@ -263,7 +278,7 @@ class ManagerRegistrationListName(generics.ListAPIView):
             ),
         }
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Get all manager registrations of a user from their username
         """

@@ -37,9 +37,35 @@ jobs:
       - name: Run linter evaluation
         run: pylint ./insalan
 
-  unit-tests:
+  mypy:
     if: always()
     needs: [linting]
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+
+      # Install Python 3.12
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Set the environment up
+      - run: python3 -m venv env
+      - run: source env/bin/activate
+
+      # Install dependencies
+      - name: Install dependencies
+        run: pip3 install -r requirements.txt
+      - name: Install development dependencies
+        run: pip3 install -r requirements-dev.txt
+
+      # Run mypy
+      - name: Run mypy
+        run: mypy
+
+  unit-tests:
+    if: always()
+    needs: [mypy]
     runs-on: ubuntu-22.04
     env:
       DB_NAME: insalan

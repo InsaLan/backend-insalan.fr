@@ -1,12 +1,20 @@
+from __future__ import annotations
+
 import math
-from typing import List
+from typing import TYPE_CHECKING
 
-from django.db import models
-from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
-
+from django.db import models
+from django.db.models.query import QuerySet
+from django.utils.translation import gettext_lazy as _
 
 from . import match, team
+from .tournament import BaseTournament
+
+if TYPE_CHECKING:
+    from django_stubs_ext import ValuesQuerySet
+    from .team import Team
+
 
 class BracketType(models.TextChoices):
     """Information about the type of a bracket, single or double elimination"""
@@ -48,7 +56,7 @@ class Bracket(models.Model):
             models.Index(fields=["tournament"])
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     def get_depth(self) -> int:
@@ -61,16 +69,16 @@ class Bracket(models.Model):
         # pylint: disable-next=no-member
         return math.ceil(self.team_count/self.tournament.get_game().get_team_per_match())
 
-    def get_teams(self) -> List["Team"]:
+    def get_teams(self) -> QuerySet[Team]:
         # return [match.get_teams() for match in KnockoutMatch.objects.filter(bracket=self)]
         return team.Team.objects.filter(
             pk__in=KnockoutMatch.objects.filter(bracket=self).values("teams"),
         )
 
-    def get_teams_id(self) -> List[int]:
+    def get_teams_id(self) -> ValuesQuerySet[Team, int]:
         return self.get_teams().values_list("id", flat=True)
 
-    def get_matchs(self) -> List["KnockoutMatch"]:
+    def get_matchs(self) -> QuerySet[KnockoutMatch]:
         return KnockoutMatch.objects.filter(bracket=self)
 
     def get_winner(self) -> int | None:
@@ -118,7 +126,7 @@ class KnockoutMatch(match.Match):
         verbose_name = _("Match d'arbre")
         verbose_name_plural = _("Matchs d'arbre")
 
-    def get_tournament(self):
+    def get_tournament(self) -> BaseTournament:
         return self.bracket.tournament
 
     def is_last_match(self) -> bool:

@@ -1,9 +1,12 @@
-from typing import Optional
+from __future__ import annotations
+
 from math import ceil
+from typing import Any, TYPE_CHECKING
+
 from django.db import models
+from django.db.models.query import QuerySet
 from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator
-
 from django.utils.translation import gettext_lazy as _
 
 from . import bracket
@@ -15,6 +18,18 @@ from . import substitute
 from . import swiss
 from . import tournament
 from . import validators
+
+
+if TYPE_CHECKING:
+    from django_stubs_ext import ValuesQuerySet
+
+    from .group import GroupMatch
+    from .bracket import KnockoutMatch
+    from .manager import Manager
+    from .substitute import Substitute
+    from .player import Player
+    from .swiss import SwissMatch
+    from .tournament import BaseTournament
 
 
 class Team(models.Model):
@@ -89,43 +104,41 @@ class Team(models.Model):
 
     def __str__(self) -> str:
         """Format this team to a str"""
-        if self.tournament is not None:
-            if isinstance(self.tournament, tournament.EventTournament):
-                return f"{self.name} ({self.tournament.event})"  # pylint: disable=no-member
-            return f"{self.name} ({self.tournament.name})"
-        return f"{self.name} (???)"
+        if isinstance(self.tournament, tournament.EventTournament):
+            return f"{self.name} ({self.tournament.event})"
+        return f"{self.name} ({self.tournament.name})"
 
-    def get_name(self):
+    def get_name(self) -> str:
         """
         Retrieve the name of this team.
         """
         return self.name
 
-    def get_tournament(self) -> Optional["BaseTournament"]:
+    def get_tournament(self) -> BaseTournament:
         """
-        Retrieve the tournament of this team. Potentially null.
+        Retrieve the tournament of this team.
         """
         return self.tournament
 
-    def get_players(self) -> list["Player"]:
+    def get_players(self) -> QuerySet[Player]:
         """
-        Retrieve all the players in the database for that team
+        Retrieve all the players in the database for that team.
         """
         return player.Player.objects.filter(team=self)
 
-    def get_players_id(self) -> list[int]:
+    def get_players_id(self) -> ValuesQuerySet[Player, int]:
         """
         Retrieve the user identifiers of all players
         """
         return self.get_players().values_list("id", flat=True)
 
-    def get_managers(self) -> list["Manager"]:
+    def get_managers(self) -> QuerySet[Manager]:
         """
         Retrieve all the managers in the database for that team
         """
         return manager.Manager.objects.filter(team=self)
 
-    def get_managers_id(self) -> list[int]:
+    def get_managers_id(self) -> ValuesQuerySet[Manager, int]:
         """
         Retrieve the user identifiers of all managers
         """
@@ -137,19 +150,19 @@ class Team(models.Model):
         """
         return [manager.as_user().username for manager in self.get_managers()]
 
-    def get_substitutes(self) -> list["Substitute"]:
+    def get_substitutes(self) -> QuerySet[Substitute]:
         """
         Retrieve all the substitutes in the database for that team
         """
         return substitute.Substitute.objects.filter(team=self)
 
-    def get_substitutes_id(self) -> list[int]:
+    def get_substitutes_id(self) -> ValuesQuerySet[Substitute, int]:
         """
         Retrieve the user identifiers of all substitutes
         """
         return self.get_substitutes().values_list("id", flat=True)
 
-    def get_captain_name(self) -> str:
+    def get_captain_name(self) -> str | None:
         """
         Retrieve the captain of the team
         """
@@ -161,16 +174,17 @@ class Team(models.Model):
         """Return team password"""
         return self.password
 
-    def get_group_matchs(self) -> list["GroupMatch"]:
+    def get_group_matchs(self) -> QuerySet[GroupMatch]:
         return group.GroupMatch.objects.filter(teams=self)
 
-    def get_knockout_matchs(self) -> list["KnockoutMatch"]:
+    def get_knockout_matchs(self) -> QuerySet[KnockoutMatch]:
         return bracket.KnockoutMatch.objects.filter(teams=self)
 
-    def get_swiss_matchs(self) -> list["SwissMatch"]:
+    def get_swiss_matchs(self) -> QuerySet[SwissMatch]:
         return swiss.SwissMatch.objects.filter(teams=self)
 
-    def get_matchs(self) -> list[list["GroupMatch"] | list["KnockoutMatch"] | list["SwissMatch"]]:
+    def get_matchs(self
+                   ) -> tuple[QuerySet[GroupMatch], QuerySet[KnockoutMatch], QuerySet[SwissMatch]]:
         return self.get_group_matchs(), self.get_knockout_matchs(), self.get_swiss_matchs()
 
     def get_seat_slot_id(self) -> int | None:
@@ -181,20 +195,19 @@ class Team(models.Model):
             return self.seat_slot.id  # pylint: disable=no-member
         return None
 
-    def refresh_validation(self):
+    def refresh_validation(self) -> None:
         """Refreshes the validation state of a tournament"""
         # Condition 1: ceil((n+1)/2) players have paid/will pay
         if self.validated:
             return
-        # pylint: disable-next=no-member
         if self.tournament.get_validated_teams() < self.tournament.get_max_team():
             # An EventTournament team is validated if ceil((n+1)/2) players have paid
             if isinstance(self.tournament, tournament.EventTournament):
                 players = self.get_players()
 
-                game = self.get_tournament().get_game()  # pylint: disable=no-member
+                game = self.get_tournament().get_game()
 
-                threshold = ceil((game.get_players_per_team()+1)/2)
+                threshold = ceil((game.get_players_per_team() + 1) / 2)
 
                 paid_seats = len(players.filter(payment_status=ps.PaymentStatus.PAID))
 
@@ -204,12 +217,12 @@ class Team(models.Model):
             elif isinstance(self.tournament, tournament.PrivateTournament):
                 players = self.get_players()
 
-                game = self.get_tournament().get_game()  # pylint: disable=no-member
+                game = self.get_tournament().get_game()
 
                 self.validated = len(players) == game.get_players_per_team()
                 self.save()
 
-    def clean(self):
+    def clean(self) -> None:
         """
         Assert that the tournament associated with the provided team is announced
         """
@@ -223,7 +236,7 @@ class Team(models.Model):
                 _("Tournoi complet")
             )
 
-    def save(self, *args, **kwargs):
+    def save(self, *args: Any, **kwargs: Any) -> None:
         try:
             if self.captain is None:
                 players = self.get_players()

@@ -1,28 +1,35 @@
-from django.core.exceptions import PermissionDenied, BadRequest
-from django.utils.translation import gettext_lazy as _
+from typing import Any
+
+from django.db.models.query import QuerySet
 from django.contrib.auth.hashers import check_password
+from django.core.exceptions import PermissionDenied, BadRequest
 from django.http import QueryDict
+from django.utils.translation import gettext_lazy as _
+
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import]
+from drf_yasg import openapi  # type: ignore[import]
 
 from rest_framework import generics, status
 from rest_framework.exceptions import NotFound
+from rest_framework.request import Request
 from rest_framework.response import Response
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-
+from insalan.tournament import serializers
 from insalan.tournament.models.validators import valid_name
 from insalan.user.models import User
-from insalan.tournament import serializers
 
 from ..models import Substitute, Team, PaymentStatus, EventTournament
 
-class SubstituteRegistration(generics.RetrieveAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class SubstituteRegistration(generics.RetrieveAPIView[Substitute]):
     """Show a substitute registration"""
 
     serializer_class = serializers.SubstituteSerializer
     queryset = Substitute.objects.all().order_by("id")
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializer_class,
             403: openapi.Schema(
@@ -45,13 +52,14 @@ class SubstituteRegistration(generics.RetrieveAPIView):
             )
         }
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Get a substitute
         """
         return super().get(request, *args, **kwargs)
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializer_class,
             400: openapi.Schema(
@@ -83,7 +91,7 @@ class SubstituteRegistration(generics.RetrieveAPIView):
             )
         }
     )
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Patch a substitute
         """
@@ -126,7 +134,8 @@ class SubstituteRegistration(generics.RetrieveAPIView):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializer_class,
             403: openapi.Schema(
@@ -150,7 +159,7 @@ class SubstituteRegistration(generics.RetrieveAPIView):
             )
         }
     )
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Delete a substitute
         """
@@ -187,14 +196,16 @@ class SubstituteRegistration(generics.RetrieveAPIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class SubstituteRegistrationList(generics.ListCreateAPIView):
+# pylint: disable-next=unsubscriptable-object
+class SubstituteRegistrationList(generics.ListCreateAPIView[Substitute]):
     """Show all substitute registrations"""
 
     pagination_class = None
     serializer_class = serializers.SubstituteSerializer
     queryset = Substitute.objects.all().order_by("id")
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -242,7 +253,7 @@ class SubstituteRegistrationList(generics.ListCreateAPIView):
             )
         }
     )
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         user = request.user
         data = request.data
 
@@ -299,23 +310,27 @@ class SubstituteRegistrationList(generics.ListCreateAPIView):
 
         return super().post(request, *args, **kwargs)
 
-class SubstituteRegistrationListId(generics.ListAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class SubstituteRegistrationListId(generics.ListAPIView[Substitute]):
     """Find all substitute registrations of a user from their ID"""
 
     pagination_class = None
     serializer_class = serializers.SubstituteIdSerializer
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[Substitute]:
         """Obtain the queryset fot this view"""
         return Substitute.objects.filter(user_id=self.kwargs["user_id"])
 
-class SubstituteRegistrationListName(generics.ListAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class SubstituteRegistrationListName(generics.ListAPIView[Substitute]):
     """Find all substitute registrations of a user from their username"""
 
     pagination_class = None
     serializer_class = serializers.SubstituteIdSerializer
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[Substitute]:
         """Obtain the queryset fot this view"""
         user = None
         try:
