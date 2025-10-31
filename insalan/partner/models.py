@@ -18,10 +18,10 @@ class Partner(models.Model):
         verbose_name_plural = _("Partenaires")
 
     id: int
-    name: models.CharField = models.CharField(
+    name = models.CharField(
         max_length=200, verbose_name=_("Nom du partenaire/sponsor")
     )
-    url: models.URLField = models.URLField(verbose_name=_("URL"))
+    url = models.URLField(verbose_name=_("URL"))
     logo: models.FileField = ImageField(
         verbose_name=_("Logo"),
         upload_to="partners",
@@ -29,7 +29,7 @@ class Partner(models.Model):
             FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp", "avif"])
         ],
     )
-    partner_type: models.CharField = models.CharField(
+    partner_type = models.CharField(
         verbose_name=_("Type de partenariat"),
         max_length=2,
         choices=PartnerType.choices,
