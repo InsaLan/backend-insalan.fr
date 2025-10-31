@@ -1,9 +1,15 @@
+from typing import Any
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from insalan.tournament.models import EventTournament, Team, Player
 
 from insalan.mailer import MailManager
 from insalan.settings import EMAIL_AUTH
+
+from .player import Player
+from .team import Team
+from .tournament import EventTournament
+
 
 class TournamentMailer(models.Model):
     """
@@ -73,7 +79,7 @@ class TournamentMailer(models.Model):
         upload_to="mail-attachments",
     )
 
-    def save(self, *args, **kwargs) -> None:
+    def save(self, *args: Any, **kwargs: Any) -> None:
         """Override default save of TournamentMailer"""
         if self.mail != "":
             super().save(*args, **kwargs)
@@ -97,7 +103,9 @@ class TournamentMailer(models.Model):
         # send the mail to every players
         for player in players:
             # send the mail
-            MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"]).send_tournament_mail(
+            mailer = MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"])
+            assert mailer is not None
+            mailer.send_tournament_mail(
                 player.user,
                 self.title,
                 self.content,

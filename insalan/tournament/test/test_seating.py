@@ -17,7 +17,7 @@ class SeatTestCase(TestCase):
     Test the seat model
     """
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.evobj = Event.objects.create(
             name="Test Event",
             description="This is a test",
@@ -33,7 +33,7 @@ class SeatTestCase(TestCase):
             ongoing=False,
         )
 
-    def test_seats_unique_with_coords_and_event(self):
+    def test_seats_unique_with_coords_and_event(self) -> None:
         """
         Test that seats are unique with regards to coordinates and the event
         """
@@ -96,7 +96,7 @@ class SeatSlotFormTestCase(TestCase):
             Seat.objects.create(event=self.evobj_two, x=1, y=6),
         ]
 
-    def test_number_of_seats_is_valid(self):
+    def test_number_of_seats_is_valid(self) -> None:
         """
         Test that the number of seats is valid
         """
@@ -119,7 +119,7 @@ class SeatSlotFormTestCase(TestCase):
         )
         self.assertFalse(form.is_valid())
 
-    def test_all_seats_are_in_same_event(self):
+    def test_all_seats_are_in_same_event(self) -> None:
         # seats in different events, invalid
         form = SeatSlotForm(
             data={
@@ -140,7 +140,7 @@ class SeatSlotFormTestCase(TestCase):
         )
         self.assertTrue(form.is_valid())
 
-    def test_no_seat_sharing_between_slots(self):
+    def test_no_seat_sharing_between_slots(self) -> None:
         seat_slot = SeatSlot.objects.create(tournament=self.tournament_two)
         seat_slot.seats.set(self.seats[:3])
 

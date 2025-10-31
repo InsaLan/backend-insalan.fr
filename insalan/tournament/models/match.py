@@ -1,12 +1,21 @@
 from __future__ import annotations
 
 import math
+from typing import TYPE_CHECKING
 
-from django.db import models
-from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
+from django.db import models
+from django.db.models.query import QuerySet
+from django.utils.translation import gettext_lazy as _
+
 from insalan.user.models import User
+
+if TYPE_CHECKING:
+    from django_stubs_ext import ValuesQuerySet
+
+    from .team import Team
+
 
 class MatchStatus(models.TextChoices):
     """Information about the status of a match"""
@@ -14,6 +23,7 @@ class MatchStatus(models.TextChoices):
     SCHEDULED = "SCHEDULED", _("Prévu")
     ONGOING = "ONGOING", _("En cours")
     COMPLETED = "COMPLETED", _("Terminé")
+
 
 class BestofType(models.IntegerChoices):
     """Best of type for a match"""
@@ -23,6 +33,7 @@ class BestofType(models.IntegerChoices):
     BO5 = 5, _("Série de 5")
     BO7 = 7, _("Série de 7")
     RANKING = 0, _("Classement")
+
 
 class Match(models.Model):
     teams = models.ManyToManyField(
@@ -66,10 +77,10 @@ class Match(models.Model):
     def get_team_count(self) -> int:
         return len(self.get_teams())
 
-    def get_teams(self) -> list["Team"]:
+    def get_teams(self) -> QuerySet[Team]:
         return self.teams.all()
 
-    def get_teams_id(self) -> list[int]:
+    def get_teams_id(self) -> ValuesQuerySet[Team, int]:
         return self.teams.all().values_list("id", flat=True)
 
     def get_total_max_score(self) -> int:
@@ -110,10 +121,10 @@ class Match(models.Model):
 
         return scores
 
-    def get_scores_list(self) -> list[Score]:
+    def get_scores_list(self) -> QuerySet[Score]:
         return Score.objects.filter(team__in=self.get_teams(), match=self)
 
-    def get_winners_loosers(self) -> list[list[int]]:
+    def get_winners_loosers(self) -> tuple[list[int], list[int]]:
         winners = []
         loosers = []
         scores = self.get_scores()
@@ -161,7 +172,7 @@ class Score(models.Model):
             )
         ]
 
-    def clean(self):
+    def clean(self) -> None:
         if self.score > self.match.get_max_score():
             raise ValidationError({
                 # pylint: disable-next=line-too-long

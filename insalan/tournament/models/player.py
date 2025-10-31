@@ -1,4 +1,6 @@
-from typing import Union
+from __future__ import annotations
+
+from typing import Any, TYPE_CHECKING
 
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -8,8 +10,15 @@ from django.utils.translation import gettext_lazy as _
 from insalan.tickets.models import Ticket
 from insalan.user.models import User
 
-from .payement_status import PaymentStatus
 from . import validators, group, bracket, swiss, match, tournament
+from .group import GroupMatch
+from .payement_status import PaymentStatus
+from .swiss import SwissMatch
+
+if TYPE_CHECKING:
+    from .bracket import KnockoutMatch
+    from .team import Team
+
 
 class Player(models.Model):
     """
@@ -69,7 +78,7 @@ class Player(models.Model):
         """Return the current player as a User object"""
         return self.user
 
-    def get_team(self) -> "Team":
+    def get_team(self) -> Team:
         """Return the Team object of the current team"""
         return self.team
 
@@ -77,7 +86,7 @@ class Player(models.Model):
         """Return the name_in_game of the player"""
         return self.name_in_game
 
-    def get_ongoing_match(self) -> Union["GroupMatch", "KnockoutMatch", "SwissMatch"]:
+    def get_ongoing_match(self) -> list[GroupMatch | KnockoutMatch | SwissMatch]:
         return list(group.GroupMatch.objects.filter(
             teams=self.team,
             status=match.MatchStatus.ONGOING,
@@ -89,13 +98,13 @@ class Player(models.Model):
             status=match.MatchStatus.ONGOING
         ))
 
-    def clean(self):
+    def clean(self) -> None:
         """
         Assert that the user associated with the provided player does not already
         exist in any team of any tournament of the event
         """
         user = self.user
-        tourney = self.team.get_tournament()  # pylint: disable=no-member
+        tourney = self.team.get_tournament()
         if isinstance(tourney, tournament.EventTournament):
             event = tourney.get_event()
             if not validators.unique_event_registration_validator(user, event, player=self.id):
@@ -117,12 +126,13 @@ class Player(models.Model):
                 _("Le pseudo en jeu n'est pas valide")
             )
 
-    def save(self,*args,**kwargs):
-        super().save(*args,**kwargs)
-        self.team.refresh_validation()  # pylint: disable=no-member
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        super().save(*args, **kwargs)
+        self.team.refresh_validation()
 
-    def delete(self,*args,**kwargs):
+    def delete(self, *args: Any, **kwargs: Any) -> tuple[int, dict[str, int]]:
         if self.team.captain == self:
             self.team.captain = None
-        super().delete(*args,**kwargs)
-        self.team.refresh_validation()  # pylint: disable=no-member
+        return_value = super().delete(*args, **kwargs)
+        self.team.refresh_validation()
+        return return_value

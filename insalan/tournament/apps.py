@@ -1,6 +1,8 @@
 """App configuration"""
+
 from django.apps import AppConfig
 from django.utils.translation import gettext_lazy as _
+
 
 class TournamentConfig(AppConfig):
     """Tournament app config"""
@@ -9,7 +11,7 @@ class TournamentConfig(AppConfig):
     name = "insalan.tournament"
     verbose_name = _("Tournois")
 
-    def ready(self):
+    def ready(self) -> None:
         """Called when the module is ready"""
         # pylint: disable-next=import-outside-toplevel
         from .payment import payment_handler_register

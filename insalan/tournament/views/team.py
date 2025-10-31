@@ -1,30 +1,35 @@
+from typing import Any
+
+from django.contrib.auth.hashers import make_password
 from django.core.exceptions import PermissionDenied, BadRequest
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.hashers import make_password
+
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import]
+from drf_yasg import openapi  # type: ignore[import]
 
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import NotFound
+from rest_framework.request import Request
 from rest_framework.response import Response
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-
-from insalan.settings import EMAIL_AUTH
 from insalan.mailer import MailManager
+from insalan.settings import EMAIL_AUTH
 from insalan.tournament import serializers
+from insalan.user.models import User
 
 from ..models import Player, Manager, Substitute, Team, PaymentStatus, SeatSlot
 from .permissions import ReadOnly, Patch
 
 
-class TeamList(generics.ListCreateAPIView):
+class TeamList(generics.ListCreateAPIView[Team]): # pylint: disable=unsubscriptable-object
     """List all known teams"""
 
     queryset = Team.objects.all().order_by("id")
     serializer_class = serializers.TeamSerializer
     permission_classes = [permissions.IsAuthenticated | ReadOnly]
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             201: serializer_class,
             400: openapi.Schema(
@@ -47,8 +52,9 @@ class TeamList(generics.ListCreateAPIView):
             )
         }
     )
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         user = request.user
+        assert isinstance(user, User), 'User must be authenticated to access this route.'
 
         if not user.is_email_active():
             raise PermissionDenied(
@@ -70,14 +76,17 @@ class TeamList(generics.ListCreateAPIView):
         return super().post(request, *args, **kwargs)
 
 
-class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class TeamDetails(generics.RetrieveAPIView[Team], generics.DestroyAPIView[Team]):
     """Details about a team"""
 
     queryset = Team.objects.all().order_by("id")
     serializer_class = serializers.TeamSerializer
     permission_classes = [permissions.IsAdminUser | Patch | permissions.IsAuthenticatedOrReadOnly]
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=serializers.TeamSerializer,
         responses={
             200: serializer_class,
@@ -110,10 +119,13 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
             )
         }
     )
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """Patch a team."""
         user = request.user
         data = request.data
+
+        if not user.is_authenticated:
+            raise PermissionDenied()
 
         # get the team
         try:
@@ -122,15 +134,16 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
             raise NotFound() from exc
 
         # check if the user is registered in the team
-        player = Player.objects.filter(user=user, team=team)
-        manager = Manager.objects.filter(user=user, team=team)
-        if len(player) == 0 and len(manager) == 0:
+        player_query = Player.objects.filter(user=user, team=team)
+        manager_query = Manager.objects.filter(user=user, team=team)
+        if len(player_query) == 0 and len(manager_query) == 0:
             return Response({
                 "team": _("Vous n'êtes pas inscrit dans cette équipe.")
             }, status=status.HTTP_403_FORBIDDEN)
 
         # check if the player is the team's captain or a manager
-        if len(manager) == 0 and team.captain.id != player[0].id:
+        if (len(manager_query) == 0 and
+            (team.captain is None or team.captain.id != player_query[0].id)):
             return Response({
                 "team": _("Vous n'avez pas la permission de modifier cette équipe.")
             }, status=status.HTTP_403_FORBIDDEN)
@@ -151,14 +164,16 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
         # player edit
         if "players" in data:
             existing = set(team.get_players_id())
-            players = set(data["players"])
-            removed = existing - players
+            players_set = set(data["players"])
+            removed = existing - players_set
             for uid in removed:
                 player = Player.objects.get(id=uid)
                 # if player hasn't paid, remove him from the team
                 if (player.as_user().id != user.id and
                     player.payment_status == PaymentStatus.NOT_PAID):
-                    MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"]).send_kick_mail(
+                    mailer = MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"])
+                    assert mailer is not None
+                    mailer.send_kick_mail(
                         player.as_user(),
                         team.name,
                     )
@@ -167,14 +182,16 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
         # manager edit
         if "managers" in data:
             existing = set(team.get_managers_id())
-            managers = set(data["managers"])
-            removed = existing - managers
+            managers_set = set(data["managers"])
+            removed = existing - managers_set
             for uid in removed:
                 manager = Manager.objects.get(id=uid)
                 # if manager hasn't paid, remove him from the team
                 if (manager.as_user().id != user.id and
                     manager.payment_status == PaymentStatus.NOT_PAID):
-                    MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"]).send_kick_mail(
+                    mailer = MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"])
+                    assert mailer is not None
+                    mailer.send_kick_mail(
                         manager.as_user(),
                         team.name,
                     )
@@ -183,14 +200,16 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
         # substitute edit
         if "substitutes" in data:
             existing = set(team.get_substitutes_id())
-            substitutes = set(data["substitutes"])
-            removed = existing - substitutes
+            substitutes_set = set(data["substitutes"])
+            removed = existing - substitutes_set
             for uid in removed:
                 substitute = Substitute.objects.get(id=uid)
                 # if substitute hasn't paid, remove him from the team
                 if (substitute.as_user().id != user.id and
                     substitute.payment_status == PaymentStatus.NOT_PAID):
-                    MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"]).send_kick_mail(
+                    mailer = MailManager.get_mailer(EMAIL_AUTH["tournament"]["from"])
+                    assert mailer is not None
+                    mailer.send_kick_mail(
                         substitute.as_user(),
                         team.name,
                     )
@@ -230,9 +249,9 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
 
         serializer = serializers.TeamSerializer(team, context={"request": request}).data
 
-        players = []
-        for player in serializer["players"]:
-            players.append(Player.objects.get(id=player))
+        players: list[Player] = []
+        for player_id in serializer["players"]:
+            players.append(Player.objects.get(id=player_id))
         serializer["players"] = serializers.FullDerefPlayerSerializer(
             players,
             many=True,
@@ -240,8 +259,8 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
         ).data
 
         managers = []
-        for manager in serializer["managers"]:
-            managers.append(Manager.objects.get(id=manager))
+        for manager_id in serializer["managers"]:
+            managers.append(Manager.objects.get(id=manager_id))
         serializer["managers"] = serializers.FullDerefManagerSerializer(
             managers,
             many=True,
@@ -249,8 +268,8 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
         ).data
 
         substitutes = []
-        for substitute in serializer["substitutes"]:
-            substitutes.append(Substitute.objects.get(id=substitute))
+        for substitute_id in serializer["substitutes"]:
+            substitutes.append(Substitute.objects.get(id=substitute_id))
         serializer["substitutes"] = serializers.FullDerefSubstituteSerializer(
             substitutes,
             many=True,
@@ -259,7 +278,8 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
 
         return Response(serializer, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             204: openapi.Schema(
                 type=openapi.TYPE_OBJECT,
@@ -290,13 +310,14 @@ class TeamDetails(generics.RetrieveAPIView, generics.DestroyAPIView):
             )
         }
     )
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Delete a team
         """
         return super().delete(request, *args, **kwargs)
 
-class TeamMatchs(generics.RetrieveAPIView):
+
+class TeamMatchs(generics.RetrieveAPIView[Team]):  # pylint: disable=unsubscriptable-object
     """
     Get all matchs of a team
     """
@@ -306,14 +327,15 @@ class TeamMatchs(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAdminUser | permissions.IsAuthenticated]
     pagination_class = None
 
-class AdminTeamSeeding(generics.UpdateAPIView):
+
+class AdminTeamSeeding(generics.UpdateAPIView[Team]):  # pylint: disable=unsubscriptable-object
     queryset = Team.objects.all()
     serializer_class = serializers.TeamSeedingSerializer
     permission_classes = [permissions.IsAdminUser]
     pagination_class = None
 
-    def patch(self, request, *args, **kwargs):
-        new_seeding = self.get_serializer(self.get_queryset(),data=request.data, many=True)
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        new_seeding = self.get_serializer(self.get_queryset(), data=request.data, many=True)
         if not new_seeding.is_valid():
             raise BadRequest(_("Les données sont invalides."))
 

@@ -7,11 +7,11 @@ Authors:
 
 import io
 import os
-
 from random import randint, choice
+from typing import Any
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand, CommandError, CommandParser
 
 # Our models
 import insalan.settings
@@ -28,12 +28,12 @@ from insalan.user.models import User
 from insalan.partner.models import Partner
 
 
-def generate_garbage(count=32):
+def generate_garbage(count: int = 32) -> str:
     """Generate a desired length of garbage"""
     return ("".join([hex(x)[2:] for x in os.urandom(count // 2)]))[:count]
 
 
-def pull_id(collection):
+def pull_id(collection: list[int]) -> int | None:
     """Pull an identifier, if any, at random, from a collection. None if empty."""
     if len(collection) == 0:
         return None
@@ -42,7 +42,7 @@ def pull_id(collection):
     return ret
 
 
-def payment_random():
+def payment_random() -> PaymentStatus:
     """Pull a payment status at random with a skewed distribution"""
     roll = randint(0, 100)
     if roll < 15:
@@ -57,7 +57,7 @@ class Command(BaseCommand):
 
     help = "Populate the database with dummy data for testing purposes"
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: CommandParser) -> None:
         """Add declarations for the arguments this command will take"""
         # If people keep telling you "hey, this is production"
         # Tell them: "NO, THIS IS PATRICK"
@@ -73,7 +73,7 @@ class Command(BaseCommand):
             help="Force the prompt that asks if you're really sure",
         )
 
-    def generate_partner(self):
+    def generate_partner(self) -> None:
         """Generate a partner"""
         par = Partner.objects.create(
             name="partner_" + generate_garbage(randint(50, 150)),
@@ -89,7 +89,7 @@ class Command(BaseCommand):
             flush=True,
         )
 
-    def generate_logo(self):
+    def generate_logo(self) -> SimpleUploadedFile:
         """Generate an uploaded logo file"""
         test_img = io.BytesIO(generate_garbage(randint(500, 1000)).encode("utf-8"))
         test_img.name = (
@@ -99,7 +99,7 @@ class Command(BaseCommand):
         )
         return SimpleUploadedFile(test_img.name, test_img.getvalue())
 
-    def generate_events(self):
+    def generate_events(self) -> list[Event]:
         """Generate the events, returning a list of Event objects"""
         print("-" * 40)
         print("Events:")
@@ -126,7 +126,7 @@ class Command(BaseCommand):
 
         return events
 
-    def generate_tournaments(self, events, games):
+    def generate_tournaments(self, events: list[Event], games: list[Game]) -> None:
         """Generate tournaments"""
         print("-" * 40)
         print("Tournament:")
@@ -149,7 +149,11 @@ class Command(BaseCommand):
                 )
                 print(tourney)
 
-    def generate_singleplayer_team(self, pool_of_users, tourney):
+    def generate_singleplayer_team(
+        self,
+        pool_of_users: list[int],
+        tourney: EventTournament,
+    ) -> None:
         """Generate a singleplayer team"""
         user_id = pull_id(pool_of_users)
         if user_id is None:
@@ -168,7 +172,7 @@ class Command(BaseCommand):
         )
         print(f"\r    [{team}] \u2713", end="\r")
 
-    def generate_games(self):
+    def generate_games(self) -> list[Game]:
         """Generate games, returning a list of Game objects"""
         print("-" * 40)
         print("Games:")
@@ -183,7 +187,7 @@ class Command(BaseCommand):
             print(games[-1])
         return games
 
-    def generate_multiplayer_team(self, pool_of_users, tourney):
+    def generate_multiplayer_team(self, pool_of_users: list[int], tourney: EventTournament) -> None:
         """Generate a team of multiple players and potentially a manager"""
         team = Team.objects.create(
             tournament=tourney,
@@ -218,7 +222,7 @@ class Command(BaseCommand):
             print(".", end="", flush=True)
         print(f"\r    [{team}] \u2713    ")
 
-    def handle(self, *_, **options):
+    def handle(self, *_: Any, **options: Any) -> None:
         """Command handler"""
 
         # If we are in debug, and this isn't Patrick
@@ -246,7 +250,7 @@ class Command(BaseCommand):
         # Alright, let's do this
         self.populate_dummy_data()
 
-    def populate_dummy_data(self):
+    def populate_dummy_data(self) -> None:
         """Actually populate the database"""
 
         # Let's create some events

@@ -2,7 +2,8 @@
 
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
-from django.test import TestCase
+
+from rest_framework.test import APITestCase
 
 from insalan.tournament.models import (
     Player,
@@ -15,10 +16,10 @@ from insalan.user.models import User
 
 
 # Player Class Tests
-class PlayerTestCase(TestCase):
+class PlayerTestCase(APITestCase):
     """Player Unit Test Class"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Setup method for Player Unit Tests"""
 
         # Basic setup for a one-tournamnent game event
@@ -69,7 +70,7 @@ class PlayerTestCase(TestCase):
         Player.objects.create(team=team_one, user=another_player, name_in_game="PlayerTwo")
         Player.objects.create(team=team_two, user=another_player, name_in_game="RandomKiller")
 
-    def test_get_one_player_of_user(self):
+    def test_get_one_player_of_user(self) -> None:
         """Check the conversion between user and player"""
         user = User.objects.get(username="testplayer")
 
@@ -89,21 +90,21 @@ class PlayerTestCase(TestCase):
         self.assertTrue(user.is_active)
         self.assertFalse(user.is_staff)
 
-    def test_get_many_players_of_user(self):
+    def test_get_many_players_of_user(self) -> None:
         """Test that we get all players when registered multiple times"""
         user = User.objects.get(username="anotherplayer")
 
         players = Player.objects.filter(user=user)
         self.assertEqual(2, len(players))
 
-    def test_get_no_players_of_user(self):
+    def test_get_no_players_of_user(self) -> None:
         """Test that we get no players on users never registered"""
         user = User.objects.get(username="randomplayer")
 
         players = Player.objects.filter(user=user)
         self.assertEqual(0, len(players))
 
-    def test_duplicate_player(self):
+    def test_duplicate_player(self) -> None:
         """Test whether the system reacts to player duplicates"""
         event = Event.objects.create(
             name="InsaLan Collision Test", year=2023, month=9, description=""
@@ -123,7 +124,7 @@ class PlayerTestCase(TestCase):
             ValidationError, Player.objects.create(user=user, team=team).full_clean
         )
 
-    def test_not_multiple_players_same_event_same_tournament_same_team(self):
+    def test_not_multiple_players_same_event_same_tournament_same_team(self) -> None:
         """Check that saving fails when multiple players are inserted at once"""
         event = Event.objects.create(
             name="InsaLan Collision Test", year=2023, month=9, description=""
@@ -145,7 +146,7 @@ class PlayerTestCase(TestCase):
         player = Player.objects.create(user=user, team=team)
         self.assertRaises(ValidationError, player.full_clean)
 
-    def test_not_multiple_players_same_event_same_tournament_diff_team(self):
+    def test_not_multiple_players_same_event_same_tournament_diff_team(self) -> None:
         """Check that saving fails when multiple players are inserted at once"""
         event = Event.objects.create(
             name="InsaLan Collision Test", year=2023, month=9, description=""
@@ -172,7 +173,7 @@ class PlayerTestCase(TestCase):
         player = Player.objects.create(user=user, team=team_two)
         self.assertRaises(ValidationError, player.full_clean)
 
-    def test_not_multiple_players_same_event_diff_tournament_diff_team(self):
+    def test_not_multiple_players_same_event_diff_tournament_diff_team(self) -> None:
         """Check that saving fails when multiple players are inserted at once"""
         event = Event.objects.create(
             name="InsaLan Collision Test", year=2023, month=9, description=""
@@ -200,7 +201,7 @@ class PlayerTestCase(TestCase):
         player = Player.objects.create(user=user, team=team_two)
         self.assertRaises(ValidationError, player.full_clean)
 
-    def test_not_multiple_players_diff_event_diff_tournament_diff_team(self):
+    def test_not_multiple_players_diff_event_diff_tournament_diff_team(self) -> None:
         """Check that saving fails when multiple players are inserted at once"""
         event = Event.objects.create(
             name="InsaLan Collision Test", year=2023, month=9, description=""
@@ -223,7 +224,7 @@ class PlayerTestCase(TestCase):
         player = Player.objects.create(user=user, team=team_two, name_in_game="pseudo")
         self.assertRaises(ValidationError, player.full_clean)
 
-    def test_get_player_team_not_none(self):
+    def test_get_player_team_not_none(self) -> None:
         """Check that a player gives a non null team"""
         user = User.objects.get(username="testplayer")
 
@@ -233,7 +234,7 @@ class PlayerTestCase(TestCase):
         team = player.get_team()
         self.assertIsNotNone(team)
 
-    def test_get_player_team_correct(self):
+    def test_get_player_team_correct(self) -> None:
         """Check that a player gives the correct team"""
         user = User.objects.get(username="testplayer")
         # There should be only one
@@ -249,7 +250,7 @@ class PlayerTestCase(TestCase):
         self.assertEqual(team.get_name(), "La Team Test")
         self.assertEqual(team.get_tournament(), trnm)
 
-    def test_player_team_deletion(self):
+    def test_player_team_deletion(self) -> None:
         """Verify the behaviour of a Player when their team gets deleted"""
         user_obj = User.objects.get(username="testplayer")
         event = Event.objects.get(year=2023, month=8)
@@ -265,7 +266,7 @@ class PlayerTestCase(TestCase):
 
         self.assertRaises(Player.DoesNotExist, Player.objects.get, id=play_obj.id)
 
-    def test_user_deletion(self):
+    def test_user_deletion(self) -> None:
         """Verify that a Player registration is deleted along with its user"""
         user_obj = User.objects.get(username="testplayer")
         event = Event.objects.get(year=2023, month=8)
@@ -281,7 +282,7 @@ class PlayerTestCase(TestCase):
 
         self.assertRaises(Player.DoesNotExist, Player.objects.get, id=play_obj.id)
 
-    def test_patch_user(self):
+    def test_patch_user(self) -> None:
         """
         Test the patch method of the Player API
         """
@@ -300,7 +301,6 @@ class PlayerTestCase(TestCase):
         request = self.client.patch(
             f"/v1/tournament/player/{player.id}/",
             data,
-            content_type="application/json",
         )
 
         # check response
@@ -309,7 +309,7 @@ class PlayerTestCase(TestCase):
         # check data
         self.assertEqual(request.data["name_in_game"], "playerOneModified")
 
-    def test_patch_user_not_owner(self):
+    def test_patch_user_not_owner(self) -> None:
         """
         Test the patch method of the Player API when the user is not related to the player
         """
@@ -329,13 +329,12 @@ class PlayerTestCase(TestCase):
         request = self.client.patch(
             f"/v1/tournament/player/{player.id}/",
             data,
-            content_type="application/json",
         )
 
         # check response
         self.assertEqual(request.status_code, 403)
 
-    def test_delete_user(self):
+    def test_delete_user(self) -> None:
         """
         Test the delete method of the Player API
         """
@@ -357,7 +356,7 @@ class PlayerTestCase(TestCase):
         # check data
         self.assertRaises(Player.DoesNotExist, Player.objects.get, id=player.id)
 
-    def test_delete_user_not_owner(self):
+    def test_delete_user_not_owner(self) -> None:
         """
         Test the delete method of the Player API when the user is not related to the player
         """

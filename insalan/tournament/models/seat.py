@@ -36,5 +36,5 @@ class Seat(models.Model):
             )
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.event} - ({self.x}, {self.y})"
