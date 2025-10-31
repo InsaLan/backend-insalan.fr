@@ -2,10 +2,12 @@
 Serializers for classes in the langate module.
 """
 
+from typing import Any
+
 from rest_framework import serializers
 
 
-class SimplifiedUserDataSerializer(serializers.Serializer):
+class SimplifiedUserDataSerializer(serializers.Serializer[Any]):
     """
     Serializer class for SimplifiedUserData
     """
@@ -18,7 +20,7 @@ class SimplifiedUserDataSerializer(serializers.Serializer):
     is_admin = serializers.BooleanField()
 
 
-class TournamentRegistrationSerializer(serializers.Serializer):
+class TournamentRegistrationSerializer(serializers.Serializer[Any]):
     """
     Serializer for a TournamentRegistration
     """
@@ -30,7 +32,7 @@ class TournamentRegistrationSerializer(serializers.Serializer):
     has_paid = serializers.BooleanField()
 
 
-class ReplySerializer(serializers.Serializer):
+class ReplySerializer(serializers.Serializer[Any]):
     """
     Serialize for LangateReplies
     """

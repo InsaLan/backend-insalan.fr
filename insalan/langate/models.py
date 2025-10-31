@@ -1,6 +1,8 @@
 """Langate models"""
 
-from django.db import models
+from __future__ import annotations
+
+from django.db.models import BooleanField, CharField, EmailField, TextChoices
 
 from insalan.user.models import User
 
@@ -14,15 +16,19 @@ class SimplifiedUserData:
     tournament data.
     """
 
-    username = models.CharField(max_length=100, blank=False)
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    email = models.EmailField(verbose_name="email address", max_length=255, blank=False)
-    is_staff = models.BooleanField()
-    is_admin = models.BooleanField()
+    username: CharField[str, str] = CharField(max_length=100, blank=False)
+    first_name: CharField[str, str] = CharField(max_length=100)
+    last_name: CharField[str, str] = CharField(max_length=100)
+    email: EmailField[str, str] = EmailField(
+        verbose_name="email address",
+        max_length=255,
+        blank=False,
+    )
+    is_staff: BooleanField[bool, bool] = BooleanField()
+    is_admin: BooleanField[bool, bool] = BooleanField()
 
     @classmethod
-    def new(cls, user: User):
+    def new(cls, user: User) -> SimplifiedUserData:
         # pylint: disable=line-too-long
         """
         Create a simplified version of a user's information
@@ -41,17 +47,20 @@ class SimplifiedUserData:
 
         return s_user_data
 
-class TournamentRegistration:
-    """
-    Tournament Registration for a User
-    """
 
-    shortname = models.CharField(max_length=50, blank=False)
-    game_name = models.CharField(max_length=25, blank=False)
-    team = models.CharField(max_length=25, blank=False)
-    manager = models.BooleanField()
-    has_paid = models.BooleanField()
-    email = models.EmailField(verbose_name="email address", max_length=255, blank=False)
+class TournamentRegistration:
+    """Tournament Registration for a User."""
+
+    shortname: CharField[str, str] = CharField(max_length=50, blank=False)
+    game_name: CharField[str, str] = CharField(max_length=25, blank=False)
+    team: CharField[str, str] = CharField(max_length=25, blank=False)
+    manager: BooleanField[bool, bool] = BooleanField()
+    has_paid: BooleanField[bool, bool] = BooleanField()
+    email: EmailField[str, str] = EmailField(
+        verbose_name="email address",
+        max_length=255,
+        blank=False,
+    )
 
 
 class LangateReply:
@@ -61,7 +70,7 @@ class LangateReply:
     can mirror the one found on the website.
     """
 
-    class RegistrationStatus(models.TextChoices):
+    class RegistrationStatus(TextChoices):
         """
         All possible "err" labels for langate reply information.
         """
@@ -71,11 +80,12 @@ class LangateReply:
         NOT_EXIST = "user_does_not_exist"
 
     user = SimplifiedUserData()
-    err = models.CharField(max_length=25, choices=RegistrationStatus.choices)
-    tournaments = list
+    err: CharField[str | None, str | None] = CharField(max_length=25,
+                                                       choices=RegistrationStatus.choices)
+    tournaments: list[TournamentRegistration]
 
     @classmethod
-    def new(cls, user: User):
+    def new(cls, user: User) -> LangateReply:
         """
         Create a new and very empty LangateReply
 

@@ -5,6 +5,8 @@ Langate unit tests
 from django.test import TestCase
 from django.utils.translation import gettext_lazy as _
 
+from rest_framework.test import APITestCase
+
 from insalan.tournament.models import (
     Event,
     EventTournament,
@@ -25,7 +27,7 @@ class SerializationTests(TestCase):
     Class for serialization tests
     """
 
-    def test_successful_user(self):
+    def test_successful_user(self) -> None:
         """
         Tests what the successful serialization of simplified user data looks like
         """
@@ -45,7 +47,7 @@ class SerializationTests(TestCase):
     # conversion will be db -> json, and you can only do validation when
     # going the opposite way
 
-    def test_successful_reply(self):
+    def test_successful_reply(self) -> None:
         """
         Tests what the serialization of a successful reply looks like
         """
@@ -72,19 +74,19 @@ class SerializationTests(TestCase):
         self.assertEqual(len(ser["tournaments"]), 0)
 
 
-class EndpointTests(TestCase):
+class EndpointTests(APITestCase):
     """
     Endpoint tests
     """
 
-    def test_unauthenticated_user(self):
+    def test_unauthenticated_user(self) -> None:
         """
         Tests that the API endpoint refuses to give information without auth
         """
         request = self.client.post("/v1/langate/authenticate/", format="json")
         self.assertEqual(request.status_code, 400)
 
-    def test_authenticated_user(self):
+    def test_authenticated_user(self) -> None:
         """Verify result on an authenticated user"""
         Event.objects.create(name="InsaLan", year=2023, month=3, ongoing=True)
         user = User.objects.create_user(username="limefox",
@@ -113,7 +115,7 @@ class EndpointTests(TestCase):
 
         self.assertEqual(len(ser["tournaments"]), 0)
 
-    def test_no_ongoing_event(self):
+    def test_no_ongoing_event(self) -> None:
         """
         Verify what happens when no event is happening
         """
@@ -136,7 +138,7 @@ class EndpointTests(TestCase):
         # No ongoing event triggers a 500
         self.assertEqual(reply.status_code, 500)
 
-    def test_one_ongoing_event(self):
+    def test_one_ongoing_event(self) -> None:
         """
         Verify what happens with only one ongoing event and no ID in the POST
         """
@@ -174,7 +176,7 @@ class EndpointTests(TestCase):
         self.assertFalse(tourney_reg["manager"])
         self.assertFalse(tourney_reg["has_paid"])
 
-    def test_payment_status_paid(self):
+    def test_payment_status_paid(self) -> None:
         """
         Verify that payment is correctly updated when payed
         """
@@ -212,7 +214,7 @@ class EndpointTests(TestCase):
         self.assertFalse(tourney_reg["manager"])
         self.assertTrue(tourney_reg["has_paid"])
 
-    def test_payment_status_pay_later(self):
+    def test_payment_status_pay_later(self) -> None:
         """
         Verify that payment is correctly updated when payed
         """
@@ -250,7 +252,7 @@ class EndpointTests(TestCase):
         self.assertFalse(tourney_reg["manager"])
         self.assertFalse(tourney_reg["has_paid"])
 
-    def test_payment_status_contamination(self):
+    def test_payment_status_contamination(self) -> None:
         """
         Verify that payment status is contaminated by a single not paid ticket
         """
@@ -296,7 +298,7 @@ class EndpointTests(TestCase):
         self.assertTrue(tourney_reg["manager"])
         self.assertFalse(tourney_reg["has_paid"])
 
-    def test_payment_status_fully_paid(self):
+    def test_payment_status_fully_paid(self) -> None:
         """
         Verify that payment status is null when all is paid
         """
