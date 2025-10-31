@@ -1,6 +1,11 @@
 import logging
 import sys
+from typing import cast
+
+import django_stubs_ext
+
 from django.contrib.auth.models import Permission
+from django.core.files import File
 from django.core.mail import EmailMessage, get_connection
 from django.contrib.auth.tokens import (
     PasswordResetTokenGenerator,
@@ -8,11 +13,15 @@ from django.contrib.auth.tokens import (
 )
 from django.utils.translation import gettext_lazy as _
 
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore[import]
 
 from insalan import settings
 from insalan.user.models import User
-from insalan.tickets.models import TicketManager
+from insalan.tickets.models import Ticket, TicketManager
+
+
+django_stubs_ext.monkeypatch(extra_classes=[File])
+
 
 class EmailConfirmationTokenGenerator(PasswordResetTokenGenerator):
     """
@@ -22,7 +31,7 @@ class EmailConfirmationTokenGenerator(PasswordResetTokenGenerator):
     (NB: the django app secret is also used as a salt)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.key_salt = "IWontLaunch8TwitchStreamsWhenConnectionIsAlreadyBad"
 
@@ -39,9 +48,9 @@ class UserMailer:
         self.mail_from = mail_from
         self.mail_pass = mail_pass
         self.test = test
-        self.queue = []
+        self.queue: list[EmailMessage] = []
 
-    def send_email_confirmation(self, user_object: User):
+    def send_email_confirmation(self, user_object: User) -> None:
         """
         Send an e-mail confirmation token to the user registring.
         """
@@ -73,7 +82,7 @@ class UserMailer:
         else:
             self.queue.append(email)
 
-    def send_password_reset(self, user_object: User):
+    def send_password_reset(self, user_object: User) -> None:
         """
         Send a password reset token.
         """
@@ -105,7 +114,7 @@ class UserMailer:
         else:
             self.queue.append(email)
 
-    def send_kick_mail(self, user_object: User, team_name: str):
+    def send_kick_mail(self, user_object: User, team_name: str) -> None:
         """
         Send a mail to a user that has been kicked.
         """
@@ -129,7 +138,7 @@ class UserMailer:
         else:
             self.queue.append(email)
 
-    def send_ticket_mail(self, user_object: User, ticket: str):
+    def send_ticket_mail(self, user_object: User, ticket: Ticket) -> None:
         """
         Send a mail with the ticket in attachment.
         """
@@ -147,7 +156,7 @@ class UserMailer:
         email = EmailMessage(
             settings.EMAIL_SUBJECT_PREFIX + _("Votre billet pour l'InsaLan"),
             # pylint: disable-next=line-too-long
-            _("Votre inscription pour l'Insalan a été payée. Votre billet est disponible en pièce jointe. Vous pouvez retrouver davantages d'informations sur l'évènement sur le site internet de l'InsaLan."),
+            cast(str, _("Votre inscription pour l'Insalan a été payée. Votre billet est disponible en pièce jointe. Vous pouvez retrouver davantages d'informations sur l'évènement sur le site internet de l'InsaLan.")),
             self.mail_from,
             [user_object.email],
             connection=connection,
@@ -163,10 +172,14 @@ class UserMailer:
         else:
             self.queue.append(email)
 
-    def send_tournament_mail(self, user_object: User, title: str, content: str, attachment: str):
-        """
-        Send a mail
-        """
+    def send_tournament_mail(
+        self,
+        user_object: User,
+        title: str,
+        content: str,
+        attachment: File[bytes] | None,  # pylint: disable=unsubscriptable-object
+    ) -> None:
+        """Send a mail."""
         connection = get_connection(
             fail_silently=False,
             username=self.mail_from,
@@ -190,7 +203,7 @@ class UserMailer:
         else:
             self.queue.append(email)
 
-    def send_first_mail(self):
+    def send_first_mail(self) -> None:
         """
         Send the first mail in the queue.
         """
@@ -208,10 +221,10 @@ class MailManager:
     """
     Manage emails.
     """
-    mailers = {}
+    mailers: dict[str, UserMailer] = {}
 
     @staticmethod
-    def get_mailer(mail_from: str) -> UserMailer:
+    def get_mailer(mail_from: str) -> UserMailer | None:
         """
         Get a mailer for a specific email address.
         """
@@ -220,7 +233,7 @@ class MailManager:
         return MailManager.mailers[mail_from]
 
     @staticmethod
-    def get_default_mailer() -> UserMailer:
+    def get_default_mailer() -> UserMailer | None:
         """
         Get a mailer for a specific email address.
         """
@@ -229,8 +242,8 @@ class MailManager:
         return list(MailManager.mailers.values())[0]
 
     @staticmethod
-    def add_mailer(mail_host: str, mail_port: str, mail_from: str, mail_pass: str, mail_ssl:bool,
-                   test: bool = False):
+    def add_mailer(mail_host: str, mail_port: str, mail_from: str, mail_pass: str, mail_ssl: bool,
+                   test: bool = False) -> None:
         """
         Add a mailer for a specific email address.
         """
@@ -238,14 +251,14 @@ class MailManager:
                                                     mail_ssl, test=test)
 
     @staticmethod
-    def send_queued_mail():
+    def send_queued_mail() -> None:
         """
         Send first mail in all mailer's queue.
         """
         for mailer in MailManager.mailers.values():
             mailer.send_first_mail()
 
-def start_scheduler():
+def start_scheduler() -> None:
     # Remove apscheduler logs
     logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
 
