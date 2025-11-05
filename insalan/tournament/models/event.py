@@ -98,7 +98,7 @@ class Event(models.Model):
             models.Index(fields=["date_start"]),
         ]
     
-    def clean(self):
+    def clean(self) -> None:
         super().clean()
         self.clean_date_end()
         if self.ongoing:
@@ -108,7 +108,7 @@ class Event(models.Model):
             if ongoing_events.exists():
                 raise ValidationError(_("Un autre évènement est déjà en cours. Il ne peut y en avoir qu'un seul."))
 
-    def clean_date_end(self):
+    def clean_date_end(self) -> None:
         if self.date_end and self.date_start and self.date_end < self.date_start:
             raise ValidationError(_("La date de fin ne peut pas être avant la date de début."))
 

@@ -1,9 +1,9 @@
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.schedulers import SchedulerAlreadyRunningError
+from apscheduler.schedulers.background import BackgroundScheduler # type: ignore[import]
+from apscheduler.schedulers import SchedulerAlreadyRunningError # type: ignore[import]
 from django.conf import settings
 scheduler = BackgroundScheduler(timezone=settings.TIME_ZONE)
 
-def start():
+def start() -> None:
     try:
         scheduler.start()
     except SchedulerAlreadyRunningError:

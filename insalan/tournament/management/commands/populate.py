@@ -7,6 +7,7 @@ Authors:
 
 import io
 import os
+from datetime import date
 from random import randint, choice
 from typing import Any
 
@@ -105,12 +106,13 @@ class Command(BaseCommand):
         print("Events:")
         events = []
         for _ in range(randint(5, 8)):
+            start_date = date(randint(2003, 2025), randint(1, 12), randint(1, 26))
             events.append(
                 Event.objects.create(
                     name=f"Insalan {generate_garbage(randint(15, 30))}",
                     description=generate_garbage(randint(2, 127)),
-                    year=randint(2003, 2024),
-                    month=randint(1, 13),
+                    date_start=start_date,
+                    date_end=date.fromordinal(start_date.toordinal() + 2),
                     ongoing=randint(0, 100) < 20,
                 )
             )

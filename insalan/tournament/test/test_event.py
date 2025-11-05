@@ -49,7 +49,7 @@ class EventTestCase(TransactionTestCase):
         self.assertFalse(evobj_one in query_ongoing)
         self.assertTrue(evobj_two in query_ongoing)
     
-    def test_single_ongoing_event(self):
+    def test_single_ongoing_event(self) -> None:
         """Test that only one event can be ongoing at a time"""
         Event.objects.create(
             name="InsaLan 1", date_start=date(2023,8,1), date_end=date(2023,8,2), ongoing=True

@@ -9,7 +9,7 @@ import logging
     
 logger = logging.getLogger(__name__)
 
-def check_ongoing_events():
+def check_ongoing_events() -> None:
     from .models import Event
     for event in Event.objects.filter(ongoing=True):
         now = timezone.now().date()
