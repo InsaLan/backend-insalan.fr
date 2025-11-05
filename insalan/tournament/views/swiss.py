@@ -1,14 +1,18 @@
-from django.utils.translation import gettext_lazy as _
+from typing import Any
+
 from django.core.exceptions import BadRequest
+from django.utils.translation import gettext_lazy as _
+
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import]
+from drf_yasg import openapi  # type: ignore[import]
 
 from rest_framework import generics, permissions, status
-from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, PermissionDenied
-
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+from rest_framework.request import Request
+from rest_framework.response import Response
 
 from insalan.tournament import serializers
+from insalan.user.models import User
 
 from ..manage import (
     create_swiss_rounds,
@@ -16,15 +20,17 @@ from ..manage import (
     launch_match,
     update_match_score,
 )
-from ..models import MatchStatus, BaseTournament, SwissMatch, validate_match_data, Match
+from ..models import MatchStatus, BaseTournament, SwissMatch, validate_match_data
 
-class CreateSwissRounds(generics.CreateAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class CreateSwissRounds(generics.CreateAPIView[BaseTournament]):
     queryset = BaseTournament.objects.all()
     serializer_class = serializers.CreateSwissRoundsSerializer
     permission_classes = [permissions.IsAdminUser]
 
-    # pylint: disable-next=arguments-differ
-    def post(self, request, pk: int, *args, **kwargs) -> Response:
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        pk: int = self.kwargs["pk"]
         request.data["tournament"] = pk
 
         data = self.get_serializer(data=request.data)
@@ -39,11 +45,13 @@ class CreateSwissRounds(generics.CreateAPIView):
 
         return Response(serialized_data, status=status.HTTP_201_CREATED)
 
-class DeleteSwissRounds(generics.DestroyAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class DeleteSwissRounds(generics.DestroyAPIView[BaseTournament]):
     queryset = BaseTournament.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
-    def delete(self, request, *args, **kwargs) -> Response:
+    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         tournament = self.get_object()
 
         if SwissMatch.objects.filter(swiss__tournament=tournament).exclude(
@@ -58,11 +66,12 @@ class DeleteSwissRounds(generics.DestroyAPIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class SwissMatchsLaunch(generics.UpdateAPIView):
+
+class SwissMatchsLaunch(generics.UpdateAPIView[Any]):  # pylint: disable=unsubscriptable-object
     serializer_class = serializers.LaunchMatchsSerializer
     permission_classes = [permissions.IsAdminUser]
 
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         if kwargs["pk"] != request.data["tournament"]:
             raise BadRequest()
 
@@ -79,13 +88,16 @@ class SwissMatchsLaunch(generics.UpdateAPIView):
             "matchs": matchs, "warning": data.validated_data["warning"]
         }, status=status.HTTP_200_OK)
 
-class GenerateSwissRoundRound(generics.UpdateAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class GenerateSwissRoundRound(generics.UpdateAPIView[BaseTournament]):
     queryset = BaseTournament.objects.all()
     permission_classes = [permissions.IsAdminUser]
     serializer_class = serializers.GenerateSwissRoundRoundSerializer
 
     # pylint: disable-next=arguments-differ
-    def patch(self, request, pk: int, *args, **kwargs) -> Response:
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        pk: int = self.kwargs["pk"]
         request.data["tournament"] = pk
 
         data = self.get_serializer(data=request.data)
@@ -96,24 +108,29 @@ class GenerateSwissRoundRound(generics.UpdateAPIView):
 
         updated_matchs_serialized = serializers.SwissMatchSerializer(updated_matchs, many=True)
 
-        updated_matchs_serialized = {m["id"]: m for m in updated_matchs_serialized.data}
+        return Response(
+            {m["id"]: m for m in updated_matchs_serialized.data},
+            status=status.HTTP_200_OK,
+        )
 
-        return Response(updated_matchs_serialized, status=status.HTTP_200_OK)
 
-class SwissMatchPatch(generics.UpdateAPIView):
+class SwissMatchPatch(generics.UpdateAPIView[SwissMatch]):  # pylint: disable=unsubscriptable-object
     queryset = SwissMatch.objects.all()
     permission_classes = [permissions.IsAdminUser]
     serializer_class = serializers.SwissMatchSerializer
     lookup_url_kwarg = "match_id"
 
-class SwissMatchScore(generics.GenericAPIView):
+
+# pylint: disable-next=unsubscriptable-object
+class SwissMatchScore(generics.GenericAPIView[SwissMatch]):
     """Update score of a swiss match"""
 
     queryset = SwissMatch.objects.all().order_by("id")
     serializer_class = serializers.SwissMatchSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -158,7 +175,7 @@ class SwissMatchScore(generics.GenericAPIView):
             )
         }
     )
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         user = request.user
         data = request.data
 
@@ -167,16 +184,17 @@ class SwissMatchScore(generics.GenericAPIView):
         except SwissMatch.DoesNotExist as e:
             raise NotFound() from e
 
+        assert isinstance(user, User), 'User must be authenticated to access this route.'
         if not match.is_user_in_match(user):
             raise PermissionDenied()
 
-        if match.status != Match.MatchStatus.ONGOING:
+        if match.status != MatchStatus.ONGOING:
             return Response({"status" : "Le match n'est pas en cours"},
                             status = status.HTTP_400_BAD_REQUEST)
 
         error_response = validate_match_data(match, data)
         if error_response is not None:
-            return Response({k: _(v) for k,v in error_response.items()},
+            return Response({k: _(v) for k, v in error_response.items()},
                             status=status.HTTP_400_BAD_REQUEST)
 
         update_match_score(match,data)

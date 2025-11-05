@@ -1,27 +1,47 @@
-from datetime import timedelta
+from __future__ import annotations
+
+from datetime import datetime, timedelta
+from typing import Any, cast, TYPE_CHECKING
 
 from django.contrib.postgres.fields import ArrayField
+from django.db import models
+from django.db.models.manager import Manager
+from django.db.models.query import QuerySet
 from django.core.validators import (
     FileExtensionValidator,
     MinValueValidator,
     MinLengthValidator,
 )
-from django.db import models
-from django.db.models.query import QuerySet
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from polymorphic.models import PolymorphicModel
+# No stubs are available for django-polymorphic
+# https://github.com/jazzband/django-polymorphic/issues/579
+from polymorphic.models import PolymorphicModel  # type: ignore
 
 from insalan.components.image_field import ImageField
 
 from . import team, caster, group, bracket, swiss
 
+if TYPE_CHECKING:
+    from django.db.models.manager import RelatedManager
+    from django_stubs_ext import ValuesQuerySet
 
-def in_thirty_days():
+    from .bracket import Bracket
+    from .caster import Caster
+    from .event import Event
+    from .game import Game
+    from .group import Group
+    from .swiss import SwissRound
+    from .team import Team
+
+
+def in_thirty_days() -> datetime:
     """Return now + 30 days"""
     return timezone.now() + timedelta(days=30)
 
-class BaseTournament(PolymorphicModel):
+
+# Ignore type error because django-polymorphic doesn't have types stubs.
+class BaseTournament(PolymorphicModel):  # type: ignore[misc]
     """
     Base class for a Tournament. Contains the common fields between a Tournament.
     """
@@ -68,6 +88,10 @@ class BaseTournament(PolymorphicModel):
         max_length=300,
     )
 
+    # The teams field is defined in the tournament field in the Team model as
+    # realated name but mypy doesn't detect it.
+    teams: RelatedManager[Team]
+
     class Meta:
         """Meta options"""
 
@@ -87,11 +111,11 @@ class BaseTournament(PolymorphicModel):
         """Get the game of a tournament"""
         return self.game
 
-    def get_teams(self) -> QuerySet["Team"]:
+    def get_teams(self) -> QuerySet[Team]:
         """Return the list of Teams in that Tournament"""
-        return self.teams.all() #team.Team.objects.filter(tournament=self)
+        return self.teams.all()
 
-    def get_teams_id(self) -> list[int]:
+    def get_teams_id(self) -> ValuesQuerySet[Team, int]:
         """Return the list of identifiers of this Tournament's Teams"""
         return self.get_teams().values_list("id", flat=True)
 
@@ -103,29 +127,31 @@ class BaseTournament(PolymorphicModel):
         """Return the max number of teams"""
         return self.maxTeam
 
-    def get_validated_teams(self, exclude=None) -> int:
+    def get_validated_teams(self, exclude: int | None = None) -> int:
         """Return the number of validated teams"""
-        return len(team.Team.objects.filter(tournament=self,validated=True).exclude(id=exclude))
+        return len(team.Team.objects.filter(tournament=self, validated=True).exclude(id=exclude))
 
-    def get_groups(self) -> list["Group"]:
+    def get_groups(self) -> QuerySet[Group]:
         return group.Group.objects.filter(tournament=self)
 
-    def get_groups_id(self) -> list[int]:
+    def get_groups_id(self) -> ValuesQuerySet[Group, int]:
         return group.Group.objects.filter(tournament=self).values_list("id",flat=True)
 
-    def get_brackets(self) -> list["Bracket"]:
+    def get_brackets(self) -> QuerySet[Bracket]:
         return bracket.Bracket.objects.filter(tournament=self)
 
-    def get_brackets_id(self) -> list[int]:
+    def get_brackets_id(self) -> ValuesQuerySet[Bracket, int]:
         return bracket.Bracket.objects.filter(tournament=self).values_list("id",flat=True)
 
-    def get_swiss_rounds_id(self) -> list[int]:
+    def get_swiss_rounds_id(self) -> ValuesQuerySet[SwissRound, int]:
         return swiss.SwissRound.objects.filter(tournament=self).values_list("id",flat=True)
 
 class PrivateTournament(BaseTournament):
     """
     A private Tournament without paid registration.
     """
+
+    objects: Manager[PrivateTournament]
 
     # No need to use a password field here, as it would add unnecessary complexity
     password = models.CharField(
@@ -159,10 +185,13 @@ class PrivateTournament(BaseTournament):
         verbose_name = _("Tournoi privé")
         verbose_name_plural = _("Tournois privés")
 
+
 class EventTournament(BaseTournament):
     """
     A Tournament happening during an event that Teams of players register for.
     """
+
+    objects: Manager[EventTournament]
 
     event = models.ForeignKey(
         "Event", verbose_name=_("Évènement"), on_delete=models.CASCADE
@@ -283,7 +312,7 @@ class EventTournament(BaseTournament):
             models.Index(fields=["event"]),
         ]
 
-    def save(self, *args, **kwargs):
+    def save(self, *args: Any, **kwargs: Any) -> None:
         """
         Override default save of Tournament.
         When a Tournament object is created, it creates 2 products, its associated
@@ -300,8 +329,8 @@ class EventTournament(BaseTournament):
         if self.player_online_product is None:
             prod = Product.objects.create(
                 price=self.player_price_online,
-                name=_(f"Place {self.name} Joueur en ligne - {self.event.name}"),
-                desc=_(f"Inscription au tournoi {self.name} joueur"),
+                name=cast(str, _(f"Place {self.name} Joueur en ligne - {self.event.name}")),
+                desc=cast(str, _(f"Inscription au tournoi {self.name} joueur")),
                 category=ProductCategory.REGISTRATION_PLAYER,
                 associated_tournament=self,
                 available_from=self.registration_open,
@@ -317,8 +346,8 @@ class EventTournament(BaseTournament):
         if self.manager_online_product is None:
             prod = Product.objects.create(
                 price=self.manager_price_online,
-                name=_(f"Place {self.name} manager en ligne - {self.event.name}"),
-                desc=_(f"Inscription au tournoi {self.name} manager"),
+                name=cast(str, _(f"Place {self.name} manager en ligne - {self.event.name}")),
+                desc=cast(str, _(f"Inscription au tournoi {self.name} manager")),
                 category=ProductCategory.REGISTRATION_MANAGER,
                 associated_tournament=self,
                 available_from=self.registration_open,
@@ -334,8 +363,8 @@ class EventTournament(BaseTournament):
         if self.substitute_online_product is None:
             prod = Product.objects.create(
                 price=self.substitute_price_online,
-                name=_(f"Place {self.name} remplaçant en ligne - {self.event.name}"),
-                desc=_(f"Inscription au tournoi {self.name} remplaçant"),
+                name=cast(str, _(f"Place {self.name} remplaçant en ligne - {self.event.name}")),
+                desc=cast(str, _(f"Inscription au tournoi {self.name} remplaçant")),
                 category=ProductCategory.REGISTRATION_SUBSTITUTE,
                 associated_tournament=self,
                 available_from=self.registration_open,
@@ -355,10 +384,10 @@ class EventTournament(BaseTournament):
         """Format this Tournament to a str"""
         return f"{self.name} (@ {self.event})"
 
-    def get_event(self) -> "Event":
+    def get_event(self) -> Event:
         """Get the event of a tournament"""
         return self.event
 
-    def get_casters(self) -> list["Caster"]:
+    def get_casters(self) -> QuerySet[Caster]:
         """Return the list of casters for this tournament"""
         return caster.Caster.objects.filter(tournament=self)

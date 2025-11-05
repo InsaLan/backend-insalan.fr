@@ -1,13 +1,35 @@
 """
 NameValidator class
 """
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from typing import Callable, ClassVar, Type, TYPE_CHECKING
+
 from django.utils.translation import gettext_lazy as _
 
 import requests
 
 from insalan.settings import RIOT_API_KEY
 
-class EmptyNameValidator:
+if TYPE_CHECKING:
+    from django_stubs_ext import StrPromise
+
+
+class NameValidator(ABC):
+    short: ClassVar[str]
+    name: ClassVar[StrPromise]
+
+    @staticmethod
+    @abstractmethod
+    def is_valid(_name: str) -> bool:
+        """
+        This method is used to validate the name of a player
+        Each validators should implement this method
+        """
+
+
+class EmptyNameValidator(NameValidator):
     """
     NameValidator class
     """
@@ -15,14 +37,10 @@ class EmptyNameValidator:
     name = _("Pas de Validation de nom")
 
     @staticmethod
-    def is_valid(_name: str):
-        """
-        This method is used to validate the name of a player
-        Each validators should implement this method
-        """
+    def is_valid(_name: str) -> bool:
         return True
 
-class LeagueOfLegendsNameValidator:
+class LeagueOfLegendsNameValidator(NameValidator):
     """
     LeagueOfLegendsNameValidator class
     """
@@ -30,7 +48,7 @@ class LeagueOfLegendsNameValidator:
     name = _("Validation League of Legends")
 
     @staticmethod
-    def is_valid(name: str):
+    def is_valid(name: str) -> bool:
         """
         This method is used to validate the name of a LoL player
         """
@@ -66,18 +84,18 @@ class LeagueOfLegendsNameValidator:
 
         return True
 
-validators = [
+validators: list[Type[NameValidator]] = [
     EmptyNameValidator,
     LeagueOfLegendsNameValidator
 ]
 
-def get_choices():
+def get_choices() -> list[tuple[str, StrPromise]]:
     """
     Get the choices for the validators
     """
     return [(validator.short, validator.name) for validator in validators]
 
-def get_validator(name):
+def get_validator(name: str) -> Callable[[str], bool] | None:
     """
     Get the validator from a name
     """

@@ -1,6 +1,7 @@
 """User module API Endpoints"""
 
 from datetime import datetime
+from typing import Any
 
 from django.contrib.auth import login, logout
 from django.contrib.auth.models import Group, Permission
@@ -13,13 +14,15 @@ from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET
 from django.core.exceptions import ValidationError
+
 from rest_framework import generics, permissions, status
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import]
+from drf_yasg import openapi  # type: ignore[import]
 
 from insalan.user.serializers import (
     GroupSerializer,
@@ -35,14 +38,15 @@ from .models import User, UserManager
 
 @require_GET
 @ensure_csrf_cookie
-def get_csrf(request):
+def get_csrf(request: Request) -> JsonResponse:
     """
     Returns a response setting CSRF cookie in headers
     """
     return JsonResponse({"csrf": _("Le cookie a été défini")})
 
 
-class UserView(generics.RetrieveUpdateDestroyAPIView):
+# pylint: disable-next=unsubscriptable-object
+class UserView(generics.RetrieveUpdateDestroyAPIView[User]):
     """
     API endpoint that allows users to be viewed or edited.
     """
@@ -53,7 +57,7 @@ class UserView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer
 
 
-class UserMe(generics.RetrieveAPIView):
+class UserMe(generics.RetrieveAPIView[User]):  # pylint: disable=unsubscriptable-object
     """
     API endpoint that allows a logged in user to get and set some of their own
     account fields.
@@ -63,10 +67,11 @@ class UserMe(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = UserSerializer
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Returns an user's own informations
         """
+        assert isinstance(request.user, User), 'User must be authenticated to access this route.'
         user = UserSerializer(request.user, context={"request": request}).data
 
         user_groups = []
@@ -77,7 +82,8 @@ class UserMe(generics.RetrieveAPIView):
 
         return Response(user)
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -154,10 +160,11 @@ class UserMe(generics.RetrieveAPIView):
             )
         }
     )
-    def patch(self, request):
+    def patch(self, request: Request) -> Response:
         """
         Edit the current user following some limitations
         """
+        assert isinstance(request.user, User), 'User must be authenticated to access this route.'
         user: User = request.user
         data = request.data
         resp = Response()
@@ -205,7 +212,9 @@ class UserMe(generics.RetrieveAPIView):
 
         if "email" in data:
             user.email = UserManager.normalize_email(data["email"])
-            MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_email_confirmation(user)
+            mailer = MailManager.get_mailer(EMAIL_AUTH["contact"]["from"])
+            assert mailer is not None
+            mailer.send_email_confirmation(user)
 
         if "first_name" in data:
             user.first_name = data["first_name"]
@@ -227,7 +236,8 @@ class UserMe(generics.RetrieveAPIView):
 
 
 # TODO: change permission
-class PermissionViewSet(generics.ListCreateAPIView):
+# pylint: disable-next=unsubscriptable-object
+class PermissionViewSet(generics.ListCreateAPIView[Permission]):
     """
     Django's `Permission` ViewSet to be able to add them to the admin panel
     """
@@ -237,7 +247,7 @@ class PermissionViewSet(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAdminUser]
 
 
-class GroupViewSet(generics.ListCreateAPIView):
+class GroupViewSet(generics.ListCreateAPIView[Group]):  # pylint: disable=unsubscriptable-object
     """
     Django's `Group` ViewSet to be able to add them to the admin panel
     """
@@ -255,7 +265,8 @@ class EmailConfirmView(APIView):
     permissions_classes = [permissions.AllowAny]
     authentication_classes = [SessionAuthentication]
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: openapi.Schema(
                 type=openapi.TYPE_OBJECT,
@@ -281,7 +292,7 @@ class EmailConfirmView(APIView):
             )
         }
     )
-    def get(self, request, pk=None, token=None):
+    def get(self, request: Request, pk: int | None = None, token: str | None = None) -> Response:
         """
         If requested with valid parameters, will validate an user's email
         """
@@ -316,7 +327,8 @@ class AskForPasswordReset(APIView):
     permissions_classes = [permissions.AllowAny]
     authentication_classes = [SessionAuthentication]
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -338,14 +350,16 @@ class AskForPasswordReset(APIView):
             ),
         }
     )
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         """
         If requested with valid parameters, will send a password reset email to
-        an user given their email address
+        an user given their email address.
         """
         try:
             user_object: User = User.objects.get(email=request.data["email"])
-            MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_password_reset(user_object)
+            mailer = MailManager.get_mailer(EMAIL_AUTH["contact"]["from"])
+            assert mailer is not None
+            mailer.send_password_reset(user_object)
         except User.DoesNotExist:
             pass
 
@@ -360,7 +374,8 @@ class ResetPassword(APIView):
     permissions_classes = [permissions.AllowAny]
     authentication_classes = [SessionAuthentication]
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -406,9 +421,9 @@ class ResetPassword(APIView):
             )
         }
     )
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         """
-        If requested with valid parameters, will reset an user password
+        If requested with valid parameters, will reset an user password.
         """
         data = request.data
         if not (
@@ -464,7 +479,8 @@ class ResendEmailConfirmView(APIView):
     permissions_classes = [permissions.AllowAny]
     authentication_classes = [SessionAuthentication]
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -498,7 +514,7 @@ class ResendEmailConfirmView(APIView):
             )
         }
     )
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         """
         If the user is found, will send again a confirmation email
         """
@@ -523,11 +539,13 @@ class ResendEmailConfirmView(APIView):
         if user_object.has_perm("email_active"):
             return Response({"msg": error_text}, status=status.HTTP_400_BAD_REQUEST)
 
-        MailManager.get_mailer(EMAIL_AUTH["contact"]["from"]).send_email_confirmation(user_object)
+        mailer = MailManager.get_mailer(EMAIL_AUTH["contact"]["from"])
+        assert mailer is not None
+        mailer.send_email_confirmation(user_object)
         return Response()
 
 
-class UserRegister(generics.CreateAPIView):
+class UserRegister(generics.CreateAPIView[User]):  # pylint: disable=unsubscriptable-object
     """
     API endpoint that allows user creation.
     """
@@ -545,7 +563,8 @@ class UserLogin(APIView):
     permission_classes = [permissions.AllowAny]
     authentication_classes = [SessionAuthentication]
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
@@ -607,10 +626,8 @@ class UserLogin(APIView):
             )
         }
     )
-    def post(self, request):
-        """
-        Submit a login form
-        """
+    def post(self, request: Request) -> Response:
+        """Submit a login form."""
         data = request.data
         serializer = UserLoginSerializer(data=data, context={"request": request})
         if serializer.is_valid():
@@ -641,7 +658,7 @@ class UserLogout(APIView):
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
 
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         """
         Will logout an user.
         """

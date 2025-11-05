@@ -6,7 +6,8 @@ from rest_framework import serializers
 
 from .models import Ticket
 
-class TicketSerializer(serializers.Serializer):
+
+class TicketSerializer(serializers.Serializer[Ticket]):
     """Serializer for a ticket"""
 
     class Meta:

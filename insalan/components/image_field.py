@@ -1,21 +1,26 @@
 import os
 from io import BytesIO
+from typing import Any
 
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Model
 from PIL import Image
-import pillow_avif
+# TODO: remove pillow-avif-plugin from dependecies when updating pillow to 11.3.0
+# https://github.com/python-pillow/Pillow/pull/5201#issuecomment-3023668716
+import pillow_avif  # type: ignore[import]
+
 
 class ImageField(models.ImageField):
     """
-        A subclass of Django's ImageField that convert the image to a webp format
+    A subclass of Django's ImageField that convert the image to a webp format.
     """
 
-    def __init__(self, *args, **kwargs):
-        self.convert_to_webp = kwargs.pop("convert_to_webp", True)
+    def __init__(self, *args: Any, convert_to_webp: bool = True, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+        self.convert_to_webp = convert_to_webp
 
-    def pre_save(self, model_instance, add):
+    def pre_save(self, model_instance: Model, add: bool) -> Any:
         file = super().pre_save(model_instance, add)
         if not file:
             return file

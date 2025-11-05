@@ -9,6 +9,8 @@ from django.test import TestCase
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 
+from rest_framework.test import APITestCase
+
 from insalan.tournament.models import (
     Player,
     Manager,
@@ -22,10 +24,11 @@ from insalan.tournament.models import (
 )
 from insalan.user.models import User
 
+
 class BaseTournamentTestCase(TestCase):
     """Tournament Tests"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up the Tournaments"""
         game_one = Game.objects.create(name="Test Game One")
         game_two = Game.objects.create(name="Test Game Two")
@@ -35,13 +38,13 @@ class BaseTournamentTestCase(TestCase):
         BaseTournament.objects.create(name="Tourney 3", game=game_three)
         BaseTournament.objects.create(name="Tourney 4", game=game_three)
 
-    def test_tournament_null_game(self):
+    def test_tournament_null_game(self) -> None:
         """Test failure of creation of a Tournament with no game"""
         self.assertRaises(
             IntegrityError, BaseTournament.objects.create, game=None
         )
 
-    def test_manager_player_duplication(self):
+    def test_manager_player_duplication(self) -> None:
         """Verify that a user cannot be a manager and a player on the same tournament"""
         game_obj = Game.objects.create(name="Game 1", short_name="G1")
         event_obj = Event.objects.create(
@@ -132,7 +135,7 @@ class BaseTournamentTestCase(TestCase):
             Player.objects.create(user=user_five, team=team_five).full_clean,
         )
 
-    def test_substitute_player_duplication(self):
+    def test_substitute_player_duplication(self) -> None:
         """Verify that a user cannot be a substitute and a player on the same tournament"""
         game_obj = Game.objects.create(name="Game 1", short_name="G1")
         tourney_one = BaseTournament.objects.create(
@@ -216,14 +219,14 @@ class BaseTournamentTestCase(TestCase):
             Player.objects.create(user=user_five, team=team_five).full_clean,
         )
 
-    def test_get_game(self):
+    def test_get_game(self) -> None:
         """Get the game for a tournament"""
         game = Game.objects.get(name="Test Game Three")
         tourney = BaseTournament.objects.get(name="Tourney 3")
 
         self.assertEqual(game, tourney.get_game())
 
-    def test_get_teams(self):
+    def test_get_teams(self) -> None:
         """Get the teams for a tournament"""
         tourney = BaseTournament.objects.all()[0]
         tourney_two = BaseTournament.objects.all()[1]
@@ -249,7 +252,7 @@ class BaseTournamentTestCase(TestCase):
         self.assertTrue(team_two in teams)
         self.assertFalse(team_three in teams)
 
-    def test_name_too_short(self):
+    def test_name_too_short(self) -> None:
         """Verify that a tournament name cannot be too short"""
         tourneyobj = BaseTournament.objects.all()[0]
         tourneyobj.name = "C" * 2
@@ -258,7 +261,7 @@ class BaseTournamentTestCase(TestCase):
         tourneyobj.name = "C" * 3
         tourneyobj.full_clean()
 
-    def test_name_too_long(self):
+    def test_name_too_long(self) -> None:
         """Verify that a tournament name cannot be too long"""
         tourney = BaseTournament.objects.all()[0]
         tourney.name = "C" * 513
@@ -267,7 +270,7 @@ class BaseTournamentTestCase(TestCase):
         tourney.name = "C" * 512
         tourney.full_clean()
 
-    def test_game_deletion_cascade(self):
+    def test_game_deletion_cascade(self) -> None:
         """Verify that a tournament is deleted when its game is"""
         tourney = BaseTournament.objects.all()[0]
         game_obj = tourney.game
@@ -288,37 +291,37 @@ class BaseTournamentTestCase(TestCase):
         test_img.name = file_name
         return SimpleUploadedFile(test_img.name, test_img.getvalue())
 
-    def test_logo_extension_enforcement(self):
+    def test_logo_extension_enforcement(self) -> None:
         """Verify that we only accept logos as PNG, JPG, JPEG and SVG"""
         tourney = BaseTournament.objects.all()[0]
 
         # PNGs work
-        test_png = __class__.create_tourney_logo("tourney-test.png")
+        test_png = BaseTournamentTestCase.create_tourney_logo("tourney-test.png")
         tourney.logo = test_png
         tourney.full_clean()
 
         # JPGs work
-        test_jpg = __class__.create_tourney_logo("tourney-test.jpg")
+        test_jpg = BaseTournamentTestCase.create_tourney_logo("tourney-test.jpg")
         tourney.logo = test_jpg
         tourney.full_clean()
 
         # JPEGs work
-        test_jpeg = __class__.create_tourney_logo("tourney-test.jpeg")
+        test_jpeg = BaseTournamentTestCase.create_tourney_logo("tourney-test.jpeg")
         tourney.logo = test_jpeg
         tourney.full_clean()
 
         # SVGs work
-        test_svg = __class__.create_tourney_logo("tourney-test.svg")
+        test_svg = BaseTournamentTestCase.create_tourney_logo("tourney-test.svg")
         tourney.logo = test_svg
         tourney.full_clean()
 
         # Others won't
         for ext in ["mkv", "txt", "md", "php", "exe", "zip", "7z"]:
-            test_icon = __class__.create_tourney_logo(f"tourney-test.{ext}")
+            test_icon = BaseTournamentTestCase.create_tourney_logo(f"tourney-test.{ext}")
             tourney.logo = test_icon
             self.assertRaises(ValidationError, tourney.full_clean)
 
-    def test_rules_size_limit(self):
+    def test_rules_size_limit(self) -> None:
         """
         Check that the rules of a tournament can overflow the limit.
 
@@ -333,11 +336,11 @@ class BaseTournamentTestCase(TestCase):
         tourney.rules = "C" * 50001
         tourney.full_clean()
 
-class TournamentMeTests(TestCase):
+class TournamentMeTests(APITestCase):
     """
     Test the tournament/me endpoint
     """
-    def setUp(self):
+    def setUp(self) -> None:
         self.usrobj = User.objects.create_user(
             username="randomplayer",
             email="randomplayer@example.com",
@@ -402,7 +405,7 @@ class TournamentMeTests(TestCase):
             name_in_game="pseudo"
         )
 
-    def test_get_tournament_me(self):
+    def test_get_tournament_me(self) -> None:
         """
         Test the tournament/me endpoint
         """
@@ -423,7 +426,7 @@ class TournamentMeTests(TestCase):
                          self.tourneyobj_two.name)
         self.assertTrue('event' not in response.data['player'][1]['team']['tournament'])
 
-    def test_get_tournament_me_manager(self):
+    def test_get_tournament_me_manager(self) -> None:
         """
         Test the tournament/me endpoint
         """
@@ -437,7 +440,7 @@ class TournamentMeTests(TestCase):
         self.assertEqual(response.data['manager'][0]['team']['tournament']['event']['name'],
                          self.evobj.name)
 
-    def test_get_tournament_me_substitute(self):
+    def test_get_tournament_me_substitute(self) -> None:
         """
         Test the tournament/me endpoint
         """
@@ -451,7 +454,7 @@ class TournamentMeTests(TestCase):
         self.assertEqual(response.data['substitute'][0]['team']['tournament']['event']['name'],
                          self.evobj.name)
 
-    def test_get_tournament_me_unauthenticated(self):
+    def test_get_tournament_me_unauthenticated(self) -> None:
         """
         Test the tournament/me endpoint
         """

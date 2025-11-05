@@ -1,11 +1,13 @@
 """This module contains the admin configuration for the Pizza app."""
 
+from django.db.models.query import QuerySet
 from django.contrib import admin
-from django.http import HttpResponse
+from django.http import HttpRequest, HttpResponse
 
 from .models import Pizza, TimeSlot, Order, PizzaOrder, PizzaExport, PaymentMethod
 
-class PizzaAdmin(admin.ModelAdmin):
+
+class PizzaAdmin(admin.ModelAdmin[Pizza]):  # pylint: disable=unsubscriptable-object
     """Admin class for the Pizza model"""
     list_display = ("id", "name", "ingredients")
     search_fields = ["name", "ingredients", "allergens"]
@@ -13,7 +15,7 @@ class PizzaAdmin(admin.ModelAdmin):
 admin.site.register(Pizza, PizzaAdmin)
 
 
-class TimeSlotAdmin(admin.ModelAdmin):
+class TimeSlotAdmin(admin.ModelAdmin[TimeSlot]):  # pylint: disable=unsubscriptable-object
     """Admin class for the TimeSlot model"""
     list_display = ("id", "delivery_time", "end", "pizza_max")
     search_fields = ["delivery_time", "end"]
@@ -21,12 +23,14 @@ class TimeSlotAdmin(admin.ModelAdmin):
 admin.site.register(TimeSlot, TimeSlotAdmin)
 
 
-class PizzaOrderInline(admin.TabularInline):
+# pylint: disable-next=unsubscriptable-object
+class PizzaOrderInline(admin.TabularInline[PizzaOrder, Order]):
     """Admin class for the PizzaOrder model"""
     model = PizzaOrder
     extra = 1
 
-class OrderAdmin(admin.ModelAdmin):
+
+class OrderAdmin(admin.ModelAdmin[Order]):  # pylint: disable=unsubscriptable-object
     """Admin class for the Order model"""
     list_display = ("id", "get_username", "time_slot", "created_at")
     search_fields = ["user", "time_slot__delivery_time"]
@@ -38,8 +42,7 @@ class OrderAdmin(admin.ModelAdmin):
     # add an action to export orders
     actions = ["export"]
 
-    def export(self, request, queryset):
-
+    def export(self, request: HttpRequest, queryset: QuerySet[Order]) -> HttpResponse:
         export = "pizza;prix;moyen de paiement;date créneau\n"
 
         for order in queryset:
@@ -61,11 +64,13 @@ class OrderAdmin(admin.ModelAdmin):
         response["Content-Disposition"] = "attachment; filename=export.csv"
         return response
 
-    export.short_description = "Exporter un résumé des commandes"
+    export.short_description = "Exporter un résumé des commandes"  # type: ignore[attr-defined]
+
 
 admin.site.register(Order, OrderAdmin)
 
-class ExportAdmin(admin.ModelAdmin):
+
+class ExportAdmin(admin.ModelAdmin[PizzaExport]):  # pylint: disable=unsubscriptable-object
     """Admin class for the Export model"""
     list_display = ("id", "time_slot", "created_at")
     search_fields = ["time_slot"]

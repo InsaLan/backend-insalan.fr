@@ -21,7 +21,7 @@ from insalan.user.models import User
 class PizzaEndpointsTestCase(TestCase):
     """Test the pizza model"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.admin_user = User.objects.create(
             username="admin", email="admin@example.com", is_staff=True
         )
@@ -49,7 +49,7 @@ class PizzaEndpointsTestCase(TestCase):
             order=self.order, pizza=self.pizza2
         )
 
-    def test_pizza_list(self):
+    def test_pizza_list(self) -> None:
         """Test the pizza list endpoint"""
         client = APIClient()
         response = client.get(reverse("pizza/list"))
@@ -58,7 +58,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.data[0], self.pizza1.id)
         self.assertEqual(response.data[1], self.pizza2.id)
 
-    def test_pizza_post(self):
+    def test_pizza_post(self) -> None:
         """Test the pizza post endpoint"""
         client = APIClient()
         client.force_login(user=self.admin_user)
@@ -67,14 +67,14 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.data["name"], "Test Pizza 3")
         self.assertEqual(Pizza.objects.count(), 3)
 
-    def test_pizza_post_unauthorized(self):
+    def test_pizza_post_unauthorized(self) -> None:
         """Test the pizza post endpoint with unauthorized user"""
         client = APIClient()
         response = client.post(reverse("pizza/list"), {"name": "Test Pizza 3"})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(Pizza.objects.count(), 2)
 
-    def test_pizza_list_full(self):
+    def test_pizza_list_full(self) -> None:
         """Test the pizza list full endpoint"""
         client = APIClient()
         response = client.get(reverse("pizza/list/full"))
@@ -83,20 +83,20 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.data[0]["name"], "Test Pizza")
         self.assertEqual(response.data[1]["name"], "Test Pizza 2")
 
-    def test_pizza_detail(self):
+    def test_pizza_detail(self) -> None:
         """Test the pizza detail endpoint"""
         client = APIClient()
         response = client.get(reverse("pizza/detail", kwargs={"pk": self.pizza1.id}))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], "Test Pizza")
 
-    def test_pizza_detail_not_found(self):
+    def test_pizza_detail_not_found(self) -> None:
         """Test the pizza detail endpoint with wrong id"""
         client = APIClient()
         response = client.get(reverse("pizza/detail", kwargs={"pk": 999}))
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_pizza_search(self):
+    def test_pizza_search(self) -> None:
         """Test the pizza search endpoint"""
         client = APIClient()
         response = client.get(reverse("pizza/fuzzy-find"), {"q": "2"})
@@ -104,7 +104,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["name"], "Test Pizza 2")
 
-    def test_pizza_by_timeslot(self):
+    def test_pizza_by_timeslot(self) -> None:
         """Test the pizza by timeslot endpoint"""
         client = APIClient()
         client.force_login(user=self.admin_user)
@@ -113,13 +113,13 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(len(response.data["results"]), 1)
         self.assertEqual(response.data["results"][0]["id"], self.time_slot.id)
 
-    def test_pizza_by_timeslot_unauthorized(self):
+    def test_pizza_by_timeslot_unauthorized(self) -> None:
         """Test the pizza by timeslot endpoint with unauthorized user"""
         client = APIClient()
         response = client.get(reverse("pizza/list/by-timeslot"))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_pizza_by_timeslot_id(self):
+    def test_pizza_by_timeslot_id(self) -> None:
         """Test the pizza by timeslot id endpoint"""
         client = APIClient()
         response = client.get(
@@ -130,7 +130,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.data["pizza"][self.pizza1.id], 1)
         self.assertEqual(response.data["pizza"][self.pizza2.id], 1)
 
-    def test_pizza_by_timeslot_id_not_found(self):
+    def test_pizza_by_timeslot_id_not_found(self) -> None:
         """Test the pizza by timeslot id endpoint with wrong id"""
         client = APIClient()
         response = client.get(
@@ -257,7 +257,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(Pizza.objects.count(), 2)
 
-    def test_timeslot_list(self):
+    def test_timeslot_list(self) -> None:
         """Test the timeslot list endpoint"""
         client = APIClient()
         response = client.get(reverse("timeslot/list"))
@@ -265,7 +265,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(len(response.data["results"]), 1)
         self.assertEqual(response.data["results"][0], self.time_slot.id)
 
-    def test_timeslot_post(self):
+    def test_timeslot_post(self) -> None:
         """Test the timeslot post endpoint"""
         client = APIClient()
         client.force_login(user=self.admin_user)
@@ -287,7 +287,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.data["pizza_max"], 100)
         self.assertEqual(TimeSlot.objects.count(), 2)
 
-    def test_timeslot_post_unauthorized(self):
+    def test_timeslot_post_unauthorized(self) -> None:
         """Test the timeslot post endpoint with unauthorized user"""
         client = APIClient()
         response = client.post(
@@ -307,7 +307,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(TimeSlot.objects.count(), 1)
 
-    def test_timeslot_list_full(self):
+    def test_timeslot_list_full(self) -> None:
         """Test the timeslot list full endpoint"""
         client = APIClient()
         response = client.get(reverse("timeslot/list/full"))
@@ -315,7 +315,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(len(response.data["results"]), 1)
         self.assertEqual(response.data["results"][0]["id"], self.time_slot.id)
 
-    def test_timeslot_detail(self):
+    def test_timeslot_detail(self) -> None:
         """Test the timeslot detail endpoint"""
         client = APIClient()
         client.force_login(user=self.admin_user)
@@ -325,7 +325,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], self.time_slot.id)
 
-    def test_timeslot_detail_unauthorized(self):
+    def test_timeslot_detail_unauthorized(self) -> None:
         """Test the timeslot detail endpoint with unauthorized user"""
         client = APIClient()
         response = client.get(
@@ -333,7 +333,7 @@ class PizzaEndpointsTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_timeslot_delete(self):
+    def test_timeslot_delete(self) -> None:
         """Test the timeslot delete endpoint"""
         client = APIClient()
         client.force_login(user=self.admin_user)
@@ -343,7 +343,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(TimeSlot.objects.count(), 0)
 
-    def test_timeslot_delete_unauthorized(self):
+    def test_timeslot_delete_unauthorized(self) -> None:
         """Test the timeslot delete endpoint with unauthorized user"""
         client = APIClient()
         response = client.delete(
@@ -352,21 +352,21 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(TimeSlot.objects.count(), 1)
 
-    def test_timeslot_detail_not_found(self):
+    def test_timeslot_detail_not_found(self) -> None:
         """Test the timeslot detail endpoint with wrong id"""
         client = APIClient()
         client.force_login(user=self.admin_user)
         response = client.get(reverse("timeslot/detail", kwargs={"pk": 999}))
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_timeslot_next(self):
+    def test_timeslot_next(self) -> None:
         """Test the timeslot next endpoint"""
         client = APIClient()
         response = client.get(reverse("timeslot/list/next"))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data[0]["id"], self.time_slot.id)
 
-    def test_order_list(self):
+    def test_order_list(self) -> None:
         """Test the order list endpoint"""
         client = APIClient()
         client.force_login(user=self.admin_user)
@@ -375,13 +375,13 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(len(response.data["results"]), 1)
         self.assertEqual(response.data["results"][0], self.order.id)
 
-    def test_order_list_unauthorized(self):
+    def test_order_list_unauthorized(self) -> None:
         """Test the order list endpoint with unauthorized user"""
         client = APIClient()
         response = client.get(reverse("order/list"))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_order_post(self):
+    def test_order_post(self) -> None:
         """Test the order post endpoint"""
         client = APIClient()
         client.force_login(user=self.admin_user)
@@ -399,7 +399,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.data["price"], 5)
         self.assertEqual(Order.objects.count(), 2)
 
-    def test_order_external_price_post(self):
+    def test_order_external_price_post(self) -> None:
         """Test the order post endpoint"""
         client = APIClient()
         client.force_login(user=self.admin_user)
@@ -417,7 +417,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.data["price"], 15)
         self.assertEqual(Order.objects.count(), 2)
 
-    def test_order_post_unauthorized(self):
+    def test_order_post_unauthorized(self) -> None:
         """Test the order post endpoint with unauthorized user"""
         client = APIClient()
         response = client.post(
@@ -427,7 +427,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(Order.objects.count(), 1)
 
-    def test_order_post_not_found(self):
+    def test_order_post_not_found(self) -> None:
         """Test the order post endpoint with wrong id"""
         client = APIClient()
         client.force_login(user=self.admin_user)
@@ -501,7 +501,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Order.objects.count(), 5)
 
-    def test_order_list_full(self):
+    def test_order_list_full(self) -> None:
         """Test the order list full endpoint"""
         client = APIClient()
         client.force_login(user=self.admin_user)
@@ -510,13 +510,13 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(len(response.data["results"]), 1)
         self.assertEqual(response.data["results"][0]["id"], self.order.id)
 
-    def test_order_list_full_unauthorized(self):
+    def test_order_list_full_unauthorized(self) -> None:
         """Test the order list endpoint with unauthorized user"""
         client = APIClient()
         response = client.get(reverse("order/list/full"))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_order_detail(self):
+    def test_order_detail(self) -> None:
         """Test the order detail endpoint"""
         client = APIClient()
         client.force_login(user=self.admin_user)
@@ -524,20 +524,20 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], self.order.id)
 
-    def test_order_detail_unauthorized(self):
+    def test_order_detail_unauthorized(self) -> None:
         """Test the order detail endpoint with unauthorized user"""
         client = APIClient()
         response = client.get(reverse("order/detail", kwargs={"pk": self.order.id}))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_order_detail_not_found(self):
+    def test_order_detail_not_found(self) -> None:
         """Test the order detail endpoint with wrong id"""
         client = APIClient()
         client.force_login(user=self.admin_user)
         response = client.get(reverse("order/detail", kwargs={"pk": 999}))
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_order_patch(self):
+    def test_order_patch(self) -> None:
         """Test the order patch endpoint"""
         client = APIClient()
         client.force_login(user=self.admin_user)
@@ -548,7 +548,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"detail": "Modified."})
 
-    def test_order_patch_unauthorized(self):
+    def test_order_patch_unauthorized(self) -> None:
         """Test the order patch endpoint with unauthorized user"""
         client = APIClient()
         response = client.patch(
@@ -557,7 +557,7 @@ class PizzaEndpointsTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_order_patch_not_found(self):
+    def test_order_patch_not_found(self) -> None:
         """Test the order patch endpoint with wrong id"""
         client = APIClient()
         client.force_login(user=self.admin_user)
@@ -566,7 +566,7 @@ class PizzaEndpointsTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_order_delete(self):
+    def test_order_delete(self) -> None:
         """Test the order delete endpoint"""
         client = APIClient()
         client.force_login(user=self.admin_user)
@@ -576,7 +576,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Order.objects.count(), 0)
 
-    def test_order_delete_unauthorized(self):
+    def test_order_delete_unauthorized(self) -> None:
         """Test the order delete endpoint with unauthorized user"""
         client = APIClient()
         response = client.delete(
@@ -585,7 +585,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(Order.objects.count(), 1)
 
-    def test_order_delete_not_found(self):
+    def test_order_delete_not_found(self) -> None:
         """Test the order delete endpoint with wrong id"""
         client = APIClient()
         client.force_login(user=self.admin_user)
@@ -595,7 +595,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(Order.objects.count(), 1)
 
-    def test_export_order_unauthorized(self):
+    def test_export_order_unauthorized(self) -> None:
         """Test the export order endpoint with unauthorized user"""
         client = APIClient()
         response = client.get(
@@ -603,7 +603,7 @@ class PizzaEndpointsTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_export_order_not_found(self):
+    def test_export_order_not_found(self) -> None:
         """Test the export order endpoint with wrong id"""
         client = APIClient()
         client.force_login(user=self.admin_user)
@@ -612,7 +612,7 @@ class PizzaEndpointsTestCase(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_export_order_empty(self):
+    def test_export_order_empty(self) -> None:
         """Test the export order endpoint"""
         client = APIClient()
         client.force_login(user=self.admin_user)
@@ -622,7 +622,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0)
 
-    def test_export_order(self):
+    def test_export_order(self) -> None:
         """Test the export order endpoint"""
         client = APIClient()
         client.force_login(user=self.admin_user)
@@ -639,7 +639,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.data[0]["orders"][self.order.pizza.all()[0].name], 1)
         self.assertEqual(response.data[0]["orders"][self.order.pizza.all()[1].name], 1)
 
-    def test_export_order_post(self):
+    def test_export_order_post(self) -> None:
         """Test the export order post endpoint"""
         client = APIClient()
         client.force_login(user=self.admin_user)
@@ -651,7 +651,7 @@ class PizzaEndpointsTestCase(TestCase):
         self.assertEqual(response.data[0]["orders"][self.order.pizza.all()[0].name], 1)
         self.assertEqual(response.data[0]["orders"][self.order.pizza.all()[1].name], 1)
 
-    def test_export_order_post_full(self):
+    def test_export_order_post_full(self) -> None:
         """Test the export order post endpoint"""
         client = APIClient()
         client.force_login(user=self.admin_user)

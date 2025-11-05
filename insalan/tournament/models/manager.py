@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -5,8 +9,12 @@ from django.utils.translation import gettext_lazy as _
 from insalan.tickets.models import Ticket
 from insalan.user.models import User
 
-from .payement_status import PaymentStatus
 from . import validators, tournament
+from .payement_status import PaymentStatus
+
+if TYPE_CHECKING:
+    from .team import Team
+
 
 class Manager(models.Model):
     """
@@ -59,17 +67,17 @@ class Manager(models.Model):
         """Return the current player as a User object"""
         return self.user
 
-    def get_team(self):
+    def get_team(self) -> Team:
         """Return the Team object of the current team"""
         return self.team
 
-    def clean(self):
+    def clean(self) -> None:
         """
         Assert that the user associated with the provided manager does not already
         exist in any team of any tournament of the event
         """
         user = self.user
-        tourney = self.get_team().get_tournament()  # pylint: disable=no-member
+        tourney = self.get_team().get_tournament()
         if isinstance(tourney, tournament.EventTournament):
             event = tourney.get_event()
             if not validators.unique_event_registration_validator(user,event, manager=self.id):

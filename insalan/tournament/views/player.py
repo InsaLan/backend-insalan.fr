@@ -1,29 +1,35 @@
-from django.core.exceptions import PermissionDenied, BadRequest
-from django.utils.translation import gettext_lazy as _
+from typing import Any
+
+from django.db.models.query import QuerySet
 from django.contrib.auth.hashers import check_password
+from django.core.exceptions import PermissionDenied, BadRequest
 from django.http import QueryDict
+from django.utils.translation import gettext_lazy as _
+
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import]
+from drf_yasg import openapi  # type: ignore[import]
 
 from rest_framework import generics, status
 from rest_framework.exceptions import NotFound
+from rest_framework.request import Request
 from rest_framework.response import Response
 
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-
+from insalan.tournament import serializers
 from insalan.tournament.models.validators import valid_name
 from insalan.user.models import User
-from insalan.tournament import serializers
 
 from ..models import Player, Team, PaymentStatus, EventTournament, PrivateTournament
 
 
-class PlayerRegistration(generics.RetrieveAPIView):
+# pylint: disable-next=unsubscriptable-object
+class PlayerRegistration(generics.RetrieveAPIView[Player]):
     """Get the registration of a player"""
 
     serializer_class = serializers.PlayerSerializer
     queryset = Player.objects.all().order_by("id")
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializer_class,
             403: openapi.Schema(
@@ -46,13 +52,14 @@ class PlayerRegistration(generics.RetrieveAPIView):
             )
         }
     )
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Get a player
         """
         return super().get(request, *args, **kwargs)
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             200: serializer_class,
             400: openapi.Schema(
@@ -84,7 +91,7 @@ class PlayerRegistration(generics.RetrieveAPIView):
             )
         }
     )
-    def patch(self, request, *args, **kwargs):
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Patch a player
         """
@@ -127,7 +134,8 @@ class PlayerRegistration(generics.RetrieveAPIView):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         responses={
             204: openapi.Schema(
                 type=openapi.TYPE_OBJECT,
@@ -150,7 +158,7 @@ class PlayerRegistration(generics.RetrieveAPIView):
             )
         }
     )
-    def delete(self, request, *args, **kwargs):
+    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
         Delete a player
         """
@@ -188,14 +196,16 @@ class PlayerRegistration(generics.RetrieveAPIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class PlayerRegistrationList(generics.ListCreateAPIView):
+# pylint: disable-next=unsubscriptable-object
+class PlayerRegistrationList(generics.ListCreateAPIView[Player]):
     """Get all player registrations"""
 
     pagination_class = None
     serializer_class = serializers.PlayerSerializer
     queryset = Player.objects.all().order_by("id")
 
-    @swagger_auto_schema(
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=serializers.PlayerSerializer,
         responses={
             201: serializer_class,
@@ -227,7 +237,7 @@ class PlayerRegistrationList(generics.ListCreateAPIView):
             )
         }
     )
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         user = request.user
         data = request.data
 
@@ -295,24 +305,26 @@ class PlayerRegistrationList(generics.ListCreateAPIView):
         return super().post(request, *args, **kwargs)
 
 
-class PlayerRegistrationListId(generics.ListAPIView):
+# pylint: disable-next=unsubscriptable-object
+class PlayerRegistrationListId(generics.ListAPIView[Player]):
     """Find all player registrations of a user from their ID"""
 
     pagination_class = None
     serializer_class = serializers.PlayerIdSerializer
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[Player]:
         """Obtain the queryset fot this view"""
         return Player.objects.filter(user_id=self.kwargs["user_id"])
 
 
-class PlayerRegistrationListName(generics.ListAPIView):
+# pylint: disable-next=unsubscriptable-object
+class PlayerRegistrationListName(generics.ListAPIView[Player]):
     """Find all player registrations of a user from their username"""
 
     pagination_class = None
     serializer_class = serializers.PlayerIdSerializer
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[Player]:
         """Obtain the queryset fot this view"""
         user = None
         try:

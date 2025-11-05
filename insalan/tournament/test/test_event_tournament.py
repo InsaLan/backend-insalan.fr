@@ -9,6 +9,8 @@ from django.test import TestCase
 from django.utils import timezone
 from django.urls import reverse
 
+from rest_framework.test import APITestCase
+
 from insalan.tournament.models import (
     PaymentStatus,
     Player,
@@ -33,7 +35,7 @@ class EventTournamentTestCase(TestCase):
         BaseTournamentTestCase class.
     """
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up the Tournaments"""
         event = Event.objects.create(name="Test", year=2023, month=3, description="")
         event_two = Event.objects.create(
@@ -47,14 +49,14 @@ class EventTournamentTestCase(TestCase):
         EventTournament.objects.create(name="Tourney 3", game=game_three, event=event)
         EventTournament.objects.create(name="Tourney 4", game=game_three, event=event_two)
 
-    def test_tournament_null_event(self):
+    def test_tournament_null_event(self) -> None:
         """Test failure of creation of a Tournament with no event"""
         game = Game.objects.create(name="Test")
         self.assertRaises(
             IntegrityError, EventTournament.objects.create, event=None, game=game
         )
 
-    def test_get_event(self):
+    def test_get_event(self) -> None:
         """Get the event for a tournament"""
         event = Event.objects.get(year=2023, month=3)
         game = Game.objects.get(name="Test Game One")
@@ -62,12 +64,12 @@ class EventTournamentTestCase(TestCase):
 
         self.assertEqual(event, tourney.get_event())
 
-    def test_default_cashprizes(self):
+    def test_default_cashprizes(self) -> None:
         """Test that the default for cashprizes is an empty list"""
         tourney = EventTournament.objects.all()[0]
         self.assertEqual([], tourney.cashprizes)
 
-    def test_get_set_cashprizes(self):
+    def test_get_set_cashprizes(self) -> None:
         """Verify that getting and setting cashprizes is possible"""
         tourney = EventTournament.objects.all()[0]
 
@@ -90,7 +92,7 @@ class EventTournamentTestCase(TestCase):
         tourney.save()
         self.assertEqual(0, len(tourney.cashprizes))
 
-    def test_cashprizes_cannot_be_strictly_negative(self):
+    def test_cashprizes_cannot_be_strictly_negative(self) -> None:
         """Test that a cashprize cannot be strictly negative"""
         tourney = EventTournament.objects.all()[0]
 
@@ -100,7 +102,7 @@ class EventTournamentTestCase(TestCase):
         tourney.cashprizes = [Decimal(278), Decimal(0), Decimal(0)]
         tourney.full_clean()
 
-    def test_event_deletion_cascade(self):
+    def test_event_deletion_cascade(self) -> None:
         """Verify that a tournament is deleted when its event is"""
         tourney = EventTournament.objects.all()[0]
         ev_obj = tourney.game
@@ -114,7 +116,7 @@ class EventTournamentTestCase(TestCase):
             EventTournament.DoesNotExist, EventTournament.objects.get, id=tourney.id
         )
 
-    def test_product_creation(self):
+    def test_product_creation(self) -> None:
         """
         Verify that a product is created for a tournament
         """
@@ -137,10 +139,10 @@ class EventTournamentTestCase(TestCase):
 
         self.assertEqual(trnm_one.substitute_price_online, 3)
 
-class TournamentFullDerefEndpoint(TestCase):
+class TournamentFullDerefEndpoint(APITestCase):
     """Test the endpoint that fully dereferences everything about a tournament"""
 
-    def test_not_found(self):
+    def test_not_found(self) -> None:
         """Test what happens on a tournament not found"""
         candidates = EventTournament.objects.all().values_list("id", flat=True)
         if len(candidates) == 0:
@@ -152,7 +154,7 @@ class TournamentFullDerefEndpoint(TestCase):
         )
         self.assertEqual(request.status_code, 404)
 
-    def test_example(self):
+    def test_example(self) -> None:
         """Test a simple example"""
         uobj_one = User.objects.create(
             username="test_user_one", email="one@example.com"
@@ -211,10 +213,7 @@ class TournamentFullDerefEndpoint(TestCase):
         )
         seat_two.save()
 
-        seatslot_one = SeatSlot.objects.create(
-            tournament=tourneyobj_one,
-            team=team_one
-        )
+        seatslot_one = SeatSlot.objects.create(tournament=tourneyobj_one)
         seatslot_one.seats.set([seat_one, seat_two])
         seatslot_one.save()
 
@@ -222,6 +221,9 @@ class TournamentFullDerefEndpoint(TestCase):
             reverse("tournament/details-full", args=[tourneyobj_one.id]), format="json"
         )
         self.assertEqual(request.status_code, 200)
+        assert tourneyobj_one.manager_online_product is not None
+        assert tourneyobj_one.player_online_product is not None
+        assert tourneyobj_one.substitute_online_product is not None
         model = {
             "id": tourneyobj_one.id,
             "event": {
@@ -381,7 +383,7 @@ class TournamentFullDerefEndpoint(TestCase):
         self.assertEqual(request.data["teams"], model["teams"])
         self.assertEqual(request.data, model)
 
-    def test_not_announced(self):
+    def test_not_announced(self) -> None:
         """Test if a tournament hasn't been yet announced"""
         uobj_one = User.objects.create(
             username="test_user_one", email="one@example.com"

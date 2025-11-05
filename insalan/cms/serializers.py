@@ -9,7 +9,7 @@ from rest_framework import serializers
 from .models import Content, Constant, File
 
 
-class ContentSerializer(serializers.ModelSerializer):
+class ContentSerializer(serializers.ModelSerializer[Content]):
     """Serializer for a content in the cms"""
 
     class Meta:
@@ -20,7 +20,7 @@ class ContentSerializer(serializers.ModelSerializer):
         fields = ["name", "content"]
 
 
-class ConstantSerializer(serializers.ModelSerializer):
+class ConstantSerializer(serializers.ModelSerializer[Constant]):
     """Serializer for a constant in the cms"""
 
     class Meta:
@@ -30,7 +30,7 @@ class ConstantSerializer(serializers.ModelSerializer):
         model = Constant
         fields = ["name", "value"]
 
-class FileSerializer(serializers.ModelSerializer):
+class FileSerializer(serializers.ModelSerializer[File]):
     """Serializer for a file in the cms"""
 
     class Meta:
