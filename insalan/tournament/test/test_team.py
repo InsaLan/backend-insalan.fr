@@ -62,7 +62,10 @@ class TeamTestCase(TestCase):
         )
 
         event_one = Event.objects.create(
-            name="Insalan Test One", date_start=date(2023,2,1), date_end=date(2023,2,2), description=""
+            name="Insalan Test One",
+            date_start=date(2023,2,1),
+            date_end=date(2023,2,2),
+            description=""
         )
 
         game = Game.objects.create(

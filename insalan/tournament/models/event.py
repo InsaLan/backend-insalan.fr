@@ -97,7 +97,7 @@ class Event(models.Model):
             models.Index(fields=["name"]),
             models.Index(fields=["date_start"]),
         ]
-    
+
     def clean(self) -> None:
         super().clean()
         self.clean_date_end()
@@ -106,7 +106,9 @@ class Event(models.Model):
             if self.pk:
                 ongoing_events = ongoing_events.exclude(pk=self.pk)
             if ongoing_events.exists():
-                raise ValidationError(_("Un autre évènement est déjà en cours. Il ne peut y en avoir qu'un seul."))
+                raise ValidationError(
+                    _("Un autre évènement est déjà en cours. Il ne peut y en avoir qu'un seul.")
+                )
 
     def clean_date_end(self) -> None:
         if self.date_end and self.date_start and self.date_end < self.date_start:

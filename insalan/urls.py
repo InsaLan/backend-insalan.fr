@@ -23,8 +23,8 @@ from rest_framework import routers
 from rest_framework import permissions
 
 from insalan.mailer import start_job
-from . import scheduler
 from insalan.langate import views as langate_views
+from . import scheduler
 
 
 router = routers.DefaultRouter()

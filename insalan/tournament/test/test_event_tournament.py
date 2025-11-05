@@ -38,7 +38,12 @@ class EventTournamentTestCase(TestCase):
 
     def setUp(self) -> None:
         """Set up the Tournaments"""
-        event = Event.objects.create(name="Test", date_start=date(2023,3,1), date_end=date(2023,3,2), description="")
+        event = Event.objects.create(
+            name="Test",
+            date_start=date(2023,3,1),
+            date_end=date(2023,3,2),
+            description=""
+        )
         event_two = Event.objects.create(
             name="Test Two", date_start=date(2023,2,1), date_end=date(2023,2,2), description=""
         )
@@ -122,7 +127,10 @@ class EventTournamentTestCase(TestCase):
         Verify that a product is created for a tournament
         """
         event_one = Event.objects.create(
-            name="Insalan Test One", date_start=date(2023,2,1), date_end=date(2023,2,2), description=""
+            name="Insalan Test One",
+            date_start=date(2023,2,1),
+            date_end=date(2023,2,2),
+            description=""
         )
 
         game = Game.objects.create(name="Fortnite")

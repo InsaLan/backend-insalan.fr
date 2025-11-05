@@ -22,7 +22,12 @@ class EventTestCase(TransactionTestCase):
 
     def test_simple_event(self) -> None:
         """Test that we can create a simple event"""
-        Event.objects.create(name="Insalan Test", date_start=date(2023,2,1), date_end=date(2023,2,2), description="")
+        Event.objects.create(
+            name="Insalan Test",
+            date_start=date(2023,2,1),
+            date_end=date(2023,2,2),
+            description=""
+        )
 
     def test_name_minimum_length(self) -> None:
         """Test that an Event cannot have too short a name"""
@@ -48,7 +53,7 @@ class EventTestCase(TransactionTestCase):
 
         self.assertFalse(evobj_one in query_ongoing)
         self.assertTrue(evobj_two in query_ongoing)
-    
+
     def test_single_ongoing_event(self) -> None:
         """Test that only one event can be ongoing at a time"""
         Event.objects.create(
@@ -81,7 +86,12 @@ class EventTestCase(TransactionTestCase):
 
     def test_get_tournaments(self) -> None:
         """Get tournaments for an event"""
-        event = Event.objects.create(name="Test", date_start=date(2023,3,1), date_end=date(2023,3,2), description="")
+        event = Event.objects.create(
+            name="Test",
+            date_start=date(2023,3,1),
+            date_end=date(2023,3,2),
+            description=""
+        )
         event_two = Event.objects.create(
             name="Test Two", date_start=date(2023,2,1), date_end=date(2023,2,2), description=""
         )
@@ -198,7 +208,12 @@ class EventDerefAndGroupingEndpoints(APITestCase):
 
     def test_deref_not_announced(self) -> None:
         """Test a simple example of a dereference"""
-        evobj = Event.objects.create(name="Test", date_start=date(2023,3,1), date_end=date(2023,3,2), ongoing=True)
+        evobj = Event.objects.create(
+            name="Test",
+            date_start=date(2023,3,1),
+            date_end=date(2023,3,2),
+            ongoing=True
+        )
         gobj = Game.objects.create(name="Test Game", short_name="TG")
         tourney = EventTournament.objects.create(
             name="Test Tournament",
@@ -235,7 +250,12 @@ class EventDerefAndGroupingEndpoints(APITestCase):
 
     def test_deref(self) -> None:
         """Test a simple example of a dereference"""
-        evobj = Event.objects.create(name="Test", date_start=date(2023,3,1), date_end=date(2023,3,2), ongoing=True)
+        evobj = Event.objects.create(
+            name="Test",
+            date_start=date(2023,3,1),
+            date_end=date(2023,3,2),
+            ongoing=True
+        )
         gobj = Game.objects.create(name="Test Game", short_name="TG")
         tourney = EventTournament.objects.create(
             name="Test Tournament",
