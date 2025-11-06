@@ -181,4 +181,19 @@ urlpatterns = [
         views.SwissMatchScore.as_view(),
         name="swiss/match/score"
     ),
+	path(
+		"stage/create",
+		views.CreateUpdateDeleteStage.as_view(),
+		name="create/stage"
+    ),
+	path(
+        "stage/<int:pk>/update",
+		views.CreateUpdateDeleteStage.as_view(),
+		name="update/stage"
+    ),
+	path(
+		"stage/<int:pk>/delete",
+		views.CreateUpdateDeleteStage.as_view(),
+		name="delete/stage"
+    )
 ]

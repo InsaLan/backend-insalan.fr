@@ -30,5 +30,6 @@ from .tournament import BaseTournament as BaseTournament
 from .tournament import EventTournament as EventTournament
 from .tournament import in_thirty_days as in_thirty_days
 from .tournament import PrivateTournament as PrivateTournament
+from .stage import Stage as Stage
 
 from .validators import *

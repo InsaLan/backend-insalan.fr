@@ -33,6 +33,12 @@ class Group(models.Model):
         verbose_name=_("Nombre de rounds"),
         default=1
     )
+    stage = models.ForeignKey(
+        "Stage",
+        verbose_name=_("Phase du tournoi"),
+        on_delete=models.CASCADE,
+        null=True
+    )
 
     class Meta:
         verbose_name = _("Poule")
