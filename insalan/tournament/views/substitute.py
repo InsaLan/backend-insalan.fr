@@ -115,14 +115,13 @@ class SubstituteRegistration(generics.RetrieveAPIView[Substitute]):
 
         if "name_in_game" in data:
             substitute_data = valid_name(substitute.team.tournament.game, data["name_in_game"])
-            if substitute_data:
-                substitute.name_in_game = data["name_in_game"]
-                substitute.data.update(substitute_data)
-            else:
+            if substitute_data is None:
                 return Response(
                     {"name_in_game": _("Pseudo invalide")},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+            substitute.name_in_game = data["name_in_game"]
+            substitute.data.update(substitute_data)
 
         try:
             substitute.save()

@@ -74,7 +74,7 @@ class Player(models.Model):
         blank=True,
         default=dict,
         verbose_name=_("Données additionnelles"),
-        help_text=_("Données additionnelles fournies par le validateur de pseudo en jeu. Ne pas modifier manuellement."),
+        help_text=_("Données additionnelles fournies par le validateur de pseudo en jeu."),
     )
 
     def __str__(self) -> str:
@@ -126,13 +126,13 @@ class Player(models.Model):
             raise ValidationError(
                 _("Équipe déjà remplie")
             )
-            
+
         # Validate the name in game and save the data
         info = validators.valid_name(
             tourney.get_game(),
             self.name_in_game
         )
-        if not info:
+        if info is None:
             raise ValidationError(
                 _("Le pseudo en jeu n'est pas valide")
             )

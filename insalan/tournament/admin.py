@@ -829,12 +829,14 @@ class PaymentStatusFilter(admin.SimpleListFilter):
 class ButtonWidget(forms.Widget):
     """Custom widget for the update name in game button."""
 
-    def render(self, name: str, value: Any, attrs: dict[str, Any] | None = None,
-               renderer: BaseRenderer | None = None) -> SafeString:
+    def render(
+        self, name: str, value: Any, attrs: dict[str, Any] | None = None,
+        renderer: BaseRenderer | None = None
+    ) -> SafeString:
         return SafeString('<input type="button" value="' + \
             _("Mettre à jour le pseudo en jeu") + \
             '" onclick="window.location.href=\'../name/update\'" />')
-        
+
 class Button(forms.Field):
     """
     Custom field for the button widget
@@ -880,7 +882,7 @@ class PlayerAdmin(admin.ModelAdmin[Player]):  # pylint: disable=unsubscriptable-
         return obj.team.tournament.name
 
     get_tournament.short_description = 'Tournament'  # type: ignore[attr-defined]
-    
+
     def get_fieldsets(
         self, request: HttpRequest, obj: Player | None = None
     ) -> FieldSets:
@@ -917,18 +919,19 @@ class PlayerAdmin(admin.ModelAdmin[Player]):  # pylint: disable=unsubscriptable-
                     "key": escape(player_id),
                 }
             )
-            
+
         # perform the update
         old_name_in_game = player.name_in_game
         data = player.data
-        new_name_in_game = player.get_team().get_tournament().get_game().get_name_validator().update_name(old_name_in_game, data)
-        
+        validator = player.team.tournament.game.get_name_validator()
+        new_name_in_game = validator.update_name(old_name_in_game, data)
+
         player.name_in_game = new_name_in_game
         player.save()
-        
+
         msg = _("The name in game was successfully updated to ") + player.name_in_game + "."
         messages.success(request, msg)
-        
+
         return HttpResponseRedirect(
             reverse(
                 f"{self.admin_site.name}:{player._meta.app_label}_{player._meta.model_name}_change",
@@ -999,7 +1002,7 @@ class SubstituteAdmin(admin.ModelAdmin[Substitute]):  # pylint: disable=unsubscr
         return obj.team.tournament.name
 
     get_tournament.short_description = 'Tournament'  # type: ignore[attr-defined]
-    
+
     def get_fieldsets(
         self, request: HttpRequest, obj: Substitute | None = None
     ) -> FieldSets:
@@ -1040,7 +1043,8 @@ class SubstituteAdmin(admin.ModelAdmin[Substitute]):  # pylint: disable=unsubscr
         # perform the update
         old_name_in_game = substitute.name_in_game
         data = substitute.data
-        new_name_in_game = substitute.get_team().get_tournament().get_game().get_name_validator().update_name(old_name_in_game, data)
+        validator = substitute.team.tournament.game.get_name_validator()
+        new_name_in_game = validator.update_name(old_name_in_game, data)
 
         substitute.name_in_game = new_name_in_game
         substitute.save()
@@ -1050,7 +1054,9 @@ class SubstituteAdmin(admin.ModelAdmin[Substitute]):  # pylint: disable=unsubscr
 
         return HttpResponseRedirect(
             reverse(
-                f"{self.admin_site.name}:{substitute._meta.app_label}_{substitute._meta.model_name}_change",
+                f"{self.admin_site.name}:{
+                    substitute._meta.app_label
+                }_{substitute._meta.model_name}_change",
                 args=(substitute.pk,),
             )
         )

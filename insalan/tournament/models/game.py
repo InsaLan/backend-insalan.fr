@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, TYPE_CHECKING, Type
+from typing import TYPE_CHECKING, Type
 
 from django.db import models
 from django.core.validators import (

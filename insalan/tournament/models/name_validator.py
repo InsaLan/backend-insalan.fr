@@ -27,7 +27,7 @@ class NameValidator(ABC):
         This method is used to validate the name of a player
         Each validators should implement this method
         """
-        
+
     @staticmethod
     @abstractmethod
     def update_name(_name: str, _data: Dict[str, Any]) -> str:
