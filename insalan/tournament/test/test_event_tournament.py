@@ -1,5 +1,6 @@
 """EventTournament Module Tests"""
 
+from datetime import date
 from decimal import Decimal
 
 from django.db.utils import IntegrityError
@@ -37,9 +38,14 @@ class EventTournamentTestCase(TestCase):
 
     def setUp(self) -> None:
         """Set up the Tournaments"""
-        event = Event.objects.create(name="Test", year=2023, month=3, description="")
+        event = Event.objects.create(
+            name="Test",
+            date_start=date(2023,3,1),
+            date_end=date(2023,3,2),
+            description=""
+        )
         event_two = Event.objects.create(
-            name="Test Two", year=2023, month=2, description=""
+            name="Test Two", date_start=date(2023,2,1), date_end=date(2023,2,2), description=""
         )
         game_one = Game.objects.create(name="Test Game One")
         game_two = Game.objects.create(name="Test Game Two")
@@ -58,7 +64,7 @@ class EventTournamentTestCase(TestCase):
 
     def test_get_event(self) -> None:
         """Get the event for a tournament"""
-        event = Event.objects.get(year=2023, month=3)
+        event = Event.objects.get(date_start=date(2023,3,1))
         game = Game.objects.get(name="Test Game One")
         tourney = EventTournament.objects.get(game=game)
 
@@ -121,7 +127,10 @@ class EventTournamentTestCase(TestCase):
         Verify that a product is created for a tournament
         """
         event_one = Event.objects.create(
-            name="Insalan Test One", year=2023, month=2, description=""
+            name="Insalan Test One",
+            date_start=date(2023,2,1),
+            date_end=date(2023,2,2),
+            description=""
         )
 
         game = Game.objects.create(name="Fortnite")
@@ -181,8 +190,8 @@ class TournamentFullDerefEndpoint(APITestCase):
         evobj = Event.objects.create(
             name="Test Event",
             description="This is a test",
-            year=2021,
-            month=12,
+            date_start=date(2021,12,1),
+            date_end=date(2021,12,2),
             ongoing=False,
         )
         tourneyobj_one = EventTournament.objects.create(
@@ -230,8 +239,8 @@ class TournamentFullDerefEndpoint(APITestCase):
                 "id": evobj.id,
                 "name": "Test Event",
                 "description": "This is a test",
-                "year": 2021,
-                "month": 12,
+                "date_start": "2021-12-01",
+                "date_end": "2021-12-02",
                 "ongoing": False,
                 "logo": None,
                 "poster": None,
@@ -400,8 +409,8 @@ class TournamentFullDerefEndpoint(APITestCase):
         evobj = Event.objects.create(
             name="Test Event",
             description="This is a test",
-            year=2021,
-            month=12,
+            date_start=date(2021,12,1),
+            date_end=date(2021,12,2),
             ongoing=False,
         )
         tourneyobj_one = EventTournament.objects.create(

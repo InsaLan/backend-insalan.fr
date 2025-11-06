@@ -1,5 +1,6 @@
 """Tournament Player Module Tests"""
 
+from datetime import date
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
 
@@ -24,7 +25,7 @@ class PlayerTestCase(APITestCase):
 
         # Basic setup for a one-tournamnent game event
         event = Event.objects.create(
-            name="InsaLan Test", year=2023, month=8, description=""
+            name="InsaLan Test", date_start=date(2023,8,1), date_end=date(2023,8,2), description=""
         )
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(game=game, event=event)
@@ -36,7 +37,10 @@ class PlayerTestCase(APITestCase):
 
         # Second edition
         event_two = Event.objects.create(
-            name="InsaLan Test (Past)", year=2023, month=3, description=""
+            name="InsaLan Test (Past)",
+            date_start=date(2023,3,1),
+            date_end=date(2023,3,2),
+            description=""
         )
         trnm_two = EventTournament.objects.create(game=game, event=event_two)
         team_two: Team = Team.objects.create(
@@ -107,7 +111,10 @@ class PlayerTestCase(APITestCase):
     def test_duplicate_player(self) -> None:
         """Test whether the system reacts to player duplicates"""
         event = Event.objects.create(
-            name="InsaLan Collision Test", year=2023, month=9, description=""
+            name="InsaLan Collision Test",
+            date_start=date(2023,9,1),
+            date_end=date(2023,9,2),
+            description=""
         )
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(game=game, event=event)
@@ -127,7 +134,10 @@ class PlayerTestCase(APITestCase):
     def test_not_multiple_players_same_event_same_tournament_same_team(self) -> None:
         """Check that saving fails when multiple players are inserted at once"""
         event = Event.objects.create(
-            name="InsaLan Collision Test", year=2023, month=9, description=""
+            name="InsaLan Collision Test",
+            date_start=date(2023,9,1),
+            date_end=date(2023,9,2),
+            description=""
         )
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(game=game, event=event)
@@ -149,7 +159,10 @@ class PlayerTestCase(APITestCase):
     def test_not_multiple_players_same_event_same_tournament_diff_team(self) -> None:
         """Check that saving fails when multiple players are inserted at once"""
         event = Event.objects.create(
-            name="InsaLan Collision Test", year=2023, month=9, description=""
+            name="InsaLan Collision Test",
+            date_start=date(2023,9,1),
+            date_end=date(2023,9,2),
+            description=""
         )
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(game=game, event=event)
@@ -176,7 +189,10 @@ class PlayerTestCase(APITestCase):
     def test_not_multiple_players_same_event_diff_tournament_diff_team(self) -> None:
         """Check that saving fails when multiple players are inserted at once"""
         event = Event.objects.create(
-            name="InsaLan Collision Test", year=2023, month=9, description=""
+            name="InsaLan Collision Test",
+            date_start=date(2023,9,1),
+            date_end=date(2023,9,2),
+            description=""
         )
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(game=game, event=event)
@@ -204,10 +220,16 @@ class PlayerTestCase(APITestCase):
     def test_not_multiple_players_diff_event_diff_tournament_diff_team(self) -> None:
         """Check that saving fails when multiple players are inserted at once"""
         event = Event.objects.create(
-            name="InsaLan Collision Test", year=2023, month=9, description=""
+            name="InsaLan Collision Test",
+            date_start=date(2023,9,1),
+            date_end=date(2023,9,2),
+            description=""
         )
         event_two = Event.objects.create(
-            name="InsaLan Collision Test Two", year=2023, month=9, description=""
+            name="InsaLan Collision Test Two",
+            date_start=date(2023,9,1),
+            date_end=date(2023,9,2),
+            description=""
         )
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(game=game, event=event)
@@ -238,7 +260,7 @@ class PlayerTestCase(APITestCase):
         """Check that a player gives the correct team"""
         user = User.objects.get(username="testplayer")
         # There should be only one
-        event = Event.objects.get(year=2023, month=8)
+        event = Event.objects.get(date_start=date(2023,8,1))
         trnm = EventTournament.objects.get(event=event)
 
         player = Player.objects.get(user=user)
@@ -253,7 +275,7 @@ class PlayerTestCase(APITestCase):
     def test_player_team_deletion(self) -> None:
         """Verify the behaviour of a Player when their team gets deleted"""
         user_obj = User.objects.get(username="testplayer")
-        event = Event.objects.get(year=2023, month=8)
+        event = Event.objects.get(date_start=date(2023,8,1))
         trnm = EventTournament.objects.get(event=event)
         # Create a team and player
         team_obj = Team.objects.create(name="La Team Test Player", tournament=trnm)
@@ -269,7 +291,7 @@ class PlayerTestCase(APITestCase):
     def test_user_deletion(self) -> None:
         """Verify that a Player registration is deleted along with its user"""
         user_obj = User.objects.get(username="testplayer")
-        event = Event.objects.get(year=2023, month=8)
+        event = Event.objects.get(date_start=date(2023,8,1))
         trnm = EventTournament.objects.get(event=event)
         # Create a Player registration
         team_obj = Team.objects.create(name="La Team Test User", tournament=trnm)

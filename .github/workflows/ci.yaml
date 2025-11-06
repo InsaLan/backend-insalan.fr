@@ -1,12 +1,13 @@
 on:
   pull_request:
-    type: [opened]
+    types: [opened]
   push:
     paths:
       - '.github/workflows/ci.yaml'
       - '.github/workflows/init_db.sql'
       - 'insalan/**'
       - 'requirements.txt'
+      - 'requirements-dev.txt'
       - '*.sh'
       - 'locale/**'
       - 'Dockerfile*'
@@ -97,6 +98,7 @@ jobs:
 
       # Install dependencies
       - run: pip3 install -r requirements.txt
+      - run: pip3 install -r requirements-dev.txt
 
       # Initialize the database
       - run: psql postgresql://${{ env.DB_USER }}:${{ env.DB_PASS }}@${{ env.DB_HOST }}:${{ env.DB_PORT }}/${{ env.DB_NAME }} -f .github/workflows/init_db.sql

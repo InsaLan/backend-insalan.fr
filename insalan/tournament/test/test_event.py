@@ -1,5 +1,6 @@
 """Tournament Event Module Tests"""
 
+from datetime import date
 from io import BytesIO
 
 from django.utils import timezone
@@ -21,59 +22,48 @@ class EventTestCase(TransactionTestCase):
 
     def test_simple_event(self) -> None:
         """Test that we can create a simple event"""
-        Event.objects.create(name="Insalan Test", year=2023, month=2, description="")
+        Event.objects.create(
+            name="Insalan Test",
+            date_start=date(2023,2,1),
+            date_end=date(2023,2,2),
+            description=""
+        )
 
     def test_name_minimum_length(self) -> None:
         """Test that an Event cannot have too short a name"""
-        eobj = Event(name="Ins", year=2023, month=2)
+        eobj = Event(name="Ins", date_start=date(2023,2,1), date_end=date(2023,2,2))
         self.assertRaises(ValidationError, eobj.full_clean)
 
-    def test_earlierst_event_year(self) -> None:
-        """Check that we can't have too early an event"""
-        eobj = Event(name="InsaLan", year=2002, month=2)
+    def test_invalid_date_range(self) -> None:
+        """Test that an Event cannot end before it starts"""
+        eobj = Event(name="InsaLan", date_start=date(2023,5,1), date_end=date(2023,4,30))
         self.assertRaises(ValidationError, eobj.full_clean)
-
-    def test_low_event_month(self) -> None:
-        """Check that we cannot use too low an event month"""
-        eobj = Event(name="InsaLan", year=2023, month=0)
-        self.assertRaises(ValidationError, eobj.full_clean)
-
-        eobj.month = -1
-        self.assertRaises(ValidationError, eobj.full_clean)
-
-        eobj.month = -1000
-        self.assertRaises(ValidationError, eobj.full_clean)
-
-        eobj.month = 1
-        eobj.full_clean()
-
-    def test_high_event_month(self) -> None:
-        """Check that we cannot use too high an event month"""
-        eobj = Event(name="InsaLan", year=2023, month=13)
-        self.assertRaises(ValidationError, eobj.full_clean)
-
-        eobj.month = 839
-        self.assertRaises(ValidationError, eobj.full_clean)
-
-        eobj.month = 12
-        eobj.full_clean()
 
     def test_ongoing_events(self) -> None:
         """Test that we can find events that are ongoing"""
-        Event.objects.create(name="InsaLan", year=2023, month=8)
         evobj_one = Event.objects.create(
-            name="InsaLan", year=2023, month=9, ongoing=True
+            name="InsaLan 1", date_start=date(2023,8,1), date_end=date(2023,8,2), ongoing=False
         )
-        Event.objects.create(name="InsaLan", year=2023, month=10)
         evobj_two = Event.objects.create(
-            name="InsaLan", year=2023, month=11, ongoing=True
+            name="InsaLan 2", date_start=date(2023,9,1), date_end=date(2023,9,2), ongoing=True
         )
 
         query_ongoing = Event.objects.filter(ongoing=True)
-        self.assertEqual(2, len(query_ongoing))
+        self.assertEqual(1, len(query_ongoing))
 
-        self.assertTrue(evobj_one in query_ongoing)
+        self.assertFalse(evobj_one in query_ongoing)
         self.assertTrue(evobj_two in query_ongoing)
+
+    def test_single_ongoing_event(self) -> None:
+        """Test that only one event can be ongoing at a time"""
+        Event.objects.create(
+            name="InsaLan 1", date_start=date(2023,8,1), date_end=date(2023,8,2), ongoing=True
+        )
+        evobj_two = Event(
+            name="InsaLan 2", date_start=date(2023,9,1), date_end=date(2023,9,2), ongoing=True
+        )
+
+        self.assertRaises(ValidationError, evobj_two.full_clean)
 
     def test_non_null_fields(self) -> None:
         """Test that all non-nullable fields should raise errors"""
@@ -81,40 +71,29 @@ class EventTestCase(TransactionTestCase):
             IntegrityError,
             Event.objects.create,
             name=None,
-            year=2023,
-            month=2,
+            date_start=date(2023,2,1),
+            date_end=date(2023,2,2),
             description="",
         )
         self.assertRaises(
             IntegrityError,
             Event.objects.create,
             name="",
-            year=None,
-            month=2,
-            description="",
-        )
-        self.assertRaises(
-            IntegrityError,
-            Event.objects.create,
-            name="",
-            year=2023,
-            month=None,
-            description="",
-        )
-        self.assertRaises(
-            IntegrityError,
-            Event.objects.create,
-            name="",
-            year=2023,
-            month=2,
+            date_start=date(2023,2,1),
+            date_end=date(2023,2,2),
             description=None,
         )
 
     def test_get_tournaments(self) -> None:
         """Get tournaments for an event"""
-        event = Event.objects.create(name="Test", year=2023, month=3, description="")
+        event = Event.objects.create(
+            name="Test",
+            date_start=date(2023,3,1),
+            date_end=date(2023,3,2),
+            description=""
+        )
         event_two = Event.objects.create(
-            name="Test Two", year=2023, month=2, description=""
+            name="Test Two", date_start=date(2023,2,1), date_end=date(2023,2,2), description=""
         )
         game_one = Game.objects.create(name="Test Game One")
         game_two = Game.objects.create(name="Test Game Two")
@@ -141,7 +120,7 @@ class EventTestCase(TransactionTestCase):
     def test_logo_extension_enforcement(self) -> None:
         """Verify that we only accept logos as PNG, JPG, JPEG and SVG"""
         ev_obj = Event.objects.create(
-            name="Insalan Test", year=2023, month=2, description=""
+            name="Insalan Test", date_start=date(2023,2,1), date_end=date(2023,2,2), description=""
         )
 
         # PNGs work
@@ -177,10 +156,10 @@ class EventDerefAndGroupingEndpoints(APITestCase):
     @staticmethod
     def create_multiple_events() -> None:
         """Create some of events"""
-        Event.objects.create(name="Event 1", year=2018, month=8)
-        Event.objects.create(name="Event 2", year=2019, month=3)
-        Event.objects.create(name="Event 3", year=2019, month=7)
-        Event.objects.create(name="Event 4", year=2021, month=11)
+        Event.objects.create(name="Event 1", date_start=date(2018,8,1), date_end=date(2018,8,2))
+        Event.objects.create(name="Event 2", date_start=date(2019,3,1), date_end=date(2019,3,2))
+        Event.objects.create(name="Event 3", date_start=date(2019,7,1), date_end=date(2019,7,2))
+        Event.objects.create(name="Event 4", date_start=date(2021,11,1), date_end=date(2021,11,2))
 
     def test_year_group_empty(self) -> None:
         """Test what happens when events are in the database but we query an empty year"""
@@ -229,7 +208,12 @@ class EventDerefAndGroupingEndpoints(APITestCase):
 
     def test_deref_not_announced(self) -> None:
         """Test a simple example of a dereference"""
-        evobj = Event.objects.create(name="Test", year=2023, month=3, ongoing=True)
+        evobj = Event.objects.create(
+            name="Test",
+            date_start=date(2023,3,1),
+            date_end=date(2023,3,2),
+            ongoing=True
+        )
         gobj = Game.objects.create(name="Test Game", short_name="TG")
         tourney = EventTournament.objects.create(
             name="Test Tournament",
@@ -249,8 +233,8 @@ class EventDerefAndGroupingEndpoints(APITestCase):
             "id": evobj.id,
             "name": "Test",
             "description": "",
-            "year": 2023,
-            "month": 3,
+            "date_start": "2023-03-01",
+            "date_end": "2023-03-02",
             "ongoing": True,
             "tournaments": [
                 {
@@ -266,7 +250,12 @@ class EventDerefAndGroupingEndpoints(APITestCase):
 
     def test_deref(self) -> None:
         """Test a simple example of a dereference"""
-        evobj = Event.objects.create(name="Test", year=2023, month=3, ongoing=True)
+        evobj = Event.objects.create(
+            name="Test",
+            date_start=date(2023,3,1),
+            date_end=date(2023,3,2),
+            ongoing=True
+        )
         gobj = Game.objects.create(name="Test Game", short_name="TG")
         tourney = EventTournament.objects.create(
             name="Test Tournament",
@@ -290,8 +279,8 @@ class EventDerefAndGroupingEndpoints(APITestCase):
             "id": evobj.id,
             "name": "Test",
             "description": "",
-            "year": 2023,
-            "month": 3,
+            "date_start": "2023-03-01",
+            "date_end": "2023-03-02",
             "ongoing": True,
             "tournaments": [
                 {

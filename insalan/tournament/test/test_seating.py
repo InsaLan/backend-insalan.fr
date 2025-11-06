@@ -1,3 +1,4 @@
+from datetime import date
 from django.db.utils import IntegrityError
 from django.test import TestCase
 
@@ -21,15 +22,15 @@ class SeatTestCase(TestCase):
         self.evobj = Event.objects.create(
             name="Test Event",
             description="This is a test",
-            year=2021,
-            month=12,
+            date_start=date(2021,12,1),
+            date_end=date(2021,12,2),
             ongoing=False,
         )
         self.evobj_two = Event.objects.create(
             name="Test Event 2",
             description="This is a test",
-            year=2021,
-            month=12,
+            date_start=date(2021,12,1),
+            date_end=date(2021,12,2),
             ongoing=False,
         )
 
@@ -56,15 +57,15 @@ class SeatSlotFormTestCase(TestCase):
         self.evobj = Event.objects.create(
             name="Test Event",
             description="This is a test",
-            year=2021,
-            month=12,
+            date_start=date(2021,12,1),
+            date_end=date(2021,12,2),
             ongoing=False,
         )
         self.evobj_two = Event.objects.create(
             name="Test Event 2",
             description="This is a test",
-            year=2021,
-            month=12,
+            date_start=date(2021,12,1),
+            date_end=date(2021,12,2),
             ongoing=False,
         )
 

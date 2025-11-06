@@ -2,6 +2,7 @@
 Langate unit tests
 """
 
+from datetime import date
 from django.test import TestCase
 from django.utils.translation import gettext_lazy as _
 
@@ -88,7 +89,12 @@ class EndpointTests(APITestCase):
 
     def test_authenticated_user(self) -> None:
         """Verify result on an authenticated user"""
-        Event.objects.create(name="InsaLan", year=2023, month=3, ongoing=True)
+        Event.objects.create(
+            name="InsaLan",
+            date_start=date(2023,3,1),
+            date_end=date(2023,3,2),
+            ongoing=True
+        )
         user = User.objects.create_user(username="limefox",
                                         email="test@example.com",
                                         first_name="Lux Amelia",
@@ -119,9 +125,24 @@ class EndpointTests(APITestCase):
         """
         Verify what happens when no event is happening
         """
-        Event.objects.create(name="Insalan XV", year=2020, month=2, ongoing=False)
-        Event.objects.create(name="Insalan XVI", year=2022, month=3, ongoing=False)
-        Event.objects.create(name="InsaLan XVII", year=2023, month=2, ongoing=False)
+        Event.objects.create(
+            name="Insalan XV",
+            date_start=date(2020,2,1),
+            date_end=date(2020,2,2),
+            ongoing=False
+        )
+        Event.objects.create(
+            name="Insalan XVI",
+            date_start=date(2022,3,1),
+            date_end=date(2022,3,2),
+            ongoing=False
+        )
+        Event.objects.create(
+            name="InsaLan XVII",
+            date_start=date(2023,2,1),
+            date_end=date(2023,2,2),
+            ongoing=False
+        )
         user = User.objects.create_user(username="limefox",
                                         email="test@example.com",
                                         first_name="Lux Amelia",
@@ -142,9 +163,24 @@ class EndpointTests(APITestCase):
         """
         Verify what happens with only one ongoing event and no ID in the POST
         """
-        Event.objects.create(name="Insalan XV", year=2020, month=2, ongoing=False)
-        evobj = Event.objects.create(name="Insalan XVI", year=2022, month=3, ongoing=True)
-        Event.objects.create(name="InsaLan XVII", year=2023, month=2, ongoing=False)
+        Event.objects.create(
+            name="Insalan XV",
+            date_start=date(2020,2,1),
+            date_end=date(2020,2,2),
+            ongoing=False
+        )
+        evobj = Event.objects.create(
+            name="Insalan XVI",
+            date_start=date(2022,3,1),
+            date_end=date(2022,3,2),
+            ongoing=True
+        )
+        Event.objects.create(
+            name="InsaLan XVII",
+            date_start=date(2023,2,1),
+            date_end=date(2023,2,2),
+            ongoing=False
+        )
         game_obj = Game.objects.create(name="Test Game", short_name="TG")
         tourney = EventTournament.objects.create(name="Tourney", game=game_obj, event=evobj)
         team = Team.objects.create(name="Bloop", tournament=tourney)
@@ -180,9 +216,24 @@ class EndpointTests(APITestCase):
         """
         Verify that payment is correctly updated when payed
         """
-        Event.objects.create(name="Insalan XV", year=2020, month=2, ongoing=False)
-        evobj = Event.objects.create(name="Insalan XVI", year=2022, month=3, ongoing=True)
-        Event.objects.create(name="InsaLan XVII", year=2023, month=2, ongoing=False)
+        Event.objects.create(
+            name="Insalan XV",
+            date_start=date(2020,2,1),
+            date_end=date(2020,2,2),
+            ongoing=False
+        )
+        evobj = Event.objects.create(
+            name="Insalan XVI",
+            date_start=date(2022,3,1),
+            date_end=date(2022,3,2),
+            ongoing=True
+        )
+        Event.objects.create(
+            name="InsaLan XVII",
+            date_start=date(2023,2,1),
+            date_end=date(2023,2,2),
+            ongoing=False
+        )
         game_obj = Game.objects.create(name="Test Game", short_name="TG")
         tourney = EventTournament.objects.create(name="Tourney", game=game_obj, event=evobj)
         team = Team.objects.create(name="Bloop", tournament=tourney)
@@ -218,9 +269,24 @@ class EndpointTests(APITestCase):
         """
         Verify that payment is correctly updated when payed
         """
-        Event.objects.create(name="Insalan XV", year=2020, month=2, ongoing=False)
-        evobj = Event.objects.create(name="Insalan XVI", year=2022, month=3, ongoing=True)
-        Event.objects.create(name="InsaLan XVII", year=2023, month=2, ongoing=False)
+        Event.objects.create(
+            name="Insalan XV",
+            date_start=date(2020,2,1),
+            date_end=date(2020,2,2),
+            ongoing=False
+        )
+        evobj = Event.objects.create(
+            name="Insalan XVI",
+            date_start=date(2022,3,1),
+            date_end=date(2022,3,2),
+            ongoing=True
+        )
+        Event.objects.create(
+            name="InsaLan XVII",
+            date_start=date(2023,2,1),
+            date_end=date(2023,2,2),
+            ongoing=False
+        )
         game_obj = Game.objects.create(name="Test Game", short_name="TG")
         tourney = EventTournament.objects.create(name="Tourney", game=game_obj, event=evobj)
         team = Team.objects.create(name="Bloop", tournament=tourney)
@@ -256,9 +322,24 @@ class EndpointTests(APITestCase):
         """
         Verify that payment status is contaminated by a single not paid ticket
         """
-        Event.objects.create(name="Insalan XV", year=2020, month=2, ongoing=False)
-        evobj = Event.objects.create(name="Insalan XVI", year=2022, month=3, ongoing=True)
-        Event.objects.create(name="InsaLan XVII", year=2023, month=2, ongoing=False)
+        Event.objects.create(
+            name="Insalan XV",
+            date_start=date(2020,2,1),
+            date_end=date(2020,2,2),
+            ongoing=False
+        )
+        evobj = Event.objects.create(
+            name="Insalan XVI",
+            date_start=date(2022,3,1),
+            date_end=date(2022,3,2),
+            ongoing=True
+        )
+        Event.objects.create(
+            name="InsaLan XVII",
+            date_start=date(2023,2,1),
+            date_end=date(2023,2,2),
+            ongoing=False
+        )
         game_obj = Game.objects.create(name="Test Game", short_name="TG")
         tourney = EventTournament.objects.create(name="Tourney", game=game_obj, event=evobj)
         team = Team.objects.create(name="Bloop", tournament=tourney)
@@ -302,9 +383,24 @@ class EndpointTests(APITestCase):
         """
         Verify that payment status is null when all is paid
         """
-        Event.objects.create(name="Insalan XV", year=2020, month=2, ongoing=False)
-        evobj = Event.objects.create(name="Insalan XVI", year=2022, month=3, ongoing=True)
-        Event.objects.create(name="InsaLan XVII", year=2023, month=2, ongoing=False)
+        Event.objects.create(
+            name="Insalan XV",
+            date_start=date(2020,2,1),
+            date_end=date(2020,2,2),
+            ongoing=False
+        )
+        evobj = Event.objects.create(
+            name="Insalan XVI",
+            date_start=date(2022,3,1),
+            date_end=date(2022,3,2),
+            ongoing=True
+        )
+        Event.objects.create(
+            name="InsaLan XVII",
+            date_start=date(2023,2,1),
+            date_end=date(2023,2,2),
+            ongoing=False
+        )
         game_obj = Game.objects.create(name="Test Game", short_name="TG")
         tourney = EventTournament.objects.create(name="Tourney", game=game_obj, event=evobj)
         team = Team.objects.create(name="Bloop", tournament=tourney)

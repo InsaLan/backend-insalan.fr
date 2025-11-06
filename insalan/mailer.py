@@ -1,4 +1,3 @@
-import logging
 import sys
 from typing import cast
 
@@ -13,11 +12,10 @@ from django.contrib.auth.tokens import (
 )
 from django.utils.translation import gettext_lazy as _
 
-from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore[import]
-
 from insalan import settings
 from insalan.user.models import User
 from insalan.tickets.models import Ticket, TicketManager
+from insalan.scheduler import scheduler
 
 
 django_stubs_ext.monkeypatch(extra_classes=[File])
@@ -258,13 +256,9 @@ class MailManager:
         for mailer in MailManager.mailers.values():
             mailer.send_first_mail()
 
-def start_scheduler() -> None:
-    # Remove apscheduler logs
-    logging.getLogger('apscheduler.executors.default').setLevel(logging.WARNING)
-
+def start_job() -> None:
     # Check if we are in test mode
     test = 'test' in sys.argv
-    print(test, file=sys.stderr)
 
     # Add mailers
     for auth in settings.EMAIL_AUTH:
@@ -274,6 +268,4 @@ def start_scheduler() -> None:
 
     # Start scheduler
     if not test:
-        scheduler = BackgroundScheduler()
         scheduler.add_job(MailManager.send_queued_mail, 'interval', seconds=30)
-        scheduler.start()

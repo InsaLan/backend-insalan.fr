@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from datetime import date
 from django.core.validators import (
     FileExtensionValidator,
-    MaxValueValidator,
-    MinValueValidator,
     MinLengthValidator,
 )
+from django.forms import ValidationError
 from django.db import models
 from django.db.models.query import QuerySet
 from django.utils.translation import gettext_lazy as _
@@ -45,15 +45,23 @@ class Event(models.Model):
         default="",
         blank=True,
     )
-    year = models.IntegerField(
-        verbose_name=_("Année"), null=False, validators=[MinValueValidator(2003)]
-    )
-    month = models.IntegerField(
-        verbose_name=_("Mois"),
+    date_start = models.DateField(
+        verbose_name=_("Date de début"),
         null=False,
-        validators=[MinValueValidator(1), MaxValueValidator(12)],
+        blank=False,
+        default=date(2000, 1, 1)
     )
-    ongoing = models.BooleanField(verbose_name=_("En cours"), default=False)
+    date_end = models.DateField(
+        verbose_name=_("Date de fin"),
+        null=False,
+        blank=False,
+        default=date(2000, 1, 1)
+    )
+    ongoing = models.BooleanField(
+        verbose_name=_("En cours"),
+        help_text=_("Détermine si l'évènement est affiché sur la page principale"),
+        default=True
+    )
     logo: models.FileField = ImageField(
         verbose_name=_("Logo"),
         blank=True,
@@ -87,12 +95,30 @@ class Event(models.Model):
         verbose_name_plural = _("Évènements")
         indexes = [
             models.Index(fields=["name"]),
-            models.Index(fields=["year", "month"]),
+            models.Index(fields=["date_start"]),
         ]
+
+    def clean(self) -> None:
+        super().clean()
+        self.clean_date_end()
+        if self.ongoing:
+            ongoing_events = Event.objects.filter(ongoing=True)
+            if self.pk:
+                ongoing_events = ongoing_events.exclude(pk=self.pk)
+            if ongoing_events.exists():
+                raise ValidationError(
+                    _("Un autre évènement est déjà en cours. Il ne peut y en avoir qu'un seul.")
+                )
+
+    def clean_date_end(self) -> None:
+        if self.date_end and self.date_start and self.date_end < self.date_start:
+            raise ValidationError(_("La date de fin ne peut pas être avant la date de début."))
 
     def __str__(self) -> str:
         """Format this Event to a str"""
-        return f"{self.name} ({self.year}-{self.month:02d})"
+        if self.date_start:
+            return f"{self.name} ({self.date_start.year}-{self.date_start.month:02d})"
+        return self.name
 
     def get_tournaments_id(self) -> ValuesQuerySet[EventTournament, int]:
         """Return the list of tournaments identifiers for that Event"""
