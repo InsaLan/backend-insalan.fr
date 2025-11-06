@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import Counter
 from math import ceil
-from typing import Any, TYPE_CHECKING
+from typing import Any, Dict, TYPE_CHECKING
 
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
@@ -142,8 +142,8 @@ def validate_match_data(match: Match, data: dict[str, Any]) -> dict[str, str] | 
 
     return None
 
-def valid_name(game_param: Game, name: str) -> bool:
+def valid_name(game_param: Game, name: str) -> Dict[str, Any] | None:
     name_validator = game_param.get_name_validator()
     if name_validator is None:
-        return True
+        return {}
     return name_validator.validate_name(name)

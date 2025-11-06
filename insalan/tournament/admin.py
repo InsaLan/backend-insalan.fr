@@ -37,7 +37,7 @@ from insalan.tournament.manage import (
     create_swiss_matchs,
     launch_match,
 )
-from insalan.utils import FieldSets
+from insalan.utils import FieldOpts, FieldSets
 
 from .models import (
     BestofType,
@@ -868,7 +868,7 @@ class PlayerAdmin(admin.ModelAdmin[Player]):  # pylint: disable=unsubscriptable-
     list_display = ("id", "user", "name_in_game", "team", "payment_status", "get_tournament")
     search_fields = ["user__username", "team__name", "name_in_game"]
     readonly_fields = ("data",)
-    add_fieldsets = (
+    add_fieldsets: tuple[tuple[str | None, FieldOpts]] = (
         (None, {"fields": ("user", "team", "payment_status", "ticket", "name_in_game")}),
     )
 
@@ -924,10 +924,11 @@ class PlayerAdmin(admin.ModelAdmin[Player]):  # pylint: disable=unsubscriptable-
         old_name_in_game = player.name_in_game
         data = player.data
         validator = player.team.tournament.game.get_name_validator()
-        new_name_in_game = validator.update_name(old_name_in_game, data)
+        if validator is not None:
+            new_name_in_game = validator.update_name(old_name_in_game, data)
 
-        player.name_in_game = new_name_in_game
-        player.save()
+            player.name_in_game = new_name_in_game
+            player.save()
 
         msg = _("The name in game was successfully updated to ") + player.name_in_game + "."
         messages.success(request, msg)
@@ -988,7 +989,7 @@ class SubstituteAdmin(admin.ModelAdmin[Substitute]):  # pylint: disable=unsubscr
     list_display = ("id", "user", "name_in_game", "team", "payment_status", "get_tournament")
     search_fields = ["user__username", "team__name", "name_in_game"]
     readonly_fields = ("data",)
-    add_fieldsets = (
+    add_fieldsets: tuple[tuple[str | None, FieldOpts]] = (
         (None, {"fields": ("user", "team", "payment_status", "ticket", "name_in_game")}),
     )
 
@@ -1044,10 +1045,11 @@ class SubstituteAdmin(admin.ModelAdmin[Substitute]):  # pylint: disable=unsubscr
         old_name_in_game = substitute.name_in_game
         data = substitute.data
         validator = substitute.team.tournament.game.get_name_validator()
-        new_name_in_game = validator.update_name(old_name_in_game, data)
+        if validator is not None:
+            new_name_in_game = validator.update_name(old_name_in_game, data)
 
-        substitute.name_in_game = new_name_in_game
-        substitute.save()
+            substitute.name_in_game = new_name_in_game
+            substitute.save()
 
         msg = _("The name in game was successfully updated to ") + substitute.name_in_game + "."
         messages.success(request, msg)

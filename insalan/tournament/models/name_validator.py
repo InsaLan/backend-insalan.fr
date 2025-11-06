@@ -4,7 +4,7 @@ NameValidator class
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, ClassVar, Dict, Type, TYPE_CHECKING
+from typing import Any, ClassVar, Dict, Type, TYPE_CHECKING, cast
 
 from django.utils.translation import gettext_lazy as _
 
@@ -116,11 +116,19 @@ class LeagueOfLegendsNameValidator(NameValidator):
             summonerendpoint.format(puuid, RIOT_API_KEY),
             timeout=5
         )
-        # If the request fails, don't update the name
+        # If the request fails, don't update the name
         if response.status_code != 200:
             return name
 
-        return response.json()["gameName"] + "#" + response.json()["tagLine"]
+        # Type the JSON response to avoid returning Any and validate fields
+        json_data = cast(Dict[str, Any], response.json())
+
+        game_name = json_data.get("gameName")
+        tag_line = json_data.get("tagLine")
+        if not isinstance(game_name, str) or not isinstance(tag_line, str):
+            return name
+
+        return game_name + "#" + tag_line
 
 validators: list[Type[NameValidator]] = [
     EmptyNameValidator,
