@@ -220,5 +220,20 @@ urlpatterns = [
         "stage/<int:pk>/add/swiss/",
         views.StageAddSwissRounds.as_view(),
         name="stage/add/swiss"
+    ),
+	path(
+		"stage/create",
+		views.CreateUpdateDeleteStage.as_view(),
+		name="create/stage"
+    ),
+	path(
+        "stage/<int:pk>/update",
+		views.CreateUpdateDeleteStage.as_view(),
+		name="update/stage"
+    ),
+	path(
+		"stage/<int:pk>/delete",
+		views.CreateUpdateDeleteStage.as_view(),
+		name="delete/stage"
     )
 ]

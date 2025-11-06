@@ -25,6 +25,7 @@ class CreateStage(CreateAPIView[Stage]):
     serializer_class = StageSerializer
     permission_classes = [IsAdminUser]
 
+
 # pylint: disable-next=unsubscriptable-object
 class UpdateStage(UpdateAPIView[Stage]):
     """Update tournament stage"""
