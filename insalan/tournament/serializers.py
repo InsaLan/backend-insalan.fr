@@ -37,6 +37,7 @@ from .models import (
     Seat,
     SeatSlot,
     Seeding,
+    Stage,
     GroupTiebreakScore,
     MatchStatus,
     BestofType,
@@ -1167,6 +1168,21 @@ class FullDerefEventSerializer(serializers.ModelSerializer[Event]):
         fields = "__all__"
 
 
+class StageSerializer(serializers.ModelSerializer[Stage]):
+    """Stage serializer"""
+
+    class Meta:
+        model = Stage
+        fields = "__all__"
+
+class StageField(serializers.ModelSerializer[Stage]):
+    """Serializer for a stage when used as a field in another serializer"""
+
+    class Meta:
+        model = Stage
+        exclude = ["tournament"]
+
+
 class FullDerefEventTournamentSerializer(serializers.ModelSerializer[EventTournament]):
     """Serializer for a Tournament with all fields serialized"""
 
@@ -1179,6 +1195,7 @@ class FullDerefEventTournamentSerializer(serializers.ModelSerializer[EventTourna
     event = FullDerefEventSerializer()
     game = GameSerializer()
     seatslots = FullDerefSeatSlotSerializer(many=True, source="seatslot_set")
+    stages = StageField(many=True, source="stage_set")
 
     class Meta:
         model = EventTournament

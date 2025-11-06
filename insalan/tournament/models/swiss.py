@@ -26,6 +26,12 @@ class SwissRound(models.Model):
     min_score = models.IntegerField(
         verbose_name=_("Score minimal pour la qualification")
     )
+    stage = models.ForeignKey(
+        "Stage",
+        verbose_name=_("Phase du tournoi"),
+        on_delete=models.CASCADE,
+        null=True
+    )
 
     class Meta:
         verbose_name = _("Ronde Suisse")

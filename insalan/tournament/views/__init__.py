@@ -8,3 +8,4 @@ from .team import *
 from .tournament import *
 from .bracket import *
 from .swiss import *
+from .stage import *

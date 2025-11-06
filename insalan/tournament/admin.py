@@ -58,6 +58,7 @@ from .models import (
     Seat,
     SeatSlot,
     Seeding,
+    Stage,
     Substitute,
     SwissMatch,
     SwissRound,
@@ -95,7 +96,8 @@ ADMIN_ORDERING += [
         'KnockoutMatch',
         'SwissRound',
         'SwissMatch',
-        'GroupTiebreakScore'
+        'GroupTiebreakScore',
+        'Stage'
     ]),
 ]
 
@@ -2217,3 +2219,31 @@ class SeatSlotAdmin(ModelAdmin):  # type: ignore
 
 
 admin.site.register(SeatSlot, SeatSlotAdmin)
+
+
+# pylint: disable-next=unsubscriptable-object
+class StageBracketInline(admin.TabularInline[Bracket, Stage]):
+    model = Bracket
+    extra = 1
+
+# pylint: disable-next=unsubscriptable-object
+class StageGroupInline(admin.TabularInline[Group, Stage]):
+    model = Group
+    extra = 1
+
+
+# pylint: disable-next=unsubscriptable-object
+class StageSwissInline(admin.TabularInline[SwissRound, Stage]):
+    model = SwissRound
+    extra = 1
+
+# pylint: disable-next=unsubscriptable-object
+class StageAdmin(admin.ModelAdmin[Stage]):
+    """Admin handler for tournament stage"""
+
+    list_display = ("id", "tournament", "name", "index")
+    list_filter = ["tournament"]
+    search_fields = ["tournament"]
+    inlines = [StageBracketInline, StageGroupInline, StageSwissInline]
+
+admin.site.register(Stage, StageAdmin)
