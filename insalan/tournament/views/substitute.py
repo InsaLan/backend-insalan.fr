@@ -114,8 +114,10 @@ class SubstituteRegistration(generics.RetrieveAPIView[Substitute]):
             }, status=status.HTTP_403_FORBIDDEN)
 
         if "name_in_game" in data:
-            if valid_name(substitute.team.tournament.game, data["name_in_game"]):
+            substitute_data = valid_name(substitute.team.tournament.game, data["name_in_game"])
+            if substitute_data:
                 substitute.name_in_game = data["name_in_game"]
+                substitute.data.update(substitute_data)
             else:
                 return Response(
                     {"name_in_game": _("Pseudo invalide")},

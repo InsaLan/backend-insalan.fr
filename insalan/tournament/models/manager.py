@@ -47,6 +47,12 @@ class Manager(models.Model):
         blank=True,
         default=None,
     )
+    data = models.JSONField(
+        null=True,
+        blank=True,
+        default=dict,
+        verbose_name=_("Données additionnelles"),
+    )
 
     class Meta:
         """Meta Options"""

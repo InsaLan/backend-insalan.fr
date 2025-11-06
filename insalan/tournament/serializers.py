@@ -690,13 +690,21 @@ class TeamSerializer(serializers.ModelSerializer[Team]):
         ):
             raise serializers.ValidationError(_("Il manque des name_in_games de remplaçant⋅e⋅s"))
 
+        # prevent payloard injection
+        data["_validated_players"] = []
+        data["_validated_substitutes"] = []
+
         # Validate the name in game
         for name in data.get("players_names_in_game", []):
-            if not valid_name(data["tournament"].game, name):
+            info = valid_name(data["tournament"].game, name)
+            if not info:
                 raise serializers.ValidationError(_("Le pseudo en jeu n'est pas valide"))
+            data["_validated_players"].append(info)
         for name in data.get("substitutes_names_in_game", []):
-            if not valid_name(data["tournament"].game, name):
+            info = valid_name(data["tournament"].game, name)
+            if not info:
                 raise serializers.ValidationError(_("Le pseudo en jeu n'est pas valide"))
+            data["_validated_substitutes"].append(info)
 
         return data
 
@@ -709,21 +717,23 @@ class TeamSerializer(serializers.ModelSerializer[Team]):
         substitutes = validated_data.pop("get_substitutes_id", [])
         players_names_in_game = validated_data.pop("players_names_in_game", [])
         substitutes_names_in_game = validated_data.pop("substitutes_names_in_game", [])
+        data_players = validated_data.pop("_validated_players", [])
+        data_substitutes = validated_data.pop("_validated_substitutes", [])
 
         validated_data["password"] = make_password(validated_data.get("password", ""))
         team_obj = Team.objects.create(**validated_data)
 
-        for player, name_in_game in zip(players, players_names_in_game):
+        for player, name_in_game, data in zip(players, players_names_in_game, data_players):
             user_obj = User.objects.get(id=player)
-            Player.objects.create(user=user_obj, team=team_obj, name_in_game=name_in_game)
+            Player.objects.create(user=user_obj, team=team_obj, name_in_game=name_in_game, data=data)
 
         for manager in managers:
             user_obj = User.objects.get(id=manager)
             Manager.objects.create(user=user_obj, team=team_obj)
 
-        for sub, name_in_game in zip(substitutes, substitutes_names_in_game):
+        for sub, name_in_game, data in zip(substitutes, substitutes_names_in_game, data_substitutes):
             user_obj = User.objects.get(id=sub)
-            Substitute.objects.create(user=user_obj, team=team_obj, name_in_game=name_in_game)
+            Substitute.objects.create(user=user_obj, team=team_obj, name_in_game=name_in_game, data=data)
 
         return team_obj
 

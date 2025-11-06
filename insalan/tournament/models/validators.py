@@ -146,4 +146,4 @@ def valid_name(game_param: Game, name: str) -> bool:
     name_validator = game_param.get_name_validator()
     if name_validator is None:
         return True
-    return name_validator(name)
+    return name_validator.validate_name(name)

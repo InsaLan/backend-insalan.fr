@@ -112,10 +112,12 @@ class PlayerRegistration(generics.RetrieveAPIView[Player]):
             return Response({
                 "player": _("Vous n'avez pas la permission de modifier cette inscription.")
             }, status=status.HTTP_403_FORBIDDEN)
-
+            
         if "name_in_game" in data:
-            if valid_name(player.team.tournament.game, data["name_in_game"]):
+            player_data = valid_name(player.team.tournament.game, data["name_in_game"])
+            if player_data:
                 player.name_in_game = data["name_in_game"]
+                player.data.update(player_data)
             else:
                 return Response(
                     {"name_in_game": _("Pseudo invalide")},
