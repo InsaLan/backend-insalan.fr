@@ -383,6 +383,15 @@ class Notifications(APIView):
             state = data.get("state")
             if state == "Authorized":
                 # Ok we should be good now
+                # Retrieve the payer's name which will be useful for the event
+                payer = trans_obj.payer
+                data_first_name = data.get("payer", {}).get("firstName", "")
+                data_last_name = data.get("payer", {}).get("lastName", "")
+                if data_first_name != "" and payer.first_name == "":
+                    payer.first_name = data_first_name
+                if data_last_name != "" and payer.last_name == "":
+                    payer.last_name = data_last_name
+                payer.save()
                 trans_obj.validate_transaction()
 
             elif state in ["Refused", "Unknown"]:
