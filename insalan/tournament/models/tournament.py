@@ -146,6 +146,14 @@ class BaseTournament(PolymorphicModel):  # type: ignore[misc]
     def get_swiss_rounds_id(self) -> ValuesQuerySet[SwissRound, int]:
         return swiss.SwissRound.objects.filter(tournament=self).values_list("id",flat=True)
 
+    def update_name_in_game(self) -> None:
+        """Update all name_in_game of players and substitutes in the tournament"""
+        for team_obj in self.get_teams():
+            for player in team_obj.get_players():
+                player.update_name_in_game()
+            for substitute in team_obj.get_substitutes():
+                substitute.update_name_in_game()
+
 class PrivateTournament(BaseTournament):
     """
     A private Tournament without paid registration.

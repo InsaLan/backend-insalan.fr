@@ -121,7 +121,7 @@ class SubstituteRegistration(generics.RetrieveAPIView[Substitute]):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             substitute.name_in_game = data["name_in_game"]
-            substitute.data.update(substitute_data)
+            substitute.validator_data.update(substitute_data)
 
         try:
             substitute.save()

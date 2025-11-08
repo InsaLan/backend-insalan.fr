@@ -4,7 +4,7 @@ NameValidator class
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, ClassVar, Dict, Type, TYPE_CHECKING, cast
+from typing import Any, ClassVar, Type, TYPE_CHECKING, cast
 
 from django.utils.translation import gettext_lazy as _
 
@@ -22,7 +22,7 @@ class NameValidator(ABC):
 
     @staticmethod
     @abstractmethod
-    def validate_name(_name: str) -> Dict[str, Any] | None:
+    def validate_name(_name: str) -> dict[str, Any] | None:
         """
         This method is used to validate the name of a player
         Each validators should implement this method
@@ -30,7 +30,7 @@ class NameValidator(ABC):
 
     @staticmethod
     @abstractmethod
-    def update_name(_name: str, _data: Dict[str, Any]) -> str:
+    def update_name(_name: str, _data: dict[str, Any]) -> str:
         """
         This method is used to update the name of a player
         Each validators should implement this method
@@ -45,12 +45,12 @@ class EmptyNameValidator(NameValidator):
     name = _("Pas de Validation de nom")
 
     @staticmethod
-    def validate_name(_name: str) -> Dict[str, Any] | None:
+    def validate_name(_name: str) -> dict[str, Any] | None:
         # No validation required: return an empty dict to indicate success
         return {}
 
     @staticmethod
-    def update_name(_name: str, _data: Dict[str, Any]) -> str:
+    def update_name(_name: str, _data: dict[str, Any]) -> str:
         return _name
 
 class LeagueOfLegendsNameValidator(NameValidator):
@@ -61,7 +61,7 @@ class LeagueOfLegendsNameValidator(NameValidator):
     name = _("Validation League of Legends")
 
     @staticmethod
-    def validate_name(name: str) -> Dict[str, Any] | None:
+    def validate_name(name: str) -> dict[str, Any] | None:
         """
         This method is used to validate the name of a LoL player
         """
@@ -101,7 +101,7 @@ class LeagueOfLegendsNameValidator(NameValidator):
         return data
 
     @staticmethod
-    def update_name(name: str, data: Dict[str, Any]) -> str:
+    def update_name(name: str, data: dict[str, Any]) -> str:
         """
         This method is used to update the name of a LoL player based on the puuid
         """
@@ -121,7 +121,7 @@ class LeagueOfLegendsNameValidator(NameValidator):
             return name
 
         # Type the JSON response to avoid returning Any and validate fields
-        json_data = cast(Dict[str, Any], response.json())
+        json_data = cast(dict[str, Any], response.json())
 
         game_name = json_data.get("gameName")
         tag_line = json_data.get("tagLine")

@@ -69,7 +69,7 @@ class Player(models.Model):
         blank=False,
         verbose_name=_("Pseudo en jeu"),
     )
-    data = models.JSONField(
+    validator_data = models.JSONField(
         null=True,
         blank=True,
         default=dict,
@@ -136,7 +136,20 @@ class Player(models.Model):
             raise ValidationError(
                 _("Le pseudo en jeu n'est pas valide")
             )
-        self.data.update(info)
+        self.validator_data.update(info)
+
+    def update_name_in_game(self) -> None:
+        """
+        Update and validate the name_in_game of the player
+        """
+        data = self.validator_data
+        validator = self.team.tournament.game.get_name_validator()
+        if validator is not None:
+            new_name_in_game = validator.update_name(self.name_in_game, data)
+
+            if new_name_in_game != self.name_in_game:
+                self.name_in_game = new_name_in_game
+                self.save()
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         super().save(*args, **kwargs)

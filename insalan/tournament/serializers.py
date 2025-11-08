@@ -726,7 +726,7 @@ class TeamSerializer(serializers.ModelSerializer[Team]):
         for player, name_in_game, data in zip(players, players_names_in_game, data_players):
             user_obj = User.objects.get(id=player)
             Player.objects.create(
-                user=user_obj, team=team_obj, name_in_game=name_in_game, data=data
+                user=user_obj, team=team_obj, name_in_game=name_in_game, validator_data=data
             )
 
         for manager in managers:
@@ -738,7 +738,7 @@ class TeamSerializer(serializers.ModelSerializer[Team]):
         ):
             user_obj = User.objects.get(id=sub)
             Substitute.objects.create(
-                user=user_obj, team=team_obj, name_in_game=name_in_game, data=data
+                user=user_obj, team=team_obj, name_in_game=name_in_game, validator_data=data
             )
 
         return team_obj
@@ -829,12 +829,12 @@ class PlayerSerializer(serializers.ModelSerializer[Player]):
             raise serializers.ValidationError(_("Ce tournoi n'est pas encore annoncé"))
 
         # prevent payload injection
-        data["data"] = {}
+        data["validator_data"] = {}
 
         info = valid_name(data["team"].tournament.game, data["name_in_game"])
         if info is None:
             raise serializers.ValidationError(_("Le pseudo en jeu n'est pas valide"))
-        data["data"] = info
+        data["validator_data"] = info
 
         return data
 
@@ -917,12 +917,12 @@ class SubstituteSerializer(serializers.ModelSerializer[Substitute]):
             )
 
         # prevent payload injection
-        data["data"] = {}
+        data["validator_data"] = {}
 
         info = valid_name(data["team"].tournament.game, data["name_in_game"])
         if info is None:
             raise serializers.ValidationError(_("Le pseudo en jeu n'est pas valide"))
-        data["data"] = info
+        data["validator_data"] = info
 
         return data
 

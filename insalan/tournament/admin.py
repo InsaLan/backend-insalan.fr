@@ -396,6 +396,8 @@ class EventTournamentAdmin(admin.ModelAdmin[EventTournament]):
 
     list_filter = (EventTournamentFilter, GameTournamentFilter)
 
+    actions = ['update_name']
+
     def get_form(
         self,
         request: HttpRequest,
@@ -419,6 +421,14 @@ class EventTournamentAdmin(admin.ModelAdmin[EventTournament]):
 
     get_occupancy.short_description = 'Remplissage'  # type: ignore[attr-defined]
 
+    @admin.action(description=_("Mettre à jour les pseudos"))
+    def update_name(
+        self, request: HttpRequest, queryset: QuerySet[EventTournament]
+    ) -> None:
+        for tournament in queryset:
+            tournament.update_name_in_game()
+        self.message_user(request,_("Les pseudo ont été mis à jour."))
+
     class Media:
         css = {
             'all': ('css/seat_canvas.css',)
@@ -439,6 +449,8 @@ class PrivateTournamentAdmin(admin.ModelAdmin[PrivateTournament]):
     list_display = ("id", "name", "game", "get_occupancy")
     search_fields = ["name", "game__name"]
 
+    actions = ['update_name']
+
     def get_occupancy(self, obj: PrivateTournament) -> str:
         """
         Returns the occupancy of the tournament
@@ -447,6 +459,14 @@ class PrivateTournamentAdmin(admin.ModelAdmin[PrivateTournament]):
             tournament=obj,
             validated=True,
         ).count()) + " / " + str(obj.maxTeam)
+
+    @admin.action(description=_("Mettre à jour les pseudos"))
+    def update_name(
+        self, request: HttpRequest, queryset: QuerySet[EventTournament]
+    ) -> None:
+        for tournament in queryset:
+            tournament.update_name_in_game()
+        self.message_user(request,_("Les pseudo ont été mis à jour."))
 
     get_occupancy.short_description = 'Remplissage'  # type: ignore[attr-defined]
 
@@ -867,7 +887,7 @@ class PlayerAdmin(admin.ModelAdmin[Player]):  # pylint: disable=unsubscriptable-
 
     list_display = ("id", "user", "name_in_game", "team", "payment_status", "get_tournament")
     search_fields = ["user__username", "team__name", "name_in_game"]
-    readonly_fields = ("data",)
+    readonly_fields = ("validator_data",)
     add_fieldsets: tuple[tuple[str | None, FieldOpts]] = (
         (None, {"fields": ("user", "team", "payment_status", "ticket", "name_in_game")}),
     )
@@ -921,14 +941,7 @@ class PlayerAdmin(admin.ModelAdmin[Player]):  # pylint: disable=unsubscriptable-
             )
 
         # perform the update
-        old_name_in_game = player.name_in_game
-        data = player.data
-        validator = player.team.tournament.game.get_name_validator()
-        if validator is not None:
-            new_name_in_game = validator.update_name(old_name_in_game, data)
-
-            player.name_in_game = new_name_in_game
-            player.save()
+        player.update_name_in_game()
 
         msg = _("The name in game was successfully updated to ") + player.name_in_game + "."
         messages.success(request, msg)
@@ -988,7 +1001,7 @@ class SubstituteAdmin(admin.ModelAdmin[Substitute]):  # pylint: disable=unsubscr
 
     list_display = ("id", "user", "name_in_game", "team", "payment_status", "get_tournament")
     search_fields = ["user__username", "team__name", "name_in_game"]
-    readonly_fields = ("data",)
+    readonly_fields = ("validator_data",)
     add_fieldsets: tuple[tuple[str | None, FieldOpts]] = (
         (None, {"fields": ("user", "team", "payment_status", "ticket", "name_in_game")}),
     )
@@ -1042,14 +1055,7 @@ class SubstituteAdmin(admin.ModelAdmin[Substitute]):  # pylint: disable=unsubscr
             )
 
         # perform the update
-        old_name_in_game = substitute.name_in_game
-        data = substitute.data
-        validator = substitute.team.tournament.game.get_name_validator()
-        if validator is not None:
-            new_name_in_game = validator.update_name(old_name_in_game, data)
-
-            substitute.name_in_game = new_name_in_game
-            substitute.save()
+        substitute.update_name_in_game()
 
         msg = _("The name in game was successfully updated to ") + substitute.name_in_game + "."
         messages.success(request, msg)

@@ -121,7 +121,7 @@ class PlayerRegistration(generics.RetrieveAPIView[Player]):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             player.name_in_game = data["name_in_game"]
-            player.data.update(player_data)
+            player.validator_data.update(player_data)
 
         try:
             player.save()
