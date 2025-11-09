@@ -147,7 +147,7 @@ class Command(BaseCommand):
                     name="tourney_" + generate_garbage(randint(20, 30)),
                     rules=generate_garbage(randint(40000, 45000)),
                     is_announced=randint(0, 100) < 80,
-                    maxTeam=randint(16, 32),
+                    max_team_thresholds=[16, 32, 64],
                 )
                 print(tourney)
 

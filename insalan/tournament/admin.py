@@ -419,7 +419,7 @@ class EventTournamentAdmin(ModelAdmin[EventTournament]): # type: ignore
         return str(Team.objects.filter(
             tournament=obj,
             validated=True,
-        ).count()) + " / " + str(obj.maxTeam)
+        ).count()) + " / " + str(obj.get_max_team())
 
     get_occupancy.short_description = 'Remplissage'  # type: ignore[attr-defined]
 
@@ -460,7 +460,7 @@ class PrivateTournamentAdmin(ModelAdmin[PrivateTournament]): # type: ignore
         return str(Team.objects.filter(
             tournament=obj,
             validated=True,
-        ).count()) + " / " + str(obj.maxTeam)
+        ).count()) + " / " + str(obj.get_max_team())
 
     @admin.action(description=_("Mettre à jour les pseudos"))
     def update_name(
