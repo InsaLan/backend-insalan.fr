@@ -27,7 +27,7 @@ def generate_groups(tournament: BaseTournament, count: int, team_per_group: int,
         )))
     else:
         teams = list(Team.objects.filter(tournament=tournament, validated=True))
-    teams += [None] * (tournament.maxTeam - len(teams))
+    teams += [None] * (tournament.get_max_team() - len(teams))
 
     for i in range(count):
         group = Group.objects.create(tournament=tournament, name=names[i],

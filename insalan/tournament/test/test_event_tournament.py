@@ -50,10 +50,18 @@ class EventTournamentTestCase(TestCase):
         game_one = Game.objects.create(name="Test Game One")
         game_two = Game.objects.create(name="Test Game Two")
         game_three = Game.objects.create(name="Test Game Three")
-        EventTournament.objects.create(name="Tourney 1", game=game_one, event=event)
-        EventTournament.objects.create(name="Tourney 2", game=game_two, event=event)
-        EventTournament.objects.create(name="Tourney 3", game=game_three, event=event)
-        EventTournament.objects.create(name="Tourney 4", game=game_three, event=event_two)
+        EventTournament.objects.create(
+            name="Tourney 1", game=game_one, event=event, max_team_thresholds=[8,16,32]
+        )
+        EventTournament.objects.create(
+            name="Tourney 2", game=game_two, event=event, max_team_thresholds=[8,16,32]
+        )
+        EventTournament.objects.create(
+            name="Tourney 3", game=game_three, event=event, max_team_thresholds=[8,16,32]
+        )
+        EventTournament.objects.create(
+            name="Tourney 4", game=game_three, event=event_two, max_team_thresholds=[8,16,32]
+        )
 
     def test_tournament_null_event(self) -> None:
         """Test failure of creation of a Tournament with no event"""
@@ -200,6 +208,7 @@ class TournamentFullDerefEndpoint(APITestCase):
             rules="have fun!",
             game=game_obj,
             is_announced=True,
+            max_team_thresholds=[8,16,32],
         )
         team_one = Team.objects.create(name="Team One", tournament=tourneyobj_one)
         first = Player.objects.create(user=uobj_one, team=team_one, name_in_game="playerone")
@@ -267,7 +276,8 @@ class TournamentFullDerefEndpoint(APITestCase):
             "name": "Test Tournament",
             "rules": "have fun!",
             "is_announced": True,
-            "maxTeam": tourneyobj_one.maxTeam,
+            "max_team_thresholds": [8, 16, 32],
+            "current_threshold_index": 0,
             # I don't know what's happenin with timezones here
             "registration_open": timezone.make_aware(
                 timezone.make_naive(tourneyobj_one.registration_open)
