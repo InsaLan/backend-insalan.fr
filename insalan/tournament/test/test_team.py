@@ -77,13 +77,13 @@ class TeamTestCase(TestCase):
             event=event_one,
             game=game,
             is_announced=True,
-            maxTeam = 10
+            max_team_thresholds = [10, 20, 30],
         )
         trnm_two = EventTournament.objects.create(
             event=event_one,
             game=game,
             is_announced=True,
-            maxTeam = 10
+            max_team_thresholds = [10, 20, 30],
         )
 
         team_lalooze: Team = Team.objects.create(
@@ -223,7 +223,7 @@ class TournamentTeamEndpoints(TestCase):
         trnm = EventTournament.objects.create(
             game=game,
             event=event,
-            maxTeam=16,
+            max_team_thresholds = [16, 32, 64],
             is_announced=True
         )
         Team.objects.create(
@@ -595,7 +595,7 @@ class TournamentTeamEndpoints(TestCase):
         trnm2 = EventTournament.objects.create(
             game=game2,
             event=event,
-            maxTeam=16,
+            max_team_thresholds = [16, 32, 64],
             is_announced=True
         )
 
@@ -648,7 +648,7 @@ class TournamentTeamEndpoints(TestCase):
         trnm2 = EventTournament.objects.create(
             game=game2,
             event=event,
-            maxTeam=16,
+            max_team_thresholds = [16, 32, 64],
             is_announced=True
         )
 
@@ -692,7 +692,7 @@ class TournamentTeamEndpoints(TestCase):
         trnm2 = EventTournament.objects.create(
             game=game2,
             event=event,
-            maxTeam=16,
+            max_team_thresholds = [16, 32, 64],
             is_announced=True
         )
 

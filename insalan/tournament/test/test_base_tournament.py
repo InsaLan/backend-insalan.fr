@@ -34,10 +34,18 @@ class BaseTournamentTestCase(TestCase):
         game_one = Game.objects.create(name="Test Game One")
         game_two = Game.objects.create(name="Test Game Two")
         game_three = Game.objects.create(name="Test Game Three")
-        BaseTournament.objects.create(name="Tourney 1", game=game_one)
-        BaseTournament.objects.create(name="Tourney 2", game=game_two)
-        BaseTournament.objects.create(name="Tourney 3", game=game_three)
-        BaseTournament.objects.create(name="Tourney 4", game=game_three)
+        BaseTournament.objects.create(
+            name="Tourney 1", game=game_one, max_team_thresholds=[8,16,32]
+        )
+        BaseTournament.objects.create(
+            name="Tourney 2", game=game_two, max_team_thresholds=[8,16,32]
+        )
+        BaseTournament.objects.create(
+            name="Tourney 3", game=game_three, max_team_thresholds=[8,16,32]
+        )
+        BaseTournament.objects.create(
+            name="Tourney 4", game=game_three, max_team_thresholds=[8,16,32]
+        )
 
     def test_tournament_null_game(self) -> None:
         """Test failure of creation of a Tournament with no game"""
