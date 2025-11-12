@@ -1073,6 +1073,9 @@ class FullDerefTeamSerializer2(serializers.ModelSerializer[Team]):
     managers = FullDerefManagerSerializer(many=True, source="manager_set", read_only=True)
     # pylint: disable-next=unsubscriptable-object
     captain: SlugRelatedField[Player] = SlugRelatedField(slug_field="name_in_game", read_only=True)
+    is_waiting_for_threshold = serializers.BooleanField(
+        read_only=True, source="get_is_waiting_for_threshold"
+    )
 
     class Meta:
         """Meta options of the team serializer"""

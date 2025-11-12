@@ -202,6 +202,11 @@ class Team(models.Model):
         # If successful, the team might now be valid
         expanded = self.tournament.try_expand_threshold()
 
+        # Refresh the validated status from the database
+        # This is necessary because the 'self' instance is not the same
+        # as the one used in the subfunctions called
+        self.refresh_from_db(fields=['validated'])
+
         # Check if the team can now be validated
         if not expanded:
             validated_count = self.tournament.get_validated_teams()
@@ -216,7 +221,24 @@ class Team(models.Model):
                     # Should not be necessary, but double check
                     self.tournament.try_expand_threshold()
 
+        # Save the team to update captain if needed
         self.save()
+
+    def get_is_waiting_for_threshold(self) -> bool:
+        """
+        Determine if the team is waiting for the next threshold to be validated
+        """
+        if self.validated:
+            return False
+
+        validated_count = self.tournament.get_validated_teams()
+        current_max = self.tournament.get_max_team()
+
+        if validated_count >= current_max:
+            if self.tournament.team_meets_validation_criteria(self):
+                return True
+
+        return False
 
     def clean(self) -> None:
         """
