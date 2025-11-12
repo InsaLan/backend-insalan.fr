@@ -312,6 +312,7 @@ class TournamentFullDerefEndpoint(APITestCase):
                     "captain": first.name_in_game,
                     "validated": team_one.validated,
                     "seat_slot": None,
+                    "is_waiting_for_threshold": False,
                 }
             ],
             "logo": None,
