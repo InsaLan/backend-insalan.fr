@@ -103,6 +103,9 @@ class User(AbstractUser, PermissionsMixin):
     )
     first_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=50, blank=True)
+    confirm_name = models.BooleanField(
+        verbose_name="Ask to confirm name next time the user logs in", default=False
+    )
     display_name = models.CharField(max_length=50, blank=True)
     pronouns = models.CharField(max_length=20, blank=True, null=False, default="")
     status = models.CharField(max_length=100, blank=True, null=False, default="")
