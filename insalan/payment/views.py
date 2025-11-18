@@ -291,6 +291,22 @@ class Notifications(APIView):
             trans_obj.touch()
             trans_obj.save()
 
+            # Retrieve the payer's name which will be useful for the event
+            payer = trans_obj.payer
+            if payer is not None:
+                data_first_name = data.get("payer", {}).get("firstName", "")
+                data_last_name = data.get("payer", {}).get("lastName", "")
+                modified = False
+                if data_first_name != "" and payer.first_name == "":
+                    payer.first_name = data_first_name
+                    modified = True
+                if data_last_name != "" and payer.last_name == "":
+                    payer.last_name = data_last_name
+                    modified = True
+                if modified or payer.first_name == "" or payer.last_name == "":
+                    payer.confirm_name = True
+                payer.save()
+
             payments = data.get("payments")
             if payments is None:
                 logger.warning(
@@ -383,21 +399,6 @@ class Notifications(APIView):
             state = data.get("state")
             if state == "Authorized":
                 # Ok we should be good now
-                # Retrieve the payer's name which will be useful for the event
-                payer = trans_obj.payer
-                if payer is not None:
-                    data_first_name = data.get("payer", {}).get("firstName", "")
-                    data_last_name = data.get("payer", {}).get("lastName", "")
-                    modified = False
-                    if data_first_name != "" and payer.first_name == "":
-                        payer.first_name = data_first_name
-                        modified = True
-                    if data_last_name != "" and payer.last_name == "":
-                        payer.last_name = data_last_name
-                        modified = True
-                    if modified or payer.first_name == "" or payer.last_name == "":
-                        payer.confirm_name = True
-                    payer.save()
                 trans_obj.validate_transaction()
 
             elif state in ["Refused", "Unknown"]:
