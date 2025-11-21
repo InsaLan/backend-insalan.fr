@@ -1,9 +1,9 @@
-# La Pile Logiciel
+# La pile logicielle
 
-On appelle **pile logiciel** l'ensemble des logiciels déployés qui permettent de
+On appelle **pile logicielle** l'ensemble des logiciels déployés qui permettent de
 déployer un service.
 
-Dans le domaine du web, la pile logiciel comprends généralement 3 composantes de
+Dans le domaine du web, la pile logicielle comprend généralement 3 composantes de
 base:
  - Le serveur web
  - Le backend
@@ -13,18 +13,18 @@ Mais où est le frontend? Pas de panique. Le frontend est en realité une
 combinaison de code HTML, CSS et JavaScript qui est servi par le serveur web,
 auquel le navigateur se connecte.
 
-Toute la pile est déployé sur le ou les serveurs de production. Typiquement,
-l'avantage d'avoir ces composants séparés est qu'ils peuvent se situer sur des
+Toute la pile est déployée sur le ou les serveurs de production. Typiquement,
+l'avantage d'avoir ces composantes séparées est qu'elles peuvent se situer sur des
 serveurs différents, ce qui permet de passer à l'échelle (augmenter le nombre de
-serveurs pour servir plus de mondes), ou de changer des serveurs si besoin sans
-rien montrer aux utilisateur⋅ices.
+serveurs pour servir plus de monde), ou de changer des serveurs si besoin sans
+rien montrer aux utilisateur⋅rice·s.
 
 L'InsaLan a un VPS, donc nous faisons avec les moyens du bord.
 
-## Nos Technologies
+## Nos technologies
 
 Nous avons choisi d'utiliser les technologies suivantes pour les différentes
-composantes de notre pile logiciel:
+composantes de notre pile logicielle:
 
  - [Nginx](https://www.nginx.com/) est notre serveur web. Il a été choisi car il
      est relativement moderne, fonctionnel, et qu'il est déjà déployé sur le VPS
@@ -41,17 +41,16 @@ composantes de notre pile logiciel:
      relationnelles utilisant le langage PostgreSQL. C'est notre choix de base
      de données relationnelle pour les données persistantes représentées sous
      forme d'[objets](../02-structure/applications/modeles.md).
- - [MongoDB](https://www.mongodb.com/) est notre base de donnée non
+ - [MongoDB](https://www.mongodb.com/) est notre base de données non
      relationnelle, qui gère l'entièreté des données persistantes de type
      documents (par exemple les textes à afficher sur le site).
 
-## Autres Technologies Hors de la Pile
+## Autres technologies hors de la pile
 
 On notera aussi que toute notre pile est déployée via
-[Docker](https://www.docker.com/), qui est un système de conteneurisation, c'est
-à dire qu'il crée des environnements isolés sur le système dans lequel les
+[Docker](https://www.docker.com/), qui est un système de conteneurisation, c'est-à-dire qu'il crée des environnements isolés sur le système dans lequel les
 programmes s'exécutent, permettant d'avoir une organisation reproductible d'une
-machine à l'autre d'une pile logiciel. Nous organisons la pile dans un [Docker
+machine à l'autre d'une pile logicielle. Nous organisons la pile dans un [Docker
 compose](https://docs.docker.com/compose/), qui est une méthode de description
 de conteneurs Docker qui permet ensuite de créer tout un ensemble de conteneurs,
 et les orchestrer d'une seule commande et tous ensemble.
