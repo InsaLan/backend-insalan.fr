@@ -10,10 +10,10 @@ l'air de savoir de quoi iels parlent, sauf toi.
 
 Poses toi, prends un café ☕ (ou un thé 🫖), et commençons simplement.
 
-On commencera simplement par parles des choses à connaître *avant* de plonger la
+On commencera simplement par parler des choses à connaître *avant* de plonger la
 tête la première dans le code. Même si c'est une approche valide (qui permet
 d'apprendre par l'exemple), autant savoir à quoi s'attendre. Ensuite, il y aura
-une description de *la pile logiciel utilisée*, puis un tutoriel sur
+une description de *la pile logicielle utilisée*, puis un tutoriel sur
 *l'installation des outils*. Enfin, on parlera de la structure des dépôts, et
 comment les utiliser.
 
