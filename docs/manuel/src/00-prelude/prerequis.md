@@ -1,4 +1,4 @@
-# Connaissances Prérequises
+# Connaissances prérequises
 
 Avant de plonger la tête la première dans le code du backend, il faut savoir de
 quoi on parle.
@@ -6,15 +6,15 @@ quoi on parle.
 Ça va aller vite, prenons notre temps, et si quelque chose n'est pas clair,
 quelqu'un d'autre saura certainement l'expliquer à nouveau.
 
-## Backend VS Frontend
+## Backend VS frontend
 
 Dans une infrastructure de site web, un **backend** est la partie du site qui
 gère le traitement des données. C'est cette partie là qui contient beaucoup
 d'opérations compliquées, et qui interagit avec toutes les parties cachées du
-site que l'utilisateur⋅ice n'est pas censé⋅e voir, en principe.
+site que l'utilisateur⋅rice n'est pas censé⋅e voir, en principe.
 
 Le backend est typiquement un programme distinct de son pendant, le
-**frontend**, qui est lui directement présenté à l'utilisateur⋅ice. C'est ce
+**frontend**, qui est lui directement présenté à l'utilisateur⋅rice. C'est ce
 programme de frontend qui tourne sur son navigateur, qui lui présente les
 données formatées en page web, et cache toutes les interactions avec le backend.
 
@@ -22,8 +22,8 @@ Il n'est pas nécessaire de savoir écrire une page web à la main pour gérer l
 backend, mais il faut néanmoins savoir que l'on écrit du code avec lequel le
 frontend interagit, et garder cela en tête quand l'on conçoit les interactions.
 
-Parfois on entendra aussi parler de **middleware**, qui, comme leur noms
-l'indiquent, sont au milieu de ces interactions. En réalité, ce sont des
+Parfois on entendra aussi parler de **middlewares**, qui, comme leur nom
+l'indique, sont au milieu de ces interactions. En réalité, ce sont des
 composants du backend, mais ils modifient les demandes et retour du/vers le
 frontend selon leur travail. Par exemple, un des middlewares déployés sur le
 projet du site permet de [traduire](./../03-existant/traductions.md) les chaînes de
@@ -42,7 +42,7 @@ URL](https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Web_mechani
 
 ![Anatomie d'une URL](https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Web_mechanics/What_is_a_URL/mdn-url-all.png)
 
-Nous sommes principalement intéressé⋅es par ce qui se situe après le port ou le
+Nous sommes principalement intéressé⋅e·s par ce qui se situe après le port ou le
 nom de domaine, mais connaître ces concepts aide aussi à comprendre ce qui se
 passe quand on développe le backend. En effet, le frontend interagit avec le
 backend au travers de requêtes sur des URLs qui forment ce que l'on appelle une
@@ -59,8 +59,8 @@ cache une ressource au lieu de la redemander au serveur.
 
 ### Verbes HTTP
 
-Le protocol HTTP peut utiliser 7 verbes:
- 1. `GET`: pour récupérer une ressource (document, entité, etc)
+Le protocole HTTP peut utiliser 7 verbes:
+ 1. `GET`: pour récupérer une ressource (document, entité, etc.)
  2. `POST`: pour créer une ressource
  3. `PATCH`: pour mettre à jour des morceaux d'une ressource
  4. `PUT`: pour remplacer une ressource
@@ -91,27 +91,27 @@ détruire.
 Nous utilisons peu les paramètres d'URL dans notre API, mais certaines API les
 utilisent pour passer des arguments optionnels aux requêtes.
 
-## Base de donnée
+## Base de données
 
 Le backend enregistre ses données persistantes (c'est-à-dire qui sont maintenues
 d'une exécution à l'autre) dans une ou plusieurs **bases de données**. Les bases
 de données **relationnelles** sont constituées de tables, qui contiennent des
 entrées. Une table associe des clefs avec des valeurs, selon une structure de
-champs qui lui est propre, aussi appelé **schema**.
+champs qui lui est propre, aussi appelé **schéma**.
 
-Par exemple, une base de donnée relationnelle pour gérer le stock d'un vendeur
-de vins pourrait contenir une table pour les clients, une table pour les
-produits, une table pour les transactions effectuées, etc. La table des produits
+Par exemple, une base de données relationnelle pour gérer le stock d'un vendeur
+de vins pourrait contenir une table pour les client·e·s, une table pour les
+produits, une table pour les transactions effectuées, etc.. La table des produits
 pourrait associer un numéro d'identifiant (`id`) unique à un produit décrit par
 son type (`rouge`, `blanc`, …), son vignoble (un champs de texte), son
-millésime (un entier), etc. La table aurait un schema où chaque entrée contient
+millésime (un entier), etc.. La table aurait un schéma où chaque entrée contient
 les champs `(id, type, vignoble, millesime)`.
 
 Les bases de données relationnelles modernes reposent pour beaucoup sur un
 standard de langage commun nommé *Structured Query Language*, ou **SQL**.
 
-Une base de donnée **non-relationnelle** associe généralement simplement une
-clef à une valeur. Nous les utiliserons principalement pour stocker des grosses
+Une base de données **non-relationnelle** associe généralement simplement une
+clef à une valeur. Nous l'utiliserons principalement pour stocker des grosses
 quantités de texte à afficher sur le site. Par opposition aux bases précédentes,
 on appelle souvent ces bases de données des bases **NoSQL**.
 
@@ -122,12 +122,12 @@ extrêmement puissant, mais qu'il est trop long de décrire. Il existe
 heureusement une
 [formation](https://git.vulpinecitrus.info/Lymkwi/surviving-git/src/branch/master/build/default/default.pdf)
 qui permet de se familiariser avec les commandes de base de `git` et pourquoi
-elles fonctionnent comme elles fonctionnes.
+elles fonctionnent comme elles fonctionnent.
 
 L'idée globale cependant: `git` permet de capturer des sauvegardes successives
 de notre code, et de les associer à du texte pour expliquer les modifications
 effectuées. Ces captures (ou « commits ») peuvent ensuite être partagées et
-distribuées à d'autres contributeur⋅ices du projet pour collaborer ensemble.
+distribuées à d'autres contributeur⋅rice·s du projet pour collaborer ensemble.
 
 ## Python
 
