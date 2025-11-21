@@ -10,7 +10,7 @@ from django.db.models.query import QuerySet
 from django.contrib import admin, messages
 from django.http import HttpRequest
 from django.utils.translation import gettext as _
-from unfold.admin import ModelAdmin
+from unfold.admin import ModelAdmin # type: ignore
 
 from insalan.settings import EMAIL_AUTH
 from insalan.mailer import MailManager
@@ -36,7 +36,7 @@ class OngoingTournamentFilter(admin.SimpleListFilter):
         return queryset
 
 
-class TicketAdmin(ModelAdmin[Ticket]):  # pylint: disable=unsubscriptable-object
+class TicketAdmin(ModelAdmin):  # type: ignore
     """
     Admin class for the Ticket model
     """

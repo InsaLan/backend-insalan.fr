@@ -4,12 +4,12 @@ from django.contrib import admin
 from django.db.models.query import QuerySet
 from django.http import HttpRequest, HttpResponse
 from django.utils.translation import gettext_lazy as _
-from unfold.admin import ModelAdmin
+from unfold.admin import ModelAdmin # type: ignore
 
 from .models import Product, Transaction, Payment, TransactionStatus, Discount
 
 
-class ProductAdmin(ModelAdmin[Product]):  # pylint: disable=unsubscriptable-object
+class ProductAdmin(ModelAdmin):  # type: ignore
     """Admin handler for Products"""
 
     list_display = ("id", "price", "name", "desc", "category", "associated_tournament",
@@ -32,7 +32,7 @@ admin.site.register(Product, ProductAdmin)
 #             break
 
 
-class PaymentAdmin(ModelAdmin[Payment]):  # pylint: disable=unsubscriptable-object
+class PaymentAdmin(ModelAdmin):  # type: ignore
     """Admin handler for payments."""
 
     list_display = ("id", "amount", "transaction")
@@ -76,7 +76,7 @@ class PaymentAdmin(ModelAdmin[Payment]):  # pylint: disable=unsubscriptable-obje
 admin.site.register(Payment, PaymentAdmin)
 
 
-class TransactionAdmin(ModelAdmin[Transaction]):  # pylint: disable=unsubscriptable-object
+class TransactionAdmin(ModelAdmin):  # type: ignore
     """
     Admin handler for Transactions
     In the backoffice, Transactions can only be seen, they cannot be add,
@@ -123,7 +123,7 @@ class TransactionAdmin(ModelAdmin[Transaction]):  # pylint: disable=unsubscripta
 admin.site.register(Transaction, TransactionAdmin)
 
 
-class DiscountAdmin(ModelAdmin[Discount]):  # pylint: disable=unsubscriptable-object
+class DiscountAdmin(ModelAdmin):  # type: ignore
     """
     Admin handler for Discounts
     """

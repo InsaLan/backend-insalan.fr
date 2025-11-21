@@ -20,8 +20,8 @@ from django.utils.html import escape
 from django.utils.safestring import SafeString
 from django.utils.translation import gettext as _
 from django.views.decorators.debug import sensitive_post_parameters
-from unfold.admin import ModelAdmin
-from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
+from unfold.admin import ModelAdmin # type: ignore
+from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm # type: ignore
 
 from insalan.mailer import MailManager
 from insalan.settings import EMAIL_AUTH
@@ -76,7 +76,7 @@ class Button(forms.Field):
         super().__init__(*args, **kwargs)
 
 
-class UserForm(UserChangeForm[User]):  # pylint: disable=unsubscriptable-object
+class UserForm(UserChangeForm):  # type: ignore
     """
     Custom form for the User model
     """
@@ -212,7 +212,7 @@ class CustomUserAdmin(DjangoUserAdmin):
         )
 
 @admin.register(User) # Register with Unfold fields for the theme
-class UserAdmin(CustomUserAdmin, ModelAdmin):
+class UserAdmin(CustomUserAdmin, ModelAdmin): # type: ignore
     # Forms loaded from `unfold.forms`
     form = UserChangeForm
     add_form = UserCreationForm
