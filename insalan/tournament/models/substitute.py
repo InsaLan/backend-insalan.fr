@@ -25,7 +25,7 @@ class Substitute(models.Model):
 
     user = models.ForeignKey(
         User,
-        verbose_name=_("Utilisateur⋅ice"),
+        verbose_name=_("Utilisateur⋅rice"),
         on_delete=models.CASCADE,
     )
     team = models.ForeignKey(

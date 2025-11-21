@@ -39,7 +39,7 @@ class Player(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        verbose_name=_("Utilisateur⋅ice"),
+        verbose_name=_("Utilisateur⋅rice"),
     )
     team = models.ForeignKey(
         "Team",

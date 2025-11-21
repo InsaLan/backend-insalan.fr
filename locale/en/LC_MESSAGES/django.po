@@ -323,7 +323,7 @@ msgstr "UUID"
 
 #: insalan/tickets/models.py:25 insalan/tournament/models.py:457
 #: insalan/tournament/models.py:528
-msgid "Utilisateur⋅ice"
+msgid "Utilisateur⋅rice"
 msgstr "User"
 
 #: insalan/tickets/models.py:28
@@ -342,7 +342,7 @@ msgid "UUID invalide"
 msgstr "Invalid UUID"
 
 #: insalan/tickets/tests.py:119 insalan/tickets/views.py:32
-msgid "Utilisateur⋅ice non trouvé⋅e"
+msgid "Utilisateur⋅rice non trouvé⋅e"
 msgstr "User not found"
 
 #: insalan/tickets/tests.py:127 insalan/tickets/tests.py:188
@@ -592,11 +592,11 @@ msgid "Utilisateur⋅rice"
 msgstr "User"
 
 #: insalan/user/models.py:75
-msgid "Utilisateur⋅ice⋅s"
+msgid "Utilisateur⋅rice⋅s"
 msgstr "Users"
 
 #: insalan/user/models.py:76
-msgid "L'utilisateur⋅ice a activé son courriel"
+msgid "L'utilisateur⋅rice a activé son courriel"
 msgstr "The user has verified their email"
 
 #: insalan/user/models.py:85
