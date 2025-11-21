@@ -1,4 +1,4 @@
-# Installer les Outils
+# Installer les outils
 
 Pour qu'il te soit possible de déployer et travailler sur le backend, il faut
 que tous les outils nécessaires soient installés.
