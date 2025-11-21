@@ -1,12 +1,12 @@
-# Docker de Développement
+# Docker de développement
 
 Le dépôt d'[infra](https://github.com/InsaLan/infra-insalan.fr) contient des
 recettes de Docker compose pour pouvoir déployer une pile en local.
 
-Il faudra que l'utilisateur qui lance ces commandes soit dans le groupe `docker`
+Il faudra que l'utilisateur·rice qui lance ces commandes soit dans le groupe `docker`
 du système, pour pouvoir accéder au démon Docker.
 
-## Lancer le Compose Dev
+## Lancer le compose dev
 
 En allant dans le dossier de l'infra, après checkout des modules, lancer:
 ```shell
