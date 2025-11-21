@@ -79,7 +79,7 @@ class User(AbstractUser, PermissionsMixin):
         """Meta options"""
 
         verbose_name = _("Utilisateur⋅rice")
-        verbose_name_plural = _("Utilisateur⋅ices")
+        verbose_name_plural = _("Utilisateur⋅ice⋅s")
         permissions = [("email_active", _("L'utilisateur⋅ice a activé son courriel"))]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

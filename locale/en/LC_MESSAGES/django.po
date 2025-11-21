@@ -513,7 +513,7 @@ msgid "Inscription d'un⋅e joueur⋅euse"
 msgstr "Player Registration"
 
 #: insalan/tournament/models.py:452
-msgid "Inscription de joueur⋅euses"
+msgid "Inscription de joueur⋅euse⋅s"
 msgstr "Player Registrations"
 
 #: insalan/tournament/models.py:471 insalan/tournament/models.py:536
@@ -592,7 +592,7 @@ msgid "Utilisateur⋅rice"
 msgstr "User"
 
 #: insalan/user/models.py:75
-msgid "Utilisateur⋅ices"
+msgid "Utilisateur⋅ice⋅s"
 msgstr "Users"
 
 #: insalan/user/models.py:76

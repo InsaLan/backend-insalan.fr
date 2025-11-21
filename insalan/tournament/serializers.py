@@ -807,7 +807,7 @@ class PlayerSerializer(serializers.ModelSerializer[Player]):
             del data["password"]
         if max_players_per_team_reached(data["team"]):
             raise serializers.ValidationError(
-                _("Nombre maximum de joueur⋅euses par équipe atteint")
+                _("Nombre maximum de joueur⋅euse⋅s par équipe atteint")
             )
         if not tournament_announced(data["team"].tournament):
             raise serializers.ValidationError(_("Ce tournoi n'est pas encore annoncé"))
