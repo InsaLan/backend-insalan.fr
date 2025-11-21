@@ -76,6 +76,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 INSTALLED_APPS = [
     "insalan.apps.InsalanConfig",
+    "unfold",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -200,7 +201,7 @@ LOCALE_PATHS = [path.join(BASE_DIR, 'locale')]
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = "v1/static/"
+STATIC_URL = "/v1/static/" # https://stackoverflow.com/a/73631136
 STATIC_ROOT = "v1/" + getenv("STATIC_ROOT", "static/")
 STATICFILES_DIRS = [path.join(BASE_DIR, "assets")]
 

@@ -8,10 +8,9 @@ from typing import Any
 from django import forms
 from django.db.models.query import QuerySet
 from django.contrib import admin, messages
-from django.contrib.admin import ModelAdmin, SimpleListFilter
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.admin import SimpleListFilter
+from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.contrib.auth.models import Permission
-from django.contrib.auth.forms import UserChangeForm
 from django.forms.renderers import BaseRenderer
 from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
 from django.core.exceptions import PermissionDenied
@@ -21,6 +20,8 @@ from django.utils.html import escape
 from django.utils.safestring import SafeString
 from django.utils.translation import gettext as _
 from django.views.decorators.debug import sensitive_post_parameters
+from unfold.admin import ModelAdmin
+from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
 from insalan.mailer import MailManager
 from insalan.settings import EMAIL_AUTH
@@ -88,14 +89,13 @@ class UserForm(UserChangeForm[User]):  # pylint: disable=unsubscriptable-object
         model = User
         fields = "__all__"
 
-
-class CustomUserAdmin(UserAdmin):
+class CustomUserAdmin(DjangoUserAdmin):
     """
     Custom admin panel for the User model
     """
-    assert UserAdmin.fieldsets is not None
+    assert DjangoUserAdmin.fieldsets is not None
     fieldsets = (
-        UserAdmin.fieldsets[0],
+        DjangoUserAdmin.fieldsets[0],
         (
             "Informations personnelles",
             {
@@ -103,14 +103,14 @@ class CustomUserAdmin(UserAdmin):
             },
         ),
         (
-            UserAdmin.fieldsets[2][0],
+            DjangoUserAdmin.fieldsets[2][0],
             {
-                'fields': (*UserAdmin.fieldsets[2][1]['fields'], 'confirmation'),
-                'classes': UserAdmin.fieldsets[2][1].get('classes', ''),
-                'description': UserAdmin.fieldsets[2][1].get('description', ''),
+                'fields': (*DjangoUserAdmin.fieldsets[2][1]['fields'], 'confirmation'),
+                'classes': DjangoUserAdmin.fieldsets[2][1].get('classes', ''),
+                'description': DjangoUserAdmin.fieldsets[2][1].get('description', ''),
             },
         ),
-        *UserAdmin.fieldsets[3:],
+        *DjangoUserAdmin.fieldsets[3:],
         (
             "Image",
             {
@@ -119,7 +119,7 @@ class CustomUserAdmin(UserAdmin):
         ),
     )
     # add email to the add user form
-    add_fieldsets: tuple[tuple[str | None, FieldOpts]] = UserAdmin.add_fieldsets + (
+    add_fieldsets: tuple[tuple[str | None, FieldOpts]] = DjangoUserAdmin.add_fieldsets + (
         ("Email", {
             'fields': ('email',),
         }),
@@ -135,7 +135,7 @@ class CustomUserAdmin(UserAdmin):
     list_display = ('id', 'username', 'email', 'is_staff', 'get_number_of_registration')
 
     # add custom sort filter by has email activated in permission
-    list_filter = (*UserAdmin.list_filter, EmailActivatedFilter)
+    list_filter = (*DjangoUserAdmin.list_filter, EmailActivatedFilter)
 
     def get_fieldsets(self, request: HttpRequest, obj: User | None = None
                       ) -> FieldSets:
@@ -211,6 +211,11 @@ class CustomUserAdmin(UserAdmin):
             )
         )
 
+@admin.register(User) # Register with Unfold fields for the theme
+class UserAdmin(CustomUserAdmin, ModelAdmin):
+    # Forms loaded from `unfold.forms`
+    form = UserChangeForm
+    add_form = UserCreationForm
+    change_password_form = AdminPasswordChangeForm
 
-admin.site.register(User, CustomUserAdmin)
 admin.site.register(Permission)

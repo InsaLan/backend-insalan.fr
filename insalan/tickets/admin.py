@@ -8,9 +8,9 @@ from typing import Any
 
 from django.db.models.query import QuerySet
 from django.contrib import admin, messages
-from django.contrib.admin import ModelAdmin
 from django.http import HttpRequest
 from django.utils.translation import gettext as _
+from unfold.admin import ModelAdmin
 
 from insalan.settings import EMAIL_AUTH
 from insalan.mailer import MailManager

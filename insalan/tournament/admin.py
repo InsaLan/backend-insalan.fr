@@ -7,7 +7,7 @@ from django import forms
 from django.db.models import ForeignKey
 from django.db.models.query import QuerySet
 from django.contrib import admin, messages
-from django.contrib.admin import helpers, ModelAdmin
+from django.contrib.admin import helpers
 from django.contrib.admin.options import IS_POPUP_VAR
 from django.contrib.auth import password_validation
 from django.contrib.auth.forms import (
@@ -28,6 +28,7 @@ from django.utils.safestring import SafeString
 from django.utils.translation import gettext as _
 from django.views.decorators.debug import sensitive_post_parameters
 from django.db.models import Q
+from unfold.admin import ModelAdmin
 
 from insalan.admin import ADMIN_ORDERING
 from insalan.mailer import MailManager
@@ -219,7 +220,7 @@ class GameForm(ModelForm[Game]):  # pylint: disable=unsubscriptable-object
         fields = "__all__"
 
 
-class GameAdmin(admin.ModelAdmin[Game]):  # pylint: disable=unsubscriptable-object
+class GameAdmin(ModelAdmin[Game]):  # pylint: disable=unsubscriptable-object
     """Admin handler for Games"""
     form = GameForm
 
@@ -388,7 +389,7 @@ class EventTournamentForm(ModelForm[EventTournament]):  # pylint: disable=unsubs
 
 
 # pylint: disable-next=unsubscriptable-object
-class EventTournamentAdmin(admin.ModelAdmin[EventTournament]):
+class EventTournamentAdmin(ModelAdmin[EventTournament]):
     """Admin handler for Tournaments"""
 
     list_display = ("id", "name", "event", "game", "is_announced", "cashprizes", "get_occupancy")
@@ -432,7 +433,7 @@ admin.site.register(EventTournament, EventTournamentAdmin)
 
 
 # pylint: disable-next=unsubscriptable-object
-class PrivateTournamentAdmin(admin.ModelAdmin[PrivateTournament]):
+class PrivateTournamentAdmin(ModelAdmin[PrivateTournament]):
     """
     Admin handler for PrivateTournament
     """
@@ -628,7 +629,7 @@ class ValidatedFilter(admin.SimpleListFilter):
         return queryset
 
 
-class TeamAdmin(admin.ModelAdmin[Team]):  # pylint: disable=unsubscriptable-object
+class TeamAdmin(ModelAdmin[Team]):  # pylint: disable=unsubscriptable-object
     """Admin handler for Team"""
 
     list_display = ("id", "name", "tournament", "validated", "get_quota")
@@ -827,7 +828,7 @@ class PaymentStatusFilter(admin.SimpleListFilter):
         return queryset
 
 
-class PlayerAdmin(admin.ModelAdmin[Player]):  # pylint: disable=unsubscriptable-object
+class PlayerAdmin(ModelAdmin[Player]):  # pylint: disable=unsubscriptable-object
     """Admin handler for Player Registrations"""
 
     list_display = ("id", "user", "name_in_game", "team", "payment_status", "get_tournament")
@@ -844,7 +845,7 @@ class PlayerAdmin(admin.ModelAdmin[Player]):  # pylint: disable=unsubscriptable-
 admin.site.register(Player, PlayerAdmin)
 
 
-class ManagerAdmin(admin.ModelAdmin[Manager]):  # pylint: disable=unsubscriptable-object
+class ManagerAdmin(ModelAdmin[Manager]):  # pylint: disable=unsubscriptable-object
     """Admin handler for Manager Registrations"""
 
     list_display = ("id", "user", "team", "payment_status", "get_tournament")
@@ -862,7 +863,7 @@ class ManagerAdmin(admin.ModelAdmin[Manager]):  # pylint: disable=unsubscriptabl
 admin.site.register(Manager, ManagerAdmin)
 
 
-class CasterAdmin(admin.ModelAdmin[Caster]):  # pylint: disable=unsubscriptable-object
+class CasterAdmin(ModelAdmin[Caster]):  # pylint: disable=unsubscriptable-object
     """Admin handler for tournament Casters"""
 
     list_display = ("id", "name", "tournament")
@@ -872,7 +873,7 @@ class CasterAdmin(admin.ModelAdmin[Caster]):  # pylint: disable=unsubscriptable-
 admin.site.register(Caster, CasterAdmin)
 
 
-class SubstituteAdmin(admin.ModelAdmin[Substitute]):  # pylint: disable=unsubscriptable-object
+class SubstituteAdmin(ModelAdmin[Substitute]):  # pylint: disable=unsubscriptable-object
     """Admin handler for Substitute Registrations"""
 
     list_display = ("id", "user", "name_in_game", "team", "payment_status", "get_tournament")
@@ -1095,7 +1096,7 @@ class TournamentEventFilter(admin.SimpleListFilter):
         return queryset
 
 
-class GroupAdmin(admin.ModelAdmin[Group]):  # pylint: disable=unsubscriptable-object
+class GroupAdmin(ModelAdmin[Group]):  # pylint: disable=unsubscriptable-object
     """Admin handler for Groups"""
 
     list_display = ("id", "name", "tournament")
@@ -1125,7 +1126,7 @@ class GroupAdmin(admin.ModelAdmin[Group]):  # pylint: disable=unsubscriptable-ob
 admin.site.register(Group, GroupAdmin)
 
 
-class GroupMatchAdmin(admin.ModelAdmin[GroupMatch]):  # pylint: disable=unsubscriptable-object
+class GroupMatchAdmin(ModelAdmin[GroupMatch]):  # pylint: disable=unsubscriptable-object
     """Admin handle for group matchs"""
 
     list_display = ("id", "group", "status", "round_number", "index_in_round", "bo_type", )
@@ -1172,7 +1173,7 @@ class GroupMatchAdmin(admin.ModelAdmin[GroupMatch]):  # pylint: disable=unsubscr
 admin.site.register(GroupMatch, GroupMatchAdmin)
 
 
-class MailerAdmin(admin.ModelAdmin[TournamentMailer]):  # pylint: disable=unsubscriptable-object
+class MailerAdmin(ModelAdmin[TournamentMailer]):  # pylint: disable=unsubscriptable-object
     """
     Admin handler for TournamentMailer
     """
@@ -1237,7 +1238,7 @@ class MailerAdmin(admin.ModelAdmin[TournamentMailer]):  # pylint: disable=unsubs
 admin.site.register(TournamentMailer, MailerAdmin)
 
 
-class BracketAdmin(admin.ModelAdmin[Bracket]):  # pylint: disable=unsubscriptable-object
+class BracketAdmin(ModelAdmin[Bracket]):  # pylint: disable=unsubscriptable-object
     """Admin handle for Brackets"""
 
     list_display = ("id", "name", "tournament")
@@ -1271,7 +1272,7 @@ class BracketAdmin(admin.ModelAdmin[Bracket]):  # pylint: disable=unsubscriptabl
 admin.site.register(Bracket, BracketAdmin)
 
 
-class KnockoutMatchAdmin(admin.ModelAdmin[KnockoutMatch]):  # pylint: disable=unsubscriptable-object
+class KnockoutMatchAdmin(ModelAdmin[KnockoutMatch]):  # pylint: disable=unsubscriptable-object
     """Admin handle for Knockout matchs"""
 
     list_display = ("id", "bracket", "status", "bracket_set", "round_number", "index_in_round",
@@ -1333,7 +1334,7 @@ class SwissSeedingInline(admin.TabularInline[SwissSeeding, SwissRound]):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class SwissRoundAdmin(admin.ModelAdmin[SwissRound]):  # pylint: disable=unsubscriptable-object
+class SwissRoundAdmin(ModelAdmin[SwissRound]):  # pylint: disable=unsubscriptable-object
     """Admin handle for Swiss Round"""
 
     list_display = ("id", "tournament")
@@ -1360,7 +1361,7 @@ class SwissRoundAdmin(admin.ModelAdmin[SwissRound]):  # pylint: disable=unsubscr
 admin.site.register(SwissRound, SwissRoundAdmin)
 
 
-class SwissMatchAdmin(admin.ModelAdmin[SwissMatch]):  # pylint: disable=unsubscriptable-object
+class SwissMatchAdmin(ModelAdmin[SwissMatch]):  # pylint: disable=unsubscriptable-object
     """Admin handle for Swiss matchs"""
 
     list_display = ("id", "swiss", "status", "round_number", "index_in_round", "bo_type",
@@ -1404,7 +1405,7 @@ class SwissMatchAdmin(admin.ModelAdmin[SwissMatch]):  # pylint: disable=unsubscr
 admin.site.register(SwissMatch, SwissMatchAdmin)
 
 
-class SeatAdmin(admin.ModelAdmin[Seat]):  # pylint: disable=unsubscriptable-object
+class SeatAdmin(ModelAdmin[Seat]):  # pylint: disable=unsubscriptable-object
     """Admin handler for Seating"""
 
     list_display = ("id", "event", "x", "y")
@@ -1454,7 +1455,7 @@ class SeatSlotForm(ModelForm[SeatSlot]):  # pylint: disable=unsubscriptable-obje
         return self.cleaned_data
 
 
-class SeatSlotAdmin(admin.ModelAdmin[SeatSlot]):  # pylint: disable=unsubscriptable-object
+class SeatSlotAdmin(ModelAdmin[SeatSlot]):  # pylint: disable=unsubscriptable-object
     """Admin handler for SeatSlot"""
     list_display = ("id", "get_seats")
     form = SeatSlotForm
