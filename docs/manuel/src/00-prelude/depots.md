@@ -9,14 +9,14 @@ base de code. Il est possible pour un dépôt de faire référence à un autre v
 
 Pour l'hosting, nous nous reposons sur le service GitHub, qui permet de
 collaborer sur des des dépôts `git`. Nous avons une
-[organisation](https://github.com/InsaLan) dédiées à tout le code de
+[organisation](https://github.com/InsaLan) dédiée à tout le code de
 l'association.
 
 ## Les Trois Dépôts
 
  - [**InsaLan/backend-insalan.fr**](https://github.com/InsaLan/backend-insalan.fr)
      est le dépôt qui
-     contient le backend, c'est à dire la grosse pièce à laquelle nous nous
+     contient le backend, c'est-à-dire la grosse pièce à laquelle nous nous
      intéressons dans ce manuel
  - [**InsaLan/frontend-insalan.fr**](https://github.com/InsaLan/frontend-insalan.fr)
      est le dépôt du code du frontend
