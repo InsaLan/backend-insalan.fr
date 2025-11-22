@@ -56,6 +56,7 @@ class EmailActivatedFilter(SimpleListFilter):
 
 class ButtonWidget(forms.Widget):
     """Custom widget for the resend email button."""
+    template_name = ""
 
     def render(self, name: str, value: Any, attrs: dict[str, Any] | None = None,
                renderer: BaseRenderer | None = None) -> SafeString:

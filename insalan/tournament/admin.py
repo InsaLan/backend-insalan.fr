@@ -101,6 +101,7 @@ ADMIN_ORDERING += [
 
 class SeatCanvasWidget(forms.Widget):
     """Custom widget for the seat canvas."""
+    template_name = ""
 
     def render(self, name: str, value: Any, attrs: dict[str, Any] | None = None,
                renderer: BaseRenderer | None = None) -> SafeString:
