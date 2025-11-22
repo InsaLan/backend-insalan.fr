@@ -911,13 +911,13 @@ class PlayerAdmin(ModelAdmin):  # type: ignore
         """Use special form during Player creation."""
         if not obj:
             return self.add_fieldsets
-        return super().get_fieldsets(request, obj)
+        return super().get_fieldsets(request, obj) # type: ignore
 
     def get_urls(self) -> list[URLPattern]:
         """
         Add the update name url to the admin panel
         """
-        return [
+        return [ # type: ignore
             path(
                 "<int:player_id>/name/update",
                 self.admin_site.admin_view(self.update_name),
@@ -1025,13 +1025,13 @@ class SubstituteAdmin(ModelAdmin):  # type: ignore
         """Use special form during Substitute creation."""
         if not obj:
             return self.add_fieldsets
-        return super().get_fieldsets(request, obj)
+        return super().get_fieldsets(request, obj) # type: ignore
 
     def get_urls(self) -> list[URLPattern]:
         """
         Add the update name url to the admin panel
         """
-        return [
+        return [ # type: ignore
             path(
                 "<int:substitute_id>/name/update",
                 self.admin_site.admin_view(self.update_name),
