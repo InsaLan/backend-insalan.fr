@@ -57,3 +57,11 @@ Dans cet exemple, `MyModel` est le modèle que l'on souhaite ajouter au panel
 admin. On crée une classe `MyAdmin` qui hérite de `admin.ModelAdmin`, et on
 définit les champs `list_display` (champs à afficher) et `search_fields` (champs
 de recherche) pour personnaliser l'affichage du modèle dans le panel admin.
+
+## Thème
+
+La panel admin utilise le thème [Unfold](https://unfoldadmin.com/) pour être plus beau (et un peu plus en accord avec le reste du site). On y a apporté quelques customisations, que vous pouvez trouver dans le dictionnaire `UNFOLD` dans `insalan/settings.py`.
+
+Implémenter ce thème ne se fait pas en un clic, surtout à cause du fait qu'il n'a pas de stubs Python, ce qui fait que `mypy` ne peut pas analyser les types de ses objets. Il faut donc manuellement ignorer toutes ces erreurs avec des `# type: ignore` saupoudrés un peut partout dans les fichiers `admin.py`.
+
+Pour plus de détails sur comment implémenter le thème dans un projet existant, voyez [la doc](https://unfoldadmin.com/docs/installation/quickstart/). Il y a des cas spéciaux pour certains modules et certains types de panneaux Django.
