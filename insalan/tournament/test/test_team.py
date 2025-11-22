@@ -384,7 +384,7 @@ class TournamentTeamEndpoints(TestCase):
         self.assertEqual(tr.get_validated_teams(), 1)
         self.assertEqual(tr.current_threshold_index, 0)
         self.assertEqual(tr.get_max_team(), 1)
-        
+
         # Check that the second team is not validated
         self.assertFalse(Team.objects.get(id=team2.id).validated)
 
