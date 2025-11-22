@@ -263,6 +263,7 @@ class EventDerefAndGroupingEndpoints(APITestCase):
             event=evobj,
             rules="have fun!",
             is_announced=True,
+            max_team_thresholds=[8,16,32],
         )
 
         request = self.client.get(
@@ -289,7 +290,8 @@ class EventDerefAndGroupingEndpoints(APITestCase):
                     "validated_teams": 0,
                     "name": "Test Tournament",
                     "is_announced": True,
-                    "maxTeam": tourney.maxTeam,
+                    "max_team_thresholds": [8, 16, 32],
+                    "current_threshold_index": 0,
                     "rules": "have fun!",
                     "registration_open": timezone.make_aware(
                         timezone.make_naive(tourney.registration_open)

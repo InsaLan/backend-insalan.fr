@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from math import ceil
 from typing import Any, TYPE_CHECKING
 
 from django.db import models
@@ -13,7 +12,6 @@ from . import bracket
 from . import group
 from . import player
 from . import manager
-from . import payement_status as ps
 from . import substitute
 from . import swiss
 from . import tournament
@@ -196,31 +194,51 @@ class Team(models.Model):
         return None
 
     def refresh_validation(self) -> None:
-        """Refreshes the validation state of a tournament"""
-        # Condition 1: ceil((n+1)/2) players have paid/will pay
+        """Rafraîchit l'état de validation d'une équipe et du tournoi"""
         if self.validated:
             return
-        if self.tournament.get_validated_teams() < self.tournament.get_max_team():
-            # An EventTournament team is validated if ceil((n+1)/2) players have paid
-            if isinstance(self.tournament, tournament.EventTournament):
-                players = self.get_players()
 
-                game = self.get_tournament().get_game()
+        # Try to expand the tournament thresholds
+        # If successful, the team might now be valid
+        expanded = self.tournament.try_expand_threshold()
 
-                threshold = ceil((game.get_players_per_team() + 1) / 2)
+        # Refresh the validated status from the database
+        # This is necessary because the 'self' instance is not the same
+        # as the one used in the subfunctions called
+        self.refresh_from_db(fields=['validated'])
 
-                paid_seats = len(players.filter(payment_status=ps.PaymentStatus.PAID))
+        # Check if the team can now be validated
+        if not expanded:
+            validated_count = self.tournament.get_validated_teams()
+            current_max = self.tournament.get_max_team()
 
-                self.validated = paid_seats >= threshold
-                self.save()
-            # A PrivateTournament team is validated if the team is full
-            elif isinstance(self.tournament, tournament.PrivateTournament):
-                players = self.get_players()
+            if validated_count < current_max:
+                if self.tournament.team_meets_validation_criteria(self):
+                    self.validated = True
+                    self.save(update_fields=['validated'])
 
-                game = self.get_tournament().get_game()
+                    # Try to expand the tournament thresholds again
+                    # Should not be necessary, but double check
+                    self.tournament.try_expand_threshold()
 
-                self.validated = len(players) == game.get_players_per_team()
-                self.save()
+        # Save the team to update captain if needed
+        self.save()
+
+    def get_is_waiting_for_threshold(self) -> bool:
+        """
+        Determine if the team is waiting for the next threshold to be validated
+        """
+        if self.validated:
+            return False
+
+        validated_count = self.tournament.get_validated_teams()
+        current_max = self.tournament.get_max_team()
+
+        if validated_count >= current_max:
+            if self.tournament.team_meets_validation_criteria(self):
+                return True
+
+        return False
 
     def clean(self) -> None:
         """
