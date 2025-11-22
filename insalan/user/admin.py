@@ -53,7 +53,8 @@ class EmailActivatedFilter(SimpleListFilter):
         else:
             return queryset
 
-
+# NB: this could be themed to be a normal looking button instead of text,
+# but I tried all morning and gave up, see https://unfoldadmin.com/docs/components/button/
 class ButtonWidget(forms.Widget):
     """Custom widget for the resend email button."""
     template_name = ""
