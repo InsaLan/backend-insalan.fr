@@ -216,7 +216,6 @@ class CustomUserAdmin(DjangoUserAdmin):
 @admin.register(User) # Register with Unfold fields for the theme
 class UserAdmin(CustomUserAdmin, ModelAdmin): # type: ignore
     # Forms loaded from `unfold.forms`
-    form = UserChangeForm
     add_form = UserCreationForm
     change_password_form = AdminPasswordChangeForm
 
