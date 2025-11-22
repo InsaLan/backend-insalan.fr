@@ -142,8 +142,8 @@ def validate_match_data(match: Match, data: dict[str, Any]) -> dict[str, str] | 
 
     return None
 
-def valid_name(game_param: Game, name: str) -> bool:
+def valid_name(game_param: Game, name: str) -> dict[str, Any] | None:
     name_validator = game_param.get_name_validator()
     if name_validator is None:
-        return True
-    return name_validator(name)
+        return {}
+    return name_validator.validate_name(name)

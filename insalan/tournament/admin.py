@@ -37,7 +37,7 @@ from insalan.tournament.manage import (
     create_swiss_matchs,
     launch_match,
 )
-from insalan.utils import FieldSets
+from insalan.utils import FieldOpts, FieldSets
 
 from .models import (
     BestofType,
@@ -396,6 +396,8 @@ class EventTournamentAdmin(admin.ModelAdmin[EventTournament]):
 
     list_filter = (EventTournamentFilter, GameTournamentFilter)
 
+    actions = ['update_name']
+
     def get_form(
         self,
         request: HttpRequest,
@@ -419,6 +421,14 @@ class EventTournamentAdmin(admin.ModelAdmin[EventTournament]):
 
     get_occupancy.short_description = 'Remplissage'  # type: ignore[attr-defined]
 
+    @admin.action(description=_("Mettre à jour les pseudos"))
+    def update_name(
+        self, request: HttpRequest, queryset: QuerySet[EventTournament]
+    ) -> None:
+        for tournament in queryset:
+            tournament.update_name_in_game()
+        self.message_user(request,_("Les pseudo ont été mis à jour."))
+
     class Media:
         css = {
             'all': ('css/seat_canvas.css',)
@@ -439,6 +449,8 @@ class PrivateTournamentAdmin(admin.ModelAdmin[PrivateTournament]):
     list_display = ("id", "name", "game", "get_occupancy")
     search_fields = ["name", "game__name"]
 
+    actions = ['update_name']
+
     def get_occupancy(self, obj: PrivateTournament) -> str:
         """
         Returns the occupancy of the tournament
@@ -447,6 +459,14 @@ class PrivateTournamentAdmin(admin.ModelAdmin[PrivateTournament]):
             tournament=obj,
             validated=True,
         ).count()) + " / " + str(obj.maxTeam)
+
+    @admin.action(description=_("Mettre à jour les pseudos"))
+    def update_name(
+        self, request: HttpRequest, queryset: QuerySet[EventTournament]
+    ) -> None:
+        for tournament in queryset:
+            tournament.update_name_in_game()
+        self.message_user(request,_("Les pseudo ont été mis à jour."))
 
     get_occupancy.short_description = 'Remplissage'  # type: ignore[attr-defined]
 
@@ -826,20 +846,112 @@ class PaymentStatusFilter(admin.SimpleListFilter):
             return queryset.filter(payment_status=self.value())
         return queryset
 
+class ButtonWidget(forms.Widget):
+    """Custom widget for the update name in game button."""
+
+    def render(
+        self, name: str, value: Any, attrs: dict[str, Any] | None = None,
+        renderer: BaseRenderer | None = None
+    ) -> SafeString:
+        return SafeString('<input type="button" value="' + \
+            _("Mettre à jour le pseudo en jeu") + \
+            '" onclick="window.location.href=\'../name/update\'" />')
+
+class Button(forms.Field):
+    """
+    Custom field for the button widget
+    """
+    widget = ButtonWidget
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        kwargs.setdefault("required", False)
+        kwargs.setdefault("disabled", True)
+        super().__init__(*args, **kwargs)
+
+
+class PlayerForm(ModelForm[Player]):  # pylint: disable=unsubscriptable-object
+    """
+    Custom form for the Player model
+    """
+    update = Button()
+
+    class Meta:
+        """
+        Meta class for the Player form
+        """
+        model = Player
+        fields = "__all__"
 
 class PlayerAdmin(admin.ModelAdmin[Player]):  # pylint: disable=unsubscriptable-object
     """Admin handler for Player Registrations"""
 
     list_display = ("id", "user", "name_in_game", "team", "payment_status", "get_tournament")
     search_fields = ["user__username", "team__name", "name_in_game"]
+    readonly_fields = ("validator_data",)
+    add_fieldsets: tuple[tuple[str | None, FieldOpts]] = (
+        (None, {"fields": ("user", "team", "payment_status", "ticket", "name_in_game")}),
+    )
 
     list_filter = (EventFilter, OngoingTournamentFilter, PaymentStatusFilter)
+
+    # use our custom form
+    form = PlayerForm
 
     def get_tournament(self, obj: Player) -> str:
         """Returns the tournament name of the player."""
         return obj.team.tournament.name
 
     get_tournament.short_description = 'Tournament'  # type: ignore[attr-defined]
+
+    def get_fieldsets(
+        self, request: HttpRequest, obj: Player | None = None
+    ) -> FieldSets:
+        """Use special form during Player creation."""
+        if not obj:
+            return self.add_fieldsets
+        return super().get_fieldsets(request, obj)
+
+    def get_urls(self) -> list[URLPattern]:
+        """
+        Add the update name url to the admin panel
+        """
+        return [
+            path(
+                "<int:player_id>/name/update",
+                self.admin_site.admin_view(self.update_name),
+                name="admin_player_update_name",
+            ),
+        ] + super().get_urls()
+
+    @sensitive_post_parameters_m
+    def update_name(self, request: HttpRequest, player_id: int) -> HttpResponse:
+        """
+        Update the name in game of a player
+        """
+        player = Player.objects.get(pk=player_id)
+        if not self.has_change_permission(request, player):
+            raise PermissionDenied
+        if player is None:
+            raise Http404(
+                _("%(name)s object with primary key %(key)r does not exist.")
+                % {
+                    "name": self.opts.verbose_name,
+                    "key": escape(player_id),
+                }
+            )
+
+        # perform the update
+        player.update_name_in_game()
+
+        msg = _("The name in game was successfully updated to ") + player.name_in_game + "."
+        messages.success(request, msg)
+
+        return HttpResponseRedirect(
+            reverse(
+                f"{self.admin_site.name}:{player._meta.app_label}_{player._meta.model_name}_change",
+                args=(player.pk,),
+            )
+        )
 
 admin.site.register(Player, PlayerAdmin)
 
@@ -871,20 +983,91 @@ class CasterAdmin(admin.ModelAdmin[Caster]):  # pylint: disable=unsubscriptable-
 
 admin.site.register(Caster, CasterAdmin)
 
+class SubstituteForm(ModelForm[Substitute]):  # pylint: disable=unsubscriptable-object
+    """
+    Custom form for the Substitute model
+    """
+    update = Button()
+
+    class Meta:
+        """
+        Meta class for the Substitute form
+        """
+        model = Substitute
+        fields = "__all__"
 
 class SubstituteAdmin(admin.ModelAdmin[Substitute]):  # pylint: disable=unsubscriptable-object
     """Admin handler for Substitute Registrations"""
 
     list_display = ("id", "user", "name_in_game", "team", "payment_status", "get_tournament")
     search_fields = ["user__username", "team__name", "name_in_game"]
+    readonly_fields = ("validator_data",)
+    add_fieldsets: tuple[tuple[str | None, FieldOpts]] = (
+        (None, {"fields": ("user", "team", "payment_status", "ticket", "name_in_game")}),
+    )
 
     list_filter = (EventFilter, OngoingTournamentFilter, PaymentStatusFilter)
+
+    # use our custom form
+    form = SubstituteForm
 
     def get_tournament(self, obj: Substitute) -> str:
         """Returns the tournament name of the substitute."""
         return obj.team.tournament.name
 
     get_tournament.short_description = 'Tournament'  # type: ignore[attr-defined]
+
+    def get_fieldsets(
+        self, request: HttpRequest, obj: Substitute | None = None
+    ) -> FieldSets:
+        """Use special form during Substitute creation."""
+        if not obj:
+            return self.add_fieldsets
+        return super().get_fieldsets(request, obj)
+
+    def get_urls(self) -> list[URLPattern]:
+        """
+        Add the update name url to the admin panel
+        """
+        return [
+            path(
+                "<int:substitute_id>/name/update",
+                self.admin_site.admin_view(self.update_name),
+                name="admin_substitute_update_name",
+            ),
+        ] + super().get_urls()
+
+    @sensitive_post_parameters_m
+    def update_name(self, request: HttpRequest, substitute_id: int) -> HttpResponse:
+        """
+        Update the name in game of a substitute
+        """
+        substitute = Substitute.objects.get(pk=substitute_id)
+        if not self.has_change_permission(request, substitute):
+            raise PermissionDenied
+        if substitute is None:
+            raise Http404(
+                _("%(name)s object with primary key %(key)r does not exist.")
+                % {
+                    "name": self.opts.verbose_name,
+                    "key": escape(substitute),
+                }
+            )
+
+        # perform the update
+        substitute.update_name_in_game()
+
+        msg = _("The name in game was successfully updated to ") + substitute.name_in_game + "."
+        messages.success(request, msg)
+
+        return HttpResponseRedirect(
+            reverse(
+                f"{self.admin_site.name}:{
+                    substitute._meta.app_label
+                }_{substitute._meta.model_name}_change",
+                args=(substitute.pk,),
+            )
+        )
 
 
 admin.site.register(Substitute, SubstituteAdmin)

@@ -56,6 +56,13 @@ class Substitute(models.Model):
         blank=False,
         verbose_name=_("Pseudo en jeu"),
     )
+    validator_data = models.JSONField(
+        null=True,
+        blank=True,
+        default=dict,
+        verbose_name=_("Données additionnelles"),
+        help_text=_("Données additionnelles fournies par le validateur de pseudo en jeu."),
+    )
 
 
     class Meta:
@@ -111,8 +118,23 @@ class Substitute(models.Model):
             raise ValidationError(
                 _("Nombre maximum de remplaçants déjà atteint")
             )
-        # Validate the name in game
-        if not validators.valid_name(tourney.get_game(), self.name_in_game):
+        # Validate the name in game and save the data
+        info = validators.valid_name(tourney.get_game(), self.name_in_game)
+        if info is None:
             raise ValidationError(
                 _("Le pseudo en jeu n'est pas valide")
             )
+        self.validator_data.update(info)
+
+    def update_name_in_game(self) -> None:
+        """
+        Update and validate the name_in_game of the player
+        """
+        data = self.validator_data
+        validator = self.team.tournament.game.get_name_validator()
+        if validator is not None:
+            new_name_in_game = validator.update_name(self.name_in_game, data)
+
+            if new_name_in_game != self.name_in_game:
+                self.name_in_game = new_name_in_game
+                self.save()

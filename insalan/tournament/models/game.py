@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, TYPE_CHECKING
+from typing import TYPE_CHECKING, Type
 
 from django.db import models
 from django.core.validators import (
@@ -9,7 +9,7 @@ from django.core.validators import (
 )
 from django.utils.translation import gettext_lazy as _
 
-from .name_validator import get_choices, get_validator
+from .name_validator import NameValidator, get_choices, get_validator
 from .tournament import BaseTournament
 
 if TYPE_CHECKING:
@@ -96,6 +96,6 @@ class Game(models.Model):
         """Return the maximum number of teams in a match"""
         return self.team_per_match
 
-    def get_name_validator(self) -> Callable[[str], bool] | None:
+    def get_name_validator(self) -> Type[NameValidator] | None:
         """Return the validators of the game."""
         return get_validator(self.validators)

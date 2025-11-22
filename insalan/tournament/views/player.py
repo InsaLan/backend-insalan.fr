@@ -114,13 +114,14 @@ class PlayerRegistration(generics.RetrieveAPIView[Player]):
             }, status=status.HTTP_403_FORBIDDEN)
 
         if "name_in_game" in data:
-            if valid_name(player.team.tournament.game, data["name_in_game"]):
-                player.name_in_game = data["name_in_game"]
-            else:
+            player_data = valid_name(player.team.tournament.game, data["name_in_game"])
+            if player_data is None:
                 return Response(
                     {"name_in_game": _("Pseudo invalide")},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+            player.name_in_game = data["name_in_game"]
+            player.validator_data.update(player_data)
 
         try:
             player.save()
