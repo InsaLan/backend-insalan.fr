@@ -66,7 +66,7 @@ from .models import Ticket, TicketManager
             properties={
                 "err": openapi.Schema(
                     type=openapi.TYPE_STRING,
-                    description=_("Ticket non trouvé/Utilisateur⋅ice non trouvé⋅e")
+                    description=_("Ticket non trouvé/Utilisateur⋅rice non trouvé⋅e")
                 )
             }
         ),
@@ -94,7 +94,7 @@ def get(request: HttpRequest, user_id: str, token: str) -> JsonResponse:
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
-        return JsonResponse({'err': _("Utilisateur⋅ice non trouvé⋅e")},
+        return JsonResponse({'err': _("Utilisateur⋅rice non trouvé⋅e")},
                             status=status.HTTP_404_NOT_FOUND)
 
     try:

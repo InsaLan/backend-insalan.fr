@@ -3,11 +3,12 @@
 from django.db.models.query import QuerySet
 from django.contrib import admin
 from django.http import HttpRequest, HttpResponse
+from unfold.admin import ModelAdmin # type: ignore
 
 from .models import Pizza, TimeSlot, Order, PizzaOrder, PizzaExport, PaymentMethod
 
 
-class PizzaAdmin(admin.ModelAdmin[Pizza]):  # pylint: disable=unsubscriptable-object
+class PizzaAdmin(ModelAdmin):  # type: ignore
     """Admin class for the Pizza model"""
     list_display = ("id", "name", "ingredients")
     search_fields = ["name", "ingredients", "allergens"]
@@ -15,7 +16,7 @@ class PizzaAdmin(admin.ModelAdmin[Pizza]):  # pylint: disable=unsubscriptable-ob
 admin.site.register(Pizza, PizzaAdmin)
 
 
-class TimeSlotAdmin(admin.ModelAdmin[TimeSlot]):  # pylint: disable=unsubscriptable-object
+class TimeSlotAdmin(ModelAdmin):  # type: ignore
     """Admin class for the TimeSlot model"""
     list_display = ("id", "delivery_time", "end", "pizza_max")
     search_fields = ["delivery_time", "end"]
@@ -30,7 +31,7 @@ class PizzaOrderInline(admin.TabularInline[PizzaOrder, Order]):
     extra = 1
 
 
-class OrderAdmin(admin.ModelAdmin[Order]):  # pylint: disable=unsubscriptable-object
+class OrderAdmin(ModelAdmin):  # type: ignore
     """Admin class for the Order model"""
     list_display = ("id", "get_username", "time_slot", "created_at")
     search_fields = ["user", "time_slot__delivery_time"]
@@ -70,7 +71,7 @@ class OrderAdmin(admin.ModelAdmin[Order]):  # pylint: disable=unsubscriptable-ob
 admin.site.register(Order, OrderAdmin)
 
 
-class ExportAdmin(admin.ModelAdmin[PizzaExport]):  # pylint: disable=unsubscriptable-object
+class ExportAdmin(ModelAdmin):  # type: ignore
     """Admin class for the Export model"""
     list_display = ("id", "time_slot", "created_at")
     search_fields = ["time_slot"]

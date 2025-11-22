@@ -47,7 +47,7 @@ class Ticket(models.Model):
         verbose_name=_("UUID"), unique=True, default=uuid.uuid4, editable=False
     )
     user: models.ForeignKey[User | Combinable, User] = models.ForeignKey(
-        User, verbose_name=_("Utilisateur⋅ice"), on_delete=models.CASCADE
+        User, verbose_name=_("Utilisateur⋅rice"), on_delete=models.CASCADE
     )
     status = models.CharField(
         verbose_name=_("Statut"),

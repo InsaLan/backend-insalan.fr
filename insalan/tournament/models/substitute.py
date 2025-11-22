@@ -25,7 +25,7 @@ class Substitute(models.Model):
 
     user = models.ForeignKey(
         User,
-        verbose_name=_("Utilisateur⋅ice"),
+        verbose_name=_("Utilisateur⋅rice"),
         on_delete=models.CASCADE,
     )
     team = models.ForeignKey(
@@ -69,7 +69,7 @@ class Substitute(models.Model):
         """Meta Options"""
 
         verbose_name = _("Inscription d'un⋅e remplaçant⋅e")
-        verbose_name_plural = _("Inscriptions de remplaçant⋅es")
+        verbose_name_plural = _("Inscriptions de remplaçant⋅e⋅s")
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "team"], name="not_twice_same_substitute"

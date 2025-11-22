@@ -6,11 +6,12 @@ admin site.
 """
 
 from django.contrib import admin
+from unfold.admin import ModelAdmin # type: ignore
 
 from .models import Constant, Content, File
 
 
-class ConstantAdmin(admin.ModelAdmin[Constant]):  # pylint: disable=unsubscriptable-object
+class ConstantAdmin(ModelAdmin):  # type: ignore
     """
     Admin class for the Constant model
     """

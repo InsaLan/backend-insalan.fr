@@ -170,7 +170,7 @@ class TicketTODO(APITestCase):
             )
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.json(), {"err": _("Utilisateur⋅ice non trouvé⋅e")})
+        self.assertEqual(response.json(), {"err": _("Utilisateur⋅rice non trouvé⋅e")})
 
         response = self.client.get(
             reverse(

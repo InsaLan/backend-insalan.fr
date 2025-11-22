@@ -16,6 +16,7 @@ from pathlib import Path
 from sys import argv
 
 from django.utils.translation import gettext_lazy as _
+from django.templatetags.static import static
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -76,6 +77,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 INSTALLED_APPS = [
     "insalan.apps.InsalanConfig",
+    "unfold",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -200,7 +202,7 @@ LOCALE_PATHS = [path.join(BASE_DIR, 'locale')]
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = "v1/static/"
+STATIC_URL = "/v1/static/" # https://stackoverflow.com/a/73631136
 STATIC_ROOT = "v1/" + getenv("STATIC_ROOT", "static/")
 STATICFILES_DIRS = [path.join(BASE_DIR, "assets")]
 
@@ -259,3 +261,62 @@ RIOT_API_KEY = getenv("RIOT_API_KEY", "RGAPI-00000000-0000-0000-0000-00000000000
 
 # Session cookie settings
 SESSION_COOKIE_AGE = int(getenv("SESSION_COOKIE_AGE", "1209600"))
+
+# Unfold admin panel settings
+UNFOLD = {
+    "SITE_TITLE": "InsaLan",
+    "SITE_HEADER": "Administration InsaLan",
+    "SITE_ICON": {
+        "light": lambda request: static("images/logo_retro_black.png"),  # light mode
+        "dark": lambda request: static("images/logo_retro_white.png"),  # dark mode
+    },
+    "SITE_URL": PROTOCOL + "://" + WEBSITE_HOST,
+    "BORDER_RADIUS": "10px",
+    # So our old ass version of Unfold (due to our old ass version of Django) doesn't support oklch
+    # "COLORS": {
+    #     "primary": {
+    #         "50": "oklch(98.7% .0078 228.0)",
+    #         "100": "oklch(96.2% .0250 228.0)",
+    #         "200": "oklch(91.3% .0578 228.0)",
+    #         "300": "oklch(84.4% .1062 228.0)",
+    #         "400": "oklch(77.7% .1578 228.0)",
+    #         "500": "oklch(69.2% .1765 228.0)",
+    #         "600": "oklch(60.0% .1531 228.0)",
+    #         "700": "oklch(51.1% .1312 228.0)",
+    #         "800": "oklch(40.0% .1015 228.0)",
+    #         "900": "oklch(29.2% .0750 228.0)",
+    #         "950": "oklch(18.4% .0468 228.0)",
+    #     },
+    # },
+    "COLORS": { # Generated on https://www.tailwindshades.com
+        "base": {
+            50: '#F2F2F2',
+            100: '#E6E6E6',
+            200: '#CCCCCC',
+            300: '#B3B3B3',
+            400: '#999999',
+            500: '#808080',
+            600: '#666666',
+            700: '#4D4D4D',
+            800: '#333333',
+            900: '#1A1A1A',
+            950: '#0D0D0D'
+        },
+        "primary": {
+            50: '#F0FAFF',
+            100: '#DBF4FF',
+            200: '#B3E8FF',
+            300: '#8ADCFF',
+            400: '#61D0FF',
+            500: '#29BFFF',
+            600: '#00A8F0',
+            700: '#0081B8',
+            800: '#005980',
+            900: '#003247',
+            950: '#001E2B'
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,  # Search in applications and models names
+    }
+}

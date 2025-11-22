@@ -30,7 +30,7 @@ class Player(models.Model):
         """Meta options"""
 
         verbose_name = _("Inscription d'un⋅e joueur⋅euse")
-        verbose_name_plural = _("Inscription de joueur⋅euses")
+        verbose_name_plural = _("Inscription de joueur⋅euse⋅s")
         indexes = [
             models.Index(fields=["user"]),
             models.Index(fields=["team"]),
@@ -39,7 +39,7 @@ class Player(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        verbose_name=_("Utilisateur⋅ice"),
+        verbose_name=_("Utilisateur⋅rice"),
     )
     team = models.ForeignKey(
         "Team",
