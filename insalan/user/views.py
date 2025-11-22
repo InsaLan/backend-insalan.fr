@@ -222,6 +222,9 @@ class UserMe(generics.RetrieveAPIView[User]):  # pylint: disable=unsubscriptable
         if "last_name" in data:
             user.last_name = data["last_name"]
 
+        if "confirm_name" in data:
+            user.confirm_name = data["confirm_name"]
+
         if "display_name" in data:
             user.display_name = data["display_name"]
 

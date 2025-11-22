@@ -120,9 +120,9 @@ on appelle souvent ces bases de données des bases **NoSQL**.
 Toute notre gestion du code passe par l'utilisation de `git`. C'est un outil
 extrêmement puissant, mais qu'il est trop long de décrire. Il existe
 heureusement une
-[formation](https://git.vulpinecitrus.info/Lymkwi/surviving-git/src/branch/master/build/default/default.pdf)
+[formation](https://github.com/InsaLan/doc/blob/main/Formations/Git/complete/main.pdf)
 qui permet de se familiariser avec les commandes de base de `git` et pourquoi
-elles fonctionnent comme elles fonctionnes.
+elles fonctionnent comme elles fonctionnent.
 
 L'idée globale cependant: `git` permet de capturer des sauvegardes successives
 de notre code, et de les associer à du texte pour expliquer les modifications

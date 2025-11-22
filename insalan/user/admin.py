@@ -101,7 +101,15 @@ class CustomUserAdmin(DjangoUserAdmin):
         (
             "Informations personnelles",
             {
-                'fields': ('first_name', 'last_name', 'email', 'display_name', 'pronouns','status'),
+                'fields': (
+                    'first_name',
+                    'last_name',
+                    'confirm_name',
+                    'email',
+                    'display_name',
+                    'pronouns',
+                    'status'
+                ),
             },
         ),
         (
