@@ -274,6 +274,7 @@ class SeatSlotSelection(forms.Widget):
     """
     Custom widget for listing seat slots and allowing selection
     """
+    template_name = ""
 
     def render(self, name: str, value: Any, attrs: dict[str, Any] | None = None,
                renderer: BaseRenderer | None = None) -> SafeString:
@@ -850,6 +851,7 @@ class PaymentStatusFilter(admin.SimpleListFilter):
 
 class ButtonWidget(forms.Widget):
     """Custom widget for the update name in game button."""
+    template_name = ""
 
     def render(
         self, name: str, value: Any, attrs: dict[str, Any] | None = None,
