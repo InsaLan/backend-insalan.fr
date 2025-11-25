@@ -1062,11 +1062,11 @@ class SubstituteAdmin(ModelAdmin):  # type: ignore
         msg = _("The name in game was successfully updated to ") + substitute.name_in_game + "."
         messages.success(request, msg)
 
+        app_label = substitute._meta.app_label
+        model_name = substitute._meta.model_name
         return HttpResponseRedirect(
             reverse(
-                f"{self.admin_site.name}:{
-                    substitute._meta.app_label
-                }_{substitute._meta.model_name}_change",
+                f"{self.admin_site.name}:{app_label}_{model_name}_change",
                 args=(substitute.pk,),
             )
         )
