@@ -41,6 +41,7 @@ urlpatterns = [
     path("v1/admin/", admin.site.urls),
     path("v1/payment/", include("insalan.payment.urls")),
     path("v1/pizza/", include("insalan.pizza.urls")),
+    path("v1/ecology/", include("insalan.ecology.urls")),
 ]
 if getenv("DEV", "1") == "1":
     from drf_yasg.views import get_schema_view  # type: ignore[import]
