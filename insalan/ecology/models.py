@@ -15,10 +15,13 @@ class TransportationMethod(TextChoices):
     """Enum with all transportation method used by """
 
     BIKE = "BIKE", _("Vélo")
+    BUS = "BUS", _("Bus")
     BOAT = "BOAT", _("Bateau")
     CAR = "CAR", _("Voiture")
+    CARPOOLING = "CARPOOLING", _("Covoiturage")
     NONE = "NONE", _("Aucun")
     PLANE = "PLANE", _("Avion")
+    PUBLIC_TRANSPORT = "PUBLIC_TRANSPORT", _("Transport en commun")
     TRAIN = "TRAIN", _("Train")
 
 
