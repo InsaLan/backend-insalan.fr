@@ -217,7 +217,10 @@ class PizzaSearch(generics.ListAPIView[Pizza]):  # pylint: disable=unsubscriptab
 
     def get_queryset(self) -> QuerySet[Pizza]:
         partial_name = self.request.query_params.get("q", None)
-        return Pizza.objects.filter(name__contains=partial_name)  # type: ignore[misc]
+        
+        if type(partial_name) is not str:
+            partial_name = ""
+        return Pizza.objects.filter(name__contains=partial_name)
 
     @swagger_auto_schema(  # type: ignore[misc]
         manual_parameters=[
