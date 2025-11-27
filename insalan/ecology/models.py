@@ -40,7 +40,7 @@ class TravelData(Model):
     )
     transportation_method = CharField(
         choices=TransportationMethod.choices,
-        max_length=5,
+        max_length=max(len(choice) for choice, _ in TransportationMethod.choices),
         null=False,
         blank=False,
         verbose_name=_("Mode de transport"),
