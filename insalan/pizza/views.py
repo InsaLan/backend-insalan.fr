@@ -216,10 +216,7 @@ class PizzaSearch(generics.ListAPIView[Pizza]):  # pylint: disable=unsubscriptab
     permission_classes = [ReadOnly]
 
     def get_queryset(self) -> QuerySet[Pizza]:
-        partial_name = self.request.query_params.get("q", None)
-        
-        if isinstance(partial_name, str):
-            partial_name = ""
+        partial_name = str(self.request.query_params.get("q", None))
         return Pizza.objects.filter(name__contains=partial_name)
 
     @swagger_auto_schema(  # type: ignore[misc]
