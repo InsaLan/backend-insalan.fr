@@ -218,7 +218,7 @@ class PizzaSearch(generics.ListAPIView[Pizza]):  # pylint: disable=unsubscriptab
     def get_queryset(self) -> QuerySet[Pizza]:
         partial_name = self.request.query_params.get("q", None)
         
-        if type(partial_name) is not str:
+        if isinstance(partial_name, str):
             partial_name = ""
         return Pizza.objects.filter(name__contains=partial_name)
 
