@@ -93,6 +93,7 @@ INSTALLED_APPS = [
     "insalan.cms",
     "insalan.payment",
     "insalan.pizza",
+    "insalan.ecology",
     "drf_yasg",
 ]
 
