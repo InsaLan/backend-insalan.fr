@@ -10,6 +10,8 @@ The following behaviours are enforced:
     - `Tournaments` that refer to it
  - Deleting a `Tournament`:
     - sets the `.tournament` field of all `Team`s on it to `None`
+ - Deleting a `Tournament` deletes:
+    - `TravelData`s that refer to it
  - Deleting a `Team` deletes:
     - `Player`s on it
     - `Manager`s on it

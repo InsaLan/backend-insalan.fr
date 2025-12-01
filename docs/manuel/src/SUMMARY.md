@@ -42,6 +42,7 @@
         - [CMS](./03-existant/modules/cms.md)
         - [payment](./03-existant/modules/payment.md)
         - [pizza](./03-existant/modules/pizza.md)
+        - [Écologie](./03-existant/modules/ecology.md)
     - [Traductions](./03-existant/traductions.md)
 
 <!--# Modifier

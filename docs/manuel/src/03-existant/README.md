@@ -19,3 +19,4 @@ Voici la liste des modules qui ont été développées pour le backend:
 - [CMS](./modules/cms.md)
 - [payment](./modules/payment.md)
 - [pizza](./modules/pizza.md)
+- [Écologie](./modules/ecology.md)
