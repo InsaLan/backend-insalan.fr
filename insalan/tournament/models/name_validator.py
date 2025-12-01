@@ -10,10 +10,14 @@ from django.utils.translation import gettext_lazy as _
 
 import requests
 
-from insalan.settings import RIOT_API_KEY
+from insalan.settings import FACEIT_API_KEY, RIOT_API_KEY
 
 if TYPE_CHECKING:
     from django_stubs_ext import StrPromise
+
+
+FACE_IT_API: str = "https://open.faceit.com/data/v4"
+REQUESTS_TIMEOUT_SECONDS: int = 5
 
 
 class NameValidator(ABC):
@@ -38,9 +42,7 @@ class NameValidator(ABC):
 
 
 class EmptyNameValidator(NameValidator):
-    """
-    NameValidator class
-    """
+    """NameValidator class"""
     short = "None"
     name = _("Pas de Validation de nom")
 
@@ -53,18 +55,62 @@ class EmptyNameValidator(NameValidator):
     def update_name(_name: str, _data: dict[str, Any]) -> str:
         return _name
 
+
+class FaceItNameValidator(NameValidator):
+    """FaceItNameValidator class"""
+
+    short = "FaceIt"
+    name = _("Validation FaceIt")
+
+    @staticmethod
+    def validate_name(name: str) -> dict[str, Any] | None:
+        """This method is used to validate the FaceIt name of a CS2 player."""
+        response = requests.get(
+            f"{FACE_IT_API}/players",
+            params={"nickname": name, },
+            headers={"Authorization": f"Bearer {FACEIT_API_KEY}"},
+            timeout=REQUESTS_TIMEOUT_SECONDS,
+        )
+
+        if response.status_code != 200:
+            return None
+
+        player_id = response.json()["player_id"]
+        data = {"player_id": player_id}
+
+        return data
+
+    @staticmethod
+    def update_name(name: str, data: dict[str, Any]) -> str:
+        """
+        This method is used to update the FaceIt name of a CS2 player based on
+        its player id.
+        """
+        player_id: str = data["player_id"]
+        response = requests.get(
+            f"{FACE_IT_API}/players/{player_id}",
+            headers={"Authorization": f"Bearer {FACEIT_API_KEY}"},
+            timeout=REQUESTS_TIMEOUT_SECONDS,
+        )
+        if response.status_code != 200:
+            return name
+
+        nickname: str | None = response.json().get("nickname")
+
+        if nickname is None:
+            return name
+
+        return nickname
+
+
 class LeagueOfLegendsNameValidator(NameValidator):
-    """
-    LeagueOfLegendsNameValidator class
-    """
+    """LeagueOfLegendsNameValidator class"""
     short = "LoL"
     name = _("Validation League of Legends")
 
     @staticmethod
     def validate_name(name: str) -> dict[str, Any] | None:
-        """
-        This method is used to validate the name of a LoL player
-        """
+        """This method is used to validate the name of a LoL player."""
         # pylint: disable-next=line-too-long
         accountendpoint: str = "https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{}/{}?api_key={}"
         # pylint: disable-next=line-too-long
@@ -80,7 +126,7 @@ class LeagueOfLegendsNameValidator(NameValidator):
         # Get the puuid associated with the account
         response = requests.get(
             accountendpoint.format(gamename, tagline, RIOT_API_KEY),
-            timeout=5
+            timeout=REQUESTS_TIMEOUT_SECONDS,
         )
         if response.status_code != 200:
             return None
@@ -90,7 +136,7 @@ class LeagueOfLegendsNameValidator(NameValidator):
         # Get the league of legends account associated with the puuid
         response = requests.get(
             summonerendpoint.format(puuid, RIOT_API_KEY),
-            timeout=5
+            timeout=REQUESTS_TIMEOUT_SECONDS,
         )
         if response.status_code != 200:
             return None
@@ -114,7 +160,7 @@ class LeagueOfLegendsNameValidator(NameValidator):
         puuid = data["puuid"]
         response = requests.get(
             summonerendpoint.format(puuid, RIOT_API_KEY),
-            timeout=5
+            timeout=REQUESTS_TIMEOUT_SECONDS,
         )
         # If the request fails, don't update the name
         if response.status_code != 200:
@@ -130,16 +176,20 @@ class LeagueOfLegendsNameValidator(NameValidator):
 
         return game_name + "#" + tag_line
 
+
 validators: list[Type[NameValidator]] = [
     EmptyNameValidator,
-    LeagueOfLegendsNameValidator
+    FaceItNameValidator,
+    LeagueOfLegendsNameValidator,
 ]
+
 
 def get_choices() -> list[tuple[str, StrPromise]]:
     """
     Get the choices for the validators
     """
     return [(validator.short, validator.name) for validator in validators]
+
 
 def get_validator(name: str) -> Type[NameValidator] | None:
     """
