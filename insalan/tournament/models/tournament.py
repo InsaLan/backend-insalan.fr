@@ -129,19 +129,19 @@ class BaseTournament(PolymorphicModel):  # type: ignore[misc]
         return self.rules
 
     def get_max_team(self) -> int:
-        """Retourne la limite actuelle basée sur le seuil actif"""
+        """Return the max number of teams allowed at the current threshold"""
         if not self.max_team_thresholds:
             return 0
         return self.max_team_thresholds[self.current_threshold_index]
 
     def get_next_threshold(self) -> int | None:
-        """Retourne le prochain seuil ou None si on est au maximum"""
+        """Return the next team threshold, or None if there is none"""
         if self.current_threshold_index + 1 < len(self.max_team_thresholds):
             return self.max_team_thresholds[self.current_threshold_index + 1]
         return None
 
     def can_expand_threshold(self) -> bool:
-        """Vérifie si on peut passer au seuil suivant"""
+        """Check if we can expand to the next team threshold"""
         next_threshold = self.get_next_threshold()
         if next_threshold is None:
             return False
@@ -155,8 +155,8 @@ class BaseTournament(PolymorphicModel):  # type: ignore[misc]
 
     def get_teams_ready_for_validation(self) -> int:
         """
-        Compte les équipes non-validées mais qui pourraient l'être
-        (ont suffisamment de joueurs payés)
+        Return the number of teams that are not yet validated
+        but meet the criteria for validation.
         """
         teams = self.teams.filter(validated=False)
         count = 0
@@ -172,7 +172,7 @@ class BaseTournament(PolymorphicModel):  # type: ignore[misc]
     # not working properly and the isinstance checks fail /!\
     # took a few time to figure that out :(
     def team_meets_validation_criteria(self, tm: Team) -> bool:
-        """Vérifie si une équipe remplit les critères de validation"""
+        """Check if a team meets the criteria to be validated"""
         # An EventTournament team is validated if ceil((n+1)/2) players have paid
         if isinstance(self, EventTournament):
             players = tm.get_players()
@@ -189,8 +189,8 @@ class BaseTournament(PolymorphicModel):  # type: ignore[misc]
 
     def validate_eligible_teams(self) -> int:
         """
-        Valide toutes les équipes éligibles qui ne sont pas encore validées.
-        Retourne le nombre d'équipes nouvellement validées.
+        Validate teams that meet the criteria until reaching the max team limit.
+        Return the number of newly validated teams.
         """
         newly_validated = 0
         validated_count = self.get_validated_teams()
@@ -214,7 +214,7 @@ class BaseTournament(PolymorphicModel):  # type: ignore[misc]
         return newly_validated
 
     def try_expand_threshold(self) -> bool:
-        """Tente d'étendre au seuil suivant. Retourne True si étendu."""
+        """Try to expand the team threshold if possible. Return True if expanded, False otherwise."""
         if self.can_expand_threshold():
             self.current_threshold_index += 1
             self.save(update_fields=['current_threshold_index'])

@@ -194,7 +194,7 @@ class Team(models.Model):
         return None
 
     def refresh_validation(self) -> None:
-        """Rafraîchit l'état de validation d'une équipe et du tournoi"""
+        """Refresh the validation status of the team"""
         if self.validated:
             return
 
@@ -226,7 +226,7 @@ class Team(models.Model):
 
     def get_is_waiting_for_threshold(self) -> bool:
         """
-        Determine if the team is waiting for the next threshold to be validated
+        Check if the team is waiting for the tournament to expand its team threshold
         """
         if self.validated:
             return False
