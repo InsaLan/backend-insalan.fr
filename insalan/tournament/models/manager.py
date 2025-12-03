@@ -74,7 +74,8 @@ class Manager(models.Model):
     def clean(self) -> None:
         """
         Assert that the user associated with the provided manager does not already
-        exist in any team of any tournament of the event
+        exist in any team of any tournament of the event and that the tournament
+        allow manager registration.
         """
         user = self.user
         tourney = self.get_team().get_tournament()
@@ -86,3 +87,5 @@ class Manager(models.Model):
                 )
             if not validators.tournament_announced(tourney):
                 raise ValidationError(_("Tournoi non annoncé"))
+            if not tourney.enable_manager:
+                raise ValidationError(_("Ce tournoi n'autorise pas l'inscription de manager"))
