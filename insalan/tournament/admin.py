@@ -399,7 +399,7 @@ class EventTournamentAdmin(ModelAdmin[EventTournament]): # type: ignore
 
     list_filter = (EventTournamentFilter, GameTournamentFilter)
 
-    actions = ['update_name']
+    actions = ['update_name', 'expand_threshold']
 
     def get_form(
         self,
@@ -431,6 +431,14 @@ class EventTournamentAdmin(ModelAdmin[EventTournament]): # type: ignore
         for tournament in queryset:
             tournament.update_name_in_game()
         self.message_user(request,_("Les pseudo ont été mis à jour."))
+
+    @admin.action(description=_("Augmenter le seuil d'équipes"))
+    def expand_threshold(
+        self, request: HttpRequest, queryset: QuerySet[EventTournament]
+    ) -> None:
+        for tournament in queryset:
+            tournament.try_expand_threshold()
+        self.message_user(request,_("Le seuil a été mis à jour."))
 
     class Media:
         css = {

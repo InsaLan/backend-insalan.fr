@@ -214,7 +214,10 @@ class BaseTournament(PolymorphicModel):  # type: ignore[misc]
         return newly_validated
 
     def try_expand_threshold(self) -> bool:
-        """Try to expand the team threshold if possible. Return True if expanded, False otherwise."""
+        """
+        Try to expand the team threshold if possible.
+        Return True if expanded, False otherwise.
+        """
         if self.can_expand_threshold():
             self.current_threshold_index += 1
             self.save(update_fields=['current_threshold_index'])

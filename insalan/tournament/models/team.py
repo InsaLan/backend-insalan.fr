@@ -198,28 +198,14 @@ class Team(models.Model):
         if self.validated:
             return
 
-        # Try to expand the tournament thresholds
-        # If successful, the team might now be valid
-        expanded = self.tournament.try_expand_threshold()
-
-        # Refresh the validated status from the database
-        # This is necessary because the 'self' instance is not the same
-        # as the one used in the subfunctions called
-        self.refresh_from_db(fields=['validated'])
-
         # Check if the team can now be validated
-        if not expanded:
-            validated_count = self.tournament.get_validated_teams()
-            current_max = self.tournament.get_max_team()
+        validated_count = self.tournament.get_validated_teams()
+        current_max = self.tournament.get_max_team()
 
-            if validated_count < current_max:
-                if self.tournament.team_meets_validation_criteria(self):
-                    self.validated = True
-                    self.save(update_fields=['validated'])
-
-                    # Try to expand the tournament thresholds again
-                    # Should not be necessary, but double check
-                    self.tournament.try_expand_threshold()
+        if validated_count < current_max:
+            if self.tournament.team_meets_validation_criteria(self):
+                self.validated = True
+                self.save(update_fields=['validated'])
 
         # Save the team to update captain if needed
         self.save()
