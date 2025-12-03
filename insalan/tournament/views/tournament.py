@@ -35,13 +35,20 @@ from .permissions import ReadOnly
 
 # pylint: disable-next=unsubscriptable-object
 class PrivateTournamentList(generics.ListAPIView[PrivateTournament]):
-    """List all known private tournaments"""
+    """List all known private tournaments that are running"""
 
     pagination_class = None
     queryset = PrivateTournament.objects.filter(running=True).order_by("id")
     serializer_class = serializers.PrivateTournamentSerializer
     permission_classes = [permissions.IsAdminUser | ReadOnly]
 
+# pylint: disable-next=unsubscriptable-object
+class PrivateTournamentDetails(generics.RetrieveAPIView[PrivateTournament]):
+    """Details about a private tournament"""
+
+    queryset = PrivateTournament.objects.all().order_by("id")
+    serializer_class = serializers.PrivateTournamentSerializer
+    permission_classes = [permissions.IsAdminUser | ReadOnly]
 
 # pylint: disable-next=unsubscriptable-object
 class TournamentList(generics.ListCreateAPIView[EventTournament]):

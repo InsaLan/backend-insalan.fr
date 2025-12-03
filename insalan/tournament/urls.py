@@ -15,7 +15,16 @@ urlpatterns = [
     path("event/year/<int:year>/", views.EventByYear.as_view(), name="event/by-year"),
     path("game/", views.GameList.as_view(), name="game/list"),
     path("game/<int:pk>/", views.GameDetails.as_view(), name="game/details"),
-    path("tournament/privates/", views.PrivateTournamentList.as_view(), name="tournament/list"),
+    path(
+        "tournament/privates/",
+        views.PrivateTournamentList.as_view(),
+        name="private-tournament/list"
+    ),
+    path(
+        "tournament/privates/<int:pk>/",
+        views.PrivateTournamentDetails.as_view(),
+        name="private-tournament/details"
+    ),
     path("tournament/", views.TournamentList.as_view(), name="tournament/list"),
     path(
         "tournament/<int:pk>/",
