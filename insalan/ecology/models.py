@@ -21,7 +21,7 @@ class TransportationMethod(TextChoices):
     CARPOOLING = "CARPOOLING", _("Covoiturage")
     NONE = "NONE", _("Aucun")
     PLANE = "PLANE", _("Avion")
-    PUBLIC_TRANSPORT = "PUBLIC_TRANSPORT", _("Transport en commun")
+    PUBLIC_TRANSPORT = "PUBLIC_TRANSPORT", _("Transport public urbain")
     TRAIN = "TRAIN", _("Train")
 
 
