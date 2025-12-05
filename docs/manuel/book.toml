@@ -1,5 +1,9 @@
 [book]
-authors = ["Amélie \"Lymkwi\" González", "Gabriel \"KwiKill\" Blaisot"]
+authors = [
+    "Amélie \"Lymkwi\" González",
+    "Gabriel \"KwiKill\" Blaisot",
+    "Floris Bartra",
+]
 language = "fr"
 multilingual = false
 src = "src"

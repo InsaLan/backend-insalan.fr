@@ -47,6 +47,12 @@ class Manager(models.Model):
         blank=True,
         default=None,
     )
+    ecological_data_sent = models.BooleanField(
+        verbose_name=_("Données écologique envoyées"),
+        null=False,
+        blank=False,
+        default=False,
+    )
 
     class Meta:
         """Meta Options"""
