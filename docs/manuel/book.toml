@@ -5,6 +5,5 @@ authors = [
     "Floris Bartra",
 ]
 language = "fr"
-multilingual = false
 src = "src"
 title = "Manuel de Prise en Main du Backend"
