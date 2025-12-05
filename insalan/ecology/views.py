@@ -18,7 +18,7 @@ from .serializers import TravelDataSerializer
 
 
 class CreateTravelData(CreateAPIView[TravelData]):  # pylint: disable=unsubscriptable-object
-    """Create a new TravalData."""
+    """Create a new TravelData."""
 
     serializer_class = TravelDataSerializer
     permission_classes = [IsAuthenticated]
