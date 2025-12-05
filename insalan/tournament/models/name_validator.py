@@ -16,7 +16,6 @@ if TYPE_CHECKING:
     from django_stubs_ext import StrPromise
 
 
-FACE_IT_API: str = "https://open.faceit.com/data/v4"
 REQUESTS_TIMEOUT_SECONDS: int = 5
 
 
@@ -62,11 +61,13 @@ class FaceItNameValidator(NameValidator):
     short = "FaceIt"
     name = _("Validation FaceIt")
 
+    face_it_api: str = "https://open.faceit.com/data/v4"
+
     @staticmethod
     def validate_name(name: str) -> dict[str, Any] | None:
         """This method is used to validate the FaceIt name of a CS2 player."""
         response = requests.get(
-            f"{FACE_IT_API}/players",
+            f"{FaceItNameValidator.face_it_api}/players",
             params={"nickname": name, },
             headers={"Authorization": f"Bearer {FACEIT_API_KEY}"},
             timeout=REQUESTS_TIMEOUT_SECONDS,
@@ -88,7 +89,7 @@ class FaceItNameValidator(NameValidator):
         """
         player_id: str = data["player_id"]
         response = requests.get(
-            f"{FACE_IT_API}/players/{player_id}",
+            f"{FaceItNameValidator.face_it_api}/players/{player_id}",
             headers={"Authorization": f"Bearer {FACEIT_API_KEY}"},
             timeout=REQUESTS_TIMEOUT_SECONDS,
         )
