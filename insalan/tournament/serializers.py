@@ -281,12 +281,12 @@ class GenerateGroupsSerializer(serializers.Serializer[Any]):
                 )
             )
 
-        if count * team_per_group > tournament.maxTeam:
+        if count * team_per_group > tournament.get_max_team():
             raise serializers.ValidationError(
                 _(
                     f"{count} poules de {team_per_group} équipes permet d'accueillir\
                     {count * team_per_group} équipes au maximum, or il peut y avoir\
-                    au plus {tournament.maxTeam} équipes inscrites.\
+                    au plus {tournament.get_max_team()} équipes inscrites.\
                     Veuillez revoir le nombre de poules et/ou le nombre d'équipes par poule."
                 )
             )
@@ -434,7 +434,7 @@ class BracketSerializer(serializers.ModelSerializer[Bracket]):
         tournament = data["tournament"]
         team_count = data["team_count"]
 
-        if team_count > tournament.maxTeam:
+        if team_count > tournament.get_max_team():
             raise serializers.ValidationError(
                 _(
                     "Le nombre d'équipes demandé est supérieur\
@@ -1073,6 +1073,9 @@ class FullDerefTeamSerializer2(serializers.ModelSerializer[Team]):
     managers = FullDerefManagerSerializer(many=True, source="manager_set", read_only=True)
     # pylint: disable-next=unsubscriptable-object
     captain: SlugRelatedField[Player] = SlugRelatedField(slug_field="name_in_game", read_only=True)
+    is_waiting_for_threshold = serializers.BooleanField(
+        read_only=True, source="get_is_waiting_for_threshold"
+    )
 
     class Meta:
         """Meta options of the team serializer"""

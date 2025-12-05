@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from math import ceil
 from typing import Any, cast, TYPE_CHECKING
 
 from django.contrib.postgres.fields import ArrayField
@@ -20,7 +21,7 @@ from polymorphic.models import PolymorphicModel  # type: ignore
 
 from insalan.components.image_field import ImageField
 
-from . import team, caster, group, bracket, swiss
+from . import team, caster, group, bracket, swiss, payement_status as ps
 
 if TYPE_CHECKING:
     from django.db.models.manager import RelatedManager
@@ -67,11 +68,15 @@ class BaseTournament(PolymorphicModel):  # type: ignore[misc]
             FileExtensionValidator(allowed_extensions=["png", "jpg", "jpeg", "svg", "webp", "avif"])
         ],
     )
-    maxTeam = models.IntegerField(
+    max_team_thresholds = ArrayField(
+        models.IntegerField(validators=[MinValueValidator(1)]),
+        default=list,
+        verbose_name=_("Seuils du nombre d'équipes"),
+        help_text=_("Liste croissante de seuils (ex: [24, 32, 40])"),
+    )
+    current_threshold_index = models.IntegerField(
         default=0,
-        null=False,
-        verbose_name=_("Nombre maximal d'équipe"),
-        validators=[MinValueValidator(0)],
+        verbose_name=_("Index du seuil actuel"),
     )
     description = models.CharField(
         null=False,
@@ -124,8 +129,107 @@ class BaseTournament(PolymorphicModel):  # type: ignore[misc]
         return self.rules
 
     def get_max_team(self) -> int:
-        """Return the max number of teams"""
-        return self.maxTeam
+        """Return the max number of teams allowed at the current threshold"""
+        if not self.max_team_thresholds:
+            return 0
+        return self.max_team_thresholds[self.current_threshold_index]
+
+    def get_next_threshold(self) -> int | None:
+        """Return the next team threshold, or None if there is none"""
+        if self.current_threshold_index + 1 < len(self.max_team_thresholds):
+            return self.max_team_thresholds[self.current_threshold_index + 1]
+        return None
+
+    def can_expand_threshold(self) -> bool:
+        """Check if we can expand to the next team threshold"""
+        next_threshold = self.get_next_threshold()
+        if next_threshold is None:
+            return False
+
+        validated_count = self.get_validated_teams()
+        potential_teams = self.get_teams_ready_for_validation()
+
+        # We can expand if the sum of validated teams and teams ready for validation
+        # is greater than or equal to the next threshold
+        return (validated_count + potential_teams) >= next_threshold
+
+    def get_teams_ready_for_validation(self) -> int:
+        """
+        Return the number of teams that are not yet validated
+        but meet the criteria for validation.
+        """
+        teams = self.teams.filter(validated=False)
+        count = 0
+
+        for tm in teams:
+            if self.team_meets_validation_criteria(tm):
+                count += 1
+
+        return count
+
+    # /!\ This method need to be in the Tournament model because
+    # if it's in the Team model, the polymorphic behavior is
+    # not working properly and the isinstance checks fail /!\
+    # took a few time to figure that out :(
+    def team_meets_validation_criteria(self, tm: Team) -> bool:
+        """Check if a team meets the criteria to be validated"""
+        # An EventTournament team is validated if ceil((n+1)/2) players have paid
+        if isinstance(self, EventTournament):
+            players = tm.get_players()
+            game = self.get_game()
+            threshold = ceil((game.get_players_per_team() + 1) / 2)
+            paid_seats = players.filter(payment_status=ps.PaymentStatus.PAID).count()
+            return paid_seats >= threshold
+        # A PrivateTournament team is validated if the team is full
+        if isinstance(self, PrivateTournament):
+            players = tm.get_players()
+            game = self.get_game()
+            return players.count() == game.get_players_per_team()
+        return False
+
+    def validate_eligible_teams(self) -> int:
+        """
+        Validate teams that meet the criteria until reaching the max team limit.
+        Return the number of newly validated teams.
+        """
+        newly_validated = 0
+        validated_count = self.get_validated_teams()
+        current_max = self.get_max_team()
+
+        # Get all non-validated teams
+        teams_to_check = self.teams.filter(validated=False).select_related('tournament')
+
+        for tm in teams_to_check:
+            # Stop if we've reached the current max
+            if validated_count >= current_max:
+                break
+
+            # Validate the team if it meets the criteria
+            if self.team_meets_validation_criteria(tm):
+                tm.validated = True
+                tm.save(update_fields=['validated'])
+                validated_count += 1
+                newly_validated += 1
+
+        return newly_validated
+
+    def try_expand_threshold(self) -> bool:
+        """
+        Try to expand the team threshold if possible.
+        Return True if expanded, False otherwise.
+        """
+        if self.can_expand_threshold():
+            self.current_threshold_index += 1
+            self.save(update_fields=['current_threshold_index'])
+
+            # when we expand, we need to validate eligible teams
+            self.validate_eligible_teams()
+
+            # Check again if we can expand further
+            # (in case many teams were eligible)
+            return self.try_expand_threshold() or True
+
+        return False
 
     def get_validated_teams(self, exclude: int | None = None) -> int:
         """Return the number of validated teams"""

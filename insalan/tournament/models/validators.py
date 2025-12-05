@@ -88,7 +88,9 @@ def tournament_registration_full(tournament: BaseTournament, exclude: int | None
     """Validate if a tournament is full"""
     if exclude is not None:
         return False
-    if tournament.get_validated_teams(exclude) >= tournament.get_max_team():
+    if tournament.get_validated_teams(exclude) >= tournament.max_team_thresholds[
+        len(tournament.max_team_thresholds) - 1
+    ]:
         return True
     return False
 
