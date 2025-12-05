@@ -25,11 +25,11 @@ class ManagerTestCase(TestCase):
         """Setup method for Manager Unit Tests"""
 
         # Basic setup for a one-tournamnent game event
-        event = Event.objects.create(
+        self.event = Event.objects.create(
             name="InsaLan Test", date_start=date(2023,3,1), date_end=date(2023,3,2), description=""
         )
-        game = Game.objects.create(name="Test Game")
-        trnm = EventTournament.objects.create(game=game, event=event)
+        self.game = Game.objects.create(name="Test Game")
+        trnm = EventTournament.objects.create(game=self.game, event=self.event)
         team_one = Team.objects.create(
             name="La Team Test",
             tournament=trnm,
@@ -260,6 +260,33 @@ class ManagerTestCase(TestCase):
         man.save()
         man2 = Manager(user=fella, team=team_two)
         man2.full_clean()
+
+    def test_create_manager_when_manager_not_enabled(self) -> None:
+        """
+        Test creating a manager for an event tournament that don't allow for
+        manager registration.
+        """
+        tournament = EventTournament.objects.create(
+            game=self.game,
+            event=self.event,
+            is_announced=True,
+            enable_manager=False,
+        )
+        team = Team.objects.create(name="test_team", tournament=tournament)
+        user = User.objects.create_user(
+            username="test_user",
+            email="test@example.com",
+        )
+
+        manager = Manager(user=user, team=team)
+
+        with self.assertRaises(ValidationError) as context:
+            manager.full_clean()
+
+        self.assertEqual(
+            context.exception.messages,
+            ["Ce tournoi n'autorise pas l'inscription de manager"],
+        )
 
     def test_manager_team_deletion(self) -> None:
         """Verify the behaviour of a Manager when their team gets deleted"""

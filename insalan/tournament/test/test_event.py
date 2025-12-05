@@ -300,6 +300,7 @@ class EventDerefAndGroupingEndpoints(APITestCase):
                         timezone.make_naive(tourney.registration_close)
                     ).isoformat(),
                     "logo": None,
+                    "enable_manager": True,
                     "player_price_online": "0.00",
                     "player_price_onsite": "0.00",
                     "manager_price_online": "0.00",

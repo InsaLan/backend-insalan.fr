@@ -321,6 +321,10 @@ class EventTournament(BaseTournament):
         default=in_thirty_days,
         null=False,
     )
+    enable_manager = models.BooleanField(
+        verbose_name=_("Activer les places manager"),
+        default=True,
+    )
     # Tournament player slot prices
     # These prices are used at the tournament creation to create associated
     # products
@@ -455,22 +459,23 @@ class EventTournament(BaseTournament):
         self.player_online_product.available_until = self.registration_close
         self.player_online_product.save()
 
-        if self.manager_online_product is None:
-            prod = Product.objects.create(
-                price=self.manager_price_online,
-                name=cast(str, _(f"Place {self.name} manager en ligne - {self.event.name}")),
-                desc=cast(str, _(f"Inscription au tournoi {self.name} manager")),
-                category=ProductCategory.REGISTRATION_MANAGER,
-                associated_tournament=self,
-                available_from=self.registration_open,
-                available_until=self.registration_close,
-            )
-            self.manager_online_product = prod
-            need_save = True
+        if self.enable_manager:
+            if self.manager_online_product is None:
+                prod = Product.objects.create(
+                    price=self.manager_price_online,
+                    name=cast(str, _(f"Place {self.name} manager en ligne - {self.event.name}")),
+                    desc=cast(str, _(f"Inscription au tournoi {self.name} manager")),
+                    category=ProductCategory.REGISTRATION_MANAGER,
+                    associated_tournament=self,
+                    available_from=self.registration_open,
+                    available_until=self.registration_close,
+                )
+                self.manager_online_product = prod
+                need_save = True
 
-        self.manager_online_product.available_from = self.registration_open
-        self.manager_online_product.available_until = self.registration_close
-        self.manager_online_product.save()
+            self.manager_online_product.available_from = self.registration_open
+            self.manager_online_product.available_until = self.registration_close
+            self.manager_online_product.save()
 
         if self.substitute_online_product is None:
             prod = Product.objects.create(

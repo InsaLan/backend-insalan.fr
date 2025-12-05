@@ -285,6 +285,7 @@ class TournamentFullDerefEndpoint(APITestCase):
             "registration_close": timezone.make_aware(
                 timezone.make_naive(tourneyobj_one.registration_close)
             ).isoformat(),
+            "enable_manager": True,
             "player_price_online": "0.00",
             "player_price_onsite": "0.00",
             "manager_price_online": "0.00",
