@@ -76,6 +76,12 @@ class Player(models.Model):
         verbose_name=_("Données additionnelles"),
         help_text=_("Données additionnelles fournies par le validateur de pseudo en jeu."),
     )
+    ecological_data_sent = models.BooleanField(
+        verbose_name=_("Données écologique envoyées"),
+        null=False,
+        blank=False,
+        default=False,
+    )
 
     def __str__(self) -> str:
         """Format this player registration to a str"""
