@@ -1641,7 +1641,7 @@ class SeatSlotForm(ModelForm[SeatSlot]):  # pylint: disable=unsubscriptable-obje
                 )
 
         # Ensure that all seats are not part of another slot
-        if seats:
+        if seats and tournament:
             other_slots = SeatSlot.objects.exclude(id=self.instance.id)
             other_slots = other_slots.filter(
                 tournament__event=tournament.event,
