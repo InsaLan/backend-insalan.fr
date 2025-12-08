@@ -348,6 +348,9 @@ class EventTournamentForm(ModelForm[EventTournament]):  # pylint: disable=unsubs
 
             # Ensure that every used seat is used only once
             other_tournament_slots = SeatSlot.objects.exclude(tournament=self.instance)
+            other_tournament_slots = other_tournament_slots.filter(
+                tournament__event=self.instance.event,
+            )
             unavailable_seats = set((seat.x, seat.y)
                                     for slot in other_tournament_slots for seat in slot.seats.all())
             all_seats = set(tuple(seat) for seats in seat_slots.values() for seat in seats)
@@ -1640,6 +1643,9 @@ class SeatSlotForm(ModelForm[SeatSlot]):  # pylint: disable=unsubscriptable-obje
         # Ensure that all seats are not part of another slot
         if seats:
             other_slots = SeatSlot.objects.exclude(id=self.instance.id)
+            other_slots = other_slots.filter(
+                tournament__event=tournament.event,
+            )
             other_seats = {seat for slot in other_slots for seat in slot.seats.all()}
             if other_seats.intersection(seats):
                 raise ValidationError(
