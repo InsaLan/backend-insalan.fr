@@ -50,7 +50,7 @@ Certains paramètres de classe peuvent être définis pour configurer la vue, co
 renvoyer, et `permission_classes` pour définir les permissions nécessaires pour
 accéder à la vue.
 
-Attention, soyez prudents avec les comportements par défaut des vues
+Attention, soyez prudent·e·s avec les comportements par défaut des vues
 prédéfinies, car ils peuvent ne pas correspondre à ce que vous souhaitez faire.
 Par exemple, la vue `ListCreateAPIView` permet de créer des objets avec une
 requête POST, ce qui peut ne pas être souhaitable dans certains cas.
