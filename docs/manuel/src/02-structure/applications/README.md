@@ -14,13 +14,13 @@ Un module est organisé en plusieurs parties dans notre projet DRF. Il y a:
  - des [vues](./vues.md) pour rassembler les objets et traiter des demandes de
      l'API
  - des [serializers](./serializers.md) pour transformer les objets en chaînes de
-     caractère, et inversement
- - des [endpoints](./endpoints.md) pour que les utilisateur⋅ices puissent venir
+     caractères, et inversement
+ - des [endpoints](./endpoints.md) pour que les utilisateur⋅rice·s puissent venir
      faire des requêtes sur le backend
 
 Ces éléments forment une espèce de pile, qui permettent le traitement des
-données des objets, entre l'API exposée à internet d'un côté, et la base de
-donnée qui contient les modèles de l'autre.
+données des objets, entre l'API exposée à Internet d'un côté, et la base de
+données qui contient les modèles de l'autre.
 
 <!--
 vim: set tw=80 spell spelllang=fr:
