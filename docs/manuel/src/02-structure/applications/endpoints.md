@@ -8,7 +8,7 @@ potentiellement des paramètres.
 
 Chaque module dans notre projet contient un fichier `urls.py`, qui exporte les
 endpoints créés par le module, et décrit les potentiels paramètres des requêtes,
-et les traitants.
+et les handlers ("traitants").
 
 La liste des URLs est appelée `urlpatterns`, et contient des successions
 d'appels à la fonction [`path`](https://docs.djangoproject.com/en/4.2/ref/urls/)
@@ -27,12 +27,12 @@ chemin de la requête HTTP. Pour dire à Django que l'on souhaite réceptionner 
 parties variables de la requête, on utilise la syntaxe entre chevrons
 `<type:nom>` qui décrit les contraintes sur ces paramètres:
  - `<int:user_id>` décrit que l'ont cherche un entier naturel qui sera ensuite
-     appelé dans le traitant `user_id`
+     appelé dans le handler `user_id`
  - `<int:pk>` indique que l'on cherche un entier qui sera appelé `pk` dans le
-     traitant. Les vues par défaut de DRF (`APICreateView`, etc), utilisent `pk`
+     handler. Les vues par défaut de DRF (`APICreateView`, etc), utilisent `pk`
      comme nom de variable
  - `<str:username>` indique que l'on cherche une chaîne de caractère qui sera
-     passée dans la variable `username` au traitant
+     passée dans la variable `username` au handler
 
 ### Reverse Lookup
 
@@ -61,9 +61,9 @@ L'API est documentée (autant que possible) via une api
 [Swagger](http://api.beta.insalan.fr/v1/swagger). Cela permet de voir:
  - l'ensemble des chemins existants classés par catégorie
  - les méthodes disponibles
- - la liste des codes de retour possible et leur signification
- - la forme des payload attendus
- - la forme des payload retournés
+ - la liste des codes de retour possibles et leur signification
+ - la forme des payload attendue
+ - la forme des payload retournée
 
 Il est important de maintenir cette documentation à jour. Pour cela, on utilise
 la librairie [`drf-yasg`](https://drf-yasg.readthedocs.io/en/stable/), qui
