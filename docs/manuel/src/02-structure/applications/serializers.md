@@ -4,7 +4,7 @@
 
 Normalement vous avez lu l'[introduction à l'API
 REST](../../00-prelude/prerequis.md#api-rest) avant de lire cette section donc
-vous ne devriez pas être perdu. Si ce n'est pas le cas, je vous invite à le
+vous ne devriez pas être perdu·e. Si ce n'est pas le cas, je vous invite à le
 faire avant de continuer.
 
 Les serializers sont des classes qui permettent de transformer des objets Python
@@ -38,13 +38,13 @@ Framework](https://www.django-rest-framework.org/api-guide/serializers/#serializ
 
 Il est possible d'avoir un serializer partiel qui ne contient pas tous les
 champs du modèle, ce qui peut être pratique pour ne pas envoyer des données
-inutiles ou privée au client.
+inutiles ou privées au client.
 
-A l'inverse, il est possible de déclarer des champs qui ne sont pas des champs
+À l'inverse, il est possible de déclarer des champs qui ne sont pas des champs
 du modèle. Par exemple, le serializer du modèle Player contient un champ
 `password` qui n'est pas un champ du modèle, mais qui est utilisé pour stocker
-le mot de passe et le vérifier avec celui de l'équipe lors de la création d'un
-joueur via requête POST.
+le mot de passe et le vérifier avec celui de l'équipe lors de la création d'un·e
+joueur·euse via requête POST.
 
 ## Utiliser un Serializer
 
