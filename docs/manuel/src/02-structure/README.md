@@ -1,6 +1,6 @@
 # Structure
 
-Le backend est structuré comme un projet Django DRF, c'est à dire que l'on y
+Le backend est structuré comme un projet Django DRF, c'est-à-dire que l'on y
 retrouve une organisation selon des [*applications*](./applications/) ou «
 modules », le tout chapeauté par un *projet*.
 
