@@ -15,9 +15,9 @@ Les commandes disponibles via la commande Django Admin servent par exemple:
  - `compilemessages`/`makemessages`: À faire de la
      [traduction](../../03-existant/traductions.md)
  - `makemigrations`/`migrate`: À gérer les [migrations](../migrations.md) des
-     schemas de la base de donnée
+     schémas de la base de données
  - `sendtestemail`: À vérifier les [paramètres d'email](./configuration.md#Email)
- - `createsuperuser`: À créer un⋅e superutilisateur⋅ice qui a tous les droits
+ - `createsuperuser`: À créer un⋅e superutilisateur⋅rice qui a tous les droits
      sur les données
  - `runserver`: À lancer le serveur de développement localement
 
