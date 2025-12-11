@@ -3,7 +3,7 @@
 Vous avez compris les [statiques](./statiques.md) ? Bah c'est pareil pour les
 médias, mais avec un twist. Les médias sont des fichiers qui peuvent être
 uploadés dynamiquement, et qui ne sont pas utilisés par le code de
-l'application. Par exemple, les images de profil des utilisateurs, ou les logos
+l'application. Par exemple, les images de profil des utilisateur·rice·s, ou les logos
 des tournois.
 
 Django gère les médias de la même manière que les statiques, mais avec une
