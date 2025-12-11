@@ -1,4 +1,4 @@
-# Modèles
+# Modèles
 
 Les modèles sont des classes Python qui décrivent la structure des données que
 l'on souhaite stocker dans la base de données. Ils sont utilisés par Django pour
