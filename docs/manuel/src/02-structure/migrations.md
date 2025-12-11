@@ -3,7 +3,7 @@
 Les modèles créés via Django sont formatés automatiquement par la partie ORM
 (*Object Relation Mapping*) du framework en *tables* SQL. Les migrations
 permettent de suivre les évolutions passées et futures des modèles, et les
-répercuter sur la base de donnée relationnelle.
+répercuter sur la base de données relationnelle.
 
 ## Kézako SQL?
 
@@ -19,7 +19,7 @@ fonctionnement de SQL, à la place, on peut partir des approximations suivantes:
 Toutes les migrations sont fractionnées par application, dans un dossier
 `./migrations` à la racine de chaque application. Lorsque vous avez effectué des
 modifications sur les modèles ou contraintes, et qu'il faut les répercuter sur
-la base de donnée, on passe toujours par une génération des migrations via:
+la base de données, on passe toujours par une génération des migrations via:
 ```shell
 ./manage.py makemigrations
 ```
@@ -30,24 +30,24 @@ Suivi de
 ```
 
 Cette dernière commande applique les migrations qui sont nouvelles à votre base
-de donnée relationnelle.
+de données relationnelle.
 
 ### Gestion dans le contrôle de version
 
-Étant donnée que les migrations sont liées à un état de la base de donnée à un
+Étant donné que les migrations sont liées à un état de la base de données à un
 instant T, on considère qu'il ne faut pas commit les migrations (sauf celles
 appliquées en production). À cause de cela, nous avons une règle dans le
 `.gitignore` du backend qui ignore tous les fichiers dans les dossiers
-`migrations` qui commencent pas un chiffre.
+`migrations` qui commencent par un chiffre.
 
 Cependant, pour que Django puisse continuer de fonctionner, `migrations` doit
 être un sous-module de chaque application, **il faut donc conserver le fichier
 `__init__.py`**.
 
-### Wipe de base de donnée
+### Wipe de base de données
 
 Si vous êtes dans un environnement local et que vous repartez de zéro
-(destruction de la base de donnée, pour quelconque raison), il est aussi
+(destruction de la base de données, pour quelconque raison), il est aussi
 préférable de détruire les migrations.
 
 Pour ce faire, vous pouvez utiliser la commande suivante à lancer depuis la
