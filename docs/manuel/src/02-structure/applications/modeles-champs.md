@@ -41,7 +41,7 @@ contraintes, comme expliqué précédemment mais il est aussi possible de décla
 des contraintes plus complexes, qui portent sur plusieurs champs ou plusieurs
 entrées.
 
-Par exemple, on peut déclarer une contrainte qui empêche un joueur de participer
+Par exemple, on peut déclarer une contrainte qui empêche un·e joueur·euse de participer
 à plusieurs tournois en même temps. Ce genre de contrainte est déclaré dans le
 modèle sous forme d'une méthode
 [`clean`](https://docs.djangoproject.com/en/5.0/ref/models/fields/#field-types)
