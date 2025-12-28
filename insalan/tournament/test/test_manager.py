@@ -154,9 +154,8 @@ class ManagerTestCase(TestCase):
             name="InsaLan Test", date_start=date(2023,8,1), date_end=date(2023,8,2), description=""
         )
         game = Game.objects.create(name="Test Game")
-        trnm = EventTournament.objects.create(game=game, event=event)
-        # TODO: enable back this warning when the test is fixed.
-        team_one = Team.objects.create( # pylint: disable=unused-variable
+        trnm = EventTournament.objects.create(game=game, event=event, is_announced=True)
+        team_one = Team.objects.create(
             name="La Team Test",
             tournament=trnm,
             password=make_password("lateamtestpwd"),
@@ -174,9 +173,10 @@ class ManagerTestCase(TestCase):
             first_name="Hewwo",
             last_name="Nya",
         )
-
+        Manager.objects.create(user=fella, team=team_one)
         man2 = Manager.objects.create(user=fella, team=team_two)
 
+        assert trnm.is_announced and trnm.enable_manager
         self.assertRaises(ValidationError, man2.full_clean)
 
     def test_one_manager_many_teams_same_event_diff_tournament_diff_team(self) -> None:
