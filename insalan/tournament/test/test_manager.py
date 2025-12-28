@@ -176,6 +176,7 @@ class ManagerTestCase(TestCase):
         Manager.objects.create(user=fella, team=team_one)
         man2 = Manager.objects.create(user=fella, team=team_two)
 
+        #ensure the error raised during man2.full_clean call is the correct one
         assert trnm.is_announced and trnm.enable_manager
         self.assertRaises(ValidationError, man2.full_clean)
 
@@ -220,6 +221,7 @@ class ManagerTestCase(TestCase):
         man.save()
         man2 = Manager.objects.create(user=fella, team=team_two)
 
+        assert trnm.is_announced and trnm.enable_manager
         self.assertRaises(ValidationError, man2.full_clean)
 
 

@@ -155,8 +155,8 @@ class SubstituteTestCase(APITestCase):
             name="InsaLan Test", date_start=date(2023,8,1), date_end=date(2023,8,2), description=""
         )
         game = Game.objects.create(name="Test Game", substitute_players_per_team=1)
-        trnm = EventTournament.objects.create(game=game, event=event)
-        Team.objects.create(
+        trnm = EventTournament.objects.create(game=game, event=event, is_announced=True)
+        team_one = Team.objects.create(
             name="La Team Test",
             tournament=trnm,
             password=make_password("lateamtestpwd"),
@@ -174,9 +174,10 @@ class SubstituteTestCase(APITestCase):
             first_name="Hewwo",
             last_name="Nya",
         )
+        Substitute.objects.create(user=fella, team=team_one, name_in_game="pseudo")
+        man2 = Substitute.objects.create(user=fella, team=team_two, name_in_game="pseudo")
 
-        man2 = Substitute.objects.create(user=fella, team=team_two)
-
+        assert trnm.is_announced and trnm.enable_manager
         self.assertRaises(ValidationError, man2.full_clean)
 
     def test_one_substitute_many_teams_same_event_diff_tournament_diff_team(self) -> None:
