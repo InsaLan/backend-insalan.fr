@@ -174,10 +174,11 @@ class SubstituteTestCase(APITestCase):
             first_name="Hewwo",
             last_name="Nya",
         )
-        Substitute.objects.create(user=fella, team=team_one, name_in_game="pseudo")
+        man = Substitute.objects.create(user=fella, team=team_one, name_in_game="pseudo")
+        man.full_clean()
+        man.save()
         man2 = Substitute.objects.create(user=fella, team=team_two, name_in_game="pseudo")
 
-        assert trnm.is_announced and trnm.enable_manager
         self.assertRaises(ValidationError, man2.full_clean)
 
     def test_one_substitute_many_teams_same_event_diff_tournament_diff_team(self) -> None:
