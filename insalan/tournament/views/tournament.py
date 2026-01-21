@@ -30,6 +30,7 @@ from ..models import (
     KnockoutMatch,
     SwissMatch,
 )
+from ..models.game_processor import get_processor
 from .permissions import ReadOnly
 
 
@@ -600,3 +601,123 @@ class TournamentMe(generics.RetrieveAPIView[Any]):  # pylint: disable=unsubscrip
             "substitute": substitutes,
             "ongoing_match": ongoing_match,
         }, status=status.HTTP_200_OK)
+
+
+class TournamentResult(generics.GenericAPIView[EventTournament]):  # pylint: disable=unsubscriptable-object
+    """Process match result from external API callback for any match in a tournament"""
+
+    queryset = EventTournament.objects.all().order_by("id")
+    serializer_class = serializers.EventTournamentSerializer
+    permission_classes = [permissions.AllowAny]  # Allow external API callbacks
+
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            description=_("Payload from external API callback")
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "status": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Status message")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Tournament or match not found")
+                    )
+                }
+            ),
+        },
+    )
+    def post(self, request: Request, pk: int) -> Response:
+        """Process the result payload from an external API
+        
+        This endpoint is called by external APIs (like Riot Games) with match results.
+        It finds the appropriate match and processes the result using the game processor.
+        """
+        try:
+            tournament = EventTournament.objects.get(id=pk)
+        except EventTournament.DoesNotExist:
+            return Response(
+                {"err": _("Tournoi introuvable")},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Get the game processor for this tournament
+        game = tournament.game
+        processor_class = get_processor(game.game_processor)
+
+        if processor_class is None:
+            return Response(
+                {"err": _("Aucun processeur de jeu configuré")},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        payload = request.data
+        
+        # Extract the short code from payload to find the match
+        short_code = payload.get("shortCode")
+        
+        if not short_code:
+            return Response(
+                {"err": _("Code de tournoi manquant dans le payload")},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Find the match with this tournament code in its api_data
+        # Check all match types: GroupMatch, KnockoutMatch, SwissMatch
+        match = None
+        
+        # Search in group matches
+        for group_match in GroupMatch.objects.filter(group__tournament=tournament):
+            pregame_codes = group_match.api_data.get("pregame", []) if group_match.api_data else []
+            if short_code in pregame_codes:
+                match = group_match
+                break
+        
+        # Search in bracket matches
+        if match is None:
+            for knockout_match in KnockoutMatch.objects.filter(bracket__tournament=tournament):
+                pregame_codes = knockout_match.api_data.get("pregame", []) if knockout_match.api_data else []
+                if short_code in pregame_codes:
+                    match = knockout_match
+                    break
+        
+        # Search in swiss matches
+        if match is None:
+            for swiss_match in SwissMatch.objects.filter(round__tournament=tournament):
+                pregame_codes = swiss_match.api_data.get("pregame", []) if swiss_match.api_data else []
+                if short_code in pregame_codes:
+                    match = swiss_match
+                    break
+        
+        if match is None:
+            return Response(
+                {"err": _("Aucun match trouvé avec ce code de tournoi")},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Process the result using the game processor
+        result_data = processor_class.process_result_match(match, payload)
+
+        if result_data is not None:
+            match.api_data = result_data
+            match.save(update_fields=["api_data"])
+
+            return Response(
+                {"status": _("Résultat traité avec succès")},
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            {"err": _("Échec du traitement du résultat")},
+            status=status.HTTP_400_BAD_REQUEST
+        )

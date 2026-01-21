@@ -16,6 +16,11 @@ urlpatterns = [
     path("game/", views.GameList.as_view(), name="game/list"),
     path("game/<int:pk>/", views.GameDetails.as_view(), name="game/details"),
     path(
+        "game/processor-parameters/",
+        views.GameProcessorParameters.as_view(),
+        name="game/processor-parameters"
+    ),
+    path(
         "tournament/privates/",
         views.PrivateTournamentList.as_view(),
         name="private-tournament/list"
@@ -92,6 +97,11 @@ urlpatterns = [
         name="generate/tournament/swiss/round"
     ),
     path("me/", views.TournamentMe.as_view(), name="tournament/me"),
+    path(
+        "tournament/<int:pk>/result/",
+        views.TournamentResult.as_view(),
+        name="tournament/result"
+    ),
     path("team/", views.TeamList.as_view(), name="team/list"),
     path("team/seeding", views.AdminTeamSeeding.as_view(), name="team/seeding"),
     path("team/<int:pk>/", views.TeamDetails.as_view(), name="team/details"),
@@ -157,6 +167,11 @@ urlpatterns = [
         name="group/match/score"
     ),
     path(
+        "group/<int:group_id>/match/<int:match_id>/result/",
+        views.GroupMatchResult.as_view(),
+        name="group/match/result"
+    ),
+    path(
         "bracket/<int:pk>/",
         views.BracketDetails.as_view(),
         name="bracket/details"
@@ -172,6 +187,11 @@ urlpatterns = [
         name="bracket/match/score"
     ),
     path(
+        "bracket/<int:bracket_id>/match/<int:match_id>/result/",
+        views.BracketMatchResult.as_view(),
+        name="bracket/match/result"
+    ),
+    path(
         "swiss/<int:swiss_id>/match/<int:match_id>/",
         views.SwissMatchPatch.as_view(),
         name="swiss/match"
@@ -180,5 +200,10 @@ urlpatterns = [
         "swiss/<int:swiss_id>/match/<int:match_id>/score/",
         views.SwissMatchScore.as_view(),
         name="swiss/match/score"
+    ),
+    path(
+        "swiss/<int:swiss_id>/match/<int:match_id>/result/",
+        views.SwissMatchResult.as_view(),
+        name="swiss/match/result"
     ),
 ]

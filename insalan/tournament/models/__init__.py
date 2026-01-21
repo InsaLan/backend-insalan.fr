@@ -7,6 +7,7 @@ from .bracket import KnockoutMatch as KnockoutMatch
 from .event import Event as Event
 from .caster import Caster as Caster
 from .game import Game as Game
+from .game_processor import GameProcessor as GameProcessor
 from .group import Group as Group
 from .group import GroupMatch as GroupMatch
 from .group import GroupTiebreakScore as GroupTiebreakScore

@@ -20,7 +20,10 @@ from ..manage import (
     launch_match,
     update_match_score,
 )
-from ..models import MatchStatus, BaseTournament, SwissMatch, validate_match_data
+from ..models import MatchStatus, BaseTournament, SwissMatch, validate_match_data, SwissRound
+from ..models.game_processor import get_processor
+
+from .permissions import ReadOnly
 
 
 # pylint: disable-next=unsubscriptable-object
@@ -204,4 +207,79 @@ class SwissMatchScore(generics.GenericAPIView[SwissMatch]):
         return Response(
             status=status.HTTP_200_OK,
             data=serializer.data
+        )
+
+
+class SwissMatchResult(generics.GenericAPIView[SwissMatch]):  # pylint: disable=unsubscriptable-object
+    """Process match result from external API callback (e.g., Riot Games)"""
+
+    queryset = SwissMatch.objects.all().order_by("id")
+    serializer_class = serializers.SwissMatchSerializer
+    permission_classes = [permissions.AllowAny]  # Allow external API callbacks
+    lookup_url_kwarg = "match_id"
+
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            description=_("Payload from external API callback")
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "status": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Status message")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Match not found")
+                    )
+                }
+            ),
+        },
+    )
+    def post(self, request: Request, swiss_id: int, match_id: int) -> Response:
+        """Process the result payload from an external API"""
+        try:
+            match = SwissMatch.objects.get(id=match_id, round_id=swiss_id)
+        except SwissMatch.DoesNotExist:
+            return Response(
+                {"err": _("Match introuvable")},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Get the game processor for this match's tournament
+        tournament = match.round.tournament
+        game = tournament.game
+        processor_class = get_processor(game.game_processor)
+
+        if processor_class is None:
+            return Response(
+                {"err": _("Aucun processeur de jeu configuré")},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Process the result using the game processor
+        payload = request.data
+        result_data = processor_class.process_result_match(match, payload)
+
+        if result_data is not None:
+            match.api_data = result_data
+            match.save(update_fields=["api_data"])
+
+            return Response(
+                {"status": _("Résultat traité avec succès")},
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            {"err": _("Échec du traitement du résultat")},
+            status=status.HTTP_400_BAD_REQUEST
         )

@@ -5,7 +5,14 @@ def create_empty_knockout_matchs(bracket: Bracket, bo_type: BestofType = BestofT
     depth = bracket.get_depth()
 
     for match in KnockoutMatch.objects.filter(bracket=bracket):
+        # Call game processor for match deletion
+        processor_class = bracket.tournament.game.get_game_processor()
+        if processor_class is not None:
+            processor_class.delete_match(match)
         match.delete()
+
+    # Get game processor for match creation
+    processor_class = bracket.tournament.game.get_game_processor()
 
     for round_idx in range(1,depth+1):
         match_count = min(
@@ -13,8 +20,15 @@ def create_empty_knockout_matchs(bracket: Bracket, bo_type: BestofType = BestofT
             ceil(bracket.get_max_match_count()/2**(depth-round_idx))
         )
         for match_id in range(1,match_count+1):
-            KnockoutMatch.objects.create(round_number=round_idx, index_in_round=match_id,
+            match = KnockoutMatch.objects.create(round_number=round_idx, index_in_round=match_id,
                                          bracket=bracket, bo_type=bo_type)
+            
+            # Call game processor for match creation
+            if processor_class is not None:
+                api_data = processor_class.create_match(match)
+                if api_data is not None:
+                    match.api_data = api_data
+                    match.save(update_fields=['api_data'])
 
     if bracket.bracket_type == BracketType.DOUBLE:
         for round_idx in range(1,2*depth-1):
@@ -23,19 +37,34 @@ def create_empty_knockout_matchs(bracket: Bracket, bo_type: BestofType = BestofT
                 ceil(bracket.get_max_match_count()/2**(depth-(round_idx+1)//2))
             )
             for match_id in range(1,match_count+1):
-                KnockoutMatch.objects.create(
+                match = KnockoutMatch.objects.create(
                     round_number=round_idx,
                     index_in_round=match_id,
                     bracket=bracket,
                     bracket_set=BracketSet.LOOSER,
                     bo_type=bo_type,
                 )
-        KnockoutMatch.objects.create(
+                
+                # Call game processor for match creation
+                if processor_class is not None:
+                    api_data = processor_class.create_match(match)
+                    if api_data is not None:
+                        match.api_data = api_data
+                        match.save(update_fields=['api_data'])
+        
+        match = KnockoutMatch.objects.create(
             round_number=0,
             index_in_round=1,
             bracket=bracket,
             bo_type=bo_type,
         )
+        
+        # Call game processor for match creation
+        if processor_class is not None:
+            api_data = processor_class.create_match(match)
+            if api_data is not None:
+                match.api_data = api_data
+                match.save(update_fields=['api_data'])
 
 def update_next_knockout_match(match: KnockoutMatch) -> None:
     winners, loosers = match.get_winners_loosers()

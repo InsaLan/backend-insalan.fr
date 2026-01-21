@@ -16,19 +16,34 @@ def create_swiss_matchs(swiss: SwissRound, bo_type: BestofType = BestofType.BO1)
 
     matchs_per_score_group_per_round = []
 
+    # Get game processor for match deletion and creation
+    processor_class = swiss.tournament.game.get_game_processor()
+
     for match in SwissMatch.objects.filter(swiss=swiss):
+        # Call game processor for match deletion
+        if processor_class is not None:
+            processor_class.delete_match(match)
         match.delete()
 
     # first round
     matchs = []
     for match_idx in range(nb_matchs):
-        matchs.append(SwissMatch.objects.create(
+        match = SwissMatch.objects.create(
             round_number=1,
             index_in_round=match_idx + 1,
             swiss=swiss,
             score_group=0,
             bo_type=bo_type,
-        ))
+        )
+        
+        # Call game processor for match creation
+        if processor_class is not None:
+            api_data = processor_class.create_match(match)
+            if api_data is not None:
+                match.api_data = api_data
+                match.save(update_fields=['api_data'])
+        
+        matchs.append(match)
 
     matchs_per_score_group_per_round.append([nb_matchs])
 
@@ -43,13 +58,20 @@ def create_swiss_matchs(swiss: SwissRound, bo_type: BestofType = BestofType.BO1)
         match_idx = 0
 
         for idx in range(ceil(matchs_per_score_group_per_round[round_idx - 1][0] / 2)):
-            SwissMatch.objects.create(
+            match = SwissMatch.objects.create(
                 round_number=round_idx + 1,
                 index_in_round=idx + 1,
                 swiss=swiss,
                 score_group=0,
                 bo_type=bo_type,
             )
+            
+            # Call game processor for match creation
+            if processor_class is not None:
+                api_data = processor_class.create_match(match)
+                if api_data is not None:
+                    match.api_data = api_data
+                    match.save(update_fields=['api_data'])
 
         match_idx += idx + 1
         matchs_per_score_group_per_round.append([match_idx])
@@ -58,25 +80,39 @@ def create_swiss_matchs(swiss: SwissRound, bo_type: BestofType = BestofType.BO1)
             for idx in range(
                 ceil(sum(matchs_per_score_group_per_round[round_idx - 1][j:j + 2]) / 2)
             ):
-                SwissMatch.objects.create(
+                match = SwissMatch.objects.create(
                     round_number=round_idx + 1,
                     index_in_round=match_idx + idx + 1,
                     swiss=swiss,
                     score_group=j + 1,
                     bo_type=bo_type,
                 )
+                
+                # Call game processor for match creation
+                if processor_class is not None:
+                    api_data = processor_class.create_match(match)
+                    if api_data is not None:
+                        match.api_data = api_data
+                        match.save(update_fields=['api_data'])
 
             matchs_per_score_group_per_round[-1].append(idx + 1)
             match_idx += idx + 1
 
         for idx in range(ceil(matchs_per_score_group_per_round[round_idx - 1][-1] / 2)):
-            SwissMatch.objects.create(
+            match = SwissMatch.objects.create(
                 round_number=round_idx + 1,
                 index_in_round=match_idx + idx + 1,
                 swiss=swiss,
                 score_group=round_idx,
                 bo_type=bo_type,
             )
+            
+            # Call game processor for match creation
+            if processor_class is not None:
+                api_data = processor_class.create_match(match)
+                if api_data is not None:
+                    match.api_data = api_data
+                    match.save(update_fields=['api_data'])
 
         matchs_per_score_group_per_round[-1].append(idx + 1)
 
@@ -90,13 +126,20 @@ def create_swiss_matchs(swiss: SwissRound, bo_type: BestofType = BestofType.BO1)
             for idx in range(
                 ceil(sum(matchs_per_score_group_per_round[round_idx - 1][j:j + 2]) / 2)
             ):
-                SwissMatch.objects.create(
+                match = SwissMatch.objects.create(
                     round_number=round_idx + 1,
                     index_in_round=match_idx + idx + 1,
                     swiss=swiss,
                     score_group=j,
                     bo_type=bo_type,
                 )
+                
+                # Call game processor for match creation
+                if processor_class is not None:
+                    api_data = processor_class.create_match(match)
+                    if api_data is not None:
+                        match.api_data = api_data
+                        match.save(update_fields=['api_data'])
 
             matchs_per_score_group_per_round[-1].append(idx + 1)
             match_idx += idx + 1

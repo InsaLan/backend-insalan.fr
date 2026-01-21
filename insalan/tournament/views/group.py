@@ -16,6 +16,7 @@ from insalan.user.models import User
 
 from ..models import Group, validate_match_data, GroupMatch, MatchStatus, BaseTournament
 from ..manage import update_match_score, generate_groups, create_group_matchs, launch_match
+from ..models.game_processor import get_processor
 
 from .permissions import ReadOnly
 
@@ -257,4 +258,79 @@ class GroupMatchScore(generics.UpdateAPIView[GroupMatch]):  # pylint: disable=un
         return Response(
             status=status.HTTP_200_OK,
             data=serializer.data
+        )
+
+
+class GroupMatchResult(generics.GenericAPIView[GroupMatch]):  # pylint: disable=unsubscriptable-object
+    """Process match result from external API callback (e.g., Riot Games)"""
+
+    queryset = GroupMatch.objects.all().order_by("id")
+    serializer_class = serializers.GroupMatchSerializer
+    permission_classes = [permissions.AllowAny]  # Allow external API callbacks
+    lookup_url_kwarg = "match_id"
+
+    # The decorator is missing types stubs.
+    @swagger_auto_schema(  # type: ignore[misc]
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            description=_("Payload from external API callback")
+        ),
+        responses={
+            200: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "status": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Status message")
+                    )
+                }
+            ),
+            404: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "err": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description=_("Match not found")
+                    )
+                }
+            ),
+        },
+    )
+    def post(self, request: Request, group_id: int, match_id: int) -> Response:
+        """Process the result payload from an external API"""
+        try:
+            match = GroupMatch.objects.get(id=match_id, group_id=group_id)
+        except GroupMatch.DoesNotExist:
+            return Response(
+                {"err": _("Match introuvable")},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Get the game processor for this match's tournament
+        tournament = match.group.tournament
+        game = tournament.game
+        processor_class = get_processor(game.game_processor)
+
+        if processor_class is None:
+            return Response(
+                {"err": _("Aucun processeur de jeu configuré")},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Process the result using the game processor
+        payload = request.data
+        result_data = processor_class.process_result_match(match, payload)
+
+        if result_data is not None:
+            match.api_data = result_data
+            match.save(update_fields=["api_data"])
+
+            return Response(
+                {"status": _("Résultat traité avec succès")},
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            {"err": _("Échec du traitement du résultat")},
+            status=status.HTTP_400_BAD_REQUEST
         )

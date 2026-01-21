@@ -6,6 +6,7 @@ from typing import Any, cast, TYPE_CHECKING
 
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from django.db.models import JSONField
 from django.db.models.manager import Manager
 from django.db.models.query import QuerySet
 from django.core.validators import (
@@ -418,6 +419,13 @@ class EventTournament(BaseTournament):
         upload_to="tournament-planning",
         validators=[FileExtensionValidator(allowed_extensions=["ics"])],
     )
+    api_data = JSONField(
+        verbose_name=_("Données API"),
+        blank=True,
+        null=True,
+        default=dict,
+        help_text=_("Données JSON pour l'automatisation des matchs"),
+    )
 
     class Meta:
         """Meta options"""
@@ -438,7 +446,16 @@ class EventTournament(BaseTournament):
         # pylint: disable=import-outside-toplevel
         from insalan.payment.models import Product, ProductCategory
 
+        is_new = self.pk is None
         super().save(*args, **kwargs)  # Get the self accessible to the products
+
+        # Initialize tournament with game processor if this is a new tournament
+        if is_new:
+            processor_class = self.game.get_game_processor()
+            if processor_class is not None:
+                api_data = processor_class.initialize_tournament(self)
+                if api_data is not None:
+                    self.api_data = api_data
 
         need_save = False
 

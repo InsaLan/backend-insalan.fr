@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import JSONField
 from django.db.models.query import QuerySet
 from django.utils.translation import gettext_lazy as _
 
@@ -65,6 +66,13 @@ class Match(models.Model):
         verbose_name=_("Liste des durées des parties du match"),
         default=list,
         blank=True
+    )
+    api_data = JSONField(
+        verbose_name=_("Données API"),
+        blank=True,
+        null=True,
+        default=dict,
+        help_text=_("Données JSON pour l'automatisation du match"),
     )
 
     class Meta:
