@@ -248,22 +248,22 @@ class GameProcessorParameters(generics.GenericAPIView[Game]):  # pylint: disable
         Get default parameters and schema for a game processor
         """
         processor_name = request.query_params.get("processor")
-        
+
         if not processor_name:
             return Response(
                 {"err": _("Le paramètre 'processor' est requis")},
                 status=400
             )
-        
+
         default_params = get_processor_default_parameters(processor_name)
         schema = get_processor_parameters_schema(processor_name)
-        
+
         if not default_params and not schema:
             return Response(
                 {"err": _("Processeur non trouvé ou sans paramètres")},
                 status=404
             )
-        
+
         return Response({
             "default_parameters": default_params,
             "parameters_schema": schema

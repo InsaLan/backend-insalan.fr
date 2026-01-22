@@ -35,14 +35,14 @@ def create_swiss_matchs(swiss: SwissRound, bo_type: BestofType = BestofType.BO1)
             score_group=0,
             bo_type=bo_type,
         )
-        
+
         # Call game processor for match creation
         if processor_class is not None:
             api_data = processor_class.create_match(match)
             if api_data is not None:
                 match.api_data = api_data
                 match.save(update_fields=['api_data'])
-        
+
         matchs.append(match)
 
     matchs_per_score_group_per_round.append([nb_matchs])
@@ -65,7 +65,7 @@ def create_swiss_matchs(swiss: SwissRound, bo_type: BestofType = BestofType.BO1)
                 score_group=0,
                 bo_type=bo_type,
             )
-            
+
             # Call game processor for match creation
             if processor_class is not None:
                 api_data = processor_class.create_match(match)
@@ -87,7 +87,7 @@ def create_swiss_matchs(swiss: SwissRound, bo_type: BestofType = BestofType.BO1)
                     score_group=j + 1,
                     bo_type=bo_type,
                 )
-                
+
                 # Call game processor for match creation
                 if processor_class is not None:
                     api_data = processor_class.create_match(match)
@@ -106,7 +106,7 @@ def create_swiss_matchs(swiss: SwissRound, bo_type: BestofType = BestofType.BO1)
                 score_group=round_idx,
                 bo_type=bo_type,
             )
-            
+
             # Call game processor for match creation
             if processor_class is not None:
                 api_data = processor_class.create_match(match)
@@ -133,7 +133,7 @@ def create_swiss_matchs(swiss: SwissRound, bo_type: BestofType = BestofType.BO1)
                     score_group=j,
                     bo_type=bo_type,
                 )
-                
+
                 # Call game processor for match creation
                 if processor_class is not None:
                     api_data = processor_class.create_match(match)

@@ -53,7 +53,7 @@ def create_group_matchs(group: Group, bo_type: BestofType = BestofType.BO1) -> N
 
     # Get game processor for match creation
     processor_class = group.get_tournament().game.get_game_processor()
-    
+
     for round_idx in range(nb_rounds):
         matchs = []
         for match_idx in range(nb_matchs):
@@ -63,14 +63,14 @@ def create_group_matchs(group: Group, bo_type: BestofType = BestofType.BO1) -> N
                 group=group,
                 bo_type=bo_type,
             )
-            
+
             # Call game processor for match creation
             if processor_class is not None:
                 api_data = processor_class.create_match(match)
                 if api_data is not None:
                     match.api_data = api_data
                     match.save(update_fields=['api_data'])
-            
+
             matchs.append(match)
 
         matchs += matchs[::-1]

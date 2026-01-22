@@ -662,10 +662,10 @@ class TournamentResult(generics.GenericAPIView[EventTournament]):  # pylint: dis
             )
 
         payload = request.data
-        
+
         # Extract the short code from payload to find the match
         short_code = payload.get("shortCode")
-        
+
         if not short_code:
             return Response(
                 {"err": _("Code de tournoi manquant dans le payload")},
@@ -674,31 +674,37 @@ class TournamentResult(generics.GenericAPIView[EventTournament]):  # pylint: dis
 
         # Find the match with this tournament code in its api_data
         # Check all match types: GroupMatch, KnockoutMatch, SwissMatch
-        match = None
-        
+        match: GroupMatch | KnockoutMatch | SwissMatch | None = None
+
         # Search in group matches
         for group_match in GroupMatch.objects.filter(group__tournament=tournament):
             pregame_codes = group_match.api_data.get("pregame", []) if group_match.api_data else []
             if short_code in pregame_codes:
                 match = group_match
                 break
-        
+
         # Search in bracket matches
         if match is None:
             for knockout_match in KnockoutMatch.objects.filter(bracket__tournament=tournament):
-                pregame_codes = knockout_match.api_data.get("pregame", []) if knockout_match.api_data else []
+                if knockout_match.api_data:
+                    pregame_codes = knockout_match.api_data.get("pregame", [])
+                else:
+                    pregame_codes = []
                 if short_code in pregame_codes:
                     match = knockout_match
                     break
-        
+
         # Search in swiss matches
         if match is None:
-            for swiss_match in SwissMatch.objects.filter(round__tournament=tournament):
-                pregame_codes = swiss_match.api_data.get("pregame", []) if swiss_match.api_data else []
+            for swiss_match in SwissMatch.objects.filter(swiss__tournament=tournament):
+                if swiss_match.api_data:
+                    pregame_codes = swiss_match.api_data.get("pregame", [])
+                else:
+                    pregame_codes = []
                 if short_code in pregame_codes:
                     match = swiss_match
                     break
-        
+
         if match is None:
             return Response(
                 {"err": _("Aucun match trouvé avec ce code de tournoi")},

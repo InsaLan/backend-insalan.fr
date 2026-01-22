@@ -20,11 +20,8 @@ from ..manage import (
     launch_match,
     update_match_score,
 )
-from ..models import MatchStatus, BaseTournament, SwissMatch, validate_match_data, SwissRound
+from ..models import MatchStatus, BaseTournament, SwissMatch, validate_match_data
 from ..models.game_processor import get_processor
-
-from .permissions import ReadOnly
-
 
 # pylint: disable-next=unsubscriptable-object
 class CreateSwissRounds(generics.CreateAPIView[BaseTournament]):
@@ -248,7 +245,7 @@ class SwissMatchResult(generics.GenericAPIView[SwissMatch]):  # pylint: disable=
     def post(self, request: Request, swiss_id: int, match_id: int) -> Response:
         """Process the result payload from an external API"""
         try:
-            match = SwissMatch.objects.get(id=match_id, round_id=swiss_id)
+            match = SwissMatch.objects.get(id=match_id, swiss_id=swiss_id)
         except SwissMatch.DoesNotExist:
             return Response(
                 {"err": _("Match introuvable")},
@@ -256,7 +253,7 @@ class SwissMatchResult(generics.GenericAPIView[SwissMatch]):  # pylint: disable=
             )
 
         # Get the game processor for this match's tournament
-        tournament = match.round.tournament
+        tournament = match.swiss.tournament
         game = tournament.game
         processor_class = get_processor(game.game_processor)
 

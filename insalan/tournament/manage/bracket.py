@@ -22,7 +22,7 @@ def create_empty_knockout_matchs(bracket: Bracket, bo_type: BestofType = BestofT
         for match_id in range(1,match_count+1):
             match = KnockoutMatch.objects.create(round_number=round_idx, index_in_round=match_id,
                                          bracket=bracket, bo_type=bo_type)
-            
+
             # Call game processor for match creation
             if processor_class is not None:
                 api_data = processor_class.create_match(match)
@@ -44,21 +44,21 @@ def create_empty_knockout_matchs(bracket: Bracket, bo_type: BestofType = BestofT
                     bracket_set=BracketSet.LOOSER,
                     bo_type=bo_type,
                 )
-                
+
                 # Call game processor for match creation
                 if processor_class is not None:
                     api_data = processor_class.create_match(match)
                     if api_data is not None:
                         match.api_data = api_data
                         match.save(update_fields=['api_data'])
-        
+
         match = KnockoutMatch.objects.create(
             round_number=0,
             index_in_round=1,
             bracket=bracket,
             bo_type=bo_type,
         )
-        
+
         # Call game processor for match creation
         if processor_class is not None:
             api_data = processor_class.create_match(match)

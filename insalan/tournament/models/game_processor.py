@@ -12,6 +12,7 @@ from django.utils.translation import gettext_lazy as _
 import requests
 
 from insalan.settings import RIOT_API_KEY, WEBSITE_HOST, PROTOCOL
+from . import bracket, group, swiss
 
 if TYPE_CHECKING:
     from django_stubs_ext import StrPromise
@@ -32,12 +33,14 @@ class GameProcessor(ABC):
     """
     short: ClassVar[str]
     name: ClassVar[StrPromise]
-    
+
     # Default game parameters that will be used if not overridden
     default_game_parameters: ClassVar[dict[str, Any]] = {}
-    
+
     # Schema defining available parameters and their possible values
-    # Format: {"parameter_name": {"type": "choice|string|int|bool", "choices": [...], "label": "..."}}
+    # Format: {
+    #   "parameter_name": {"type": "choice|string|int|bool", "choices": [...], "label": "..."}
+    # }
     game_parameters_schema: ClassVar[dict[str, dict[str, Any]]] = {}
 
     @staticmethod
@@ -129,7 +132,7 @@ class EmptyGameProcessor(GameProcessor):
     """
     short = "None"
     name = _("Pas de gestion automatique")
-    
+
     default_game_parameters: ClassVar[dict[str, Any]] = {}
     game_parameters_schema: ClassVar[dict[str, dict[str, Any]]] = {}
 
@@ -165,13 +168,13 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
     """
     short = "LoL"
     name = _("League of Legends")
-    
+
     default_game_parameters: ClassVar[dict[str, Any]] = {
         "mapType": "SUMMONERS_RIFT",
         "pickType": "TOURNAMENT_DRAFT",
         "spectatorType": "ALL",
     }
-    
+
     game_parameters_schema: ClassVar[dict[str, dict[str, Any]]] = {
         "pickType": {
             "type": "choice",
@@ -216,7 +219,7 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
         3. Save both IDs in tournament ApiData
         """
         api_data: dict[str, Any] = {}
-        
+
         # Step 1: Create provider
         provider_response = requests.post(
             f"{RIOT_TOURNAMENT_API_BASE}/lol/tournament/v5/providers",
@@ -227,13 +230,13 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
             },
             timeout=REQUESTS_TIMEOUT_SECONDS,
         )
-        
+
         if provider_response.status_code != 200:
             return None
-        
+
         provider_id = provider_response.json()
         api_data["providerID"] = provider_id
-        
+
         # Step 2: Create tournament
         tournament_response = requests.post(
             f"{RIOT_TOURNAMENT_API_BASE}/lol/tournament/v5/tournaments",
@@ -244,13 +247,13 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
             },
             timeout=REQUESTS_TIMEOUT_SECONDS,
         )
-        
+
         if tournament_response.status_code != 200:
             return None
-        
+
         tournament_id = tournament_response.json()
         api_data["tournamentID"] = tournament_id
-        
+
         return api_data
 
     @staticmethod
@@ -261,38 +264,35 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
         If no matches exist, reinitialize the tournament.
         """
         # Check if any matches exist for this tournament
-        from .bracket import Bracket
-        from .group import Group
-        from .swiss import SwissRound
-        
         has_matches = False
-        
+
         # Check brackets
-        for bracket in Bracket.objects.filter(tournament=tournament):
-            if bracket.matches.exists():
+        for bracketmatch in bracket.Bracket.objects.filter(tournament=tournament):
+            if bracketmatch.get_matchs().exists():
                 has_matches = True
                 break
-        
+
         # Check groups
         if not has_matches:
-            for group in Group.objects.filter(tournament=tournament):
-                if group.matches.exists():
+            for groupmatch in group.Group.objects.filter(tournament=tournament):
+                if groupmatch.get_matchs().exists():
                     has_matches = True
                     break
-        
+
         # Check swiss rounds
         if not has_matches:
-            for swiss_round in SwissRound.objects.filter(tournament=tournament):
-                if swiss_round.matches.exists():
+            for swiss_round in swiss.SwissRound.objects.filter(tournament=tournament):
+                if swiss_round.get_matchs().exists():
                     has_matches = True
                     break
-        
+
         if has_matches:
             raise ValidationError(
                 _("Impossible de rafraîchir le tournoi : des matchs ont déjà été créés. "
-                  "Pour League of Legends, le rafraîchissement ne peut être effectué qu'avant la création des matchs.")
+                  "Pour League of Legends, le rafraîchissement ne peut être effectué "
+                  "qu'avant la création des matchs.")
             )
-        
+
         # No matches exist, we can reinitialize
         return LeagueOfLegendsGameProcessor.initialize_tournament(tournament)
 
@@ -304,56 +304,52 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
         The match needs access to its tournament to get the tournamentID.
         Creates N codes where N = best-of games (e.g., BO3 = 3 codes).
         """
-        # Get the tournament from the match
-        # We need to traverse through the match's parent structure
-        from .bracket import KnockoutMatch
-        from .group import GroupMatch
-        from .swiss import SwissMatch
-        
         tournament = None
         match_type = ""
-        
+
         # Determine which type of match this is and get its tournament
         if hasattr(match, 'knockoutmatch'):
-            knockout_match = KnockoutMatch.objects.get(id=match.id)
+            knockout_match = bracket.KnockoutMatch.objects.get(id=match.id)
             tournament = knockout_match.bracket.tournament
             match_type = "knockout"
         elif hasattr(match, 'groupmatch'):
-            group_match = GroupMatch.objects.get(id=match.id)
+            group_match = group.GroupMatch.objects.get(id=match.id)
             tournament = group_match.group.tournament
             match_type = "group"
         elif hasattr(match, 'swissmatch'):
-            swiss_match = SwissMatch.objects.get(id=match.id)
-            tournament = swiss_match.round.tournament
+            swiss_match = swiss.SwissMatch.objects.get(id=match.id)
+            tournament = swiss_match.swiss.tournament
             match_type = "swiss"
         else:
-            import sys
+            import sys  # pylint: disable=import-outside-toplevel
             print(f"Unknown match type for match ID {match.id}", file=sys.stderr)
             return None
-        
-        if tournament is None:
-            return None
-        
+
         # Check if tournament has provider data
         if not tournament.api_data or "tournamentID" not in tournament.api_data:
             # No provider configured, do nothing
             return {}
-        
+
         tournament_id = tournament.api_data["tournamentID"]
-        
+
         # Get games parameters from the game model
         game_parameters = tournament.game.games_parameters or {}
         game_parameters["teamSize"] = tournament.game.get_players_per_team()
-        game_parameters["metadata"] = f'{{"title":"{tournament.name} - Match {match.id}","tournament":"{tournament.id}","match":"{match.id}","match_type":"{match_type}"}}'
-        
+        metadata = (
+            f'{{"title":"{tournament.name} - Match {match.id}",'
+            f'"tournament":"{tournament.id}","match":"{match.id}",'
+            f'"match_type":"{match_type}"}}'
+        )
+        game_parameters["metadata"] = metadata
+
         # Determine the number of codes needed based on best-of type
-        from .match import BestofType
+        from .match import BestofType  # pylint: disable=import-outside-toplevel
         if match.bo_type == BestofType.RANKING:
             # For ranking matches, we don't create codes
             return {}
-        
+
         code_count = match.bo_type
-        
+
         # Create tournament codes
         codes_response = requests.post(
             f"{RIOT_TOURNAMENT_API_BASE}/lol/tournament/v5/codes",
@@ -365,12 +361,12 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
             json=game_parameters,
             timeout=REQUESTS_TIMEOUT_SECONDS,
         )
-        
+
         if codes_response.status_code != 200:
             return None
-        
+
         codes = codes_response.json()
-        
+
         return {
             "pregame": codes,
             "postgame": {}
@@ -381,7 +377,7 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
         """
         Start a match. For League of Legends, nothing needs to be done.
         """
-        return match.api_data
+        return match.api_data if isinstance(match.api_data, dict) else None
 
     @staticmethod
     def process_result_match(match: Match, payload: dict[str, Any]) -> dict[str, Any] | None:
@@ -409,29 +405,29 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
         """
         if not match.api_data:
             match.api_data = {"pregame": [], "postgame": {}}
-        
+
         if "postgame" not in match.api_data:
             match.api_data["postgame"] = {}
-        
+
         # Extract data from payload
         short_code = payload.get("shortCode")
         game_name = payload.get("gameName")  # This is the match PUUID
-        
+
         if not short_code or not game_name:
             return None
-        
+
         # Fetch match details from Riot API
         match_response = requests.get(
             f"{RIOT_MATCH_API_BASE}/lol/match/v5/matches/{game_name}",
             headers={"X-Riot-Token": RIOT_API_KEY},
             timeout=REQUESTS_TIMEOUT_SECONDS,
         )
-        
+
         if match_response.status_code != 200:
             return None
-        
+
         match_data = match_response.json()
-        
+
         # TODO: Extract relevant statistics
         # Store essential match information
         game_stats = {
@@ -443,21 +439,21 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
             "teams": match_data.get("info", {}).get("teams", []),
             "participants": match_data.get("info", {}).get("participants", []),
         }
-        
+
         # Save to postgame data keyed by tournament code
         match.api_data["postgame"][short_code] = game_stats
-        
+
         # Check if all games have finished
         pregame_codes = match.api_data.get("pregame", [])
         postgame_codes = match.api_data.get("postgame", {})
-        
+
         if len(postgame_codes) >= len(pregame_codes):
             # All games finished, mark match as completed
-            from .match import MatchStatus
+            from .match import MatchStatus  # pylint: disable=import-outside-toplevel
             match.status = MatchStatus.COMPLETED
             match.save(update_fields=["status", "api_data"])
-        
-        return match.api_data
+
+        return match.api_data if isinstance(match.api_data, dict) else None
 
     @staticmethod
     def delete_match(match: Match) -> None:
@@ -465,7 +461,6 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
         Clean up match data. For League of Legends, no cleanup is required.
         Tournament codes remain valid but unused.
         """
-        pass
 
 
 processors: list[Type[GameProcessor]] = [
