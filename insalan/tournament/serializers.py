@@ -574,6 +574,7 @@ class GameSerializer(serializers.ModelSerializer[Game]):
             "players_per_team",
             "substitute_players_per_team",
             "team_per_match",
+            "game_processor",
         )
 
 class EventTournamentSerializer(serializers.ModelSerializer[EventTournament]):

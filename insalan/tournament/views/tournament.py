@@ -489,6 +489,12 @@ class TournamentMe(generics.RetrieveAPIView[Any]):  # pylint: disable=unsubscrip
             del ongoing_match["times"]
             del ongoing_match["status"]
 
+            # Add game info to ongoing_match
+            ongoing_match["game"] = serializers.GameSerializer(
+                ongoing_matchs[0].get_tournament().get_game(),
+                context={"request": request},
+            ).data
+
             team_list = {}
             for team in ongoing_match["teams"]:
                 team_list[str(team)] = Team.objects.get(pk=team).get_name()
