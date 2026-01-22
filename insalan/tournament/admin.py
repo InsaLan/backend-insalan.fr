@@ -366,6 +366,78 @@ class GameParametersWidget(forms.Widget):
             return {}
 
 
+class CollapsibleJSONWidget(forms.Widget):
+    """Custom widget that renders JSON data in a collapsible, formatted view"""
+    template_name = ""  # Empty string for unfold compatibility
+
+    def render(self, name: str, value: Any, attrs: dict[str, Any] | None = None,
+               renderer: BaseRenderer | None = None) -> SafeString:
+        """Render JSON data as formatted, collapsible HTML"""
+        if value is None or value == '':
+            value = {}
+
+        # Parse JSON if it's a string
+        if isinstance(value, str):
+            try:
+                json_data = json.loads(value) if value else {}
+            except (json.JSONDecodeError, TypeError):
+                json_data = {}
+        else:
+            json_data = value or {}
+
+        # Format JSON with indentation
+        formatted_json = json.dumps(json_data, indent=2, ensure_ascii=False)
+        escaped_json = escape(formatted_json)
+
+        # Generate unique ID for this widget instance
+        widget_id = f"json_{name}_{id(self)}"
+
+        html_parts = []
+
+        # Hidden input to store the actual data
+        html_parts.append(f'<input type="hidden" name="{name}" value=\'{formatted_json}\' />')
+
+        # Collapsible container
+        html_parts.append('<div style="margin: 10px 0;">')
+        html_parts.append(
+            f'<button type="button" id="{widget_id}_toggle" '
+            f'style="background: #2563eb; color: white; padding: 8px 16px; '
+            f'border: none; border-radius: 4px; cursor: pointer; '
+            f'font-size: 14px; margin-bottom: 8px;">'
+            f'Afficher / Masquer JSON'
+            f'</button>'
+        )
+
+        # JSON display area (initially hidden)
+        html_parts.append(
+            f'<div id="{widget_id}_content" style="display: none; '
+            f'background: #1e293b; color: #e2e8f0; padding: 16px; '
+            f'border-radius: 4px; overflow-x: auto; font-family: monospace; '
+            f'font-size: 13px; line-height: 1.6; max-height: 500px; '
+            f'overflow-y: auto;">'
+        )
+        html_parts.append(f'<pre style="margin: 0;">{escaped_json}</pre>')
+        html_parts.append('</div>')
+        html_parts.append('</div>')
+
+        # JavaScript for toggle functionality
+        html_parts.append('<script>')
+        html_parts.append('(function() {')
+        html_parts.append(f'  var toggle = document.getElementById("{widget_id}_toggle");')
+        html_parts.append(f'  var content = document.getElementById("{widget_id}_content");')
+        html_parts.append('  toggle.addEventListener("click", function() {')
+        html_parts.append('    if (content.style.display === "none") {')
+        html_parts.append('      content.style.display = "block";')
+        html_parts.append('    } else {')
+        html_parts.append('      content.style.display = "none";')
+        html_parts.append('    }')
+        html_parts.append('  });')
+        html_parts.append('})();')
+        html_parts.append('</script>')
+
+        return SafeString(''.join(html_parts))
+
+
 class GameForm(ModelForm[Game]):  # pylint: disable=unsubscriptable-object
     """
     Custom form for the Game model
@@ -1630,9 +1702,40 @@ class GroupAdmin(ModelAdmin):  # type: ignore
 admin.site.register(Group, GroupAdmin)
 
 
+class GroupMatchForm(ModelForm[GroupMatch]):  # pylint: disable=unsubscriptable-object
+    """Custom form for GroupMatch with collapsible JSON widget for api_data"""
+
+    class Meta:
+        model = GroupMatch
+        fields = '__all__'
+        widgets = {
+            'api_data': CollapsibleJSONWidget(),
+        }
+
+
+class KnockoutMatchForm(ModelForm[KnockoutMatch]):  # pylint: disable=unsubscriptable-object
+    """Custom form for KnockoutMatch with collapsible JSON widget for api_data"""
+
+    class Meta:
+        model = KnockoutMatch
+        fields = '__all__'
+        widgets = {
+            'api_data': CollapsibleJSONWidget(),
+        }
+
+
+class SwissMatchForm(ModelForm[SwissMatch]):  # pylint: disable=unsubscriptable-object
+    """Custom form for SwissMatch with collapsible JSON widget for api_data"""
+
+    class Meta:
+        model = SwissMatch
+        fields = '__all__'
+
+
 class GroupMatchAdmin(ModelAdmin):  # type: ignore
     """Admin handle for group matchs"""
 
+    form = GroupMatchForm
     list_display = ("id", "group", "status", "round_number", "index_in_round", "bo_type", )
     search_fields = ["index_in_round", "round_number"]
     # filter_horizontal = ("teams",)
@@ -1646,17 +1749,61 @@ class GroupMatchAdmin(ModelAdmin):  # type: ignore
 
     def get_readonly_fields(self, request: HttpRequest, obj: GroupMatch | None = None
                            ) -> tuple[str, ...]:
-        """Make api_data readonly when editing"""
+        """Make api_data_display readonly when editing"""
         if obj is not None:
-            return ('api_data',)
+            return ('api_data_display',)
         return tuple()
 
     def get_exclude(self, request: HttpRequest, obj: GroupMatch | None = None
                    ) -> tuple[str, ...] | None:
-        """Exclude api_data when creating a new match"""
-        if obj is None:
-            return ('api_data',)
-        return None
+        """Exclude api_data field (we show api_data_display instead)"""
+        return ('api_data',)
+
+    def api_data_display(self, obj: GroupMatch) -> SafeString:
+        """Display api_data as collapsible JSON"""
+        if not obj.api_data:
+            return SafeString('<p>Aucune donnée API</p>')
+
+        formatted_json = json.dumps(obj.api_data, indent=2, ensure_ascii=False)
+        escaped_json = escape(formatted_json)
+        widget_id = f"json_api_data_{obj.id}"
+
+        html_parts = [
+            '<div style="margin: 10px 0;">',
+            f'<button type="button" id="{widget_id}_toggle" ',
+            'style="background: #2563eb; color: white; padding: 8px 16px; ',
+            'border: none; border-radius: 4px; cursor: pointer; ',
+            'font-size: 14px; margin-bottom: 8px;">',
+            'Afficher / Masquer JSON',
+            '</button>',
+            f'<div id="{widget_id}_content" style="display: none; ',
+            'background: #1e293b; color: #e2e8f0; padding: 16px; ',
+            'border-radius: 4px; overflow-x: auto; font-family: monospace; ',
+            'font-size: 13px; line-height: 1.6; max-height: 500px; ',
+            'overflow-y: auto;">',
+            f'<pre style="margin: 0;">{escaped_json}</pre>',
+            '</div>',
+            '</div>',
+            '<script>',
+            '(function() {',
+            f'  var toggle = document.getElementById("{widget_id}_toggle");',
+            f'  var content = document.getElementById("{widget_id}_content");',
+            '  if (toggle && content) {',
+            '    toggle.addEventListener("click", function() {',
+            '      if (content.style.display === "none") {',
+            '        content.style.display = "block";',
+            '      } else {',
+            '        content.style.display = "none";',
+            '      }',
+            '    });',
+            '  }',
+            '})();',
+            '</script>',
+        ]
+
+        return SafeString(''.join(html_parts))
+
+    api_data_display.short_description = 'Données API'  # type: ignore[attr-defined]
 
     @admin.action(description=_("Lancer les matchs"))
     def launch_group_matchs_action(self, request: HttpRequest, queryset: QuerySet[GroupMatch]
@@ -1793,6 +1940,7 @@ admin.site.register(Bracket, BracketAdmin)
 class KnockoutMatchAdmin(ModelAdmin):  # type: ignore
     """Admin handle for Knockout matchs"""
 
+    form = KnockoutMatchForm
     list_display = ("id", "bracket", "status", "bracket_set", "round_number", "index_in_round",
                     "bo_type")
     inlines = [ScoreInline]
@@ -1806,17 +1954,61 @@ class KnockoutMatchAdmin(ModelAdmin):  # type: ignore
 
     def get_readonly_fields(self, request: HttpRequest, obj: KnockoutMatch | None = None
                            ) -> tuple[str, ...]:
-        """Make api_data readonly when editing"""
+        """Make api_data_display readonly when editing"""
         if obj is not None:
-            return ('api_data',)
+            return ('api_data_display',)
         return tuple()
 
     def get_exclude(self, request: HttpRequest, obj: KnockoutMatch | None = None
                    ) -> tuple[str, ...] | None:
-        """Exclude api_data when creating a new match"""
-        if obj is None:
-            return ('api_data',)
-        return None
+        """Exclude api_data field (we show api_data_display instead)"""
+        return ('api_data',)
+
+    def api_data_display(self, obj: KnockoutMatch) -> SafeString:
+        """Display api_data as collapsible JSON"""
+        if not obj.api_data:
+            return SafeString('<p>Aucune donnée API</p>')
+
+        formatted_json = json.dumps(obj.api_data, indent=2, ensure_ascii=False)
+        escaped_json = escape(formatted_json)
+        widget_id = f"json_api_data_{obj.id}"
+
+        html_parts = [
+            '<div style="margin: 10px 0;">',
+            f'<button type="button" id="{widget_id}_toggle" ',
+            'style="background: #2563eb; color: white; padding: 8px 16px; ',
+            'border: none; border-radius: 4px; cursor: pointer; ',
+            'font-size: 14px; margin-bottom: 8px;">',
+            'Afficher / Masquer JSON',
+            '</button>',
+            f'<div id="{widget_id}_content" style="display: none; ',
+            'background: #1e293b; color: #e2e8f0; padding: 16px; ',
+            'border-radius: 4px; overflow-x: auto; font-family: monospace; ',
+            'font-size: 13px; line-height: 1.6; max-height: 500px; ',
+            'overflow-y: auto;">',
+            f'<pre style="margin: 0;">{escaped_json}</pre>',
+            '</div>',
+            '</div>',
+            '<script>',
+            '(function() {',
+            f'  var toggle = document.getElementById("{widget_id}_toggle");',
+            f'  var content = document.getElementById("{widget_id}_content");',
+            '  if (toggle && content) {',
+            '    toggle.addEventListener("click", function() {',
+            '      if (content.style.display === "none") {',
+            '        content.style.display = "block";',
+            '      } else {',
+            '        content.style.display = "none";',
+            '      }',
+            '    });',
+            '  }',
+            '})();',
+            '</script>',
+        ]
+
+        return SafeString(''.join(html_parts))
+
+    api_data_display.short_description = 'Données API'  # type: ignore[attr-defined]
 
     @admin.action(description=_("Lancer les matchs"))
     def launch_knockout_matchs_action(self, request: HttpRequest, queryset: QuerySet[KnockoutMatch]
@@ -1896,6 +2088,7 @@ admin.site.register(SwissRound, SwissRoundAdmin)
 class SwissMatchAdmin(ModelAdmin):  # type: ignore
     """Admin handle for Swiss matchs"""
 
+    form = SwissMatchForm
     list_display = ("id", "swiss", "status", "round_number", "index_in_round", "bo_type",
                     "score_group")
     inlines = [ScoreInline]
@@ -1908,17 +2101,61 @@ class SwissMatchAdmin(ModelAdmin):  # type: ignore
 
     def get_readonly_fields(self, request: HttpRequest, obj: SwissMatch | None = None
                            ) -> tuple[str, ...]:
-        """Make api_data readonly when editing"""
+        """Make api_data_display readonly when editing"""
         if obj is not None:
-            return ('api_data',)
+            return ('api_data_display',)
         return tuple()
 
     def get_exclude(self, request: HttpRequest, obj: SwissMatch | None = None
                    ) -> tuple[str, ...] | None:
-        """Exclude api_data when creating a new match"""
-        if obj is None:
-            return ('api_data',)
-        return None
+        """Exclude api_data field (we show api_data_display instead)"""
+        return ('api_data',)
+
+    def api_data_display(self, obj: SwissMatch) -> SafeString:
+        """Display api_data as collapsible JSON"""
+        if not obj.api_data:
+            return SafeString('<p>Aucune donnée API</p>')
+
+        formatted_json = json.dumps(obj.api_data, indent=2, ensure_ascii=False)
+        escaped_json = escape(formatted_json)
+        widget_id = f"json_api_data_{obj.id}"
+
+        html_parts = [
+            '<div style="margin: 10px 0;">',
+            f'<button type="button" id="{widget_id}_toggle" ',
+            'style="background: #2563eb; color: white; padding: 8px 16px; ',
+            'border: none; border-radius: 4px; cursor: pointer; ',
+            'font-size: 14px; margin-bottom: 8px;">',
+            'Afficher / Masquer JSON',
+            '</button>',
+            f'<div id="{widget_id}_content" style="display: none; ',
+            'background: #1e293b; color: #e2e8f0; padding: 16px; ',
+            'border-radius: 4px; overflow-x: auto; font-family: monospace; ',
+            'font-size: 13px; line-height: 1.6; max-height: 500px; ',
+            'overflow-y: auto;">',
+            f'<pre style="margin: 0;">{escaped_json}</pre>',
+            '</div>',
+            '</div>',
+            '<script>',
+            '(function() {',
+            f'  var toggle = document.getElementById("{widget_id}_toggle");',
+            f'  var content = document.getElementById("{widget_id}_content");',
+            '  if (toggle && content) {',
+            '    toggle.addEventListener("click", function() {',
+            '      if (content.style.display === "none") {',
+            '        content.style.display = "block";',
+            '      } else {',
+            '        content.style.display = "none";',
+            '      }',
+            '    });',
+            '  }',
+            '})();',
+            '</script>',
+        ]
+
+        return SafeString(''.join(html_parts))
+
+    api_data_display.short_description = 'Données API'  # type: ignore[attr-defined]
 
     @admin.action(description=_("Lancer les matchs"))
     def launch_swiss_matchs_action(self, request: HttpRequest, queryset: QuerySet[SwissMatch]

@@ -13,6 +13,7 @@ import requests
 
 from insalan.settings import RIOT_API_KEY, WEBSITE_HOST, PROTOCOL
 from . import bracket, group, swiss
+from .match import MatchStatus
 
 if TYPE_CHECKING:
     from django_stubs_ext import StrPromise
@@ -411,14 +412,16 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
 
         # Extract data from payload
         short_code = payload.get("shortCode")
-        game_name = payload.get("gameName")  # This is the match PUUID
+        game_id_raw = payload.get("gameId")
 
-        if not short_code or not game_name:
+        if not short_code or not game_id_raw:
             return None
+
+        game_id = f"EUW1_{game_id_raw}"
 
         # Fetch match details from Riot API
         match_response = requests.get(
-            f"{RIOT_MATCH_API_BASE}/lol/match/v5/matches/{game_name}",
+            f"{RIOT_MATCH_API_BASE}/lol/match/v5/matches/{game_id}",
             headers={"X-Riot-Token": RIOT_API_KEY},
             timeout=REQUESTS_TIMEOUT_SECONDS,
         )
@@ -431,11 +434,9 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
         # TODO: Extract relevant statistics
         # Store essential match information
         game_stats = {
-            "gameId": payload.get("gameId"),
-            "gameName": game_name,
+            "gameId": game_id,
             "startTime": payload.get("startTime"),
             "gameDuration": match_data.get("info", {}).get("gameDuration"),
-            "gameMode": payload.get("gameMode"),
             "teams": match_data.get("info", {}).get("teams", []),
             "participants": match_data.get("info", {}).get("participants", []),
         }
@@ -447,11 +448,73 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
         pregame_codes = match.api_data.get("pregame", [])
         postgame_codes = match.api_data.get("postgame", {})
 
-        if len(postgame_codes) >= len(pregame_codes):
-            # All games finished, mark match as completed
-            from .match import MatchStatus  # pylint: disable=import-outside-toplevel
-            match.status = MatchStatus.COMPLETED
-            match.save(update_fields=["status", "api_data"])
+        if len(postgame_codes) >= len(pregame_codes) and match.status != MatchStatus.COMPLETED:
+            # All games finished, extract winners and determine final score
+            from ..manage.match import update_match_score  # pylint: disable=import-outside-toplevel
+            from ..manage.bracket import update_next_knockout_match  # pylint: disable=import-outside-toplevel
+            from .bracket import KnockoutMatch  # pylint: disable=import-outside-toplevel
+
+            # Initialize score dict for each team
+            team_scores: dict[str, int] = {}
+            for team in match.get_teams():
+                team_scores[str(team.id)] = 0
+
+            # Count wins for each team by analyzing postgame data
+            for game_data in postgame_codes.values():
+                participants = game_data.get("participants", [])
+                teams_data = game_data.get("teams", [])
+
+                # Find winning team ID from teams data
+                winning_team_id = None
+                for team_info in teams_data:
+                    if team_info.get("win"):
+                        winning_team_id = team_info.get("teamId")
+                        break
+
+                if winning_team_id is None:
+                    continue
+
+                # Get PUUIDs of players in the winning team
+                winning_puuids = set()
+                for participant in participants:
+                    if participant.get("teamId") == winning_team_id:
+                        puuid = participant.get("puuid")
+                        if puuid:
+                            winning_puuids.add(puuid)
+
+                # Match PUUIDs to our teams via Player.validator_data
+                for team in match.get_teams():
+                    team_players = team.get_players()
+                    team_puuids = set()
+                    for player in team_players:
+                        player_puuid = player.validator_data.get("puuid")
+                        if player_puuid:
+                            team_puuids.add(player_puuid)
+
+                    # Check if this team's PUUIDs overlap with winning PUUIDs
+                    # If at least one player matches, this team won the game
+                    if team_puuids & winning_puuids:
+                        team_scores[str(team.id)] += 1
+                        break
+
+            # Extract game durations
+            times = []
+            for game_data in postgame_codes.values():
+                duration = game_data.get("gameDuration", 0)
+                # Convert from seconds to minutes
+                times.append(duration // 60 if duration else 0)
+
+            # Update match with final scores
+            score_data = {
+                "score": {str(team_id): score for team_id, score in team_scores.items()},
+                "times": times
+            }
+
+            update_match_score(match, score_data)
+
+            # Propagate results if this is a bracket match
+            if isinstance(match, KnockoutMatch) and not match.is_last_match():
+                update_next_knockout_match(match)
 
         return match.api_data if isinstance(match.api_data, dict) else None
 
