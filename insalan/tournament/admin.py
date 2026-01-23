@@ -810,7 +810,7 @@ class PrivateTournamentAdmin(ModelAdmin[PrivateTournament]): # type: ignore
     list_display = ("id", "name", "game", "get_occupancy")
     search_fields = ["name", "game__name"]
 
-    actions = ['update_name']
+    actions = ['update_name', 'update_tournament_api']
 
     def get_occupancy(self, obj: PrivateTournament) -> str:
         """
@@ -821,15 +821,60 @@ class PrivateTournamentAdmin(ModelAdmin[PrivateTournament]): # type: ignore
             validated=True,
         ).count()) + " / " + str(obj.get_max_team())
 
+    get_occupancy.short_description = 'Remplissage'  # type: ignore[attr-defined]
+
+    def get_readonly_fields(self, request: HttpRequest, obj: PrivateTournament | None = None
+                           ) -> tuple[str, ...]:
+        """Make api_data readonly when editing"""
+        if obj is not None:
+            return ('api_data',)
+        return tuple()
+
+    def get_exclude(self, request: HttpRequest, obj: PrivateTournament | None = None
+                   ) -> tuple[str, ...] | None:
+        """Exclude api_data when creating a new tournament"""
+        if obj is None:
+            return ('api_data',)
+        return None
+
     @admin.action(description=_("Mettre à jour les pseudos"))
     def update_name(
-        self, request: HttpRequest, queryset: QuerySet[EventTournament]
+        self, request: HttpRequest, queryset: QuerySet[PrivateTournament]
     ) -> None:
         for tournament in queryset:
             tournament.update_name_in_game()
         self.message_user(request,_("Les pseudo ont été mis à jour."))
 
-    get_occupancy.short_description = 'Remplissage'  # type: ignore[attr-defined]
+    @admin.action(description=_("Rafraîchir les données API du tournoi"))
+    def update_tournament_api(
+        self, request: HttpRequest, queryset: QuerySet[PrivateTournament]
+    ) -> None:
+        success_count = 0
+        error_messages = []
+
+        for tournament in queryset:
+            processor_class = tournament.game.get_game_processor()
+            if processor_class is None:
+                error_messages.append(f"{tournament.name}: Aucun processeur de jeu configuré")
+                continue
+
+            try:
+                api_data = processor_class.update_tournament(tournament)
+                if api_data is not None:
+                    tournament.api_data = api_data
+                    tournament.save(update_fields=['api_data'])
+                    success_count += 1
+                else:
+                    error_messages.append(f"{tournament.name}: Échec de la mise à jour")
+            except ValidationError as e:
+                error_messages.append(f"{tournament.name}: {e.message}")
+
+        if success_count > 0:
+            self.message_user(request, _(f"{success_count} tournoi(s) mis à jour avec succès."))
+
+        if error_messages:
+            for msg in error_messages:
+                self.message_user(request, msg, level='error')
 
 
 admin.site.register(PrivateTournament, PrivateTournamentAdmin)

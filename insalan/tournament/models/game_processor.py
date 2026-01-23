@@ -18,7 +18,7 @@ from .match import MatchStatus
 if TYPE_CHECKING:
     from django_stubs_ext import StrPromise
 
-    from .tournament import EventTournament
+    from .tournament import BaseTournament
     from .match import Match
 
 
@@ -46,7 +46,7 @@ class GameProcessor(ABC):
 
     @staticmethod
     @abstractmethod
-    def initialize_tournament(tournament: EventTournament) -> dict[str, Any] | None:
+    def initialize_tournament(tournament: BaseTournament) -> dict[str, Any] | None:
         """
         Make the required API calls and return the data to save in the ApiData field of tournament.
         Will be called when tournament is created.
@@ -60,7 +60,7 @@ class GameProcessor(ABC):
 
     @staticmethod
     @abstractmethod
-    def update_tournament(tournament: EventTournament) -> dict[str, Any] | None:
+    def update_tournament(tournament: BaseTournament) -> dict[str, Any] | None:
         """
         Make the required API calls and return the data to save in the ApiData field of tournament.
         Will be called with tournament action.
@@ -138,11 +138,11 @@ class EmptyGameProcessor(GameProcessor):
     game_parameters_schema: ClassVar[dict[str, dict[str, Any]]] = {}
 
     @staticmethod
-    def initialize_tournament(tournament: EventTournament) -> dict[str, Any] | None:
+    def initialize_tournament(tournament: BaseTournament) -> dict[str, Any] | None:
         return {}
 
     @staticmethod
-    def update_tournament(tournament: EventTournament) -> dict[str, Any] | None:
+    def update_tournament(tournament: BaseTournament) -> dict[str, Any] | None:
         return {}
 
     @staticmethod
@@ -210,7 +210,7 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
     }
 
     @staticmethod
-    def initialize_tournament(tournament: EventTournament) -> dict[str, Any] | None:
+    def initialize_tournament(tournament: BaseTournament) -> dict[str, Any] | None:
         """
         Initialize a League of Legends tournament by creating a provider and tournament ID.
         
@@ -258,7 +258,7 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
         return api_data
 
     @staticmethod
-    def update_tournament(tournament: EventTournament) -> dict[str, Any] | None:
+    def update_tournament(tournament: BaseTournament) -> dict[str, Any] | None:
         """
         Refresh tournament data. For LoL, this can only be done if no matches were created.
         If matches exist, raise an exception to inform the admin.
