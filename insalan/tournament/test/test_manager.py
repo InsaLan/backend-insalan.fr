@@ -173,11 +173,14 @@ class ManagerTestCase(TestCase):
             first_name="Hewwo",
             last_name="Nya",
         )
-        Manager.objects.create(user=fella, team=team_one)
+        man = Manager.objects.create(user=fella, team=team_one)
+        man.full_clean()
         man2 = Manager.objects.create(user=fella, team=team_two)
 
-        assert trnm.is_announced and trnm.enable_manager
-        self.assertRaises(ValidationError, man2.full_clean)
+        with self.assertRaises(ValidationError) as e:
+            man2.full_clean()
+        expected_error = "Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement"
+        self.assertEqual(e.exception.messages[0], expected_error)
 
     def test_one_manager_many_teams_same_event_diff_tournament_diff_team(self) -> None:
         """Test the collision of duplicate managers"""
@@ -220,8 +223,10 @@ class ManagerTestCase(TestCase):
         man.save()
         man2 = Manager.objects.create(user=fella, team=team_two)
 
-        self.assertRaises(ValidationError, man2.full_clean)
-
+        with self.assertRaises(ValidationError) as e:
+            man2.full_clean()
+        expected_error = "Utilisateur⋅rice déjà inscrit⋅e dans un tournoi de cet évènement"
+        self.assertEqual(e.exception.messages[0], expected_error)
 
     def test_one_manager_many_teams_diff_event_diff_tournament_diff_team(self) -> None:
         """Test the non collision of duplicate managers in different teams
