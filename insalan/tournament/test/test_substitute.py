@@ -176,7 +176,6 @@ class SubstituteTestCase(APITestCase):
         )
         man = Substitute.objects.create(user=fella, team=team_one, name_in_game="pseudo")
         man.full_clean()
-        man.save()
         man2 = Substitute.objects.create(user=fella, team=team_two, name_in_game="pseudo")
 
         self.assertRaises(ValidationError, man2.full_clean)

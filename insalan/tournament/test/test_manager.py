@@ -175,7 +175,6 @@ class ManagerTestCase(TestCase):
         )
         man = Manager.objects.create(user=fella, team=team_one)
         man.full_clean()
-        man.save()
         man2 = Manager.objects.create(user=fella, team=team_two)
 
         self.assertRaises(ValidationError, man2.full_clean)
