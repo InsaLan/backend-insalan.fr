@@ -211,6 +211,9 @@ class GameParametersWidget(forms.Widget):
         self.schema = schema or {}
         self.defaults = defaults or {}
 
+    class Media:
+        js = ('js/game_parameters.js',)
+
     def render(self, name: str, value: Any, attrs: dict[str, Any] | None = None,
                renderer: BaseRenderer | None = None) -> SafeString:
         """Render individual form fields based on schema"""
@@ -228,7 +231,16 @@ class GameParametersWidget(forms.Widget):
 
         html_parts = []
         html_parts.append(f'<input type="hidden" name="{name}" id="id_{name}" value="" />')
-        html_parts.append('<div style="margin-top: 10px;">')
+
+        # Add data attributes for JavaScript
+        schema_json = json.dumps({
+            k: {'type': v.get('type', 'string')} for k, v in self.schema.items()
+        })
+        escaped_schema = schema_json.replace('"', '&quot;')
+        html_parts.append(
+            f'<div style="margin-top: 10px;" data-game-parameters '
+            f'data-field-name="{name}" data-schema="{escaped_schema}">'
+        )
 
         for param_name, param_info in self.schema.items():
             param_type = param_info.get("type", "string")
@@ -276,7 +288,6 @@ class GameParametersWidget(forms.Widget):
                 html_parts.append('</select>')
             elif param_type == "bool":
                 checked = 'checked' if current_value else ''
-                # Checkbox uses different styling
                 checkbox_classes = (
                     "rounded border-base-300 text-primary-600 shadow-sm "
                     "focus:border-primary-300 focus:ring focus:ring-offset-0 "
@@ -307,49 +318,6 @@ class GameParametersWidget(forms.Widget):
             html_parts.append('</div>')
 
         html_parts.append('</div>')
-
-        # Add JavaScript to collect values into hidden field on form submit
-        html_parts.append('<script>')
-        html_parts.append('(function() {')
-        html_parts.append(f'  var form = document.getElementById("id_{name}").closest("form");')
-        html_parts.append('  if (form) {')
-        html_parts.append('    form.addEventListener("submit", function() {')
-        html_parts.append('      var params = {};')
-        for param_name in self.schema.keys():
-            field_id = f"param_{param_name}"
-            param_type = self.schema[param_name].get("type", "string")
-            if param_type == "bool":
-                html_parts.append("      var field_" + param_name + " = ")
-                html_parts.append('document.getElementById("' + field_id + '");')
-                html_parts.append(f'      if (field_{param_name}) {{')
-                html_parts.append(f'        params["{param_name}"] = field_{param_name}.checked;')
-                html_parts.append('      }')
-            elif param_type == "int":
-                html_parts.append('      var field_' + param_name + ' = ')
-                html_parts.append('document.getElementById("' + field_id + '");')
-                html_parts.append(
-                    '      if (field_' + param_name + ') ' +
-                    'params["' + param_name + '"] = parseInt(field_' + param_name + '.value);'
-                )
-                html_parts.append(f'      if (field_{param_name}) {{')
-                html_parts.append('        params["' + param_name + '"] = ')
-                html_parts.append('parseInt(field_' + param_name + '.value);')
-                html_parts.append('      }')
-            else:
-                html_parts.append("      var field_" + param_name + " = ")
-                html_parts.append('document.getElementById("' + field_id + '");')
-                html_parts.append('      if (field_' + param_name + ') {')
-                html_parts.append(f'      params["{param_name}"] = field_{param_name}.value;')
-                html_parts.append('      }')
-        html_parts.append('      var hidden_' + name + ' = ')
-        html_parts.append('document.getElementById("id_' + name + '");')
-        html_parts.append('      if (hidden_' + name + ') {')
-        html_parts.append('        hidden_' + name + '.value = JSON.stringify(params);')
-        html_parts.append('      }')
-        html_parts.append('    });')
-        html_parts.append('  }')
-        html_parts.append('})();')
-        html_parts.append('</script>')
 
         return SafeString(''.join(html_parts))
 
@@ -1762,48 +1730,32 @@ class GroupMatchAdmin(ModelAdmin):  # type: ignore
     def api_data_display(self, obj: GroupMatch) -> SafeString:
         """Display api_data as collapsible JSON"""
         if not obj.api_data:
-            return SafeString('<p>Aucune donnée API</p>')
+            return SafeString('<p class="collapsible-json-empty">Aucune donnée API</p>')
 
         formatted_json = json.dumps(obj.api_data, indent=2, ensure_ascii=False)
         escaped_json = escape(formatted_json)
         widget_id = f"json_api_data_{obj.id}"
 
-        html_parts = [
-            '<div style="margin: 10px 0;">',
-            f'<button type="button" id="{widget_id}_toggle" ',
-            'style="background: #2563eb; color: white; padding: 8px 16px; ',
-            'border: none; border-radius: 4px; cursor: pointer; ',
-            'font-size: 14px; margin-bottom: 8px;">',
-            'Afficher / Masquer JSON',
-            '</button>',
-            f'<div id="{widget_id}_content" style="display: none; ',
-            'background: #1e293b; color: #e2e8f0; padding: 16px; ',
-            'border-radius: 4px; overflow-x: auto; font-family: monospace; ',
-            'font-size: 13px; line-height: 1.6; max-height: 500px; ',
-            'overflow-y: auto;">',
-            f'<pre style="margin: 0;">{escaped_json}</pre>',
-            '</div>',
-            '</div>',
-            '<script>',
-            '(function() {',
-            f'  var toggle = document.getElementById("{widget_id}_toggle");',
-            f'  var content = document.getElementById("{widget_id}_content");',
-            '  if (toggle && content) {',
-            '    toggle.addEventListener("click", function() {',
-            '      if (content.style.display === "none") {',
-            '        content.style.display = "block";',
-            '      } else {',
-            '        content.style.display = "none";',
-            '      }',
-            '    });',
-            '  }',
-            '})();',
-            '</script>',
-        ]
+        html = f'''
+        <div class="collapsible-json-container">
+            <button type="button" id="{widget_id}_toggle" class="collapsible-json-toggle">
+                Afficher JSON
+            </button>
+            <div id="{widget_id}_content" class="collapsible-json-content">
+                <pre>{escaped_json}</pre>
+            </div>
+        </div>
+        '''
 
-        return SafeString(''.join(html_parts))
+        return SafeString(html)
 
     api_data_display.short_description = 'Données API'  # type: ignore[attr-defined]
+
+    class Media:
+        css = {
+            'all': ('css/collapsible_json.css',)
+        }
+        js = ('js/collapsible_json.js',)
 
     @admin.action(description=_("Lancer les matchs"))
     def launch_group_matchs_action(self, request: HttpRequest, queryset: QuerySet[GroupMatch]
@@ -1967,48 +1919,32 @@ class KnockoutMatchAdmin(ModelAdmin):  # type: ignore
     def api_data_display(self, obj: KnockoutMatch) -> SafeString:
         """Display api_data as collapsible JSON"""
         if not obj.api_data:
-            return SafeString('<p>Aucune donnée API</p>')
+            return SafeString('<p class="collapsible-json-empty">Aucune donnée API</p>')
 
         formatted_json = json.dumps(obj.api_data, indent=2, ensure_ascii=False)
         escaped_json = escape(formatted_json)
         widget_id = f"json_api_data_{obj.id}"
 
-        html_parts = [
-            '<div style="margin: 10px 0;">',
-            f'<button type="button" id="{widget_id}_toggle" ',
-            'style="background: #2563eb; color: white; padding: 8px 16px; ',
-            'border: none; border-radius: 4px; cursor: pointer; ',
-            'font-size: 14px; margin-bottom: 8px;">',
-            'Afficher / Masquer JSON',
-            '</button>',
-            f'<div id="{widget_id}_content" style="display: none; ',
-            'background: #1e293b; color: #e2e8f0; padding: 16px; ',
-            'border-radius: 4px; overflow-x: auto; font-family: monospace; ',
-            'font-size: 13px; line-height: 1.6; max-height: 500px; ',
-            'overflow-y: auto;">',
-            f'<pre style="margin: 0;">{escaped_json}</pre>',
-            '</div>',
-            '</div>',
-            '<script>',
-            '(function() {',
-            f'  var toggle = document.getElementById("{widget_id}_toggle");',
-            f'  var content = document.getElementById("{widget_id}_content");',
-            '  if (toggle && content) {',
-            '    toggle.addEventListener("click", function() {',
-            '      if (content.style.display === "none") {',
-            '        content.style.display = "block";',
-            '      } else {',
-            '        content.style.display = "none";',
-            '      }',
-            '    });',
-            '  }',
-            '})();',
-            '</script>',
-        ]
+        html = f'''
+        <div class="collapsible-json-container">
+            <button type="button" id="{widget_id}_toggle" class="collapsible-json-toggle">
+                Afficher JSON
+            </button>
+            <div id="{widget_id}_content" class="collapsible-json-content">
+                <pre>{escaped_json}</pre>
+            </div>
+        </div>
+        '''
 
-        return SafeString(''.join(html_parts))
+        return SafeString(html)
 
     api_data_display.short_description = 'Données API'  # type: ignore[attr-defined]
+
+    class Media:
+        css = {
+            'all': ('css/collapsible_json.css',)
+        }
+        js = ('js/collapsible_json.js',)
 
     @admin.action(description=_("Lancer les matchs"))
     def launch_knockout_matchs_action(self, request: HttpRequest, queryset: QuerySet[KnockoutMatch]
@@ -2114,48 +2050,32 @@ class SwissMatchAdmin(ModelAdmin):  # type: ignore
     def api_data_display(self, obj: SwissMatch) -> SafeString:
         """Display api_data as collapsible JSON"""
         if not obj.api_data:
-            return SafeString('<p>Aucune donnée API</p>')
+            return SafeString('<p class="collapsible-json-empty">Aucune donnée API</p>')
 
         formatted_json = json.dumps(obj.api_data, indent=2, ensure_ascii=False)
         escaped_json = escape(formatted_json)
         widget_id = f"json_api_data_{obj.id}"
 
-        html_parts = [
-            '<div style="margin: 10px 0;">',
-            f'<button type="button" id="{widget_id}_toggle" ',
-            'style="background: #2563eb; color: white; padding: 8px 16px; ',
-            'border: none; border-radius: 4px; cursor: pointer; ',
-            'font-size: 14px; margin-bottom: 8px;">',
-            'Afficher / Masquer JSON',
-            '</button>',
-            f'<div id="{widget_id}_content" style="display: none; ',
-            'background: #1e293b; color: #e2e8f0; padding: 16px; ',
-            'border-radius: 4px; overflow-x: auto; font-family: monospace; ',
-            'font-size: 13px; line-height: 1.6; max-height: 500px; ',
-            'overflow-y: auto;">',
-            f'<pre style="margin: 0;">{escaped_json}</pre>',
-            '</div>',
-            '</div>',
-            '<script>',
-            '(function() {',
-            f'  var toggle = document.getElementById("{widget_id}_toggle");',
-            f'  var content = document.getElementById("{widget_id}_content");',
-            '  if (toggle && content) {',
-            '    toggle.addEventListener("click", function() {',
-            '      if (content.style.display === "none") {',
-            '        content.style.display = "block";',
-            '      } else {',
-            '        content.style.display = "none";',
-            '      }',
-            '    });',
-            '  }',
-            '})();',
-            '</script>',
-        ]
+        html = f'''
+        <div class="collapsible-json-container">
+            <button type="button" id="{widget_id}_toggle" class="collapsible-json-toggle">
+                Afficher JSON
+            </button>
+            <div id="{widget_id}_content" class="collapsible-json-content">
+                <pre>{escaped_json}</pre>
+            </div>
+        </div>
+        '''
 
-        return SafeString(''.join(html_parts))
+        return SafeString(html)
 
     api_data_display.short_description = 'Données API'  # type: ignore[attr-defined]
+
+    class Media:
+        css = {
+            'all': ('css/collapsible_json.css',)
+        }
+        js = ('js/collapsible_json.js',)
 
     @admin.action(description=_("Lancer les matchs"))
     def launch_swiss_matchs_action(self, request: HttpRequest, queryset: QuerySet[SwissMatch]
