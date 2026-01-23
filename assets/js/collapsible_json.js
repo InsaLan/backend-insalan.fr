@@ -19,7 +19,11 @@
         }
 
         toggle.addEventListener('click', function() {
-            if (content.style.display === 'none') {
+            // Check computed style instead of inline style to handle CSS-defined display
+            const isHidden = content.style.display === 'none' || 
+                           window.getComputedStyle(content).display === 'none';
+            
+            if (isHidden) {
                 content.style.display = 'block';
                 toggle.textContent = 'Masquer JSON';
             } else {
