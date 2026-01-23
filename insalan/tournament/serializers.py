@@ -562,6 +562,14 @@ class EventSerializer(serializers.ModelSerializer[Event]):
 class GameSerializer(serializers.ModelSerializer[Game]):
     """Serializer for the tournament Games"""
 
+    game_processor = serializers.SerializerMethodField()
+
+    def get_game_processor(self, obj: Game) -> str | None:
+        """Return None instead of 'None' string for empty game processor"""
+        if obj.game_processor == "None" or not obj.game_processor:
+            return None
+        return obj.game_processor
+
     class Meta:
         """Meta options of the serializer"""
 
@@ -600,7 +608,7 @@ class EventTournamentSerializer(serializers.ModelSerializer[EventTournament]):
             "substitute_price_online",
             "substitute_price_onsite",
         )
-        exclude = ["polymorphic_ctype"]
+        exclude = ["polymorphic_ctype", "api_data"]
 
     def to_representation(self, instance: EventTournament) -> Any:
         """Remove all fields except id and is_announced when is_announced is False"""
@@ -1182,7 +1190,7 @@ class FullDerefEventTournamentSerializer(serializers.ModelSerializer[EventTourna
 
     class Meta:
         model = EventTournament
-        exclude = ["polymorphic_ctype"]
+        exclude = ["polymorphic_ctype", "api_data"]
 
     def to_representation(self, value: EventTournament) -> Any:
         if value.is_announced:

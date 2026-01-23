@@ -271,7 +271,8 @@ class TournamentFullDerefEndpoint(APITestCase):
                 "short_name": "TFG",
                 "players_per_team": 1,
                 "substitute_players_per_team": 0,
-                "team_per_match": 2
+                "team_per_match": 2,
+                "game_processor": None
             },
             "name": "Test Tournament",
             "rules": "have fun!",
@@ -343,6 +344,11 @@ class TournamentFullDerefEndpoint(APITestCase):
                 }
             ]
         }
+        
+        # Debug
+        import sys
+        print(request.data, file=sys.stderr)
+        print(model, file=sys.stderr)
 
         self.assertEqual(request.data["teams"], model["teams"])
         self.assertEqual(request.data, model)
