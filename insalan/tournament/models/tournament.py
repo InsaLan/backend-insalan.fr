@@ -449,6 +449,8 @@ class EventTournament(BaseTournament):
         is_new = self.pk is None
         super().save(*args, **kwargs)  # Get the self accessible to the products
 
+        need_save = False
+
         # Initialize tournament with game processor if this is a new tournament
         if is_new:
             processor_class = self.game.get_game_processor()
@@ -456,8 +458,7 @@ class EventTournament(BaseTournament):
                 api_data = processor_class.initialize_tournament(self)
                 if api_data is not None:
                     self.api_data = api_data
-
-        need_save = False
+                    need_save = True
 
         if self.player_online_product is None:
             prod = Product.objects.create(
