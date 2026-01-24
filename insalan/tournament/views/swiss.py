@@ -21,6 +21,7 @@ from ..manage import (
 from ..models import MatchStatus, BaseTournament, SwissMatch, SwissRound, validate_match_data
 from ..models.game_processor import get_processor
 
+
 # pylint: disable-next=unsubscriptable-object
 class SwissRoundsDetails(generics.DestroyAPIView[SwissRound]):
     queryset = SwissRound.objects.all()

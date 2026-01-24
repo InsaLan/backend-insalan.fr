@@ -302,7 +302,7 @@ class GroupsMatchsCreateSerializer(serializers.Serializer[Any]):
     bo_type = serializers.ChoiceField(BestofType)
 
     def validate_groups(self, value: list[Group]) -> Any:
-        if len(set(map(lambda g: g.tournament.id, value))) != 1:
+        if len(set(g.tournament.id for g in value)) != 1:
             raise serializers.ValidationError(
                 _(
                     "Toutes les poules n'appartiennent pas au même tournois."
