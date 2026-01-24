@@ -43,6 +43,7 @@
         - [payment](./03-existant/modules/payment.md)
         - [pizza](./03-existant/modules/pizza.md)
         - [Écologie](./03-existant/modules/ecology.md)
+    - [Game Processor](./03-existant/game-processor.md)
     - [Traductions](./03-existant/traductions.md)
 
 <!--# Modifier
