@@ -9,11 +9,18 @@ from ..models import (
     GroupTiebreakScore,
     Team,
     Seeding,
+    Stage
 )
 
 
-def generate_groups(tournament: BaseTournament, count: int, team_per_group: int,
-                    names: list[str], use_seeding: bool) -> None:
+def generate_groups(
+    tournament: BaseTournament,
+    count: int,
+    team_per_group: int,
+    names: list[str],
+    use_seeding: bool,
+    stage: Stage
+) -> None:
     teams: list[Team | None]
     if use_seeding:
         teams = cast(list[Team | None], list(Team.objects.filter(
@@ -30,8 +37,12 @@ def generate_groups(tournament: BaseTournament, count: int, team_per_group: int,
     teams += [None] * (tournament.get_max_team() - len(teams))
 
     for i in range(count):
-        group = Group.objects.create(tournament=tournament, name=names[i],
-                                     round_count=team_per_group - 1)
+        group = Group.objects.create(
+            tournament=tournament,
+            name=names[i],
+            round_count=team_per_group - 1,
+            stage=stage
+        )
 
         for j in range(team_per_group):
             team = teams[i + count * j]

@@ -1,7 +1,6 @@
 from typing import Any
 
 from django.utils.translation import gettext_lazy as _
-from django.core.exceptions import BadRequest
 
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import]
 from drf_yasg import openapi  # type: ignore[import]
@@ -62,76 +61,52 @@ class GroupDetails(generics.RetrieveUpdateDestroyAPIView[Group]):
 
 
 # pylint: disable-next=unsubscriptable-object
-class GenerateGroups(generics.CreateAPIView[Any]):
-    serializer_class = serializers.GenerateGroupsSerializer
+class GroupsDelete(generics.GenericAPIView):
+    queryset = Group.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
     def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        if kwargs["pk"] != request.data["tournament"]:
-            raise BadRequest()
+        groups = request.data
 
-        data = self.get_serializer(data=request.data)
-        data.is_valid(raise_exception=True)
-
-        generate_groups(**data.validated_data)
-
-        serialized_data = serializers.GroupField(data.validated_data["tournament"].group_set.all(),
-                                                 many=True).data
-
-        return Response(serialized_data, status=status.HTTP_201_CREATED)
-
-
-# pylint: disable-next=unsubscriptable-object
-class DeleteGroups(generics.DestroyAPIView[BaseTournament]):
-    queryset = BaseTournament.objects.all()
-    permission_classes = [permissions.IsAdminUser]
-
-    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        tournament = self.get_object()
-
-        if GroupMatch.objects.filter(group__tournament=tournament).exclude(
-            status=MatchStatus.SCHEDULED,
-        ).exists():
+        if GroupMatch.objects.filter(group__in=groups).exclude(status=MatchStatus.SCHEDULED).exists():
             return Response({
                 # pylint: disable-next=line-too-long
                 "error": _("Impossible de supprimer les poules. Des matchs sont en cours ou déjà terminés")
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        tournament.group_set.all().delete()
+        Group.objects.filter(id__in=groups).delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # pylint: disable-next=unsubscriptable-object
-class GenerateGroupMatchs(generics.CreateAPIView[Any]):
-    serializer_class = serializers.GenerateGroupMatchsSerializer
+class GroupsMatchsCreate(generics.CreateAPIView[Any]):
+    serializer_class = serializers.GroupsMatchsCreateSerializer
     permission_classes = [permissions.IsAdminUser]
 
     def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        if kwargs["pk"] != request.data["tournament"]:
-            raise BadRequest()
-
         data = self.get_serializer(data=request.data)
         data.is_valid(raise_exception=True)
 
         for group in data.validated_data["groups"]:
             create_group_matchs(group, data.validated_data["bo_type"])
 
-        groups = serializers.GroupField(data.validated_data["tournament"].group_set.all(),
-                                        many=True).data
+        tournament = data.validated_data["groups"][0].tournament
+        groups = serializers.GroupField(
+            tournament.group_set.all(),
+            many=True
+        ).data
 
         return Response(groups, status=status.HTTP_201_CREATED)
 
 
 # pylint: disable-next=unsubscriptable-object
-class DeleteGroupMatchs(generics.DestroyAPIView[BaseTournament]):
-    queryset = BaseTournament.objects.all()
+class GroupsMatchsDelete(generics.GenericAPIView):
     permission_classes = [permissions.IsAdminUser]
 
-    def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        tournament = self.get_object()
-
-        matchs = GroupMatch.objects.filter(group__tournament=tournament)
+    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        groups = request.data
+        matchs = GroupMatch.objects.filter(group__in=groups)
 
         if matchs.exclude(status=MatchStatus.SCHEDULED).exists():
             return Response({
@@ -144,25 +119,28 @@ class DeleteGroupMatchs(generics.DestroyAPIView[BaseTournament]):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class GroupMatchsLaunch(generics.UpdateAPIView[Any]): # pylint: disable=unsubscriptable-object
+class GroupsMatchsLaunch(generics.UpdateAPIView[Any]): # pylint: disable=unsubscriptable-object
     serializer_class = serializers.LaunchMatchsSerializer
     permission_classes = [permissions.IsAdminUser]
 
     def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        if kwargs["pk"] != request.data["tournament"]:
-            raise BadRequest()
-
-        data = self.get_serializer(data=request.data, type="group")
+        data = self.get_serializer(data=request.data, type="group", many=True)
         data.is_valid(raise_exception=True)
 
         matchs = []
 
-        for match in data.validated_data["matchs"]:
-            launch_match(match)
-            matchs.append(match.id)
+        for group in data.validated_data:
+            for match in group["matchs"]:
+                launch_match(match)
+                matchs.append(match.id)
 
-        return Response({ "matchs": matchs, "warning": data.validated_data["warning"] },
-                        status=status.HTTP_200_OK)
+        return Response(
+            {
+                "matchs": matchs,
+                "warning": any([g["warning"] for g in data.validated_data])
+            },
+            status=status.HTTP_200_OK
+        )
 
 
 class GroupMatchPatch(generics.UpdateAPIView[GroupMatch]):  # pylint: disable=unsubscriptable-object

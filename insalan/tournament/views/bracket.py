@@ -1,7 +1,7 @@
 from typing import Any, cast
 
 from django.utils.translation import gettext_lazy as _
-from django.core.exceptions import PermissionDenied, BadRequest
+from django.core.exceptions import PermissionDenied
 
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import]
 from drf_yasg import openapi  # type: ignore[import]
@@ -15,15 +15,12 @@ from insalan.tournament import serializers
 from insalan.user.models import User
 
 from ..models import (
-    BaseTournament,
-    BestofType,
     Bracket,
     KnockoutMatch,
     MatchStatus,
     validate_match_data,
 )
 from ..manage import (
-    create_empty_knockout_matchs,
     launch_match,
     update_match_score,
     update_next_knockout_match,
@@ -55,28 +52,6 @@ class BracketDetails(generics.RetrieveUpdateDestroyAPIView[Bracket]):
 
 
 # pylint: disable=unsubscriptable-object
-class CreateBracket(generics.CreateAPIView[BaseTournament]):
-    queryset = BaseTournament.objects.all()
-    permission_classes = [permissions.IsAdminUser]
-    serializer_class = serializers.BracketSerializer
-
-    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        pk: int = self.kwargs["pk"]
-        request.data["tournament"] = pk
-
-        data = self.get_serializer(data=request.data)
-        data.is_valid(raise_exception=True)
-
-        bo_type = data.validated_data.pop("bo_type", BestofType.BO1)
-
-        bracket = Bracket.objects.create(**data.validated_data)
-
-        create_empty_knockout_matchs(bracket, bo_type)
-
-        return Response(serializers.BracketField(bracket).data, status=status.HTTP_201_CREATED)
-
-
-# pylint: disable=unsubscriptable-object
 class BracketMatchPatch(generics.UpdateAPIView[KnockoutMatch]):
     queryset = KnockoutMatch.objects.all()
     permission_classes = [permissions.IsAdminUser]
@@ -99,25 +74,23 @@ class BracketMatchsLaunch(generics.UpdateAPIView[Any]):
     permission_classes = [permissions.IsAdminUser]
 
     def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        if kwargs["pk"] != request.data["tournament"]:
-            raise BadRequest()
-
-        data = self.get_serializer(data=request.data, type="bracket")
+        data = self.get_serializer(data=request.data, type="bracket", many=True)
         data.is_valid(raise_exception=True)
 
         matchs = []
 
-        for match in data.validated_data["matchs"]:
-            launch_match(match)
+        for bracket in data.validated_data:
+            for match in bracket["matchs"]:
+                launch_match(match)
 
-            if match.status == MatchStatus.COMPLETED:
-                update_next_knockout_match(match)
+                if match.status == MatchStatus.COMPLETED:
+                    update_next_knockout_match(match)
 
-            matchs.append(match.id)
+                matchs.append(match.id)
 
         return Response({
             "matchs": matchs,
-            "warning": data.validated_data["warning"],
+            "warning": any([b["warning"] for b in data.validated_data]),
         }, status=status.HTTP_200_OK)
 
 
