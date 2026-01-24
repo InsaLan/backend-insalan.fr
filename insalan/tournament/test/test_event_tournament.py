@@ -272,7 +272,7 @@ class TournamentFullDerefEndpoint(APITestCase):
                 "players_per_team": 1,
                 "substitute_players_per_team": 0,
                 "team_per_match": 2,
-                "game_processor": None
+                "game_processor": "None"
             },
             "name": "Test Tournament",
             "rules": "have fun!",

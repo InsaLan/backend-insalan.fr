@@ -562,14 +562,6 @@ class EventSerializer(serializers.ModelSerializer[Event]):
 class GameSerializer(serializers.ModelSerializer[Game]):
     """Serializer for the tournament Games"""
 
-    game_processor = serializers.SerializerMethodField()
-
-    def get_game_processor(self, obj: Game) -> str | None:
-        """Return None instead of 'None' string for empty game processor"""
-        if obj.game_processor == "None" or not obj.game_processor:
-            return None
-        return obj.game_processor
-
     class Meta:
         """Meta options of the serializer"""
 
