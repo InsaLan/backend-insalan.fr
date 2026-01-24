@@ -341,7 +341,8 @@ class TournamentFullDerefEndpoint(APITestCase):
                         },
                     ]
                 }
-            ]
+            ],
+            "stages" : []
         }
 
         self.assertEqual(request.data["teams"], model["teams"])
