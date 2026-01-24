@@ -18,7 +18,7 @@ from ..manage import (
     launch_match,
     update_match_score,
 )
-from ..models import MatchStatus, BaseTournament, SwissMatch, SwissRound, validate_match_data
+from ..models import MatchStatus, SwissMatch, SwissRound, validate_match_data
 
 
 # pylint: disable-next=unsubscriptable-object
