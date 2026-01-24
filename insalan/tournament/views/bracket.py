@@ -89,7 +89,7 @@ class BracketMatchsLaunch(generics.UpdateAPIView[Any]):
 
         return Response({
             "matchs": matchs,
-            "warning": any([b["warning"] for b in data.validated_data]),
+            "warning": any(b["warning"] for b in data.validated_data),
         }, status=status.HTTP_200_OK)
 
 

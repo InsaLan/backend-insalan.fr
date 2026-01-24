@@ -1,6 +1,5 @@
 from typing import Any
 
-from django.core.exceptions import BadRequest
 from django.utils.translation import gettext_lazy as _
 
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import]
@@ -23,7 +22,7 @@ from ..models import MatchStatus, BaseTournament, SwissMatch, SwissRound, valida
 
 
 # pylint: disable-next=unsubscriptable-object
-class SwissRoundsDetails(generics.DestroyAPIView):
+class SwissRoundsDetails(generics.DestroyAPIView[SwissRound]):
     queryset = SwissRound.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
@@ -43,7 +42,7 @@ class SwissRoundsDetails(generics.DestroyAPIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class SwissMatchsLaunch(generics.UpdateAPIView[Any]):  # pylint: disable=unsubscriptable-object
+class SwissMatchsLaunch(generics.UpdateAPIView[SwissMatch]):  # pylint: disable=unsubscriptable-object
     serializer_class = serializers.LaunchMatchsSerializer
     permission_classes = [permissions.IsAdminUser]
 
@@ -59,12 +58,12 @@ class SwissMatchsLaunch(generics.UpdateAPIView[Any]):  # pylint: disable=unsubsc
                 matchs.append(match.id)
 
         return Response({
-            "matchs": matchs, "warning": any([s["warning"] for s in data.validated_data])
+            "matchs": matchs, "warning": any(s["warning"] for s in data.validated_data)
         }, status=status.HTTP_200_OK)
 
 
 # pylint: disable-next=unsubscriptable-object
-class SwissFillRound(generics.UpdateAPIView[BaseTournament]):
+class SwissFillRound(generics.UpdateAPIView[SwissRound]):
     queryset = SwissRound.objects.all()
     permission_classes = [permissions.IsAdminUser]
     serializer_class = serializers.SwissFillRoundSerializer

@@ -13,8 +13,8 @@ from rest_framework.exceptions import NotFound, PermissionDenied
 from insalan.tournament import serializers
 from insalan.user.models import User
 
-from ..models import Group, validate_match_data, GroupMatch, MatchStatus, BaseTournament
-from ..manage import update_match_score, generate_groups, create_group_matchs, launch_match
+from ..models import Group, validate_match_data, GroupMatch, MatchStatus
+from ..manage import update_match_score, create_group_matchs, launch_match
 
 from .permissions import ReadOnly
 
@@ -60,14 +60,19 @@ class GroupDetails(generics.RetrieveUpdateDestroyAPIView[Group]):
 
 
 # pylint: disable-next=unsubscriptable-object
-class GroupsDelete(generics.GenericAPIView):
+class GroupsDelete(generics.GenericAPIView[Group]):
     queryset = Group.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
     def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         groups = request.data
 
-        if GroupMatch.objects.filter(group__in=groups).exclude(status=MatchStatus.SCHEDULED).exists():
+        if (GroupMatch
+            .objects
+            .filter(group__in=groups)
+            .exclude(status=MatchStatus.SCHEDULED)
+            .exists()
+        ):
             return Response({
                 # pylint: disable-next=line-too-long
                 "error": _("Impossible de supprimer les poules. Des matchs sont en cours ou déjà terminés")
@@ -100,7 +105,7 @@ class GroupsMatchsCreate(generics.CreateAPIView[Any]):
 
 
 # pylint: disable-next=unsubscriptable-object
-class GroupsMatchsDelete(generics.GenericAPIView):
+class GroupsMatchsDelete(generics.GenericAPIView[Group]):
     permission_classes = [permissions.IsAdminUser]
 
     def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
@@ -136,7 +141,7 @@ class GroupsMatchsLaunch(generics.UpdateAPIView[Any]): # pylint: disable=unsubsc
         return Response(
             {
                 "matchs": matchs,
-                "warning": any([g["warning"] for g in data.validated_data])
+                "warning": any(g["warning"] for g in data.validated_data)
             },
             status=status.HTTP_200_OK
         )
