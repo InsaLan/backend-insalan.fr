@@ -124,7 +124,7 @@ class Seeding(models.Model):
         Group,
         on_delete=models.CASCADE
     )
-    team = models.OneToOneField(
+    team = models.ForeignKey(
         "Team",
         on_delete=models.CASCADE,
     )

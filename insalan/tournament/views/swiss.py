@@ -15,46 +15,22 @@ from insalan.tournament import serializers
 from insalan.user.models import User
 
 from ..manage import (
-    create_swiss_rounds,
     generate_swiss_round_round,
     launch_match,
     update_match_score,
 )
-from ..models import MatchStatus, BaseTournament, SwissMatch, validate_match_data
+from ..models import MatchStatus, BaseTournament, SwissMatch, SwissRound, validate_match_data
 
 
 # pylint: disable-next=unsubscriptable-object
-class CreateSwissRounds(generics.CreateAPIView[BaseTournament]):
-    queryset = BaseTournament.objects.all()
-    serializer_class = serializers.CreateSwissRoundsSerializer
-    permission_classes = [permissions.IsAdminUser]
-
-    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        pk: int = self.kwargs["pk"]
-        request.data["tournament"] = pk
-
-        data = self.get_serializer(data=request.data)
-        data.is_valid(raise_exception=True)
-
-        create_swiss_rounds(**data.validated_data)
-
-        serialized_data = serializers.SwissRoundField(
-            data.validated_data["tournament"].swissround_set.all(),
-            many=True,
-        ).data
-
-        return Response(serialized_data, status=status.HTTP_201_CREATED)
-
-
-# pylint: disable-next=unsubscriptable-object
-class DeleteSwissRounds(generics.DestroyAPIView[BaseTournament]):
-    queryset = BaseTournament.objects.all()
+class SwissRoundsDetails(generics.DestroyAPIView):
+    queryset = SwissRound.objects.all()
     permission_classes = [permissions.IsAdminUser]
 
     def delete(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        tournament = self.get_object()
+        swiss = self.get_object()
 
-        if SwissMatch.objects.filter(swiss__tournament=tournament).exclude(
+        if SwissMatch.objects.filter(swiss=swiss).exclude(
             status=MatchStatus.SCHEDULED,
         ).exists():
             return Response({
@@ -62,7 +38,7 @@ class DeleteSwissRounds(generics.DestroyAPIView[BaseTournament]):
                     Des matchs sont en cours ou déjà terminés.")
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        tournament.swissround_set.all().delete()
+        swiss.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -72,33 +48,30 @@ class SwissMatchsLaunch(generics.UpdateAPIView[Any]):  # pylint: disable=unsubsc
     permission_classes = [permissions.IsAdminUser]
 
     def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        if kwargs["pk"] != request.data["tournament"]:
-            raise BadRequest()
-
-        data = self.get_serializer(data=request.data, type="swiss")
+        data = self.get_serializer(data=request.data, type="swiss", many=True)
         data.is_valid(raise_exception=True)
 
         matchs = []
 
-        for match in data.validated_data["matchs"]:
-            launch_match(match)
-            matchs.append(match.id)
+        for swiss in data.validated_data:
+            for match in swiss["matchs"]:
+                launch_match(match)
+                matchs.append(match.id)
 
         return Response({
-            "matchs": matchs, "warning": data.validated_data["warning"]
+            "matchs": matchs, "warning": any([s["warning"] for s in data.validated_data])
         }, status=status.HTTP_200_OK)
 
 
 # pylint: disable-next=unsubscriptable-object
-class GenerateSwissRoundRound(generics.UpdateAPIView[BaseTournament]):
-    queryset = BaseTournament.objects.all()
+class SwissFillRound(generics.UpdateAPIView[BaseTournament]):
+    queryset = SwissRound.objects.all()
     permission_classes = [permissions.IsAdminUser]
-    serializer_class = serializers.GenerateSwissRoundRoundSerializer
+    serializer_class = serializers.SwissFillRoundSerializer
 
     # pylint: disable-next=arguments-differ
     def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        pk: int = self.kwargs["pk"]
-        request.data["tournament"] = pk
+        request.data["swiss"] = self.kwargs["pk"]
 
         data = self.get_serializer(data=request.data)
         data.is_valid(raise_exception=True)

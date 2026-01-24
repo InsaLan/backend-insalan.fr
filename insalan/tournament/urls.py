@@ -36,61 +36,6 @@ urlpatterns = [
         views.TournamentDetailsFull.as_view(),
         name="tournament/details-full",
     ),
-    path(
-        "tournament/<int:pk>/bracket/create/",
-        views.CreateBracket.as_view(),
-        name="create/tournament/bracket"
-    ),
-    path(
-        "tournament/<int:pk>/bracket/matchs/launch/",
-        views.BracketMatchsLaunch.as_view(),
-        name="launch/tournament/bracket/matchs"
-    ),
-    path(
-        "tournament/<int:pk>/group/generate/",
-        views.GenerateGroups.as_view(),
-        name="generate/tournament/groups",
-    ),
-    path(
-        "tournament/<int:pk>/group/delete/",
-        views.DeleteGroups.as_view(),
-        name="delete/tournament/groups",
-    ),
-    path(
-        "tournament/<int:pk>/group/matchs/generate/",
-        views.GenerateGroupMatchs.as_view(),
-        name="generate/tournament/group/matchs"
-    ),
-    path(
-        "tournament/<int:pk>/group/matchs/delete/",
-        views.DeleteGroupMatchs.as_view(),
-        name="delete/tournament/group/matchs"
-    ),
-    path(
-        "tournament/<int:pk>/group/matchs/launch/",
-        views.GroupMatchsLaunch.as_view(),
-        name="launch/tournament/group/matchs"
-    ),
-    path(
-        "tournament/<int:pk>/swiss/create/",
-        views.CreateSwissRounds.as_view(),
-        name="create/tournament/swiss",
-    ),
-    path(
-        "tournament/<int:pk>/swiss/delete/",
-        views.DeleteSwissRounds.as_view(),
-        name="delete/tournament/swiss",
-    ),
-    path(
-        "tournament/<int:pk>/swiss/matchs/launch/",
-        views.SwissMatchsLaunch.as_view(),
-        name="launch/tournament/swiss/matchs"
-    ),
-    path(
-        "tournament/<int:pk>/swiss/round/generate/",
-        views.GenerateSwissRoundRound.as_view(),
-        name="generate/tournament/swiss/round"
-    ),
     path("me/", views.TournamentMe.as_view(), name="tournament/me"),
     path("team/", views.TeamList.as_view(), name="team/list"),
     path("team/seeding", views.AdminTeamSeeding.as_view(), name="team/seeding"),
@@ -157,6 +102,26 @@ urlpatterns = [
         name="group/match/score"
     ),
     path(
+        "groups/delete/",
+        views.GroupsDelete.as_view(),
+        name="groups/delete"
+    ),
+    path(
+        "groups/matchs/create/",
+        views.GroupsMatchsCreate.as_view(),
+        name="groups/matchs/create"
+    ),
+    path(
+        "groups/matchs/launch/",
+        views.GroupsMatchsLaunch.as_view(),
+        name="groupe/matchs/launch"
+    ),
+    path(
+        "groups/matchs/delete/",
+        views.GroupsMatchsDelete.as_view(),
+        name="groups/matchs/delete"
+    ),
+    path(
         "bracket/<int:pk>/",
         views.BracketDetails.as_view(),
         name="bracket/details"
@@ -172,6 +137,21 @@ urlpatterns = [
         name="bracket/match/score"
     ),
     path(
+        "brackets/matchs/launch/",
+        views.BracketMatchsLaunch.as_view(),
+        name="bracket/matchs/launch"
+    ),
+    path(
+        "swiss/<int:pk>/",
+        views.SwissRoundsDetails.as_view(),
+        name="swiss/details"
+    ),
+    path(
+        "swiss/<int:pk>/fill_round/",
+        views.SwissFillRound.as_view(),
+        name="swiss/fill_round"
+    ),
+    path(
         "swiss/<int:swiss_id>/match/<int:match_id>/",
         views.SwissMatchPatch.as_view(),
         name="swiss/match"
@@ -181,19 +161,39 @@ urlpatterns = [
         views.SwissMatchScore.as_view(),
         name="swiss/match/score"
     ),
+    path(
+        "swiss/matchs/launch/",
+        views.SwissMatchsLaunch.as_view(),
+        name="swiss/matchs/launch"
+    ),
 	path(
-		"stage/create",
-		views.CreateUpdateDeleteStage.as_view(),
+		"stage/create/",
+		views.CreateStage.as_view(),
 		name="create/stage"
     ),
 	path(
-        "stage/<int:pk>/update",
-		views.CreateUpdateDeleteStage.as_view(),
+        "stage/<int:pk>/update/",
+		views.UpdateStage.as_view(),
 		name="update/stage"
     ),
 	path(
-		"stage/<int:pk>/delete",
-		views.CreateUpdateDeleteStage.as_view(),
+		"stage/<int:pk>/delete/",
+		views.DeleteStage.as_view(),
 		name="delete/stage"
+    ),
+    path(
+        "stage/<int:pk>/add/groups/",
+        views.StageAddGroups.as_view(),
+        name="stage/add/groups"
+    ),
+    path(
+        "stage/<int:pk>/add/bracket/",
+        views.StageAddBracket.as_view(),
+        name="stage/add/bracket"
+    ),
+    path(
+        "stage/<int:pk>/add/swiss/",
+        views.StageAddSwissRounds.as_view(),
+        name="stage/add/swiss"
     )
 ]

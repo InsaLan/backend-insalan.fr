@@ -4,15 +4,22 @@ from typing import cast
 
 from django.db.models.query import QuerySet
 
-from ..models import BaseTournament, BestofType, SwissMatch, SwissRound, SwissSeeding
+from ..models import (
+    BaseTournament,
+    BestofType,
+    SwissMatch,
+    SwissRound,
+    SwissSeeding,
+)
 
 
-def create_swiss_matchs(swiss: SwissRound, bo_type: BestofType = BestofType.BO1) -> None:
-    teams: list[int | None] = cast(list[int | None], swiss.get_sorted_teams())
+def create_empty_swiss_matchs(
+    swiss: SwissRound,
+    team_count: int,
+    bo_type: BestofType = BestofType.BO1
+) -> None:
     team_per_match = swiss.tournament.get_game().get_team_per_match()
-    nb_matchs = ceil(len(teams) / team_per_match)
-
-    teams += [None] * (nb_matchs * team_per_match - len(teams))
+    nb_matchs = ceil(team_count / team_per_match)
 
     matchs_per_score_group_per_round = []
 
@@ -33,10 +40,6 @@ def create_swiss_matchs(swiss: SwissRound, bo_type: BestofType = BestofType.BO1)
     matchs_per_score_group_per_round.append([nb_matchs])
 
     matchs += matchs[::-1]
-
-    for i,team in enumerate(teams):
-        if team is not None:
-            matchs[i % (2 * nb_matchs)].teams.add(team)
 
     # next rounds
     for round_idx in range(1, swiss.min_score):
@@ -101,10 +104,15 @@ def create_swiss_matchs(swiss: SwissRound, bo_type: BestofType = BestofType.BO1)
             matchs_per_score_group_per_round[-1].append(idx + 1)
             match_idx += idx + 1
 
-def create_swiss_rounds(tournament: BaseTournament, min_score: int, use_seeding: bool,
-                        bo_type: BestofType) -> None:
-    teams = tournament.teams.filter(validated=True)
-    swiss = SwissRound.objects.create(tournament=tournament, min_score=min_score)
+def auto_fill_first_round(
+    tournament: BaseTournament,
+    use_seeding: bool,
+    swiss: SwissRound,
+    team_count: int,
+) -> None:
+    teams = tournament.teams.filter(validated=True)[:team_count]
+    first_round_matchs = SwissMatch.objects.filter(swiss=swiss, round_number=1)
+    team_per_match = tournament.get_game().get_team_per_match()
 
     if use_seeding:
         for team in teams:
@@ -115,7 +123,11 @@ def create_swiss_rounds(tournament: BaseTournament, min_score: int, use_seeding:
             if team is not None:
                 SwissSeeding.objects.create(swiss=swiss, seeding=0, team=team)
 
-    create_swiss_matchs(swiss, bo_type)
+    fill_matchs(
+        first_round_matchs,
+        cast(list[int | None], swiss.get_sorted_teams()),
+        team_per_match
+    )
 
 
 def get_winners_loosers_per_score_group(matchs_per_score_group: list[QuerySet[SwissMatch]]

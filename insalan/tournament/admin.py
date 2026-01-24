@@ -35,7 +35,7 @@ from insalan.mailer import MailManager
 from insalan.tournament.manage import (
     create_empty_knockout_matchs,
     create_group_matchs,
-    create_swiss_matchs,
+    create_empty_swiss_matchs,
     launch_match,
 )
 from insalan.utils import FieldOpts, FieldSets
@@ -1553,7 +1553,7 @@ class SwissRoundAdmin(ModelAdmin):  # type: ignore
                                   _("Des matchs existent déjà et sont en cours ou terminés"))
                 return
 
-            create_swiss_matchs(swiss)
+            create_empty_swiss_matchs(swiss, swiss.tournament.get_max_team(), BestofType.BO1)
             self.message_user(request,_("Matchs créés avec succès"))
 
 
