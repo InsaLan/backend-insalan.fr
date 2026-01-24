@@ -344,11 +344,6 @@ class TournamentFullDerefEndpoint(APITestCase):
                 }
             ]
         }
-        
-        # Debug
-        import sys
-        print(request.data, file=sys.stderr)
-        print(model, file=sys.stderr)
 
         self.assertEqual(request.data["teams"], model["teams"])
         self.assertEqual(request.data, model)
