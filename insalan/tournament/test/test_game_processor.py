@@ -32,13 +32,8 @@ from insalan.user.models import User
 class EmptyGameProcessorTestCase(TestCase):
     """Test the EmptyGameProcessor class"""
 
-    @patch('insalan.tournament.models.game_processor.requests.post')
-    def setUp(self, mock_post: Mock) -> None:
+    def setUp(self) -> None:
         """Set up test data"""
-        # Mock API responses to prevent actual calls during tournament creation
-        mock_response = Mock()
-        mock_response.status_code = 500  # Simulate failure so no api_data is set
-        mock_post.return_value = mock_response
 
         event = Event.objects.create(
             name="Test Event",
@@ -50,12 +45,17 @@ class EmptyGameProcessorTestCase(TestCase):
             name="Test Game",
             game_processor="None"
         )
-        self.tournament = EventTournament.objects.create(
-            name="Test Tournament",
-            game=game,
-            event=event,
-            max_team_thresholds=[8, 16, 32]
-        )
+        with patch('insalan.tournament.models.game_processor.requests.post') as mock_post:
+            # Mock API responses to prevent actual calls during tournament creation
+            mock_response = Mock()
+            mock_response.status_code = 500  # Simulate failure so no api_data is set
+            mock_post.return_value = mock_response
+            self.tournament = EventTournament.objects.create(
+                name="Test Tournament",
+                game=game,
+                event=event,
+                max_team_thresholds=[8, 16, 32]
+            )
         self.bracket = Bracket.objects.create(
             tournament=self.tournament,
             name="Test Bracket"
@@ -105,13 +105,8 @@ class EmptyGameProcessorTestCase(TestCase):
 class LeagueOfLegendsGameProcessorTestCase(TestCase):
     """Test the LeagueOfLegendsGameProcessor class"""
 
-    @patch('insalan.tournament.models.game_processor.requests.post')
-    def setUp(self, mock_post: Mock) -> None:
+    def setUp(self) -> None:
         """Set up test data"""
-        # Mock API responses to prevent actual calls during tournament creation
-        mock_response = Mock()
-        mock_response.status_code = 500  # Simulate failure so no api_data is set
-        mock_post.return_value = mock_response
 
         event = Event.objects.create(
             name="Test Event",
@@ -129,12 +124,17 @@ class LeagueOfLegendsGameProcessorTestCase(TestCase):
                 "spectatorType": "ALL",
             }
         )
-        self.tournament = EventTournament.objects.create(
-            name="LoL Tournament",
-            game=self.game,
-            event=event,
-            max_team_thresholds=[8, 16, 32]
-        )
+        with patch('insalan.tournament.models.game_processor.requests.post') as mock_post:
+            # Mock API responses to prevent actual calls during tournament creation
+            mock_response = Mock()
+            mock_response.status_code = 500  # Simulate failure so no api_data is set
+            mock_post.return_value = mock_response
+            self.tournament = EventTournament.objects.create(
+                name="LoL Tournament",
+                game=self.game,
+                event=event,
+                max_team_thresholds=[8, 16, 32]
+            )
 
         # Create teams with players
         self.team1 = Team.objects.create(
@@ -222,6 +222,7 @@ class LeagueOfLegendsGameProcessorTestCase(TestCase):
         result = LeagueOfLegendsGameProcessor.initialize_tournament(self.tournament)
 
         self.assertIsNotNone(result)
+        assert result is not None  # Type narrowing for mypy
         self.assertEqual(result["providerID"], 12345)
         self.assertEqual(result["tournamentID"], 67890)
         self.assertEqual(mock_post.call_count, 2)
@@ -322,6 +323,7 @@ class LeagueOfLegendsGameProcessorTestCase(TestCase):
         result = LeagueOfLegendsGameProcessor.create_match(self.match)
 
         self.assertIsNotNone(result)
+        assert result is not None  # Type narrowing for mypy
         self.assertIn("pregame", result)
         self.assertIn("postgame", result)
         self.assertEqual(result["pregame"], ["CODE1", "CODE2", "CODE3"])
@@ -375,6 +377,7 @@ class LeagueOfLegendsGameProcessorTestCase(TestCase):
         result = LeagueOfLegendsGameProcessor.create_match(group_match)
 
         self.assertIsNotNone(result)
+        assert result is not None  # Type narrowing for mypy
         self.assertEqual(len(result["pregame"]), 5)
 
     def test_start_match(self) -> None:
@@ -430,6 +433,7 @@ class LeagueOfLegendsGameProcessorTestCase(TestCase):
         result = LeagueOfLegendsGameProcessor.process_result_match(self.match, payload)
 
         self.assertIsNotNone(result)
+        assert result is not None  # Type narrowing for mypy
         self.assertIn("CODE1", result["postgame"])
         self.assertEqual(result["postgame"]["CODE1"]["gameId"], "EUW1_1234567890")
 
