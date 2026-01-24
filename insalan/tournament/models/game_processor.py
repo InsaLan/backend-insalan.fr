@@ -227,7 +227,7 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
             headers={"X-Riot-Token": RIOT_API_KEY},
             json={
                 "region": "EUW",  # Europe West region
-                "url": f"${PROTOCOL}://api.${WEBSITE_HOST}/api/tournament/{tournament.id}/result"
+                "url": f"{PROTOCOL}://api.{WEBSITE_HOST}/v1/tournament/tournament/{tournament.id}/result/"
             },
             timeout=REQUESTS_TIMEOUT_SECONDS,
         )

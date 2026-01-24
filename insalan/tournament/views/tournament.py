@@ -650,8 +650,8 @@ class TournamentResult(generics.GenericAPIView[EventTournament]):  # pylint: dis
         It finds the appropriate match and processes the result using the game processor.
         """
         try:
-            tournament = EventTournament.objects.get(id=pk)
-        except EventTournament.DoesNotExist:
+            tournament = BaseTournament.objects.get(id=pk)
+        except BaseTournament.DoesNotExist:
             return Response(
                 {"err": _("Tournoi introuvable")},
                 status=status.HTTP_404_NOT_FOUND
