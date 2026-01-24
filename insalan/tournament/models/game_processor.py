@@ -226,8 +226,11 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
             f"{RIOT_TOURNAMENT_API_BASE}/lol/tournament/v5/providers",
             headers={"X-Riot-Token": RIOT_API_KEY},
             json={
-                "region": "EUW",  # Europe West region
-                "url": f"{PROTOCOL}://api.{WEBSITE_HOST}/v1/tournament/tournament/{tournament.id}/result/"
+            "region": "EUW",  # Europe West region
+            "url": (
+                f"{PROTOCOL}://api.{WEBSITE_HOST}/v1/tournament/"
+                f"tournament/{tournament.id}/result/"
+            )
             },
             timeout=REQUESTS_TIMEOUT_SECONDS,
         )
