@@ -42,7 +42,7 @@ class DeleteStage(DestroyAPIView[Stage]):
     permission_classes = [IsAdminUser]
 
 # pylint: disable-next=unsubscriptable-object
-class StageAddGroups(generics.CreateAPIView):
+class StageAddGroups(generics.CreateAPIView[Stage]):
     queryset = Stage.objects.all()
     serializer_class = serializers.GroupsCreateSerializer
     permission_classes = [permissions.IsAdminUser]
@@ -75,7 +75,7 @@ class StageAddGroups(generics.CreateAPIView):
 
 
 # pylint: disable=unsubscriptable-object
-class StageAddBracket(generics.CreateAPIView):
+class StageAddBracket(generics.CreateAPIView[Stage]):
     queryset = Stage.objects.all()
     permission_classes = [permissions.IsAdminUser]
     serializer_class = serializers.BracketSerializer
@@ -97,7 +97,7 @@ class StageAddBracket(generics.CreateAPIView):
 
 
 # pylint: disable-next=unsubscriptable-object
-class StageAddSwissRounds(generics.CreateAPIView):
+class StageAddSwissRounds(generics.CreateAPIView[Stage]):
     queryset = Stage.objects.all()
     serializer_class = serializers.CreateSwissRoundsSerializer
     permission_classes = [permissions.IsAdminUser]
