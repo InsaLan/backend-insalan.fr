@@ -384,7 +384,11 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
         return match.api_data if isinstance(match.api_data, dict) else None
 
     @staticmethod
-    def _filter_match_data(game_id: str, start_time: int | None, match_data: dict[str, Any]) -> dict[str, Any]:
+    def _filter_match_data(
+        game_id: str,
+        start_time: int | None,
+        match_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Filter match data to keep only useful post-game information.
         
