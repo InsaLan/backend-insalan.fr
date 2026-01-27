@@ -384,6 +384,70 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
         return match.api_data if isinstance(match.api_data, dict) else None
 
     @staticmethod
+    def _filter_match_data(game_id: str, start_time: int | None, match_data: dict[str, Any]) -> dict[str, Any]:
+        """
+        Filter match data to keep only useful post-game information.
+        
+        Args:
+            game_id: The game ID
+            start_time: Game start timestamp
+            match_data: Raw match data from Riot API
+            
+        Returns:
+            Filtered dictionary with only essential statistics
+        """
+        info = match_data.get("info", {})
+
+        # Filter team data
+        teams = []
+        for team in info.get("teams", []):
+            teams.append({
+                "teamId": team.get("teamId"),
+                "win": team.get("win"),
+                "bans": team.get("bans", []),
+                "objectives": team.get("objectives", {}),
+            })
+
+        # Filter participant data
+        participants = []
+        for participant in info.get("participants", []):
+            participants.append({
+                "puuid": participant.get("puuid"),
+                "teamId": participant.get("teamId"),
+                "championId": participant.get("championId"),
+                "championName": participant.get("championName"),
+                "champLevel": participant.get("champLevel"),
+                "kills": participant.get("kills"),
+                "deaths": participant.get("deaths"),
+                "assists": participant.get("assists"),
+                "totalMinionsKilled": participant.get("totalMinionsKilled"),
+                "profileIcon": participant.get("profileIcon"),
+                "role": participant.get("role"),
+                "lane": participant.get("lane"),
+                "goldEarned": participant.get("goldEarned"),
+                "totalDamageDealtToChampions": participant.get("totalDamageDealtToChampions"),
+                "visionScore": participant.get("visionScore"),
+                "item0": participant.get("item0"),
+                "item1": participant.get("item1"),
+                "item2": participant.get("item2"),
+                "item3": participant.get("item3"),
+                "item4": participant.get("item4"),
+                "item5": participant.get("item5"),
+                "item6": participant.get("item6"),
+                "summoner1Id": participant.get("summoner1Id"),
+                "summoner2Id": participant.get("summoner2Id"),
+                "perks": participant.get("perks", {}),
+            })
+
+        return {
+            "gameId": game_id,
+            "startTime": start_time,
+            "gameDuration": info.get("gameDuration"),
+            "teams": teams,
+            "participants": participants,
+        }
+
+    @staticmethod
     def process_result_match(match: Match, payload: dict[str, Any]) -> dict[str, Any] | None:
         """
         Process match results from a callback.
@@ -434,15 +498,12 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
 
         match_data = match_response.json()
 
-        # TODO: Extract relevant statistics
-        # Store essential match information
-        game_stats = {
-            "gameId": game_id,
-            "startTime": payload.get("startTime"),
-            "gameDuration": match_data.get("info", {}).get("gameDuration"),
-            "teams": match_data.get("info", {}).get("teams", []),
-            "participants": match_data.get("info", {}).get("participants", []),
-        }
+        # Filter and store essential match information
+        game_stats = LeagueOfLegendsGameProcessor._filter_match_data(
+            game_id=game_id,
+            start_time=payload.get("startTime"),
+            match_data=match_data
+        )
 
         # Save to postgame data keyed by tournament code
         match.api_data["postgame"][short_code] = game_stats
