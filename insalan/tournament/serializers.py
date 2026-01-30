@@ -1035,7 +1035,7 @@ class FullDerefManagerSerializer(serializers.ModelSerializer[Manager]):
         """Meta options for the serializer"""
 
         model = Manager
-        fields= "__all__"
+        fields = "__all__"
 
     def to_representation(self, instance: Manager) -> str:
         """Return only the user's name"""
