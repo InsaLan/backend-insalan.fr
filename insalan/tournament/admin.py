@@ -2044,7 +2044,7 @@ class SwissSeedingInline(admin.TabularInline[SwissSeeding, SwissRound]):
 class SwissRoundAdmin(ModelAdmin):  # type: ignore
     """Admin handle for Swiss Round"""
 
-    list_display = ("id", "tournament")
+    list_display = ("id", "name", "tournament")
     search_fields = ["tournament"]
     inlines = [SwissSeedingInline]
     actions = ["create_swiss_matchs_action"]
