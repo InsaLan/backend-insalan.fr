@@ -1,7 +1,7 @@
 """Admin handlers for the tournament module"""
 
 import json
-from typing import Any, cast, Type, TypeVar
+from typing import Any, cast, Mapping, Type, TypeVar
 
 from django import forms
 from django.db.models import ForeignKey
@@ -67,6 +67,7 @@ from .models import (
     PrivateTournament,
     EventTournament,
     TournamentMailer,
+    game_processor,
 )
 
 
@@ -200,10 +201,232 @@ class EventAdmin(ModelAdmin):  # type: ignore
 admin.site.register(Event, EventAdmin)
 
 
+class GameParametersWidget(forms.Widget):
+    """Custom widget that renders individual fields for game parameters"""
+    template_name = ""  # Empty string instead of None for unfold compatibility
+
+    def __init__(self, schema: dict[str, Any] | None = None,
+                 defaults: dict[str, Any] | None = None, attrs: dict[str, Any] | None = None):
+        super().__init__(attrs)
+        self.schema = schema or {}
+        self.defaults = defaults or {}
+
+    class Media:
+        js = ('js/game_parameters.js',)
+
+    def render(self, name: str, value: Any, attrs: dict[str, Any] | None = None,
+               renderer: BaseRenderer | None = None) -> SafeString:
+        """Render individual form fields based on schema"""
+        if not self.schema:
+            return SafeString(f'<input type="hidden" name="{name}" value="{{}}" />')
+
+        # Parse current value
+        if isinstance(value, str):
+            try:
+                current_values = json.loads(value) if value else {}
+            except (json.JSONDecodeError, TypeError):
+                current_values = {}
+        else:
+            current_values = value or {}
+
+        html_parts = []
+        html_parts.append(f'<input type="hidden" name="{name}" id="id_{name}" value="" />')
+
+        # Add data attributes for JavaScript
+        schema_json = json.dumps({
+            k: {'type': v.get('type', 'string')} for k, v in self.schema.items()
+        })
+        escaped_schema = schema_json.replace('"', '&quot;')
+        html_parts.append(
+            f'<div style="margin-top: 10px;" data-game-parameters '
+            f'data-field-name="{name}" data-schema="{escaped_schema}">'
+        )
+
+        for param_name, param_info in self.schema.items():
+            param_type = param_info.get("type", "string")
+            label = param_info.get("label", param_name)
+            help_text = param_info.get("help_text", "")
+            field_id = f"param_{param_name}"
+
+            # Get current or default value
+            current_value = current_values.get(param_name)
+            if current_value is None and param_name in self.defaults:
+                current_value = self.defaults[param_name]
+
+            # Render field
+            html_parts.append('<div style="margin-bottom: 20px;">')
+            html_parts.append(
+                f'<label for="{field_id}" class="block text-sm font-medium mb-2">{label}</label>'
+            )
+
+            # Common classes for all input fields
+            base_classes = (
+                "border border-base-200 bg-white font-medium placeholder-base-400 "
+                "rounded shadow-sm text-font-default-light text-sm focus:ring "
+                "focus:ring-primary-300 focus:border-primary-600 focus:outline-none "
+                "dark:bg-base-900 dark:border-base-700 dark:text-font-default-dark "
+                "dark:focus:border-primary-600 dark:focus:ring-primary-700 "
+                "dark:focus:ring-opacity-50 px-3 py-2 w-full"
+            )
+
+            if param_type == "choice":
+                choices = param_info.get("choices", [])
+                select_html = (
+                    '<select id="' + field_id +
+                    '" name="' + field_id +
+                    '" class="' + base_classes +
+                    ' pr-8 max-w-2xl appearance-none">'
+                )
+                html_parts.append(select_html)
+                for choice_value, choice_label in choices:
+                    selected = 'selected' if str(current_value) == str(choice_value) else ''
+                    option_html = (
+                        '<option value="' + str(choice_value) + '" ' +
+                        selected + '>' + str(choice_label) + '</option>'
+                    )
+                    html_parts.append(option_html)
+                html_parts.append('</select>')
+            elif param_type == "bool":
+                checked = 'checked' if current_value else ''
+                checkbox_classes = (
+                    "rounded border-base-300 text-primary-600 shadow-sm "
+                    "focus:border-primary-300 focus:ring focus:ring-offset-0 "
+                    "focus:ring-primary-200 focus:ring-opacity-50 dark:bg-base-900 "
+                    "dark:border-base-600 dark:checked:bg-primary-600 "
+                    "dark:checked:border-primary-600 dark:focus:ring-offset-base-800"
+                )
+                html_parts.append(
+                    f'<input type="checkbox" id="{field_id}" name="{field_id}" '
+                    f'{checked} class="{checkbox_classes}" />'
+                )
+            elif param_type == "int":
+                html_parts.append(
+                    f'<input type="number" id="{field_id}" name="{field_id}" '
+                    f'value="{current_value or 0}" class="{base_classes} max-w-2xl" />'
+                )
+            else:  # string
+                escaped_value = str(current_value or "").replace('"', '&quot;')
+                input_html = (
+                    f'<input type="text" id="{field_id}" name="{field_id}" '
+                    f'value="{escaped_value}" class="{base_classes} max-w-2xl" />'
+                )
+                html_parts.append(input_html)
+
+            if help_text:
+                html_parts.append(f'<p class="text-xs text-base-500 mt-1">{help_text}</p>')
+
+            html_parts.append('</div>')
+
+        html_parts.append('</div>')
+
+        return SafeString(''.join(html_parts))
+
+    def value_from_datadict(
+        self,
+        data: Mapping[str, Any],
+        files: Mapping[str, Any], name: str
+    ) -> Any:
+        """Extract value from form submission"""
+        json_value = data.get(name, '{}')
+        try:
+            return json.loads(json_value) if json_value else {}
+        except (json.JSONDecodeError, TypeError):
+            return {}
+
+
+class CollapsibleJSONWidget(forms.Widget):
+    """Custom widget that renders JSON data in a collapsible, formatted view"""
+    template_name = ""  # Empty string for unfold compatibility
+
+    def render(self, name: str, value: Any, attrs: dict[str, Any] | None = None,
+               renderer: BaseRenderer | None = None) -> SafeString:
+        """Render JSON data as formatted, collapsible HTML"""
+        if value is None or value == '':
+            value = {}
+
+        # Parse JSON if it's a string
+        if isinstance(value, str):
+            try:
+                json_data = json.loads(value) if value else {}
+            except (json.JSONDecodeError, TypeError):
+                json_data = {}
+        else:
+            json_data = value or {}
+
+        # Format JSON with indentation
+        formatted_json = json.dumps(json_data, indent=2, ensure_ascii=False)
+        escaped_json = escape(formatted_json)
+
+        # Generate unique ID for this widget instance
+        widget_id = f"json_{name}_{id(self)}"
+
+        html_parts = []
+
+        # Hidden input to store the actual data
+        html_parts.append(f'<input type="hidden" name="{name}" value=\'{formatted_json}\' />')
+
+        # Collapsible container
+        html_parts.append('<div style="margin: 10px 0;">')
+        html_parts.append(
+            f'<button type="button" id="{widget_id}_toggle" '
+            f'style="background: #2563eb; color: white; padding: 8px 16px; '
+            f'border: none; border-radius: 4px; cursor: pointer; '
+            f'font-size: 14px; margin-bottom: 8px;">'
+            f'Afficher / Masquer JSON'
+            f'</button>'
+        )
+
+        # JSON display area (initially hidden)
+        html_parts.append(
+            f'<div id="{widget_id}_content" style="display: none; '
+            f'background: #1e293b; color: #e2e8f0; padding: 16px; '
+            f'border-radius: 4px; overflow-x: auto; font-family: monospace; '
+            f'font-size: 13px; line-height: 1.6; max-height: 500px; '
+            f'overflow-y: auto;">'
+        )
+        html_parts.append(f'<pre style="margin: 0;">{escaped_json}</pre>')
+        html_parts.append('</div>')
+        html_parts.append('</div>')
+
+        # JavaScript for toggle functionality
+        html_parts.append('<script>')
+        html_parts.append('(function() {')
+        html_parts.append(f'  var toggle = document.getElementById("{widget_id}_toggle");')
+        html_parts.append(f'  var content = document.getElementById("{widget_id}_content");')
+        html_parts.append('  toggle.addEventListener("click", function() {')
+        html_parts.append('    if (content.style.display === "none") {')
+        html_parts.append('      content.style.display = "block";')
+        html_parts.append('    } else {')
+        html_parts.append('      content.style.display = "none";')
+        html_parts.append('    }')
+        html_parts.append('  });')
+        html_parts.append('})();')
+        html_parts.append('</script>')
+
+        return SafeString(''.join(html_parts))
+
+
 class GameForm(ModelForm[Game]):  # pylint: disable=unsubscriptable-object
     """
     Custom form for the Game model
     """
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+
+        # Replace the games_parameters widget with our custom widget
+        if self.instance and self.instance.game_processor:
+            schema = game_processor.get_processor_parameters_schema(self.instance.game_processor)
+            defaults = game_processor.get_processor_default_parameters(self.instance.game_processor)
+
+            if schema:
+                self.fields["games_parameters"].widget = GameParametersWidget(
+                    schema=schema,
+                    defaults=defaults
+                )
+                self.fields["games_parameters"].help_text = _(
+                    "Configurez les paramètres du processeur de jeu"
+                )
+
     def clean(self) -> None:
         # if players_per_team changed, reset associated seat_slots
         new_players_per_team = self.cleaned_data.get("players_per_team")
@@ -212,6 +435,15 @@ class GameForm(ModelForm[Game]):  # pylint: disable=unsubscriptable-object
             tournaments = BaseTournament.objects.filter(game=self.instance)
             seat_slots = SeatSlot.objects.filter(tournament__in=tournaments)
             seat_slots.delete()
+
+        # Initialize games_parameters with defaults if empty and processor is selected
+        games_parameters = self.cleaned_data.get("games_parameters")
+        game_processor_cleaned = self.cleaned_data.get("game_processor")
+
+        if game_processor_cleaned and (not games_parameters or games_parameters == {}):
+            defaults = game_processor.get_processor_default_parameters(game_processor_cleaned)
+            if defaults:
+                self.cleaned_data["games_parameters"] = defaults
 
     class Meta:
         """
@@ -225,8 +457,78 @@ class GameAdmin(ModelAdmin):  # type: ignore
     """Admin handler for Games"""
     form = GameForm
 
-    list_display = ("id", "name", "players_per_team")
+    list_display = ("id", "name", "players_per_team", "validators", "game_processor")
     search_fields = ["name"]
+    actions = ["reset_to_default_parameters"]
+
+    def get_fieldsets(self, request: HttpRequest, obj: Game | None = None
+                     ) -> tuple[tuple[str, dict[str, Any]], ...]:
+        """Return different fieldsets for add vs change views"""
+        if obj is None:
+            # Adding a new game - exclude games_parameters
+            return (
+                (_("Informations générales"), {
+                    "fields": ("name", "short_name"),
+                }),
+                (_("Configuration du jeu"), {
+                    "fields": (
+                        "players_per_team",
+                        "substitute_players_per_team",
+                        "team_per_match",
+                    ),
+                }),
+                (_("Validation et automatisation"), {
+                    "fields": ("validators", "game_processor"),
+                    "description": _(
+                        "Configurez la validation des pseudos et l'automatisation "
+                        "des matchs"
+                    ),
+                }),
+            )
+        # Editing existing game - include games_parameters
+        return (
+            (_("Informations générales"), {
+                "fields": ("name", "short_name"),
+            }),
+            (_("Configuration du jeu"), {
+                "fields": (
+                    "players_per_team",
+                    "substitute_players_per_team",
+                    "team_per_match",
+                ),
+            }),
+            (_("Validation et automatisation"), {
+                "fields": (
+                    "validators",
+                    "game_processor",
+                    "games_parameters",
+                ),
+                "description": _(
+                    "Configurez la validation des pseudos et l'automatisation "
+                    "des matchs"
+                ),
+            }),
+        )
+
+    def get_readonly_fields(self, request: HttpRequest, obj: Game | None = None
+                           ) -> tuple[str, ...]:
+        """Make games_parameters field show helpful information"""
+        return tuple()
+
+    @admin.action(description=_("Réinitialiser aux paramètres par défaut"))
+    def reset_to_default_parameters(self, request: HttpRequest, queryset: QuerySet[Game]) -> None:
+        """Reset game parameters to processor defaults"""
+
+        for game in queryset:
+            defaults = game_processor.get_processor_default_parameters(game.game_processor)
+            if defaults:
+                game.games_parameters = defaults
+                game.save(update_fields=["games_parameters"])
+
+        self.message_user(
+            request,
+            _(f"{queryset.count()} jeu(x) réinitialisé(s) avec les paramètres par défaut.")
+        )
 
 
 admin.site.register(Game, GameAdmin)
@@ -402,7 +704,7 @@ class EventTournamentAdmin(ModelAdmin[EventTournament]): # type: ignore
 
     list_filter = (EventTournamentFilter, GameTournamentFilter)
 
-    actions = ['update_name', 'expand_threshold']
+    actions = ['update_name', 'expand_threshold', 'update_tournament_api']
 
     def get_form(
         self,
@@ -427,6 +729,20 @@ class EventTournamentAdmin(ModelAdmin[EventTournament]): # type: ignore
 
     get_occupancy.short_description = 'Remplissage'  # type: ignore[attr-defined]
 
+    def get_readonly_fields(self, request: HttpRequest, obj: EventTournament | None = None
+                           ) -> tuple[str, ...]:
+        """Make api_data readonly when editing"""
+        if obj is not None:
+            return ('api_data',)
+        return tuple()
+
+    def get_exclude(self, request: HttpRequest, obj: EventTournament | None = None
+                   ) -> tuple[str, ...] | None:
+        """Exclude api_data when creating a new tournament"""
+        if obj is None:
+            return ('api_data',)
+        return None
+
     @admin.action(description=_("Mettre à jour les pseudos"))
     def update_name(
         self, request: HttpRequest, queryset: QuerySet[EventTournament]
@@ -442,6 +758,37 @@ class EventTournamentAdmin(ModelAdmin[EventTournament]): # type: ignore
         for tournament in queryset:
             tournament.try_expand_threshold()
         self.message_user(request,_("Le seuil a été mis à jour."))
+
+    @admin.action(description=_("Rafraîchir les données API du tournoi"))
+    def update_tournament_api(
+        self, request: HttpRequest, queryset: QuerySet[EventTournament]
+    ) -> None:
+        success_count = 0
+        error_messages = []
+
+        for tournament in queryset:
+            processor_class = tournament.game.get_game_processor()
+            if processor_class is None:
+                error_messages.append(f"{tournament.name}: Aucun processeur de jeu configuré")
+                continue
+
+            try:
+                api_data = processor_class.update_tournament(tournament)
+                if api_data is not None:
+                    tournament.api_data = api_data
+                    tournament.save(update_fields=['api_data'])
+                    success_count += 1
+                else:
+                    error_messages.append(f"{tournament.name}: Échec de la mise à jour")
+            except ValidationError as e:
+                error_messages.append(f"{tournament.name}: {e.message}")
+
+        if success_count > 0:
+            self.message_user(request, _(f"{success_count} tournoi(s) mis à jour avec succès."))
+
+        if error_messages:
+            for msg in error_messages:
+                self.message_user(request, msg, level='error')
 
     class Media:
         css = {
@@ -463,7 +810,7 @@ class PrivateTournamentAdmin(ModelAdmin[PrivateTournament]): # type: ignore
     list_display = ("id", "name", "game", "get_occupancy")
     search_fields = ["name", "game__name"]
 
-    actions = ['update_name']
+    actions = ['update_name', 'update_tournament_api']
 
     def get_occupancy(self, obj: PrivateTournament) -> str:
         """
@@ -474,15 +821,60 @@ class PrivateTournamentAdmin(ModelAdmin[PrivateTournament]): # type: ignore
             validated=True,
         ).count()) + " / " + str(obj.get_max_team())
 
+    get_occupancy.short_description = 'Remplissage'  # type: ignore[attr-defined]
+
+    def get_readonly_fields(self, request: HttpRequest, obj: PrivateTournament | None = None
+                           ) -> tuple[str, ...]:
+        """Make api_data readonly when editing"""
+        if obj is not None:
+            return ('api_data',)
+        return tuple()
+
+    def get_exclude(self, request: HttpRequest, obj: PrivateTournament | None = None
+                   ) -> tuple[str, ...] | None:
+        """Exclude api_data when creating a new tournament"""
+        if obj is None:
+            return ('api_data',)
+        return None
+
     @admin.action(description=_("Mettre à jour les pseudos"))
     def update_name(
-        self, request: HttpRequest, queryset: QuerySet[EventTournament]
+        self, request: HttpRequest, queryset: QuerySet[PrivateTournament]
     ) -> None:
         for tournament in queryset:
             tournament.update_name_in_game()
         self.message_user(request,_("Les pseudo ont été mis à jour."))
 
-    get_occupancy.short_description = 'Remplissage'  # type: ignore[attr-defined]
+    @admin.action(description=_("Rafraîchir les données API du tournoi"))
+    def update_tournament_api(
+        self, request: HttpRequest, queryset: QuerySet[PrivateTournament]
+    ) -> None:
+        success_count = 0
+        error_messages = []
+
+        for tournament in queryset:
+            processor_class = tournament.game.get_game_processor()
+            if processor_class is None:
+                error_messages.append(f"{tournament.name}: Aucun processeur de jeu configuré")
+                continue
+
+            try:
+                api_data = processor_class.update_tournament(tournament)
+                if api_data is not None:
+                    tournament.api_data = api_data
+                    tournament.save(update_fields=['api_data'])
+                    success_count += 1
+                else:
+                    error_messages.append(f"{tournament.name}: Échec de la mise à jour")
+            except ValidationError as e:
+                error_messages.append(f"{tournament.name}: {e.message}")
+
+        if success_count > 0:
+            self.message_user(request, _(f"{success_count} tournoi(s) mis à jour avec succès."))
+
+        if error_messages:
+            for msg in error_messages:
+                self.message_user(request, msg, level='error')
 
 
 admin.site.register(PrivateTournament, PrivateTournamentAdmin)
@@ -1323,9 +1715,40 @@ class GroupAdmin(ModelAdmin):  # type: ignore
 admin.site.register(Group, GroupAdmin)
 
 
+class GroupMatchForm(ModelForm[GroupMatch]):  # pylint: disable=unsubscriptable-object
+    """Custom form for GroupMatch with collapsible JSON widget for api_data"""
+
+    class Meta:
+        model = GroupMatch
+        fields = '__all__'
+        widgets = {
+            'api_data': CollapsibleJSONWidget(),
+        }
+
+
+class KnockoutMatchForm(ModelForm[KnockoutMatch]):  # pylint: disable=unsubscriptable-object
+    """Custom form for KnockoutMatch with collapsible JSON widget for api_data"""
+
+    class Meta:
+        model = KnockoutMatch
+        fields = '__all__'
+        widgets = {
+            'api_data': CollapsibleJSONWidget(),
+        }
+
+
+class SwissMatchForm(ModelForm[SwissMatch]):  # pylint: disable=unsubscriptable-object
+    """Custom form for SwissMatch with collapsible JSON widget for api_data"""
+
+    class Meta:
+        model = SwissMatch
+        fields = '__all__'
+
+
 class GroupMatchAdmin(ModelAdmin):  # type: ignore
     """Admin handle for group matchs"""
 
+    form = GroupMatchForm
     list_display = ("id", "group", "status", "round_number", "index_in_round", "bo_type", )
     search_fields = ["index_in_round", "round_number"]
     # filter_horizontal = ("teams",)
@@ -1336,6 +1759,48 @@ class GroupMatchAdmin(ModelAdmin):  # type: ignore
     ]
 
     list_filter = ["group__tournament", "group", RoundNumberFilter, "index_in_round", "status"]
+
+    def get_readonly_fields(self, request: HttpRequest, obj: GroupMatch | None = None
+                           ) -> tuple[str, ...]:
+        """Make api_data_display readonly when editing"""
+        if obj is not None:
+            return ('api_data_display',)
+        return tuple()
+
+    def get_exclude(self, request: HttpRequest, obj: GroupMatch | None = None
+                   ) -> tuple[str, ...] | None:
+        """Exclude api_data field (we show api_data_display instead)"""
+        return ('api_data',)
+
+    def api_data_display(self, obj: GroupMatch) -> SafeString:
+        """Display api_data as collapsible JSON"""
+        if not obj.api_data:
+            return SafeString('<p class="collapsible-json-empty">Aucune donnée API</p>')
+
+        formatted_json = json.dumps(obj.api_data, indent=2, ensure_ascii=False)
+        escaped_json = escape(formatted_json)
+        widget_id = f"json_api_data_{obj.id}"
+
+        html = f'''
+        <div class="collapsible-json-container">
+            <button type="button" id="{widget_id}_toggle" class="collapsible-json-toggle">
+                Afficher JSON
+            </button>
+            <div id="{widget_id}_content" class="collapsible-json-content">
+                <pre>{escaped_json}</pre>
+            </div>
+        </div>
+        '''
+
+        return SafeString(html)
+
+    api_data_display.short_description = 'Données API'  # type: ignore[attr-defined]
+
+    class Media:
+        css = {
+            'all': ('css/collapsible_json.css',)
+        }
+        js = ('js/collapsible_json.js',)
 
     @admin.action(description=_("Lancer les matchs"))
     def launch_group_matchs_action(self, request: HttpRequest, queryset: QuerySet[GroupMatch]
@@ -1472,6 +1937,7 @@ admin.site.register(Bracket, BracketAdmin)
 class KnockoutMatchAdmin(ModelAdmin):  # type: ignore
     """Admin handle for Knockout matchs"""
 
+    form = KnockoutMatchForm
     list_display = ("id", "bracket", "status", "bracket_set", "round_number", "index_in_round",
                     "bo_type")
     inlines = [ScoreInline]
@@ -1482,6 +1948,48 @@ class KnockoutMatchAdmin(ModelAdmin):  # type: ignore
 
     list_filter = ["bracket__tournament", "bracket", "bracket_set", BracketMatchFilter,
                    "index_in_round", "status"]
+
+    def get_readonly_fields(self, request: HttpRequest, obj: KnockoutMatch | None = None
+                           ) -> tuple[str, ...]:
+        """Make api_data_display readonly when editing"""
+        if obj is not None:
+            return ('api_data_display',)
+        return tuple()
+
+    def get_exclude(self, request: HttpRequest, obj: KnockoutMatch | None = None
+                   ) -> tuple[str, ...] | None:
+        """Exclude api_data field (we show api_data_display instead)"""
+        return ('api_data',)
+
+    def api_data_display(self, obj: KnockoutMatch) -> SafeString:
+        """Display api_data as collapsible JSON"""
+        if not obj.api_data:
+            return SafeString('<p class="collapsible-json-empty">Aucune donnée API</p>')
+
+        formatted_json = json.dumps(obj.api_data, indent=2, ensure_ascii=False)
+        escaped_json = escape(formatted_json)
+        widget_id = f"json_api_data_{obj.id}"
+
+        html = f'''
+        <div class="collapsible-json-container">
+            <button type="button" id="{widget_id}_toggle" class="collapsible-json-toggle">
+                Afficher JSON
+            </button>
+            <div id="{widget_id}_content" class="collapsible-json-content">
+                <pre>{escaped_json}</pre>
+            </div>
+        </div>
+        '''
+
+        return SafeString(html)
+
+    api_data_display.short_description = 'Données API'  # type: ignore[attr-defined]
+
+    class Media:
+        css = {
+            'all': ('css/collapsible_json.css',)
+        }
+        js = ('js/collapsible_json.js',)
 
     @admin.action(description=_("Lancer les matchs"))
     def launch_knockout_matchs_action(self, request: HttpRequest, queryset: QuerySet[KnockoutMatch]
@@ -1561,6 +2069,7 @@ admin.site.register(SwissRound, SwissRoundAdmin)
 class SwissMatchAdmin(ModelAdmin):  # type: ignore
     """Admin handle for Swiss matchs"""
 
+    form = SwissMatchForm
     list_display = ("id", "swiss", "status", "round_number", "index_in_round", "bo_type",
                     "score_group")
     inlines = [ScoreInline]
@@ -1570,6 +2079,48 @@ class SwissMatchAdmin(ModelAdmin):  # type: ignore
     ]
 
     list_filter = ["swiss__tournament", "swiss", RoundNumberFilter, "index_in_round", "status"]
+
+    def get_readonly_fields(self, request: HttpRequest, obj: SwissMatch | None = None
+                           ) -> tuple[str, ...]:
+        """Make api_data_display readonly when editing"""
+        if obj is not None:
+            return ('api_data_display',)
+        return tuple()
+
+    def get_exclude(self, request: HttpRequest, obj: SwissMatch | None = None
+                   ) -> tuple[str, ...] | None:
+        """Exclude api_data field (we show api_data_display instead)"""
+        return ('api_data',)
+
+    def api_data_display(self, obj: SwissMatch) -> SafeString:
+        """Display api_data as collapsible JSON"""
+        if not obj.api_data:
+            return SafeString('<p class="collapsible-json-empty">Aucune donnée API</p>')
+
+        formatted_json = json.dumps(obj.api_data, indent=2, ensure_ascii=False)
+        escaped_json = escape(formatted_json)
+        widget_id = f"json_api_data_{obj.id}"
+
+        html = f'''
+        <div class="collapsible-json-container">
+            <button type="button" id="{widget_id}_toggle" class="collapsible-json-toggle">
+                Afficher JSON
+            </button>
+            <div id="{widget_id}_content" class="collapsible-json-content">
+                <pre>{escaped_json}</pre>
+            </div>
+        </div>
+        '''
+
+        return SafeString(html)
+
+    api_data_display.short_description = 'Données API'  # type: ignore[attr-defined]
+
+    class Media:
+        css = {
+            'all': ('css/collapsible_json.css',)
+        }
+        js = ('js/collapsible_json.js',)
 
     @admin.action(description=_("Lancer les matchs"))
     def launch_swiss_matchs_action(self, request: HttpRequest, queryset: QuerySet[SwissMatch]

@@ -574,6 +574,7 @@ class GameSerializer(serializers.ModelSerializer[Game]):
             "players_per_team",
             "substitute_players_per_team",
             "team_per_match",
+            "game_processor",
         )
 
 class EventTournamentSerializer(serializers.ModelSerializer[EventTournament]):
@@ -599,7 +600,7 @@ class EventTournamentSerializer(serializers.ModelSerializer[EventTournament]):
             "substitute_price_online",
             "substitute_price_onsite",
         )
-        exclude = ["polymorphic_ctype"]
+        exclude = ["polymorphic_ctype", "api_data"]
 
     def to_representation(self, instance: EventTournament) -> Any:
         """Remove all fields except id and is_announced when is_announced is False"""
@@ -1181,7 +1182,7 @@ class FullDerefEventTournamentSerializer(serializers.ModelSerializer[EventTourna
 
     class Meta:
         model = EventTournament
-        exclude = ["polymorphic_ctype"]
+        exclude = ["polymorphic_ctype", "api_data"]
 
     def to_representation(self, value: EventTournament) -> Any:
         if value.is_announced:

@@ -6,6 +6,7 @@ from typing import Any, cast, TYPE_CHECKING
 
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from django.db.models import JSONField
 from django.db.models.manager import Manager
 from django.db.models.query import QuerySet
 from django.core.validators import (
@@ -91,6 +92,13 @@ class BaseTournament(PolymorphicModel):  # type: ignore[misc]
         default='',
         verbose_name=_("Description du tournoi en bas de page"),
         max_length=300,
+    )
+    api_data = JSONField(
+        verbose_name=_("Données API"),
+        blank=True,
+        null=True,
+        default=dict,
+        help_text=_("Données JSON pour l'automatisation des matchs"),
     )
 
     # The teams field is defined in the tournament field in the Team model as
@@ -258,6 +266,16 @@ class BaseTournament(PolymorphicModel):  # type: ignore[misc]
             for substitute in team_obj.get_substitutes():
                 substitute.update_name_in_game()
 
+    def initialize_game_processor(self) -> bool:
+        """Initialize tournament with game processor if available. Returns True if initialized."""
+        processor_class = self.game.get_game_processor()
+        if processor_class is not None:
+            api_data = processor_class.initialize_tournament(self)
+            if api_data is not None:
+                self.api_data = api_data
+                return True
+        return False
+
 class PrivateTournament(BaseTournament):
     """
     A private Tournament without paid registration.
@@ -290,6 +308,15 @@ class PrivateTournament(BaseTournament):
         blank=True,
         default="",
     )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """Override default save to initialize game processor for new tournaments"""
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+
+        # Initialize tournament with game processor if this is a new tournament
+        if is_new and self.initialize_game_processor():
+            super().save(update_fields=['api_data'])
 
     class Meta:
         """Meta options"""
@@ -438,9 +465,14 @@ class EventTournament(BaseTournament):
         # pylint: disable=import-outside-toplevel
         from insalan.payment.models import Product, ProductCategory
 
+        is_new = self.pk is None
         super().save(*args, **kwargs)  # Get the self accessible to the products
 
         need_save = False
+
+        # Initialize tournament with game processor if this is a new tournament
+        if is_new and self.initialize_game_processor():
+            need_save = True
 
         if self.player_online_product is None:
             prod = Product.objects.create(

@@ -271,7 +271,8 @@ class TournamentFullDerefEndpoint(APITestCase):
                 "short_name": "TFG",
                 "players_per_team": 1,
                 "substitute_players_per_team": 0,
-                "team_per_match": 2
+                "team_per_match": 2,
+                "game_processor": "None"
             },
             "name": "Test Tournament",
             "rules": "have fun!",

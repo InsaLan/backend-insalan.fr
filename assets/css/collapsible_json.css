@@ -1,0 +1,52 @@
+/**
+ * Styles for collapsible JSON viewer in Django admin
+ */
+
+.collapsible-json-container {
+    margin: 10px 0;
+}
+
+.collapsible-json-toggle {
+    background: #2563eb;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 8px;
+    transition: background 0.2s ease;
+}
+
+.collapsible-json-toggle:hover {
+    background: #1d4ed8;
+}
+
+.collapsible-json-toggle:active {
+    background: #1e40af;
+}
+
+.collapsible-json-content {
+    display: none;
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 16px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.collapsible-json-content pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.collapsible-json-empty {
+    color: #94a3b8;
+    font-style: italic;
+}

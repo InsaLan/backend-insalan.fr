@@ -1,6 +1,6 @@
 from typing import Any
 
-from ..models import Match, MatchStatus, Score
+from ..models import Match, MatchStatus, Score, KnockoutMatch, GroupMatch, SwissMatch
 
 
 def update_match_score(match: Match, data: dict[str, Any]) -> None:
@@ -23,5 +23,20 @@ def launch_match(match: Match) -> None:
         score.save()
     else:
         match.status = MatchStatus.ONGOING
+        # Get the tournament from the match
+        tournament = None
+        if hasattr(match, 'knockoutmatch'):
+            tournament = KnockoutMatch.objects.get(id=match.id).bracket.tournament
+        elif hasattr(match, 'groupmatch'):
+            tournament = GroupMatch.objects.get(id=match.id).group.tournament
+        elif hasattr(match, 'swissmatch'):
+            tournament = SwissMatch.objects.get(id=match.id).swiss.tournament
+
+        if tournament is not None:
+            processor_class = tournament.game.get_game_processor()
+            if processor_class is not None:
+                api_data = processor_class.start_match(match)
+                if api_data is not None:
+                    match.api_data = api_data
 
     match.save()

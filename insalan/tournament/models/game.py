@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Type
 
 from django.db import models
+from django.db.models import JSONField
 from django.core.validators import (
     MinValueValidator,
     MinLengthValidator,
@@ -10,6 +11,11 @@ from django.core.validators import (
 from django.utils.translation import gettext_lazy as _
 
 from .name_validator import NameValidator, get_choices, get_validator
+from .game_processor import (
+    GameProcessor,
+    get_processor_choices,
+    get_processor,
+)
 from .tournament import BaseTournament
 
 if TYPE_CHECKING:
@@ -71,6 +77,21 @@ class Game(models.Model):
         default=get_choices()[0][0],
         choices=get_choices(),
     )
+    game_processor = models.CharField(
+        verbose_name=_("Récupération des matchs"),
+        max_length=42,
+        null=False,
+        blank=False,
+        default=get_processor_choices()[0][0],
+        choices=get_processor_choices(),
+    )
+    games_parameters = JSONField(
+        verbose_name=_("Paramètres du jeu"),
+        blank=True,
+        null=True,
+        default=dict,
+        help_text=_("Paramètres JSON pour la configuration des API (ex: map pour LoL)"),
+    )
 
     def __str__(self) -> str:
         """Format this Game to a str"""
@@ -99,3 +120,7 @@ class Game(models.Model):
     def get_name_validator(self) -> Type[NameValidator] | None:
         """Return the validators of the game."""
         return get_validator(self.validators)
+
+    def get_game_processor(self) -> Type[GameProcessor] | None:
+        """Return the game processor of the game."""
+        return get_processor(self.game_processor)
