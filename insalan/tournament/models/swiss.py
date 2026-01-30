@@ -35,7 +35,8 @@ class SwissRound(models.Model):
         "Stage",
         verbose_name=_("Phase du tournoi"),
         on_delete=models.CASCADE,
-        null=True
+        null=True,
+        blank=True
     )
 
     class Meta:
