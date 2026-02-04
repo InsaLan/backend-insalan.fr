@@ -274,9 +274,9 @@ class EmailConfirmView(APIView):
             200: openapi.Schema(
                 type=openapi.TYPE_OBJECT,
                 properties={
-                    "msg": openapi.Schema(
+                    "username": openapi.Schema(
                         type=openapi.TYPE_STRING,
-                        description=_("Adresse de courriel confirmée")
+                        description=_("Nom d'utilisateur·rice")
                     )
                 }
             ),
@@ -317,7 +317,7 @@ class EmailConfirmView(APIView):
                 user_object.set_email_active()
                 user_object.last_login = timezone.make_aware(datetime.now())
                 user_object.save()
-                return Response()
+                return Response({"username": user_object.username})
 
         return Response({"user": [error_text]}, status=status.HTTP_400_BAD_REQUEST)
 
