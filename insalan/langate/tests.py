@@ -439,3 +439,75 @@ class EndpointTests(APITestCase):
         self.assertEqual(tourney_reg["team"], "Bloop")
         self.assertTrue(tourney_reg["manager"])
         self.assertTrue(tourney_reg["has_paid"])
+
+    def test_is_staff_and_is_admin_true(self) -> None:
+        """
+        Authenticate a staff admin user and ensure is_staff and is_admin are
+        True in the response.
+        """
+        Event.objects.create(
+            name="Insalan XX",
+            date_start=date(2026, 3, 6),
+            date_end=date(2026, 3, 8),
+            ongoing=True
+        )
+        User.objects.create_user(
+            username="admin",
+            email="admin@insalan.fr",
+            first_name="Admin",
+            last_name="Root",
+            password="password",
+            is_staff=True,
+            is_superuser=True,
+        )
+
+        data = {
+            "username": "admin",
+            "password": "password",
+        }
+        reply = self.client.post('/v1/langate/authenticate/', data)
+        self.assertEqual(reply.status_code, 404)
+
+        user = reply.data["user"]
+        self.assertEqual(user["username"], "admin")
+        self.assertEqual(user["email"], "admin@insalan.fr")
+        self.assertEqual(user["first_name"], "Admin")
+        self.assertEqual(user["last_name"], "Root")
+        self.assertTrue(user["is_staff"])
+        self.assertTrue(user["is_admin"])
+
+    def test_is_staff_and_is_admin_false(self) -> None:
+        """
+        Authenticate a regular user and ensure is_staff and is_admin are False
+        in the response.
+        """
+        Event.objects.create(
+            name="Insalan XX",
+            date_start=date(2026, 3, 6),
+            date_end=date(2026, 3, 8),
+            ongoing=True
+        )
+        User.objects.create_user(
+            username="limefox",
+            email="test@example.com",
+            first_name="Lux Amelia",
+            last_name="Phifollen",
+            password="password",
+            is_staff=False,
+            is_superuser=False,
+        )
+
+        data = {
+            "username": "limefox",
+            "password": "password",
+        }
+        reply = self.client.post('/v1/langate/authenticate/', data)
+        self.assertEqual(reply.status_code, 404)
+
+        user = reply.data["user"]
+        self.assertEqual(user["username"], "limefox")
+        self.assertEqual(user["email"], "test@example.com")
+        self.assertEqual(user["first_name"], "Lux Amelia")
+        self.assertEqual(user["last_name"], "Phifollen")
+        self.assertFalse(user["is_staff"])
+        self.assertFalse(user["is_admin"])
