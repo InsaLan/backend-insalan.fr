@@ -6,7 +6,7 @@ l'événement.
 
 ## Qu'est-ce qu'un Langate et pourquoi s'infliger cela ?
 
-Le [*Langate2000*](https://github.com/InsaLan/langate2000) ou Langate est le
+Le [*Langate3000*](https://github.com/InsaLan/langate3000) ou Langate est le
 portail captif utilisé par l'InsaLan lors des événements (Mini ou autre) pour
 authentifier les utilisateur⋅ices. Cela permet deux choses importantes:
  - N'autoriser l'accès au réseau qu'aux personnes ayant payé leur entrée
@@ -20,7 +20,7 @@ authentifier les utilisateur⋅ices. Cela permet deux choses importantes:
 Ainsi, le Langate tourne localement dans l'infrastructure de Cœur de Réseau
 (CdR) pour filtrer l'accès à Internet et gérer les authentifications.
 
-Lors des Minis (du moins jusqu'en 2023), le Bureau se chargeait de créer les
+Lors des Minis (du moins jusqu'en 2026), le Bureau se chargeait de créer les
 comptes autorisés sur le Langate lors du paiement d'une entrée. Lors des
 événements, cependant, pour simplifier la vie de tout le monde, les comptes ne
 sont pas créés manuellement. À la place, le Langate interroge le site web de
@@ -38,14 +38,20 @@ point d'API.
 
 ## Le Fonctionnement
 
-Le point d'API utilisé est `/v1/langate/authenticate` en verbe `POST`. Le Langate doit `POST` avec un objet au format JSON qui contient le nom d'utilisateur et le mot de passe. Par exemple:
+Le point d'API utilisé est `/v1/langate/authenticate` en verbe `POST`. Le
+Langate doit `POST` avec un objet au format JSON qui contient le nom
+d'utilisateur et le mot de passe. Par exemple:
+
 ```json
 {
   "username": "theUser",
   "password": "thePassword",
 }
 ```
-Le site web va alors faire une tentative de connexion avec ces informations. En cas de succès, la réponse sera un objet JSON qui contient les informations nécessaires pour créer un compte sur le Langate. En cas d'échec, la réponse sera un objet JSON qui contient une erreur.
+Le site web va alors faire une tentative de connexion avec ces informations. En
+cas de succès, la réponse sera un objet JSON qui contient les informations
+nécessaires pour créer un compte sur le Langate. En cas d'échec, la réponse sera
+un objet JSON qui contient une erreur.
 
 ### Réponse
 
@@ -59,7 +65,8 @@ Le backend répond un objet JSON qui décrit:
      une en tant que joueur et une en tant que manager, la liste est forcément
      limitée en taille. Chaque entrée dans la liste contient:
      - Le nom de code du jeu du tournois (par exemple: `"CSGO"`)
-     - Le nom complet du jeu: (par exemple: `"Counter-Strike: Global Offensive"`)
+     - Le nom complet du jeu: (par exemple:
+         `"Counter-Strike: Global Offensive"`)
      - Le numéro identifiant de la Team pour laquelle la place est enregistrée
      - Un booléen qui décrit si la place concerne un⋅e joueur⋅euse, ou un⋅e
          manager
