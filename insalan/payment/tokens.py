@@ -24,7 +24,7 @@ class Token:
     when needed.
     """
 
-    instance = None
+    instance: Token | None = None
 
     def __init__(self) -> None:
         """Initialize the Token retrieval instance"""
@@ -94,7 +94,7 @@ class Token:
         result = request.json()
         if "error" in result:
             raise RuntimeError(
-                _("Impossible de rafraichir le jeton HelloAsso: %s") % result["error_description"]
+                _("Impossible de rafraîchir le jeton HelloAsso: %s") % result["error_description"]
             )
 
         self.assign_token_data(request.json())
