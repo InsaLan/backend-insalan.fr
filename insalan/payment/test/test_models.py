@@ -11,7 +11,7 @@ from django.test import TestCase
 from insalan.pizza.models import TimeSlot
 from insalan.tournament.models import Game, Event, EventTournament
 
-from ..models import Product, ProductCategory
+from ..models import Payment, Product, ProductCategory, Transaction
 
 
 TIMEZONE: ZoneInfo = ZoneInfo('Europe/Paris')
@@ -110,3 +110,22 @@ class TestProductModel(TestCase):
         ) as mock_now:
             self.assertFalse(self.product.can_be_bought_now())
         mock_now.assert_called_once_with()
+
+
+class TestPaymentModel(TestCase):
+    """Test class for the Payment model."""
+
+    def test_create_payment(self) -> None:
+        """Tests create a payment object."""
+        transaction: Transaction = Transaction.objects.create(
+            creation_date=datetime(2026, 1, 30, tzinfo=TIMEZONE),
+            last_modification_date=datetime(2026, 1, 31, tzinfo=TIMEZONE),
+        )
+        payment: Payment = Payment.objects.create(
+            id=10,
+            transaction=transaction,
+            amount=Decimal(10.0)
+        )
+        self.assertEqual(payment.id, 10)
+        self.assertEqual(payment.transaction, transaction)
+        self.assertEqual(payment.amount, Decimal(10.0))
