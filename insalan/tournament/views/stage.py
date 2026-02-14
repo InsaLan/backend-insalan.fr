@@ -89,10 +89,11 @@ class StageAddBracket(generics.CreateAPIView[Stage]):
         data.is_valid(raise_exception=True)
 
         bo_type = data.validated_data.pop("bo_type", BestofType.BO1)
+        play_all = data.validated_data.pop("play_all", False)
 
         bracket = Bracket.objects.create(**data.validated_data, stage=stage)
 
-        create_empty_knockout_matchs(bracket, bo_type)
+        create_empty_knockout_matchs(bracket, bo_type, play_all)
 
         return Response(serializers.BracketField(bracket).data, status=status.HTTP_201_CREATED)
 
@@ -118,7 +119,7 @@ class StageAddSwissRounds(generics.CreateAPIView[Stage]):
             stage=stage
         )
 
-        create_empty_swiss_matchs(swiss, validated_data["team_count"], validated_data["bo_type"])
+        create_empty_swiss_matchs(swiss, validated_data["team_count"], validated_data["bo_type"], validated_data["play_all"])
 
         if validated_data["auto_fill"]:
             auto_fill_first_round(

@@ -300,6 +300,7 @@ class GroupsMatchsCreateSerializer(serializers.Serializer[Any]):
         queryset=Group.objects.all().prefetch_related("groupmatch_set"), many=True
     )
     bo_type = serializers.ChoiceField(BestofType)
+    play_all = serializers.BooleanField()
 
     def validate_groups(self, value: list[Group]) -> Any:
         if len(set(g.tournament.id for g in value)) != 1:
@@ -415,6 +416,7 @@ class BracketSerializer(serializers.ModelSerializer[Bracket]):
     winner = serializers.IntegerField(required=False, source="get_winner")
     depth = serializers.IntegerField(required=False, source="get_depth")
     bo_type = serializers.ChoiceField(BestofType, required=False, write_only=True)
+    play_all = serializers.BooleanField(required=False, write_only=True)
 
     class Meta:
         model = Bracket
@@ -468,6 +470,7 @@ class CreateSwissRoundsSerializer(serializers.Serializer[SwissRound]):
     name = serializers.CharField()
     auto_fill = serializers.BooleanField()
     team_count = serializers.IntegerField(min_value=1)
+    play_all = serializers.BooleanField()
 
     def validate(self, data: Any) -> Any:
         if data["team_count"] > data["tournament"].get_max_team():

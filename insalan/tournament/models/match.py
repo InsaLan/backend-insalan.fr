@@ -74,6 +74,10 @@ class Match(models.Model):
         default=dict,
         help_text=_("Données JSON pour l'automatisation du match"),
     )
+    play_all = models.BooleanField(
+        default=False,
+        verbose_name=_("Jouer toutes les parties")
+    )
 
     class Meta:
         ordering = ["round_number","index_in_round"]

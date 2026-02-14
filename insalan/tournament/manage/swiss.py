@@ -16,7 +16,8 @@ from ..models import (
 def create_empty_swiss_matchs(
     swiss: SwissRound,
     team_count: int,
-    bo_type: BestofType = BestofType.BO1
+    bo_type: BestofType = BestofType.BO1,
+    play_all: bool = False
 ) -> None:
     team_per_match = swiss.tournament.get_game().get_team_per_match()
     nb_matchs = ceil(team_count / team_per_match)
@@ -41,6 +42,7 @@ def create_empty_swiss_matchs(
             swiss=swiss,
             score_group=0,
             bo_type=bo_type,
+            play_all=play_all
         )
 
         # Call game processor for match creation
@@ -67,6 +69,7 @@ def create_empty_swiss_matchs(
                 swiss=swiss,
                 score_group=0,
                 bo_type=bo_type,
+                play_all=play_all
             )
 
             # Call game processor for match creation
@@ -89,6 +92,7 @@ def create_empty_swiss_matchs(
                     swiss=swiss,
                     score_group=j + 1,
                     bo_type=bo_type,
+                    play_all=play_all
                 )
 
                 # Call game processor for match creation
@@ -108,6 +112,7 @@ def create_empty_swiss_matchs(
                 swiss=swiss,
                 score_group=round_idx,
                 bo_type=bo_type,
+                play_all=play_all
             )
 
             # Call game processor for match creation
@@ -135,6 +140,7 @@ def create_empty_swiss_matchs(
                     swiss=swiss,
                     score_group=j,
                     bo_type=bo_type,
+                    play_all=play_all
                 )
 
                 # Call game processor for match creation
