@@ -1,7 +1,11 @@
 from math import ceil
 from ..models import Bracket, KnockoutMatch, BracketType, BracketSet, BestofType
 
-def create_empty_knockout_matchs(bracket: Bracket, bo_type: BestofType = BestofType.BO1, play_all: bool = False) -> None:
+def create_empty_knockout_matchs(
+    bracket: Bracket,
+    bo_type: BestofType = BestofType.BO1,
+    play_all: bool = False
+) -> None:
     depth = bracket.get_depth()
 
     for match in KnockoutMatch.objects.filter(bracket=bracket):

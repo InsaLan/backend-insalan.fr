@@ -51,7 +51,11 @@ def generate_groups(
                 GroupTiebreakScore.objects.create(group=group, team=team)
 
 
-def create_group_matchs(group: Group, bo_type: BestofType = BestofType.BO1, play_all: bool = False) -> None:
+def create_group_matchs(
+    group: Group,
+    bo_type: BestofType = BestofType.BO1,
+    play_all: bool = False
+) -> None:
     teams: list[int | None] = cast(list[int | None], group.get_sorted_teams())
     team_per_match = group.get_tournament().get_game().get_team_per_match()
     nb_matchs = math.ceil(len(teams)/team_per_match)
