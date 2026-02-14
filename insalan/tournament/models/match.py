@@ -66,6 +66,10 @@ class Match(models.Model):
         default=list,
         blank=True
     )
+    play_all = models.BooleanField(
+        default=False,
+        verbose_name=_("Jouer toutes les parties")
+    )
 
     class Meta:
         ordering = ["round_number","index_in_round"]

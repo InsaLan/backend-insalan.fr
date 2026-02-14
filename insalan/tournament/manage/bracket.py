@@ -1,7 +1,7 @@
 from math import ceil
 from ..models import Bracket, KnockoutMatch, BracketType, BracketSet, BestofType
 
-def create_empty_knockout_matchs(bracket: Bracket, bo_type: BestofType = BestofType.BO1) -> None:
+def create_empty_knockout_matchs(bracket: Bracket, bo_type: BestofType = BestofType.BO1, play_all: bool = False) -> None:
     depth = bracket.get_depth()
 
     for match in KnockoutMatch.objects.filter(bracket=bracket):
@@ -13,8 +13,13 @@ def create_empty_knockout_matchs(bracket: Bracket, bo_type: BestofType = BestofT
             ceil(bracket.get_max_match_count()/2**(depth-round_idx))
         )
         for match_id in range(1,match_count+1):
-            KnockoutMatch.objects.create(round_number=round_idx, index_in_round=match_id,
-                                         bracket=bracket, bo_type=bo_type)
+            KnockoutMatch.objects.create(
+                round_number=round_idx,
+                index_in_round=match_id,
+                bracket=bracket,
+                bo_type=bo_type,
+                play_all=play_all
+            )
 
     if bracket.bracket_type == BracketType.DOUBLE:
         for round_idx in range(1,2*depth-1):
@@ -29,12 +34,14 @@ def create_empty_knockout_matchs(bracket: Bracket, bo_type: BestofType = BestofT
                     bracket=bracket,
                     bracket_set=BracketSet.LOOSER,
                     bo_type=bo_type,
+                    play_all=play_all
                 )
         KnockoutMatch.objects.create(
             round_number=0,
             index_in_round=1,
             bracket=bracket,
             bo_type=bo_type,
+            play_all=play_all
         )
 
 def update_next_knockout_match(match: KnockoutMatch) -> None:
