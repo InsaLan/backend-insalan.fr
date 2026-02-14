@@ -118,7 +118,12 @@ class StageAddSwissRounds(generics.CreateAPIView[Stage]):
             stage=stage
         )
 
-        create_empty_swiss_matchs(swiss, validated_data["team_count"], validated_data["bo_type"], validated_data["play_all"])
+        create_empty_swiss_matchs(
+            swiss,
+            validated_data["team_count"],
+            validated_data["bo_type"],
+            validated_data["play_all"]
+        )
 
         if validated_data["auto_fill"]:
             auto_fill_first_round(

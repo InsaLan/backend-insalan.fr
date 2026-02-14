@@ -118,7 +118,7 @@ def validate_match_data(match: Match, data: dict[str, Any]) -> dict[str, str] | 
 
     if match.play_all and sum(data["score"].values()) != match.get_total_max_score():
         return {
-            "score" : "Les {} matchs doivent être joués".format(match.bo_type)
+            "score" : f"Les {match.bo_type} matchs doivent être joués"
         }
 
     for score in data["score"].values():

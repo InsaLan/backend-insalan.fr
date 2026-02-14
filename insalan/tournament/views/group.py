@@ -93,7 +93,11 @@ class GroupsMatchsCreate(generics.CreateAPIView[Any]):
         data.is_valid(raise_exception=True)
 
         for group in data.validated_data["groups"]:
-            create_group_matchs(group, data.validated_data["bo_type"], data.validated_data["play_all"])
+            create_group_matchs(
+                group,
+                data.validated_data["bo_type"],
+                data.validated_data["play_all"]
+            )
 
         tournament = data.validated_data["groups"][0].tournament
         groups = serializers.GroupField(
