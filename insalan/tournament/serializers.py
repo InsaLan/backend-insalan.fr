@@ -254,6 +254,7 @@ class GroupsCreateSerializer(serializers.Serializer[Any]):
     names = serializers.ListField()
     use_seeding = serializers.BooleanField()
     auto_fill = serializers.BooleanField()
+    round_count = serializers.IntegerField(min_value=1, allow_null=True)
 
     def validate(self, data: Any) -> Any:
         tournament: BaseTournament = data["tournament"]
@@ -301,6 +302,7 @@ class GroupsMatchsCreateSerializer(serializers.Serializer[Any]):
     )
     bo_type = serializers.ChoiceField(BestofType)
     play_all = serializers.BooleanField()
+    round_count = serializers.IntegerField(min_value=1)
 
     def validate_groups(self, value: list[Group]) -> Any:
         if len(set(g.tournament.id for g in value)) != 1:

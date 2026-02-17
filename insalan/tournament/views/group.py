@@ -93,6 +93,10 @@ class GroupsMatchsCreate(generics.CreateAPIView[Any]):
         data.is_valid(raise_exception=True)
 
         for group in data.validated_data["groups"]:
+            if group.round_count != data.validated_data["round_count"]:
+                group.round_count = data.validated_data["round_count"]
+                group.save()
+
             create_group_matchs(
                 group,
                 data.validated_data["bo_type"],
