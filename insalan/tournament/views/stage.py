@@ -115,7 +115,8 @@ class StageAddSwissRounds(generics.CreateAPIView[Stage]):
             tournament=validated_data["tournament"],
             name=validated_data["name"],
             min_score=validated_data["min_score"],
-            stage=stage
+            stage=stage,
+            round_count=validated_data["round_count"]
         )
 
         create_empty_swiss_matchs(
