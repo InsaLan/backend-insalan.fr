@@ -997,7 +997,8 @@ class TeamCreationForm(ModelForm[Team]):  # pylint: disable=unsubscriptable-obje
         return password2
 
     def _post_clean(self) -> None:
-        super()._post_clean()  # type: ignore[misc]
+        if self.cleaned_data.get("tournament"):
+            super()._post_clean()  # type: ignore[misc]
         # Validate the password after self.instance is updated with form data
         # by super().
         password = self.cleaned_data.get("password2")
