@@ -55,7 +55,8 @@ class SwissRound(models.Model):
             models.CheckConstraint(
                 check=~models.Q(min_score__isnull=True) ^ ~models.Q(round_count__isnull=True),
                 name="either_min-score_or_round-count",
-                violation_error_message="Soit le score minimal, soit le nombre de round doit être renseigné"
+                violation_error_message="Soit le score minimal, \
+                soit le nombre de round doit être renseigné"
             )
         ]
 
@@ -89,15 +90,12 @@ class SwissRound(models.Model):
 
     def get_round_count(self) -> int:
         if self.min_score is None:
-            return self.round_count
+            return self.round_count or 1
 
         return 2 * self.min_score - 1
 
     def get_qualifying_round_idx(self) -> int:
-        if self.min_score is None:
-            return self.round_count
-
-        return self.min_score
+        return (self.min_score or self.round_count) or 1
 
 
 class SwissSeeding(models.Model):

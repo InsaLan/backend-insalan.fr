@@ -44,7 +44,7 @@ def create_empty_swiss_matchs(
     matchs += matchs[::-1]
 
     # next rounds
-    round_count = swiss.round_count if swiss.round_count else swiss.min_score
+    round_count = (swiss.round_count or swiss.min_score) or 1
 
     for round_idx in range(1, round_count):
         match_idx = 0
@@ -213,7 +213,7 @@ def generate_swiss_round_round(swiss: SwissRound, round_idx: int) -> QuerySet[Sw
 
     # qualifying rounds
     else:
-        score_group_count = 2*swiss.min_score - round_idx
+        score_group_count = 2*swiss.get_qualifying_round_idx() - round_idx
         matchs_per_score_group = [SwissMatch.objects.filter(
             swiss=swiss,
             round_number=round_idx - 1,
