@@ -66,7 +66,7 @@ class StageAddGroups(generics.CreateAPIView[Stage]):
                 Group.objects.create(
                     tournament=data.validated_data["tournament"],
                     name=data.validated_data["names"][i],
-                    round_count=data.validated_data["round_count"],
+                    round_count=data.validated_data["round_count"], #type: ignore
                     stage=stage
                 )
 
