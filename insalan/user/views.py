@@ -212,6 +212,13 @@ class UserMe(generics.RetrieveAPIView[User]):  # pylint: disable=unsubscriptable
 
         if "email" in data:
             user.email = UserManager.normalize_email(data["email"])
+            try:
+                user.validate_unique()
+            except ValidationError as err:
+                return Response(
+                    {"user": err.messages},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             mailer = MailManager.get_mailer(EMAIL_AUTH["contact"]["from"])
             assert mailer is not None
             mailer.send_email_confirmation(user)
