@@ -48,6 +48,13 @@ class Bracket(models.Model):
         verbose_name=_("Nombre d'équipes"),
         validators=[MinValueValidator(2)]
     )
+    stage = models.ForeignKey(
+        "Stage",
+        verbose_name=_("Phase du tournoi"),
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
 
     class Meta:
         verbose_name = _("Arbre de tournoi")

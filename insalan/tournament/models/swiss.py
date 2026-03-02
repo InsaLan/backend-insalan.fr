@@ -23,8 +23,20 @@ class SwissRound(models.Model):
         verbose_name=_("Tournoi"),
         on_delete=models.CASCADE
     )
+    name = models.CharField(
+        max_length=40,
+        verbose_name=_("Nom de la ronde suisse"),
+        default="Ronde suisse"
+    )
     min_score = models.IntegerField(
         verbose_name=_("Score minimal pour la qualification")
+    )
+    stage = models.ForeignKey(
+        "Stage",
+        verbose_name=_("Phase du tournoi"),
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
     )
 
     class Meta:
@@ -67,7 +79,7 @@ class SwissSeeding(models.Model):
         SwissRound,
         on_delete=models.CASCADE
     )
-    team = models.OneToOneField(
+    team = models.ForeignKey(
         "Team",
         on_delete=models.CASCADE
     )

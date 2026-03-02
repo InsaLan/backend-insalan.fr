@@ -33,6 +33,13 @@ class Group(models.Model):
         verbose_name=_("Nombre de rounds"),
         default=1
     )
+    stage = models.ForeignKey(
+        "Stage",
+        verbose_name=_("Phase du tournoi"),
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
 
     class Meta:
         verbose_name = _("Poule")
@@ -118,7 +125,7 @@ class Seeding(models.Model):
         Group,
         on_delete=models.CASCADE
     )
-    team = models.OneToOneField(
+    team = models.ForeignKey(
         "Team",
         on_delete=models.CASCADE,
     )
