@@ -28,7 +28,9 @@ class SwissRound(models.Model):
         verbose_name=_("Nom de la ronde suisse"),
         default="Ronde suisse"
     )
-    min_score = models.IntegerField(
+    min_score = models.PositiveIntegerField(
+        blank=True,
+        null=True,
         verbose_name=_("Score minimal pour la qualification")
     )
     stage = models.ForeignKey(
@@ -38,11 +40,24 @@ class SwissRound(models.Model):
         null=True,
         blank=True
     )
+    round_count = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        verbose_name=_("Nombre de tour")
+    )
 
     class Meta:
         verbose_name = _("Ronde Suisse")
         indexes = [
             models.Index(fields=["tournament"])
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=~models.Q(min_score__isnull=True) ^ ~models.Q(round_count__isnull=True),
+                name="either_min-score_or_round-count",
+                violation_error_message="Soit le score minimal, \
+                soit le nombre de round doit être renseigné"
+            )
         ]
 
     def __str__(self) -> str:
@@ -72,6 +87,15 @@ class SwissRound(models.Model):
 
     def get_matchs(self) -> QuerySet[SwissMatch]:
         return SwissMatch.objects.filter(swiss=self)
+
+    def get_round_count(self) -> int:
+        if self.min_score is None:
+            return self.round_count or 1
+
+        return 2 * self.min_score - 1
+
+    def get_qualifying_round_idx(self) -> int:
+        return (self.min_score or self.round_count) or 1
 
 
 class SwissSeeding(models.Model):

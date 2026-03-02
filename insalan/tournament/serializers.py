@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from operator import xor
 import sys
 from collections import Counter
 from math import ceil
@@ -466,13 +467,14 @@ class CreateSwissRoundsSerializer(serializers.Serializer[SwissRound]):
     tournament: PrimaryKeyRelatedField[BaseTournament] = PrimaryKeyRelatedField(
         queryset=BaseTournament.objects.all(),
     )
-    min_score = serializers.IntegerField(min_value=1)
+    min_score = serializers.IntegerField(min_value=1, allow_null=True)
     use_seeding = serializers.BooleanField()
     bo_type = serializers.ChoiceField(BestofType)
     name = serializers.CharField()
     auto_fill = serializers.BooleanField()
     team_count = serializers.IntegerField(min_value=1)
     play_all = serializers.BooleanField()
+    round_count = serializers.IntegerField(min_value=1, allow_null=True)
 
     def validate(self, data: Any) -> Any:
         if data["team_count"] > data["tournament"].get_max_team():
@@ -481,6 +483,11 @@ class CreateSwissRoundsSerializer(serializers.Serializer[SwissRound]):
                     "Le nombre d'équipes demandé est supérieur\
                     au nombre maximum d'équipes inscrites dans le tournoi."
                 )
+            )
+
+        if not xor(data["min_score"] is None, data["round_count"] is None):
+            raise serializers.ValidationError(
+                _("Soit le score minimal soit le nombre de tours doivent être renseignés")
             )
 
         return data
@@ -497,7 +504,7 @@ class SwissFillRoundSerializer(serializers.Serializer[Any]):
         swiss = data["swiss"]
         round_idx = data["round"]
 
-        if round_idx > 2 * swiss.min_score - 1:
+        if round_idx > swiss.get_round_count():
             raise serializers.ValidationError(
                 _("Le tour demandé ne fait pas partie de cette ronde suisse.")
             )
