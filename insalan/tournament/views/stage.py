@@ -55,6 +55,10 @@ class StageAddGroups(generics.CreateAPIView[Stage]):
         data = self.get_serializer(data=request.data)
         data.is_valid(raise_exception=True)
 
+        if data.validated_data["round_count"] is None:
+            team_per_group = data.validated_data["team_per_group"]
+            data.validated_data["round_count"] = team_per_group - 1
+
         auto_fill = data.validated_data.pop("auto_fill")
         if auto_fill:
             generate_groups(**data.validated_data, stage=stage)
@@ -63,7 +67,7 @@ class StageAddGroups(generics.CreateAPIView[Stage]):
                 Group.objects.create(
                     tournament=data.validated_data["tournament"],
                     name=data.validated_data["names"][i],
-                    round_count=data.validated_data["round_count"],
+                    round_count=data.validated_data["round_count"], #type: ignore
                     stage=stage
                 )
 

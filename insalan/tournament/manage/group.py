@@ -19,7 +19,8 @@ def generate_groups(
     team_per_group: int,
     names: list[str],
     use_seeding: bool,
-    stage: Stage
+    stage: Stage,
+    round_count: int
 ) -> None:
     teams: list[Team | None]
     if use_seeding:
@@ -40,7 +41,7 @@ def generate_groups(
         group = Group.objects.create(
             tournament=tournament,
             name=names[i],
-            round_count=team_per_group - 1,
+            round_count=round_count,
             stage=stage
         )
 
