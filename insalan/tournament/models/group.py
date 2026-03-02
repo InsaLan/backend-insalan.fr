@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from math import ceil
 from operator import itemgetter
 from typing import TYPE_CHECKING
 
@@ -96,8 +95,7 @@ class Group(models.Model):
         return [team for (team, _) in seeded_teams + non_seeded_teams]
 
     def get_round_count(self) -> int:
-        team_per_match = self.tournament.game.team_per_match  # pylint: disable=no-member
-        return ceil(len(self.get_teams_id()) / team_per_match) * team_per_match - 1
+        return self.round_count
 
     def get_leaderboard(self) -> dict[int, int]:
         leaderboard = {}

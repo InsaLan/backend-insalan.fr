@@ -19,7 +19,8 @@ def generate_groups(
     team_per_group: int,
     names: list[str],
     use_seeding: bool,
-    stage: Stage
+    stage: Stage,
+    round_count: int
 ) -> None:
     teams: list[Team | None]
     if use_seeding:
@@ -40,7 +41,7 @@ def generate_groups(
         group = Group.objects.create(
             tournament=tournament,
             name=names[i],
-            round_count=team_per_group - 1,
+            round_count=round_count,
             stage=stage
         )
 
@@ -51,7 +52,11 @@ def generate_groups(
                 GroupTiebreakScore.objects.create(group=group, team=team)
 
 
-def create_group_matchs(group: Group, bo_type: BestofType = BestofType.BO1) -> None:
+def create_group_matchs(
+    group: Group,
+    bo_type: BestofType = BestofType.BO1,
+    play_all: bool = False
+) -> None:
     teams: list[int | None] = cast(list[int | None], group.get_sorted_teams())
     team_per_match = group.get_tournament().get_game().get_team_per_match()
     nb_matchs = math.ceil(len(teams)/team_per_match)
@@ -73,6 +78,7 @@ def create_group_matchs(group: Group, bo_type: BestofType = BestofType.BO1) -> N
                 index_in_round=match_idx + 1,
                 group=group,
                 bo_type=bo_type,
+                play_all=play_all
             )
 
             # Call game processor for match creation

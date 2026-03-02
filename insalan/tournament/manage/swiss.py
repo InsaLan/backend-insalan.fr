@@ -16,7 +16,8 @@ from ..models import (
 def create_empty_swiss_matchs(
     swiss: SwissRound,
     team_count: int,
-    bo_type: BestofType = BestofType.BO1
+    bo_type: BestofType = BestofType.BO1,
+    play_all: bool = False
 ) -> None:
     team_per_match = swiss.tournament.get_game().get_team_per_match()
     nb_matchs = ceil(team_count / team_per_match)
@@ -41,6 +42,7 @@ def create_empty_swiss_matchs(
             swiss=swiss,
             score_group=0,
             bo_type=bo_type,
+            play_all=play_all
         )
 
         # Call game processor for match creation
@@ -57,7 +59,9 @@ def create_empty_swiss_matchs(
     matchs += matchs[::-1]
 
     # next rounds
-    for round_idx in range(1, swiss.min_score):
+    round_count = (swiss.round_count or swiss.min_score) or 1
+
+    for round_idx in range(1, round_count):
         match_idx = 0
 
         for idx in range(ceil(matchs_per_score_group_per_round[round_idx - 1][0] / 2)):
@@ -67,6 +71,7 @@ def create_empty_swiss_matchs(
                 swiss=swiss,
                 score_group=0,
                 bo_type=bo_type,
+                play_all=play_all
             )
 
             # Call game processor for match creation
@@ -89,6 +94,7 @@ def create_empty_swiss_matchs(
                     swiss=swiss,
                     score_group=j + 1,
                     bo_type=bo_type,
+                    play_all=play_all
                 )
 
                 # Call game processor for match creation
@@ -108,6 +114,7 @@ def create_empty_swiss_matchs(
                 swiss=swiss,
                 score_group=round_idx,
                 bo_type=bo_type,
+                play_all=play_all
             )
 
             # Call game processor for match creation
@@ -120,32 +127,35 @@ def create_empty_swiss_matchs(
         matchs_per_score_group_per_round[-1].append(idx + 1)
 
     # last qualifying rounds
-    for round_idx in range(swiss.min_score,2*swiss.min_score-1):
-        matchs_per_score_group_per_round.append([])
+    if swiss.min_score:
+        for round_idx in range(swiss.min_score,2*swiss.min_score-1):
+            matchs_per_score_group_per_round.append([])
 
-        match_idx = 0
+            match_idx = 0
 
-        for j in range(2 * swiss.min_score - round_idx - 1):
-            for idx in range(
-                ceil(sum(matchs_per_score_group_per_round[round_idx - 1][j:j + 2]) / 2)
-            ):
-                match = SwissMatch.objects.create(
-                    round_number=round_idx + 1,
-                    index_in_round=match_idx + idx + 1,
-                    swiss=swiss,
-                    score_group=j,
-                    bo_type=bo_type,
-                )
+            for j in range(2 * swiss.min_score - round_idx - 1):
+                for idx in range(
+                    ceil(sum(matchs_per_score_group_per_round[round_idx - 1][j:j + 2]) / 2)
+                ):
+                    match = SwissMatch.objects.create(
+                        round_number=round_idx + 1,
+                        index_in_round=match_idx + idx + 1,
+                        swiss=swiss,
+                        score_group=j,
+                        bo_type=bo_type,
+                        play_all=play_all
+                    )
 
-                # Call game processor for match creation
-                if processor_class is not None:
-                    api_data = processor_class.create_match(match)
-                    if api_data is not None:
-                        match.api_data = api_data
-                        match.save(update_fields=['api_data'])
+                    # Call game processor for match creation
+                    if processor_class is not None:
+                        api_data = processor_class.create_match(match)
+                        if api_data is not None:
+                            match.api_data = api_data
+                            match.save(update_fields=['api_data'])
 
-            matchs_per_score_group_per_round[-1].append(idx + 1)
-            match_idx += idx + 1
+                matchs_per_score_group_per_round[-1].append(idx + 1)
+                match_idx += idx + 1
+
 
 def auto_fill_first_round(
     tournament: BaseTournament,
@@ -210,7 +220,7 @@ def fill_matchs(matchs: QuerySet[SwissMatch], teams: list[int | None], team_per_
 def generate_swiss_round_round(swiss: SwissRound, round_idx: int) -> QuerySet[SwissMatch]:
     team_per_match = swiss.tournament.get_game().get_team_per_match()
     # before qualifying rounds
-    if round_idx <= swiss.min_score:
+    if round_idx <= swiss.get_qualifying_round_idx():
         matchs_per_score_group = [SwissMatch.objects.filter(
             swiss=swiss,
             round_number=round_idx - 1,
@@ -247,7 +257,7 @@ def generate_swiss_round_round(swiss: SwissRound, round_idx: int) -> QuerySet[Sw
 
     # qualifying rounds
     else:
-        score_group_count = 2*swiss.min_score - round_idx
+        score_group_count = 2*swiss.get_qualifying_round_idx() - round_idx
         matchs_per_score_group = [SwissMatch.objects.filter(
             swiss=swiss,
             round_number=round_idx - 1,
