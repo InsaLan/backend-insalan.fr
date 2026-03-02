@@ -13,8 +13,8 @@ from rest_framework.exceptions import NotFound, PermissionDenied
 from insalan.tournament import serializers
 from insalan.user.models import User
 
-from ..models import Group, validate_match_data, GroupMatch, MatchStatus, BaseTournament
-from ..manage import update_match_score, generate_groups, create_group_matchs, launch_match
+from ..models import Group, validate_match_data, GroupMatch, MatchStatus
+from ..manage import update_match_score, create_group_matchs, launch_match
 from ..models.game_processor import get_processor
 
 from .permissions import ReadOnly
