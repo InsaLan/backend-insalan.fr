@@ -477,13 +477,13 @@ class CreateSwissRoundsSerializer(serializers.Serializer[SwissRound]):
     round_count = serializers.IntegerField(min_value=1, allow_null=True)
 
     def validate(self, data: Any) -> Any:
-        if data["team_count"] > data["tournament"].get_max_team():
-            raise serializers.ValidationError(
-                _(
-                    "Le nombre d'équipes demandé est supérieur\
-                    au nombre maximum d'équipes inscrites dans le tournoi."
-                )
-            )
+        # if data["team_count"] > data["tournament"].get_max_team():
+        #     raise serializers.ValidationError(
+        #         _(
+        #             "Le nombre d'équipes demandé est supérieur\
+        #             au nombre maximum d'équipes inscrites dans le tournoi."
+        #         )
+        #     )
 
         if not xor(data["min_score"] is None, data["round_count"] is None):
             raise serializers.ValidationError(

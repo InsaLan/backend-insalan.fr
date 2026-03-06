@@ -522,7 +522,7 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
                 (match.play_all and len(postgame_codes) >= len(pregame_codes)) \
                 or len(postgame_codes) >= ceil(len(pregame_codes) / 2)
             ) \
-            and match.status != MatchStatus.COMPLETED
+            and match.status == MatchStatus.ONGOING
         ):
             # All games finished, extract winners and determine final score
             from ..manage.match import update_match_score  # pylint: disable=import-outside-toplevel

@@ -163,7 +163,11 @@ def auto_fill_first_round(
     swiss: SwissRound,
     team_count: int,
 ) -> None:
-    teams = tournament.teams.filter(validated=True)[:team_count]
+    teams = tournament.teams.filter(validated=True)
+    if team_count < len(teams):
+        teams = teams[:team_count]
+    else:
+        teams += [None]*(team_count - len(teams))
     first_round_matchs = SwissMatch.objects.filter(swiss=swiss, round_number=1)
     team_per_match = tournament.get_game().get_team_per_match()
 
