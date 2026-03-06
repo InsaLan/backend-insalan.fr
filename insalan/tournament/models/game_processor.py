@@ -4,6 +4,7 @@ GameProcessor class
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from math import ceil
 from typing import Any, ClassVar, Type, TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
@@ -516,7 +517,13 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
         pregame_codes = match.api_data.get("pregame", [])
         postgame_codes = match.api_data.get("postgame", {})
 
-        if len(postgame_codes) >= len(pregame_codes) and match.status != MatchStatus.COMPLETED:
+        if (
+            (
+                (match.play_all and len(postgame_codes) >= len(pregame_codes)) \
+                or len(postgame_codes) >= ceil(len(pregame_codes) / 2)
+            ) \
+            and match.status != MatchStatus.COMPLETED
+        ):
             # All games finished, extract winners and determine final score
             from ..manage.match import update_match_score  # pylint: disable=import-outside-toplevel
             from ..manage.bracket import update_next_knockout_match  # pylint: disable=import-outside-toplevel
@@ -565,24 +572,27 @@ class LeagueOfLegendsGameProcessor(GameProcessor):
                         team_scores[str(team.id)] += 1
                         break
 
-            # Extract game durations
-            times = []
-            for game_data in postgame_codes.values():
-                duration = game_data.get("gameDuration", 0)
-                # Convert from seconds to minutes
-                times.append(duration // 60 if duration else 0)
+            # Test if there is a winning team
+            if any(map(lambda x: x >= match.get_winning_score(),team_scores.values())):
 
-            # Update match with final scores
-            score_data = {
-                "score": {str(team_id): score for team_id, score in team_scores.items()},
-                "times": times
-            }
+                # Extract game durations
+                times = []
+                for game_data in postgame_codes.values():
+                    duration = game_data.get("gameDuration", 0)
+                    # Convert from seconds to minutes
+                    times.append(duration // 60 if duration else 0)
 
-            update_match_score(match, score_data)
+                # Update match with final scores
+                score_data = {
+                    "score": {str(team_id): score for team_id, score in team_scores.items()},
+                    "times": times
+                }
 
-            # Propagate results if this is a bracket match
-            if isinstance(match, KnockoutMatch) and not match.is_last_match():
-                update_next_knockout_match(match)
+                update_match_score(match, score_data)
+
+                # Propagate results if this is a bracket match
+                if isinstance(match, KnockoutMatch) and not match.is_last_match():
+                    update_next_knockout_match(match)
 
         return match.api_data if isinstance(match.api_data, dict) else None
 
