@@ -10,6 +10,7 @@ from ..models import (
     SwissMatch,
     SwissRound,
     SwissSeeding,
+    Team,
 )
 
 
@@ -163,7 +164,7 @@ def auto_fill_first_round(
     swiss: SwissRound,
     team_count: int,
 ) -> None:
-    teams = tournament.teams.filter(validated=True)
+    teams = cast(list[Team | None], list(tournament.teams.filter(validated=True)))
     if team_count < len(teams):
         teams = teams[:team_count]
     else:
