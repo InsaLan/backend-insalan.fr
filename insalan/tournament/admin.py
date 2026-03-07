@@ -1494,10 +1494,11 @@ def update_bo_type_action(queryset: QuerySet[GroupMatchOrKnockoutMatchOrSwissMat
 
 @admin.action(description=_("Mise à jour des données api"))
 def update_match_api_data(
+    # pylint: disable-next=unsubscriptable-object
     modeladmin: ModelAdmin[GroupMatchOrKnockoutMatchOrSwissMatch],
     request: HttpRequest,
     queryset: QuerySet[GroupMatchOrKnockoutMatchOrSwissMatch]
-):
+) -> None:
     for match in queryset:
         processor_class = match.get_tournament().game.get_game_processor()
         if processor_class is not None:
@@ -1505,6 +1506,8 @@ def update_match_api_data(
             if api_data is not None:
                 match.api_data = api_data
                 match.save(update_fields=['api_data'])
+
+    modeladmin.message_user(request, _("Les données d'api ont bien été mis à jour"))
 
 @admin.action(description=_("Passer en Bo1"))
 def update_to_bo1_action(
