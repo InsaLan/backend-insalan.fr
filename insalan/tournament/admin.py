@@ -1492,6 +1492,19 @@ def update_bo_type_action(queryset: QuerySet[GroupMatchOrKnockoutMatchOrSwissMat
                           new_bo_type: BestofType) -> None:
     queryset.update(bo_type=new_bo_type)
 
+@admin.action(description=_("Mise à jour des données api"))
+def update_match_api_data(
+    modeladmin: ModelAdmin[GroupMatchOrKnockoutMatchOrSwissMatch],
+    request: HttpRequest,
+    queryset: QuerySet[GroupMatchOrKnockoutMatchOrSwissMatch]
+):
+    for match in queryset:
+        processor_class = match.get_tournament().game.get_game_processor()
+        if processor_class is not None:
+            api_data = processor_class.create_match(match)
+            if api_data is not None:
+                match.api_data = api_data
+                match.save(update_fields=['api_data'])
 
 @admin.action(description=_("Passer en Bo1"))
 def update_to_bo1_action(
