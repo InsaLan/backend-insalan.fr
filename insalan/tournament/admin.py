@@ -1569,7 +1569,8 @@ update_bo_type_action_list = [
     update_to_bo3_action,
     update_to_bo5_action,
     update_to_bo7_action,
-    update_to_ranking_action
+    update_to_ranking_action,
+    update_match_api_data
 ]
 
 
