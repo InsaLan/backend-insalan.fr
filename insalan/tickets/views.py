@@ -22,7 +22,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.request import Request
 
-from insalan.tournament.models import Player, Substitute, Manager, PaymentStatus
+from insalan.tournament.models import EventTournament, Player, Substitute, Manager, PaymentStatus
 from insalan.user.models import User
 from insalan.mailer import MailManager
 from insalan.settings import EMAIL_AUTH
@@ -477,17 +477,20 @@ def unpaid(request: HttpRequest) -> JsonResponse:
         This view is used to get all the unpaid registrations
     """
     # Get all the registrations that are not paid
+    tournament_ids = EventTournament.objects.filter(
+        event__ongoing=True,
+    ).values_list("id", flat=True)
     players = Player.objects.filter(
         team__validated=True,
-        team__tournament__event__ongoing=True
+        team__tournament__in=tournament_ids,
     ).exclude(payment_status=PaymentStatus.PAID)
     substitutes = Substitute.objects.filter(
         team__validated=True,
-        team__tournament__event__ongoing=True
+        team__tournament__in=tournament_ids,
     ).exclude(payment_status=PaymentStatus.PAID)
     managers = Manager.objects.filter(
         team__validated=True,
-        team__tournament__event__ongoing=True
+        team__tournament__in=tournament_ids,
     ).exclude(payment_status=PaymentStatus.PAID)
 
     return JsonResponse([
