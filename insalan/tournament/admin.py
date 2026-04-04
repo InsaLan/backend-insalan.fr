@@ -914,7 +914,7 @@ class TeamForm(ModelForm[Team]):  # pylint: disable=unsubscriptable-object
             user_permissions.queryset = user_permissions.queryset.select_related("content_type")
 
         seat_slot = cast(ModelChoiceField | None, self.fields.get("seat_slot"))
-        if seat_slot and self.instance.tournament and isinstance(self.instance.tournament, EventTournament):
+        if seat_slot and isinstance(self.instance.tournament, EventTournament):
             assert seat_slot.queryset is not None
             seat_slot.queryset = seat_slot.queryset.filter(
                 tournament=self.instance.tournament
