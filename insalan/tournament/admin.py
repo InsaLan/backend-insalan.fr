@@ -1213,7 +1213,7 @@ class EventFilter(admin.SimpleListFilter):
     def queryset(self, request: HttpRequest, queryset: QuerySet[ManagerOrPlayerOrSubstitute]
                  ) -> QuerySet[ManagerOrPlayerOrSubstitute]:
         if self.value():
-            return queryset.filter(team__tournament__event__id=self.value())
+            return queryset.filter(team__tournament__eventtournament__event_id=self.value())
         return queryset
 
 
