@@ -58,7 +58,6 @@ class Team(models.Model):
     )
     password = models.CharField(
         max_length=100,
-        validators=[MinLengthValidator(8)],
         null=False,
         blank=False,
         verbose_name=_("Mot de passe de l'équipe"),
