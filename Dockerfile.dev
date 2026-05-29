@@ -11,4 +11,4 @@ COPY requirements-dev.txt /app/
 RUN pip install -r /app/requirements.txt
 RUN pip install -r /app/requirements-dev.txt
 
-ENTRYPOINT ["./entrypoint-dev.sh"]
+ENTRYPOINT ["sh", "./entrypoint-dev.sh"]
