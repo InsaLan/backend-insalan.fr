@@ -17,7 +17,7 @@ class ContentSerializer(serializers.ModelSerializer[Content]):
         Meta class for the ContentSerializer.
         """
         model = Content
-        fields = ["name", "content"]
+        fields = ["name", "lang", "content"]
 
 
 class ConstantSerializer(serializers.ModelSerializer[Constant]):
@@ -28,7 +28,7 @@ class ConstantSerializer(serializers.ModelSerializer[Constant]):
         Meta class for the ConstantSerializer.
         """
         model = Constant
-        fields = ["name", "value"]
+        fields = ["name", "lang", "value"]
 
 class FileSerializer(serializers.ModelSerializer[File]):
     """Serializer for a file in the cms"""

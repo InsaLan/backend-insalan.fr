@@ -34,8 +34,7 @@ class ContentFetch(generics.ListAPIView[Content]):  # pylint: disable=unsubscrip
     serializer_class = serializers.ContentSerializer
 
     def get_queryset(self) -> QuerySet[Content]:
-        # Ignore type error because djongo doesn't have types stubs.
-        return Content.objects.filter(name=self.kwargs["name"])  # type: ignore[no-any-return]
+        return Content.objects.filter(name=self.kwargs["name"])
 
 
 class ConstantList(generics.ListAPIView[Constant]):  # pylint: disable=unsubscriptable-object
@@ -55,8 +54,7 @@ class ConstantFetch(generics.ListAPIView[Constant]):  # pylint: disable=unsubscr
     serializer_class = serializers.ConstantSerializer
 
     def get_queryset(self) -> QuerySet[Constant]:
-        # Ignore type error because djongo doesn't have types stubs.
-        return Constant.objects.filter(name=self.kwargs["name"])  # type: ignore[no-any-return]
+        return Constant.objects.filter(name=self.kwargs["name"])
 
 
 class FileList(generics.ListAPIView[File]):  # pylint: disable=unsubscriptable-object
@@ -76,8 +74,7 @@ class FileFetch(generics.ListAPIView[File]):  # pylint: disable=unsubscriptable-
     serializer_class = serializers.FileSerializer
 
     def get_queryset(self) -> QuerySet[File]:
-        # Ignore type error because djongo doesn't have types stubs.
-        return File.objects.filter(name=self.kwargs["name"])  # type: ignore[no-any-return]
+        return File.objects.filter(name=self.kwargs["name"])
 
 
 class FullList(APIView):

@@ -8,10 +8,16 @@ The models include:
 
 import re
 
-from djongo import models  # type: ignore[import]
+from django.db import models
+from django.db.models.enums import TextChoices
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
+
+class AvailableLang(TextChoices):
+    """Enum with all available languages"""
+    FR = "fr"
+    EN = "en"
 
 def constant_definition_validator(content: str) -> None:
     """
@@ -58,14 +64,16 @@ def constant_definition_validator(content: str) -> None:
         )
 
 
-# Ignore type error because djongo doesn't have types stubs.
-class Content(models.Model):  # type: ignore[misc]
+class Content(models.Model):
     """
     Represents markdown content to be placed on website pages.
     """
 
     name = models.CharField(
-        max_length=100, unique=True, verbose_name=_("Nom du contenu")
+        max_length=100, verbose_name=_("Nom du contenu")
+    )
+    lang = models.CharField(
+        choices=AvailableLang.choices, max_length=7, default="fr", verbose_name=_("Langue du contenu")
     )
     content = models.TextField(
         verbose_name=_("Contenu"), validators=[constant_definition_validator]
@@ -75,6 +83,7 @@ class Content(models.Model):  # type: ignore[misc]
         """
         Meta class for the Content model.
         """
+        unique_together = ("name", "lang")
         verbose_name = _("Contenu")
         verbose_name_plural = _("Contenus")
 
@@ -82,15 +91,13 @@ class Content(models.Model):  # type: ignore[misc]
         return f"[Content] {self.name}"
 
 
-# Ignore type error because djongo doesn't have types stubs.
-class Constant(models.Model):  # type: ignore[misc]
+class Constant(models.Model):
     """
     Stores the constant values on the InsaLan website (e.g: date, staff, prices..).
     """
 
     name = models.CharField(
         max_length=100,
-        unique=True,
         verbose_name=_("Nom de la constante"),
         validators=[
             RegexValidator(
@@ -99,12 +106,16 @@ class Constant(models.Model):  # type: ignore[misc]
             )
         ]
     )
+    lang = models.CharField(
+        choices=AvailableLang.choices, max_length=7, default="fr", verbose_name=_("Langue de la constante")
+    )
     value = models.CharField(max_length=200, verbose_name=_("Valeur de la constante"))
 
     class Meta:
         """
         Meta class for the Constant model.
         """
+        unique_together = ("name", "lang")
         verbose_name = _("Constante")
         verbose_name_plural = _("Constantes")
 
@@ -112,8 +123,7 @@ class Constant(models.Model):  # type: ignore[misc]
         return f"[Constant] {self.name}"
 
 
-# Ignore type error because djongo doesn't have types stubs.
-class File(models.Model):  # type: ignore[misc]
+class File(models.Model):
     """
     Represents a file to be placed on website pages.
     """
