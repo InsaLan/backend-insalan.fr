@@ -73,7 +73,10 @@ class Content(models.Model):
         max_length=100, verbose_name=_("Nom du contenu")
     )
     lang = models.CharField(
-        choices=AvailableLang.choices, max_length=7, default="fr", verbose_name=_("Langue du contenu")
+        choices=AvailableLang.choices,
+        max_length=7,
+        default="fr",
+        verbose_name=_("Langue du contenu")
     )
     content = models.TextField(
         verbose_name=_("Contenu"), validators=[constant_definition_validator]
@@ -107,7 +110,10 @@ class Constant(models.Model):
         ]
     )
     lang = models.CharField(
-        choices=AvailableLang.choices, max_length=7, default="fr", verbose_name=_("Langue de la constante")
+        choices=AvailableLang.choices,
+        max_length=7,
+        default="fr",
+        verbose_name=_("Langue de la constante")
     )
     value = models.CharField(max_length=200, verbose_name=_("Valeur de la constante"))
 
