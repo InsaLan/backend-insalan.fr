@@ -914,7 +914,7 @@ class TeamForm(ModelForm[Team]):  # pylint: disable=unsubscriptable-object
             user_permissions.queryset = user_permissions.queryset.select_related("content_type")
 
         seat_slot = cast(ModelChoiceField | None, self.fields.get("seat_slot"))
-        if seat_slot and self.instance.tournament:
+        if seat_slot and isinstance(self.instance.tournament, EventTournament):
             assert seat_slot.queryset is not None
             seat_slot.queryset = seat_slot.queryset.filter(
                 tournament=self.instance.tournament
@@ -997,7 +997,8 @@ class TeamCreationForm(ModelForm[Team]):  # pylint: disable=unsubscriptable-obje
         return password2
 
     def _post_clean(self) -> None:
-        super()._post_clean()  # type: ignore[misc]
+        if self.cleaned_data.get("tournament"):
+            super()._post_clean()  # type: ignore[misc]
         # Validate the password after self.instance is updated with form data
         # by super().
         password = self.cleaned_data.get("password2")
@@ -1212,7 +1213,7 @@ class EventFilter(admin.SimpleListFilter):
     def queryset(self, request: HttpRequest, queryset: QuerySet[ManagerOrPlayerOrSubstitute]
                  ) -> QuerySet[ManagerOrPlayerOrSubstitute]:
         if self.value():
-            return queryset.filter(team__tournament__event__id=self.value())
+            return queryset.filter(team__tournament__eventtournament__event_id=self.value())
         return queryset
 
 

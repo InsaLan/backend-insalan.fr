@@ -684,6 +684,8 @@ class TeamSerializer(serializers.ModelSerializer[Team]):
             + data.get("get_substitutes_id", [])
         ):
             tournament = BaseTournament.objects.get(id=data["tournament"].id)
+            if not isinstance(tournament, PrivateTournament) and len(data["password"]) < 8:
+                raise serializers.ValidationError("Le mot de passe fait moins de 8 caractères")
             if isinstance(tournament, EventTournament):
                 event = Event.objects.get(eventtournament=data["tournament"])
                 if not unique_event_registration_validator(user, event):

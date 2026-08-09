@@ -73,7 +73,7 @@ class BaseTournament(PolymorphicModel):  # type: ignore[misc]
         models.IntegerField(validators=[MinValueValidator(1)]),
         default=list,
         verbose_name=_("Seuils du nombre d'équipes"),
-        help_text=_("Liste croissante de seuils (ex: [24, 32, 40])"),
+        help_text=_("Liste croissante de seuils (ex: 24, 32, 40)"),
     )
     current_threshold_index = models.IntegerField(
         default=0,
