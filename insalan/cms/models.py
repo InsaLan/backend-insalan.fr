@@ -14,6 +14,8 @@ from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 
+# NOTE: to add a language, thou shall change `insalan/cms/admin.py ContentForm`
+# to add a field for the new language
 class AvailableLang(TextChoices):
     """Enum with all available languages"""
     FR = "fr"
