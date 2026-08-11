@@ -6,7 +6,6 @@ of the Insalan website.
 from typing import Any
 
 from django.db.models.query import QuerySet
-from django.utils.cache import patch_vary_headers
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_control
 
