@@ -6,6 +6,9 @@ of the Insalan website.
 from typing import Any
 
 from django.db.models.query import QuerySet
+from django.utils.cache import patch_vary_headers
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_control
 
 from rest_framework import generics
 from rest_framework.request import Request
@@ -76,10 +79,10 @@ class FileFetch(generics.ListAPIView[File]):  # pylint: disable=unsubscriptable-
     def get_queryset(self) -> QuerySet[File]:
         return File.objects.filter(name=self.kwargs["name"])
 
-
 class FullList(APIView):
     """Get all constants, content and files."""
 
+    @method_decorator(cache_control(max_age=6 * 60 * 60, public=True), name='dispatch')
     def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         constants = Constant.objects.all()
         content = Content.objects.all()
