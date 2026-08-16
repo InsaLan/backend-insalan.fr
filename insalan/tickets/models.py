@@ -19,7 +19,7 @@ from reportlab.pdfgen import canvas
 
 from insalan import settings
 from insalan.user.models import User
-from insalan.cms.models import Content
+from insalan.cms.models import Content, AvailableLang
 
 if TYPE_CHECKING:
     from django.db.models import Combinable
@@ -222,7 +222,7 @@ class TicketManager(models.Manager[Ticket]):
 
         # split the string in multiple lines
         n = 105
-        cgv = Content.objects.filter(name="ticket_CGV")
+        cgv = Content.objects.filter(name="ticket_CGV", lang=AvailableLang.FR)
         if cgv:
             parts: list[str] = []
             for i in cgv.first().content.split(" "): #type: ignore[union-attr]
