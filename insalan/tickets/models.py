@@ -225,7 +225,7 @@ class TicketManager(models.Manager[Ticket]):
         cgv = Content.objects.filter(name="ticket_CGV")
         if cgv:
             parts: list[str] = []
-            for i in cgv.first().content.split(" "):
+            for i in cgv.first().content.split(" "): #type: ignore[union-attr]
                 if len(parts) == 0 or len(parts[-1]) + 1 + len(i) > n:
                     parts.append(i)
                 else:
