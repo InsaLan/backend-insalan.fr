@@ -290,6 +290,7 @@ UNFOLD = {
     #         "950": "oklch(18.4% .0468 228.0)",
     #     },
     # },
+    # pylint: disable=line-too-long
     "COLORS": { # Generated on https://www.shadecolr.com/#colors=Y29sb3I6MjMwLjc2OTIzMDc2OTIzMDc3LDI3LjY1OTU3NDQ2ODA4NTEsMTguNDMxMzcyNTQ5MDE5NjF8c3RlcC11cDoxMC45fHN0ZXAtZG93bjo3LjJ8aHVlLXNoaWZ0OjB8YmFzZS1zdG9wOjh8bmFtZTpzbGF0ZXxsb2NrZWQ6MA%3D%3D&active=color-1&v=2
         "base": {
             50: '#FFFFFF',
