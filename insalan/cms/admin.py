@@ -4,12 +4,14 @@ This module contains the admin configuration for the CMS app.
 It defines the admin classes for the Constant and Content models, and registers them with the Django
 admin site.
 """
+from typing import Any
 
 from django import forms
 from django.contrib import admin
 from django.db import transaction
+from django.utils.safestring import SafeString
 from django.utils.translation import gettext as _
-from django.db.models import OuterRef, Count, Subquery
+from django.db.models import OuterRef, Count, Subquery, Model, QuerySet
 from django.forms import Textarea
 from django.forms.models import ModelForm
 from django.http import HttpRequest
@@ -26,7 +28,7 @@ class ConstantAdmin(ModelAdmin):  # type: ignore
     list_display = ("name", "value")
     search_fields = ["name"]
 
-class ContentForm(ModelForm):
+class ContentForm(ModelForm[Content]):
     content_fr = forms.CharField(
                 label = "fr",
                 required = False,
@@ -37,16 +39,18 @@ class ContentForm(ModelForm):
         required=False,
         widget=forms.Textarea(),
     )
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.original_name = self.instance.name if self.instance.pk else None
 
         if self.instance.pk:
             translations = Content.objects.filter(name=self.original_name)
             for translation in translations:
-                self.initial[f"content_{translation.lang}"] = translation.content
+                self.initial[f"content_{translation.lang}"] = translation.content #type: ignore[index]
+                                                                                  #I mean it works ? so idk if the
+                                                                                  # complaint is valid
 
-    def save(self, commit: bool = True):
+    def save(self, commit: bool = True) -> Content:
         instance = super().save(commit)
         form_name = self.instance.name if self.instance.pk else self.cleaned_data["name"]
 
@@ -81,7 +85,7 @@ class ContentAdmin(ModelAdmin): #type: ignore
     form = ContentForm
     list_display = ("name", "translation_status")
     search_fields = ["name"]
-    def get_queryset(self, request: HttpRequest):
+    def get_queryset(self, request: HttpRequest) -> QuerySet[Content]:
         translation_count = (
             Content.objects
             .filter(name=OuterRef("name"))
@@ -96,19 +100,21 @@ class ContentAdmin(ModelAdmin): #type: ignore
             .order_by("pk")
             .values("pk")[:1]
         )
-        return (
-            super()
-            .get_queryset(request)
+        return (# type: ignore[no-any-return]
+            super()#tf ? it isn't any ? get_queryset return the same type as me, and all the other return
+            .get_queryset(request)#the current instance, so the end result should be of the expected type...
             .annotate(translation_count=Subquery(translation_count))
             .filter(pk=Subquery(first_content))
             .order_by("name")
         )
 
-    @admin.display(description="Translations", ordering="translation_count")
-    def translation_status(self, obj):
-        expected = len(AvailableLang.values)
-        actual = obj.translation_count
 
+
+    @admin.display(description="Translations", ordering="translation_count")
+    def translation_status(self, obj: Content) -> SafeString:
+        expected = len(AvailableLang.values)
+        actual = obj.translation_count # type: ignore[attr-defined]
+                                       # is dynamically added by annotation
         if expected == actual:
             return format_html(
                 '<span style="color: #15803d; font-weight: 600;">'
