@@ -41,9 +41,7 @@ composantes de notre pile logiciel:
      relationnelles utilisant le langage PostgreSQL. C'est notre choix de base
      de données relationnelle pour les données persistantes représentées sous
      forme d'[objets](../02-structure/applications/modeles.md).
- - [MongoDB](https://www.mongodb.com/) est notre base de donnée non
-     relationnelle, qui gère l'entièreté des données persistantes de type
-     documents (par exemple les textes à afficher sur le site).
+
 
 ## Autres Technologies Hors de la Pile
 

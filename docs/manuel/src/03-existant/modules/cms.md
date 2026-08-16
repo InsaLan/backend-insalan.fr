@@ -24,14 +24,3 @@ Il y a trois type de contenu CMS, les `contents`, les `constants` et les
 site web et qui peuvent dépendre de constantes qui sont justement définies à
 part. Les `files` sont des fichiers uploadés sur le site web. Ils peuvent être
 des images, des vidéos, des documents, etc.
-
-## Spécificités
-
-Les contenus CMS ne sont pas enregistrés dans la base de données de
-l'application, mais dans une base de données mongoDB dédiée. Cela permet de ne
-pas surcharger la base de données principale avec des contenus qui peuvent être
-très volumineux.
-
-Tout les contenus CMS sont récupéré en même temps à ouverture du site web. Il
-est donc important de ne pas surcharger la base de données mongoDB avec des
-contenus inutiles.
