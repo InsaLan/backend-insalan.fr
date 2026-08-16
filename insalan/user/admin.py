@@ -10,7 +10,8 @@ from django.db.models.query import QuerySet
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
-from django.contrib.auth.models import Permission
+from django.contrib.admin.sites import NotRegistered
+from django.contrib.auth.models import Group, Permission
 from django.forms.renderers import BaseRenderer
 from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
 from django.core.exceptions import PermissionDenied
@@ -227,4 +228,26 @@ class UserAdmin(CustomUserAdmin, ModelAdmin): # type: ignore
     add_form = UserCreationForm
     change_password_form = AdminPasswordChangeForm
 
-admin.site.register(Permission)
+
+@admin.register(Permission)
+class PermissionAdmin(ModelAdmin):  # type: ignore
+    """
+    Admin class for the Permission model.
+    """
+    list_display = ("content_type", "codename", "name")
+    search_fields = ("name", "codename")
+
+
+try:
+    admin.site.unregister(Group)
+except NotRegistered:
+    pass
+
+@admin.register(Group)
+class GroupAdmin(ModelAdmin):  # type: ignore
+    """
+    Admin class for the Group model.
+    """
+    list_display = ("name",)
+    search_fields = ("name",)
+    filter_horizontal = ("permissions",)
