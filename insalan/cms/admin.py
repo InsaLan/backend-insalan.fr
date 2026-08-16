@@ -12,11 +12,11 @@ from django.db import transaction
 from django.utils.safestring import SafeString
 from django.utils.translation import gettext as _
 from django.db.models import OuterRef, Count, Subquery, QuerySet
-from django.forms import Textarea
 from django.forms.models import ModelForm
 from django.http import HttpRequest
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin # type: ignore
+from unfold.widgets import UnfoldAdminTextareaWidget as Textarea
 
 from .models import Constant, Content, File, AvailableLang
 
@@ -32,12 +32,12 @@ class ContentForm(ModelForm[Content]):#pylint: disable=unsubscriptable-object
     content_fr = forms.CharField(
         label = "fr",
         required = False,
-        widget = forms.Textarea(),
+        widget = Textarea(),
     )
     content_en = forms.CharField(
         label="en",
         required=False,
-        widget=forms.Textarea(),
+        widget=Textarea(),
     )
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
