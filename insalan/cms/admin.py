@@ -11,7 +11,7 @@ from django.contrib import admin
 from django.db import transaction
 from django.utils.safestring import SafeString
 from django.utils.translation import gettext as _
-from django.db.models import OuterRef, Count, Subquery, Model, QuerySet
+from django.db.models import OuterRef, Count, Subquery, QuerySet
 from django.forms import Textarea
 from django.forms.models import ModelForm
 from django.http import HttpRequest
@@ -28,12 +28,12 @@ class ConstantAdmin(ModelAdmin):  # type: ignore
     list_display = ("name", "value")
     search_fields = ["name"]
 
-class ContentForm(ModelForm[Content]):
+class ContentForm(ModelForm[Content]):#pylint: disable=unsubscriptable-object
     content_fr = forms.CharField(
-                label = "fr",
-                required = False,
-                widget = forms.Textarea(),
-            )
+        label = "fr",
+        required = False,
+        widget = forms.Textarea(),
+    )
     content_en = forms.CharField(
         label="en",
         required=False,
@@ -46,9 +46,10 @@ class ContentForm(ModelForm[Content]):
         if self.instance.pk:
             translations = Content.objects.filter(name=self.original_name)
             for translation in translations:
-                self.initial[f"content_{translation.lang}"] = translation.content #type: ignore[index]
-                                                                                  #I mean it works ? so idk if the
-                                                                                  # complaint is valid
+                key = f'content_{translation.lang}'
+                self.initial[key] = translation.content # type: ignore[index]
+                                                        #I mean it works ? so idk if the
+                                                        # complaint is valid
 
     def save(self, commit: bool = True) -> Content:
         instance = super().save(commit)
@@ -101,9 +102,9 @@ class ContentAdmin(ModelAdmin): #type: ignore
             .values("pk")[:1]
         )
         return (# type: ignore[no-any-return]
-            super()#tf ? it isn't any ? get_queryset return the same type as me, and all the other return
-            .get_queryset(request)#the current instance, so the end result should be of the expected type...
-            .annotate(translation_count=Subquery(translation_count))
+            super()#tf ? it isn't any ? get_queryset return the same type as me, and all the other
+            .get_queryset(request)#return the current instance, so the end result should be of the
+            .annotate(translation_count=Subquery(translation_count))#expected type...
             .filter(pk=Subquery(first_content))
             .order_by("name")
         )
