@@ -9,6 +9,7 @@ The models include:
 import re
 
 from django.db import models
+from django.db.models import CharField, Model
 from django.db.models.enums import TextChoices
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
@@ -20,6 +21,10 @@ class AvailableLang(TextChoices):
     """Enum with all available languages"""
     FR = "fr"
     EN = "en"
+
+class CommonFieldInterface(Model):
+    name: CharField
+    lang: CharField
 
 def constant_definition_validator(content: str) -> None:
     """
@@ -66,7 +71,7 @@ def constant_definition_validator(content: str) -> None:
         )
 
 
-class Content(models.Model):
+class Content(CommonFieldInterface):
     """
     Represents markdown content to be placed on website pages.
     """
@@ -96,7 +101,7 @@ class Content(models.Model):
         return f"[Content] {self.name}"
 
 
-class Constant(models.Model):
+class Constant(CommonFieldInterface):
     """
     Stores the constant values on the InsaLan website (e.g: date, staff, prices..).
     """
