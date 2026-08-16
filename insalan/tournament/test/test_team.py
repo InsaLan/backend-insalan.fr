@@ -680,6 +680,7 @@ class TournamentTeamEndpoints(TestCase):
         )
 
         self.assertEqual(request.status_code, 400)
+        self.assertEqual(request.json()["seat_slot"], "Équipe non validée.")
 
     def test_cant_patch_seat_slot(self) -> None:
         user: User = User.objects.get(username="validemail")
@@ -707,9 +708,12 @@ class TournamentTeamEndpoints(TestCase):
             name="Nom d'équipe 1",
             tournament=trnm2,
             password=make_password("password"),
+            validated=True,
         )
 
-        Player.objects.create(team=team, user=user, name_in_game="pseudo")
+        pl = Player.objects.create(team=team, user=user, name_in_game="pseudo")
+        team.captain = pl
+        team.save()
 
         # invalid slot
         request = self.client.patch(
@@ -720,6 +724,7 @@ class TournamentTeamEndpoints(TestCase):
             content_type="application/json",
         )
         self.assertEqual(request.status_code, 400)
+        self.assertEqual(request.json()["seat_slot"], "Slot invalide.")
 
         # invalid tournament
         trnm = event.get_tournaments()[0]
@@ -737,6 +742,7 @@ class TournamentTeamEndpoints(TestCase):
             content_type="application/json",
         )
         self.assertEqual(request.status_code, 400)
+        self.assertEqual(request.json()["seat_slot"], "Slot appartient à un autre tournoi.")
 
         # slot already occupied
         Team.objects.create(
@@ -753,6 +759,23 @@ class TournamentTeamEndpoints(TestCase):
             content_type="application/json",
         )
         self.assertEqual(request.status_code, 400)
+        self.assertEqual(request.json()["seat_slot"], "Slot déjà utilisé.")
+
+        # slot not adapted to the tournament (wrong number of seats)
+        seat_slot3 = SeatSlot.objects.create(tournament=trnm2)
+        seat_slot3.seats.set([
+            Seat.objects.create(event=event, x=3, y=1),
+            Seat.objects.create(event=event, x=3, y=2),
+        ])
+        request = self.client.patch(
+            f"/v1/tournament/team/{team.id}/",
+            {
+                "seat_slot": seat_slot3.id,
+            },
+            content_type="application/json",
+        )
+        self.assertEqual(request.status_code, 400)
+        self.assertEqual(request.json()["seat_slot"], "Slot inadapté au tournoi.")
 
 
 
