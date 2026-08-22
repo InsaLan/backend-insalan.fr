@@ -34,8 +34,8 @@
 | tournament/views/substitute.py |   |   |   |
 | tournament/views/swiss.py |   |   |   |
 | tournament/views/game.py |   |   |   |
-| tournament/views/team.py |   |   |   |
-| tournament/views/player.py |   |   |   |
+| tournament/views/team.py | &check; | &check; |   |
+| tournament/views/player.py | &check; | &check; |   |
 | tournament/views/group.py |   |   |   |
 | tournament/views/permissions.py |   |   |   |
 | tournament/views/stage.py | &check; | &check; | WIP |
