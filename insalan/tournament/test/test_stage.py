@@ -18,8 +18,8 @@ from insalan.tournament.models import (
 )
 from insalan.user.models import User
 
-class BracketTestCase(APITestCase):
-    """Bracket Unit Test Class"""
+class StageTestCase(APITestCase):
+    """Stage Unit Test Class"""
 
     def setUp(self) -> None:
         """Setup method for Player Unit Tests"""
@@ -31,27 +31,9 @@ class BracketTestCase(APITestCase):
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(game=game, event=event)
         stg = Stage.objects.create(name="Test Stage", tournament=trnm, index=1)
-        bracket = Bracket.objects.create(name="Test Bracket", stage=stg, bracket_type = BracketType.SINGLE)
-        team_one: Team = Team.objects.create(
-            name="La Team Test",
-            tournament=trnm,
-            password=make_password("password"),
-        )
-
-        # Second edition
-        event_two = Event.objects.create(
-            name="InsaLan Test (Past)",
-            date_start=date(2023,3,1),
-            date_end=date(2023,3,2),
-            description=""
-        )
-        trnm_two = EventTournament.objects.create(game=game, event=event_two)
-        team_two: Team = Team.objects.create(
-            name="La Team Test Passée", tournament=trnm_two, password=make_password("password2")
-        )
 
         # Now the users
-        user_one = User.objects.create_user(
+        user_one = User.objects.create_superuser(
             username="testplayer",
             email="player.user.test@insalan.fr",
             password="^ThisIsAnAdminPassword42$",
@@ -59,59 +41,89 @@ class BracketTestCase(APITestCase):
             last_name="Staff",
         )
 
-        User.objects.create_user(
-            username="randomplayer",
-            email="randomplayer@gmail.com",
-            password="IUseAVerySecurePassword",
-            first_name="Random",
-            last_name="Player",
-        )
-
-        another_player = User.objects.create_user(
-            username="anotherplayer",
-            password="ThisIsPassword",
-        )
-
-        # Now, registrations
-        Player.objects.create(team=team_one, user=user_one, name_in_game="playerOne")
-        Player.objects.create(team=team_one, user=another_player, name_in_game="PlayerTwo")
-        Player.objects.create(team=team_two, user=another_player, name_in_game="RandomKiller")
-
-    def test_add_stage_not_admin(self) -> None:
-        self.assertTrue(False)
+    def test_stage_functions_not_admin(self) -> None:
+        """Check that APIs are refused to non-admins"""
 
     def test_add_stage(self) -> None:
-        self.assertTrue(False)
+        """
+        Create a stage from the API
+        """
+        event = Event.objects.get(date_start=date(2023,8,1))
+        game = Game.objects.get(name="Test Game")
+        trnm = EventTournament.objects.get(game=game, event=event)
 
-    def test_update_stage_not_admin(self) -> None:
-        self.assertTrue(False)
+        user = User.objects.get(username="testplayer")
+        self.client.force_login(user=user)
+
+        data = {
+            "name": "Stage addition",
+            "index": 1,
+            "tournament": trnm.pk
+        }
+
+        request = self.client.post("/v1/tournament/stage/create/", data)
+        self.assertEqual(request.status_code, 201)
+        Stage.objects.get(name="Stage addition")
 
     def test_update_stage(self) -> None:
-        self.assertTrue(False)
+        """
+        Update a stage from the API
+        """
+        event = Event.objects.get(date_start=date(2023,8,1))
+        game = Game.objects.get(name="Test Game")
+        trnm = EventTournament.objects.get(game=game, event=event)
+        stage = Stage.objects.create(name="Stage update", index=1, tournament=trnm)
 
-    def test_delete_stage_not_admin(self) -> None:
-        self.assertTrue(False)
+        user = User.objects.get(username="testplayer")
+        self.client.force_login(user=user)
 
+        data = {
+            "name": "Stage update",
+            "index": 3,
+            "tournament": trnm.pk
+        }
+
+        request = self.client.put(f"/v1/tournament/stage/{stage.pk}/update/", data)
+        self.assertEqual(request.status_code, 200)
+        self.assertEqual(Stage.objects.get(pk=stage.pk).index, 3)
+        
     def test_delete_stage(self) -> None:
-        self.assertTrue(False)
+        """
+        Delete a stage from the API
+        """
+        event = Event.objects.get(date_start=date(2023,8,1))
+        game = Game.objects.get(name="Test Game")
+        trnm = EventTournament.objects.get(game=game, event=event)
+        stage = Stage.objects.create(name="Stage deletion", index=1, tournament=trnm)
 
-    def test_add_groups_not_admin(self) -> None:
-        self.assertTrue(False)
+        user = User.objects.get(username="testplayer")
+        self.client.force_login(user=user)
+
+
+        request = self.client.delete(f"/v1/tournament/stage/{stage.pk}/delete/")
+        self.assertEqual(request.status_code, 204)
+        self.assertRaises(Stage.DoesNotExist, Stage.objects.get, pk=stage.pk)
 
     def test_add_groups(self) -> None:
+        """
+        Add group to a stage
+        """
         self.assertTrue(False)
 
     def test_add_groups_autofill(self) -> None:
-        self.assertTrue(False)
-
-    def test_add_brackets_not_admin(self) -> None:
+        """
+        Add group with autofill to a stage
+        """
         self.assertTrue(False)
 
     def test_add_brackets(self) -> None:
-        self.assertTrue(False)
-
-    def test_add_swiss_not_admin(self) -> None:
+        """
+        Add brackets to a stage
+        """
         self.assertTrue(False)
 
     def test_add_swiss(self) -> None:
+        """
+        Add swiss rounds to a stage
+        """
         self.assertTrue(False)

@@ -1,4 +1,4 @@
-# This list gives the current stage regarding tournament tests by files
+# This list gives the current state regarding tournament tests by files
 
 | Path      | Checked for new tests | Documented new tests | Implemented new tests |
 |---|:---:|:---:|:---:|
@@ -38,7 +38,7 @@
 | tournament/views/player.py |   |   |   |
 | tournament/views/group.py |   |   |   |
 | tournament/views/permissions.py |   |   |   |
-| tournament/views/stage.py | &check; |   |   |
+| tournament/views/stage.py | &check; | &check; | WIP |
 | tournament/views/bracket.py |   |   |   |
 | tournament/views/tournament.py |   |   |   |
 | tournament/views/manager.py |   |   |   |
