@@ -1,4 +1,4 @@
-"""Tournament Bracket Module Tests"""
+"""Tournament Stage Module Tests"""
 
 from datetime import date
 from django.contrib.auth.hashers import make_password
@@ -43,6 +43,7 @@ class StageTestCase(APITestCase):
 
     def test_stage_functions_not_admin(self) -> None:
         """Check that APIs are refused to non-admins"""
+        self.assertTrue(False)
 
     def test_add_stage(self) -> None:
         """
@@ -86,7 +87,7 @@ class StageTestCase(APITestCase):
         request = self.client.put(f"/v1/tournament/stage/{stage.pk}/update/", data)
         self.assertEqual(request.status_code, 200)
         self.assertEqual(Stage.objects.get(pk=stage.pk).index, 3)
-        
+
     def test_delete_stage(self) -> None:
         """
         Delete a stage from the API

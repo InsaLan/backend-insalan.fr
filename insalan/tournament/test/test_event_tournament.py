@@ -167,12 +167,47 @@ class TournamentFullDerefEndpoint(APITestCase):
         not_used = max(candidates) + 1
 
         request = self.client.get(
-            f"/v1/tournament/tournament/{not_used}/full/", format="sjon"
+            f"/v1/tournament/tournament/{not_used}/full/", format="json"
         )
         self.assertEqual(request.status_code, 404)
 
+    def test_list_tournaments(self) -> None:
+        """Check the tournament list API"""
+        # get /v1/tournament/tournament/
+        self.assertTrue(False)
+
+    def test_tournament_operation_not_admin(self) -> None:
+        """Check that APIs are refused to non-logged user"""
+        # * but get /v1/tournament/tournament/
+        self.assertTrue(False)
+    
+    def test_create_tournament(self) -> None:
+        """Create a tournament using the API endpoint"""
+        # post /v1/tournament/tournament/
+        self.assertTrue(False)
+
+    def test_change_tournament(self) -> None:
+        """Modify a tournament using the API endpoint"""
+        # patch /v1/tournament/tournament/
+        self.assertTrue(False)
+
+    def test_put_tournament(self) -> None:
+        """Put a tournament using the API endpoint"""
+        # put /v1/tournament/tournament/{id}/
+        self.assertTrue(False)
+    
+    def test_delete_tournament(self) -> None:
+        """Create a tournament using the API endpoint"""
+        # delete /v1/tournament/tournament/{id}/
+        self.assertTrue(False)
+    
     def test_example(self) -> None:
         """Test a simple example"""
+        # get /v1/tournament/tournament/{id}/
+        self.assertTrue(False)
+
+    def test_example_full(self) -> None:
+        """Test a simple example with full details"""
         uobj_one = User.objects.create(
             username="test_user_one", email="one@example.com"
         )

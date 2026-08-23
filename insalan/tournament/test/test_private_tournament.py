@@ -29,6 +29,16 @@ class PrivateTournamentTestCase(TestCase):
         PrivateTournament.objects.create(name="Tourney 3", game=game_three, start=timezone.now())
         PrivateTournament.objects.create(name="Tourney 4", game=game_three, start=timezone.now())
 
+    def test_list_private_tournaments(self) -> None:
+        """Check the private tournament list API"""
+        # get /v1/tournament/tournament/privates
+        self.assertTrue(False)
+
+    def test_private_tournament_details(self) -> None:
+        """Check the private tournament details"""
+        # get /v1/tournament/tournament/privates/{id}
+        self.assertTrue(False)
+        
     def test_create_private_tournament(self) -> None:
         """Test creation of PrivateTournament"""
         game = Game.objects.create(name="New Game")
@@ -54,6 +64,7 @@ class PrivateTournamentTestCase(TestCase):
             password="ab",
             running=True,
             start=timezone.now(),
+            max_team_thresholds=[3],
             rewards="First place gets a trophy"
         )
         self.assertRaises(ValidationError, tournament.full_clean)

@@ -434,6 +434,7 @@ class TournamentMeTests(APITestCase):
         self.assertEqual(response.data['player'][1]['team']['tournament']['name'],
                          self.tourneyobj_two.name)
         self.assertTrue('event' not in response.data['player'][1]['team']['tournament'])
+        raise ValidationError("Add a private tournament and test it")
 
     def test_get_tournament_me_manager(self) -> None:
         """
@@ -463,6 +464,13 @@ class TournamentMeTests(APITestCase):
         self.assertEqual(response.data['substitute'][0]['team']['tournament']['event']['name'],
                          self.evobj.name)
 
+    def test_get_tournament_ongoing_matches(self) -> None:
+        """
+        Test the tournament/me endpoint
+        """
+        # get /v1/tournament/me
+        self.assertTrue(False)
+
     def test_get_tournament_me_unauthenticated(self) -> None:
         """
         Test the tournament/me endpoint
@@ -470,3 +478,45 @@ class TournamentMeTests(APITestCase):
         response = self.client.get(reverse("tournament/me"))
 
         self.assertEqual(response.status_code, 403)
+
+class TournamentResultTestCase(APITestCase):
+    """Tournament result endpoint Test Class"""
+
+    def test_result_denied_not_logged(self) -> None:
+        """Check that APIs are refused to non-logged user"""
+        self.assertTrue(False)
+
+    def test_tournament_not_found(self) -> None:
+        """
+        Check the result when there is no tournament found
+        """
+        # post /v1/tournament/tournament/{id}/result
+        self.assertTrue(False) # I mean that's just an http 404 check
+
+    def test_match_not_found(self) -> None:
+        """
+        Check the result when there is no valid match or game processor found
+        """
+        # post /v1/tournament/tournament/{id}/result
+        self.assertTrue(False)
+
+    def test_request_success_group(self) -> None:
+        """
+        Send a valid payload on a group match
+        """
+        # post /v1/tournament/tournament/{id}/result
+        self.assertTrue(False)
+
+    def test_request_success_bracket(self) -> None:
+        """
+        Send a valid payload on a bracket match
+        """
+        # post /v1/tournament/tournament/{id}/result
+        self.assertTrue(False)
+
+    def test_request_success_swiss(self) -> None:
+        """
+        Send a valid payload on a swiss match
+        """
+        # post /v1/tournament/tournament/{id}/result
+        self.assertTrue(False)

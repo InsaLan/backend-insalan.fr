@@ -290,14 +290,8 @@ class PlayerTestCase(APITestCase):
 
     def test_update_name(self) -> None:
         """Check that a player gives a non null team"""
-        user = User.objects.get(username="testplayer")
-
-        player = Player.objects.get(user=user)
-        self.assertIsNotNone(player)
-
-        player.name_in_game = "test InGame Name With A Lot Of Letters To Check Validators"
-        player.update_name_in_game()
-        self.assertEqual(player.name_in_game, "test InGame Name With A Lot Of Letters To ")
+        # I genuinely would like help with name validators I don't understand shit
+        self.assertTrue(False)
 
     def test_user_deletion(self) -> None:
         """Verify that a Player registration is deleted along with its user"""
@@ -446,7 +440,7 @@ class PlayerTestCase(APITestCase):
         self.assertTrue(False)
 
     def test_get_registration_list_no_user(self) -> None:
-         """
-         Check registration list from username when no user exists
-         """
-         self.assertTrue(False)
+        """
+        Check registration list from username when no user exists
+        """
+        self.assertTrue(False)
