@@ -469,7 +469,7 @@ class TournamentMeTests(APITestCase):
         Test the tournament/me endpoint
         """
         # get /v1/tournament/me
-        self.assertTrue(False)
+        raise NotImplementedError()
 
     def test_get_tournament_me_unauthenticated(self) -> None:
         """
@@ -484,39 +484,39 @@ class TournamentResultTestCase(APITestCase):
 
     def test_result_denied_not_logged(self) -> None:
         """Check that APIs are refused to non-logged user"""
-        self.assertTrue(False)
+        raise NotImplementedError()
 
     def test_tournament_not_found(self) -> None:
         """
         Check the result when there is no tournament found
         """
         # post /v1/tournament/tournament/{id}/result
-        self.assertTrue(False) # I mean that's just an http 404 check
+        raise NotImplementedError() # I mean that's just an http 404 check
 
     def test_match_not_found(self) -> None:
         """
         Check the result when there is no valid match or game processor found
         """
         # post /v1/tournament/tournament/{id}/result
-        self.assertTrue(False)
+        raise NotImplementedError()
 
     def test_request_success_group(self) -> None:
         """
         Send a valid payload on a group match
         """
         # post /v1/tournament/tournament/{id}/result
-        self.assertTrue(False)
+        raise NotImplementedError()
 
     def test_request_success_bracket(self) -> None:
         """
         Send a valid payload on a bracket match
         """
         # post /v1/tournament/tournament/{id}/result
-        self.assertTrue(False)
+        raise NotImplementedError()
 
     def test_request_success_swiss(self) -> None:
         """
         Send a valid payload on a swiss match
         """
         # post /v1/tournament/tournament/{id}/result
-        self.assertTrue(False)
+        raise NotImplementedError()

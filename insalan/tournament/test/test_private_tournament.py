@@ -32,12 +32,12 @@ class PrivateTournamentTestCase(TestCase):
     def test_list_private_tournaments(self) -> None:
         """Check the private tournament list API"""
         # get /v1/tournament/tournament/privates
-        self.assertTrue(False)
+        raise NotImplementedError()
 
     def test_private_tournament_details(self) -> None:
         """Check the private tournament details"""
         # get /v1/tournament/tournament/privates/{id}
-        self.assertTrue(False)
+        raise NotImplementedError()
         
     def test_create_private_tournament(self) -> None:
         """Test creation of PrivateTournament"""

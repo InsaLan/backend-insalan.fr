@@ -43,7 +43,7 @@ class StageTestCase(APITestCase):
 
     def test_stage_functions_not_admin(self) -> None:
         """Check that APIs are refused to non-admins"""
-        self.assertTrue(False)
+        raise NotImplementedError()
 
     def test_add_stage(self) -> None:
         """
@@ -109,22 +109,22 @@ class StageTestCase(APITestCase):
         """
         Add group to a stage
         """
-        self.assertTrue(False)
+        raise NotImplementedError()
 
     def test_add_groups_autofill(self) -> None:
         """
         Add group with autofill to a stage
         """
-        self.assertTrue(False)
+        raise NotImplementedError()
 
     def test_add_brackets(self) -> None:
         """
         Add brackets to a stage
         """
-        self.assertTrue(False)
+        raise NotImplementedError()
 
     def test_add_swiss(self) -> None:
         """
         Add swiss rounds to a stage
         """
-        self.assertTrue(False)
+        raise NotImplementedError()

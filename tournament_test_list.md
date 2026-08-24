@@ -23,11 +23,11 @@
 | tournament/models/mailer.py |   |   |   |
 | tournament/models/match.py |   |   |   |
 | tournament/models/game_processor.py |   |   |   |
-| tournament/apps.py |   |   |   |
+| tournament/apps.py | &check; | &check; |   |
 | tournament/admin.py |   |   |   |
 | tournament/manage/swiss.py |   |   |   |
 | tournament/manage/group.py |   |   |   |
-| tournament/manage/bracket.py |   |   |   |
+| tournament/manage/bracket.py | &check; (partial) | &check; |   |
 | tournament/manage/match.py |   |   |   |
 | tournament/urls.py |   |   |   |
 | tournament/views/event.py |   |   |   |
@@ -37,7 +37,7 @@
 | tournament/views/team.py | &check; | &check; |   |
 | tournament/views/player.py | &check; | &check; |   |
 | tournament/views/group.py |   |   |   |
-| tournament/views/permissions.py |   |   |   |
+| tournament/views/permissions.py | &check; | &check; | &check; |
 | tournament/views/stage.py | &check; | &check; | WIP |
 | tournament/views/bracket.py |   |   |   |
 | tournament/views/tournament.py | &check; (except permissions) | WIP |   |

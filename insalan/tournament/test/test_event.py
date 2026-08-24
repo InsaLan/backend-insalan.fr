@@ -326,3 +326,7 @@ class EventDerefAndGroupingEndpoints(APITestCase):
             "planning_file": None,
         }
         self.assertEqual(request.data, model)
+
+    def test_ongoing_events(self) -> None:
+        """Test the apps.check_ongoing_events function"""
+        raise NotImplementedError()

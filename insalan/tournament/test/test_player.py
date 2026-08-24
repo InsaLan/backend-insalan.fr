@@ -291,7 +291,7 @@ class PlayerTestCase(APITestCase):
     def test_update_name(self) -> None:
         """Check that a player gives a non null team"""
         # I genuinely would like help with name validators I don't understand shit
-        self.assertTrue(False)
+        raise NotImplementedError()
 
     def test_user_deletion(self) -> None:
         """Verify that a Player registration is deleted along with its user"""
@@ -365,19 +365,19 @@ class PlayerTestCase(APITestCase):
         """
         Try to modify a user that doesn't exist
         """
-        self.assertTrue(False)
+        raise NotImplementedError()
 
     def test_patch_user_wrong_name(self) -> None:
         """
         Try to modify a user without the correct in-game name
         """
-        self.assertTrue(False)
+        raise NotImplementedError()
 
     def test_patch_user_invalid_name(self) -> None:
         """
         Try to modify a user with a new invalid name
         """
-        self.assertTrue(False)
+        raise NotImplementedError()
 
     def test_delete_user(self) -> None:
         """
@@ -425,22 +425,22 @@ class PlayerTestCase(APITestCase):
         """
         Try to delete a player when registration is paid
         """
-        self.assertTrue(False)
+        raise NotImplementedError()
 
     def test_get_registration(self) -> None:
         """
         Check registration in a tournament
         """
-        self.assertTrue(False)
+        raise NotImplementedError()
 
     def test_get_registration_list(self) -> None:
         """
         Check registration list from either username or id
         """
-        self.assertTrue(False)
+        raise NotImplementedError()
 
     def test_get_registration_list_no_user(self) -> None:
         """
         Check registration list from username when no user exists
         """
-        self.assertTrue(False)
+        raise NotImplementedError()
