@@ -88,19 +88,67 @@ class BracketEndpointTestCase(APITestCase):
         Player.objects.create(team=team_one, user=another_player, name_in_game="PlayerTwo")
         Player.objects.create(team=team_two, user=another_player, name_in_game="RandomKiller")
 
+    def test_change_match_not_admin(self) -> None:
+        """
+        Check that the requests on APIs are refused to non admins
+        """
+        # * except get /v1/tournament/bracket/{id}/*
+        raise NotImplementedError()
+
+    def test_bracket_details(self) -> None:
+        """
+        Get backets details from the API endpoint
+        """
+        # get /v1/tournament/bracket/{id}
+        raise NotImplementedError()
+
     def test_update_bracket_match(self) -> None:
+        """
+        Change information on a bracket match from the API
+        """
+        # patch /v1/tournament/bracket/{bracket_id}/match/{match_id}
+        raise NotImplementedError()
+
+    def test_delete_bracket_match_ongoing(self) -> None:
+        """
+        Try to delete bracket with ongoing matchs in it
+        """
+        # delete /v1/tournament/bracket/{id}
         raise NotImplementedError()
 
     def test_delete_bracket_match(self) -> None:
+        """
+        Delete brackets from the API
+        """
+        # delete /v1/tournament/bracket/{id}
+        raise NotImplementedError()
+
+    def test_launch_bracket_match(self) -> None:
+        """
+        Launch matches from the API endpoint
+        """
+        # patch /v1/tournament/brackets/matchs/launch
+        raise NotImplementedError()
+
+    def test_update_bracket_match_score(self) -> None:
+        """
+        Update brackets score from the API endpoint
+        """
+        # patch /v1/tournament/bracket/{id}/score
         raise NotImplementedError()
 
     def test_update_bracket_match_results(self) -> None:
+        """
+        Test the result API endpoint
+        """
+        # post /v1/tournament/bracket/{id}/result
         raise NotImplementedError()
 
-    def test_patch_bracket_match_results(self) -> None:
-        raise NotImplementedError()
-
-    def test_post_bracket_match_results(self) -> None:
+    def test_update_bracket_match_results_no_processor(self) -> None:
+        """
+        Try to use the result API endpoint on a bracket with no game processor
+        """
+        # post /v1/tournament/bracket/{id}/result
         raise NotImplementedError()
 
 class BracketTestCase(TestCase):

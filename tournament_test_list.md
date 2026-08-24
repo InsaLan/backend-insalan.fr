@@ -39,7 +39,7 @@
 | tournament/views/group.py |   |   |   |
 | tournament/views/permissions.py | &check; | &check; | &check; |
 | tournament/views/stage.py | &check; | &check; | WIP |
-| tournament/views/bracket.py |   |   |   |
+| tournament/views/bracket.py | &check; | &check; |   |
 | tournament/views/tournament.py | &check; (except permissions) | WIP |   |
 | tournament/views/manager.py |   |   |   |
 | tournament/payment.py |   |   |   |
