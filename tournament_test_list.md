@@ -29,7 +29,7 @@
 | tournament/manage/group.py |   |   |   |
 | tournament/manage/bracket.py | &check; (partial) | &check; |   |
 | tournament/manage/match.py |   |   |   |
-| tournament/urls.py |   |   |   |
+| tournament/urls.py | N/A | N/A | N/A |
 | tournament/views/event.py |   |   |   |
 | tournament/views/substitute.py |   |   |   |
 | tournament/views/swiss.py |   |   |   |

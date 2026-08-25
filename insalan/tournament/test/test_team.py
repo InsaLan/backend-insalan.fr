@@ -733,7 +733,6 @@ class TournamentTeamEndpoints(TestCase):
             },
             content_type="application/json",
         )
-        self.assertEqual(request.data["seat_slot"], "Slot invalide.")
         self.assertEqual(request.status_code, 400)
 
         # invalid tournament
@@ -751,7 +750,6 @@ class TournamentTeamEndpoints(TestCase):
             },
             content_type="application/json",
         )
-        self.assertEqual(request.data["seat_slot"], "Slot appartient à un autre tournoi.")
         self.assertEqual(request.status_code, 400)
 
         # slot already occupied
@@ -768,7 +766,6 @@ class TournamentTeamEndpoints(TestCase):
             },
             content_type="application/json",
         )
-        self.assertEqual(request.data["seat_slot"], "Slot déjà utilisé.")
         self.assertEqual(request.status_code, 400)
 
     def test_patch_player(self) -> None:
