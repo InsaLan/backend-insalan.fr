@@ -269,8 +269,8 @@ UNFOLD = {
     "SITE_TITLE": "InsaLan",
     "SITE_HEADER": "Administration InsaLan",
     "SITE_ICON": {
-        "light": lambda request: static("images/logo_retro_black.png"),  # light mode
-        "dark": lambda request: static("images/logo_retro_white.png"),  # dark mode
+        "light": lambda request: static("images/logo_simple_inverted.png"),  # light mode
+        "dark": lambda request: static("images/logo_simple.png"),  # dark mode
     },
     "SITE_URL": PROTOCOL + "://" + WEBSITE_HOST,
     "BORDER_RADIUS": "10px",
@@ -290,19 +290,20 @@ UNFOLD = {
     #         "950": "oklch(18.4% .0468 228.0)",
     #     },
     # },
-    "COLORS": { # Generated on https://www.tailwindshades.com
+    # pylint: disable=line-too-long
+    "COLORS": { # Generated on https://www.shadecolr.com/#colors=Y29sb3I6MjMwLjc2OTIzMDc2OTIzMDc3LDI3LjY1OTU3NDQ2ODA4NTEsMTguNDMxMzcyNTQ5MDE5NjF8c3RlcC11cDoxMC45fHN0ZXAtZG93bjo3LjJ8aHVlLXNoaWZ0OjB8YmFzZS1zdG9wOjh8bmFtZTpzbGF0ZXxsb2NrZWQ6MA%3D%3D&active=color-1&v=2
         "base": {
-            50: '#F2F2F2',
-            100: '#E6E6E6',
-            200: '#CCCCCC',
-            300: '#B3B3B3',
-            400: '#999999',
-            500: '#808080',
-            600: '#666666',
-            700: '#4D4D4D',
-            800: '#333333',
-            900: '#1A1A1A',
-            950: '#0D0D0D'
+            50: '#FFFFFF',
+            100: '#EEEFF5',
+            200: '#CACEE1',
+            300: '#A7ADCD',
+            400: '#838CB9',
+            500: '#606BA5',
+            600: '#4A5383',
+            700: '#363C5F',
+            800: '#22263C',
+            900: '#151725',
+            950: '#0E1019'
         },
         "primary": {
             50: '#F0FAFF',
