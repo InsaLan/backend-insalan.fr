@@ -6,6 +6,8 @@ of the Insalan website.
 from typing import Any
 
 from django.db.models.query import QuerySet
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_control
 
 from rest_framework import generics
 from rest_framework.request import Request
@@ -34,8 +36,7 @@ class ContentFetch(generics.ListAPIView[Content]):  # pylint: disable=unsubscrip
     serializer_class = serializers.ContentSerializer
 
     def get_queryset(self) -> QuerySet[Content]:
-        # Ignore type error because djongo doesn't have types stubs.
-        return Content.objects.filter(name=self.kwargs["name"])  # type: ignore[no-any-return]
+        return Content.objects.filter(name=self.kwargs["name"])
 
 
 class ConstantList(generics.ListAPIView[Constant]):  # pylint: disable=unsubscriptable-object
@@ -55,8 +56,7 @@ class ConstantFetch(generics.ListAPIView[Constant]):  # pylint: disable=unsubscr
     serializer_class = serializers.ConstantSerializer
 
     def get_queryset(self) -> QuerySet[Constant]:
-        # Ignore type error because djongo doesn't have types stubs.
-        return Constant.objects.filter(name=self.kwargs["name"])  # type: ignore[no-any-return]
+        return Constant.objects.filter(name=self.kwargs["name"])
 
 
 class FileList(generics.ListAPIView[File]):  # pylint: disable=unsubscriptable-object
@@ -76,13 +76,12 @@ class FileFetch(generics.ListAPIView[File]):  # pylint: disable=unsubscriptable-
     serializer_class = serializers.FileSerializer
 
     def get_queryset(self) -> QuerySet[File]:
-        # Ignore type error because djongo doesn't have types stubs.
-        return File.objects.filter(name=self.kwargs["name"])  # type: ignore[no-any-return]
-
+        return File.objects.filter(name=self.kwargs["name"])
 
 class FullList(APIView):
     """Get all constants, content and files."""
 
+    @method_decorator(cache_control(max_age=6 * 60 * 60, public=True), name='dispatch')
     def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         constants = Constant.objects.all()
         content = Content.objects.all()

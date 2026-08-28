@@ -147,16 +147,6 @@ DATABASES = {
         "PASSWORD": getenv("DB_PASS", "password"),
         "HOST": getenv("DB_HOST", "localhost"),
         "PORT": getenv("DB_PORT", "5432"),
-    },
-    "cms": {
-        "ENGINE": 'djongo',
-        "NAME": "cms-db",
-        "CLIENT": {
-            "password": getenv("MONGODB_PASS", "password"),
-            "host": getenv("DB_HOST", "localhost"),
-            "port": getenv("DB_MONGO_PORT", "5433"),
-            "username": getenv("MONGODB_USER", "admin")
-        }
     }
 }
 

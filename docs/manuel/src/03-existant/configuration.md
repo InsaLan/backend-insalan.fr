@@ -78,13 +78,6 @@ Tout ces paramètres permettent de déterminer les informations de connexion à 
 base de données. Grosso modo, tant que ça fonctionne, pas besoin d'y toucher
 mais c'est bien de savoir où ça se trouve.
 
-### `MONGODB_PASS`, `MONGODB_USER`
-
-Si vous avez bien lu les variables précédentes et la section sur la [pile
-logicielle](../00-prelude/pile-logiciel.md#la-pile-logiciel), vous avez compris
-que ces paramètres permettent de déterminer les informations de connexion à la
-base de données MongoDB. Nous reviendrons sur l'utilité de mongo en abordant les
-[contenus cms](./modules/cms.md).
 
 ### `SUPERUSER_USER`, `SUPERUSER_PASS`
 

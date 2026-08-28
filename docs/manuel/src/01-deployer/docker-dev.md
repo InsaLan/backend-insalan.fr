@@ -28,7 +28,6 @@ Cette commande va lancer 5 choses:
  - Le frontend en mode développement, ce qui causera un rafraichissement
      identique en cas de modification du code dans `frontend`
  - Une base de données PostgreSQL avec persistance des données
- - Une base de données MongoDB avec persistance des données
 
 Le `-d` spécifie que la sortie standard, qui fournit tous les logs des dockers
 lancés, est détachée par défaut de la sortie standard du shell: une fois le
