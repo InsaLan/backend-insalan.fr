@@ -3,20 +3,20 @@
 | Path      | Checked for new tests | Documented new tests | Implemented new tests |
 |---|:---:|:---:|:---:|
 | tournament/serializers.py |   |   |   |
-| tournament/models/caster.py |   |   |   |
+| tournament/models/caster.py | N/A | N/A | N/A |
 | tournament/models/event.py |   |   |   |
-| tournament/models/seat.py |   |   |   |
+| tournament/models/seat.py | N/A | N/A | N/A |
 | tournament/models/substitute.py |   |   |   |
 | tournament/models/swiss.py |   |   |   |
 | tournament/models/game.py |   |   |   |
 | tournament/models/validators.py |   |   |   |
-| tournament/models/seat_slot.py |   |   |   |
+| tournament/models/seat_slot.py | N/A | N/A | N/A |
 | tournament/models/team.py |   |   |   |
 | tournament/models/player.py |   |   |   |
 | tournament/models/group.py |   |   |   |
 | tournament/models/stage.py | N/A | N/A | N/A |
 | tournament/models/name_validator.py |   |   |   |
-| tournament/models/payement_status.py |   |   |   |
+| tournament/models/payement_status.py | N/A | N/A | N/A |
 | tournament/models/bracket.py |   |   |   |
 | tournament/models/tournament.py |   |   |   |
 | tournament/models/manager.py |   |   |   |
@@ -30,7 +30,7 @@
 | tournament/manage/bracket.py | &check; (partial) | &check; |   |
 | tournament/manage/match.py |   |   |   |
 | tournament/urls.py | N/A | N/A | N/A |
-| tournament/views/event.py |   |   |   |
+| tournament/views/event.py | &check; | &check; |   |
 | tournament/views/substitute.py |   |   |   |
 | tournament/views/swiss.py |   |   |   |
 | tournament/views/game.py |   |   |   |

@@ -327,6 +327,26 @@ class EventDerefAndGroupingEndpoints(APITestCase):
         }
         self.assertEqual(request.data, model)
 
-    def test_ongoing_events(self) -> None:
+    def test_refresh_ongoing_events(self) -> None:
         """Test the apps.check_ongoing_events function"""
+        raise NotImplementedError()
+
+    def test_delete_event(self) -> None:
+        """Delete an event through the API endpoint"""
+        # delete /tournament/event/{id}
+        raise NotImplementedError()
+
+    def test_put_event(self) -> None:
+        """Call a PUT request to an event"""
+        # put /tournament/event/{id}
+        raise NotImplementedError()
+
+    def test_patch_event(self) -> None:
+        """Call a PATCH request to an event"""
+        # patch /tournament/event/{id}
+        raise NotImplementedError()
+
+    def test_change_event_not_admin(self) -> None:
+        """Try to change an event while not logged in as admin"""
+        # put patch and delete /tournament/event/{id}
         raise NotImplementedError()

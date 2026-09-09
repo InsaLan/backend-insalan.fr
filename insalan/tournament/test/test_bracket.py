@@ -251,7 +251,7 @@ class BracketTestCase(TestCase):
 
     def test_update_match_looser_bracket_simple_match(self) -> None:
         """
-        Try to update a looser bracket in a simple bracket
+        Try to update a looser bracket in a simple bracket match
         Idk what's the result or if it's supposed to happen tbh but ig it should stay consistent
         """
         raise NotImplementedError()
