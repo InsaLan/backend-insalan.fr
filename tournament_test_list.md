@@ -21,14 +21,14 @@
 | tournament/models/tournament.py |   |   |   |
 | tournament/models/manager.py |   |   |   |
 | tournament/models/mailer.py |   |   |   |
-| tournament/models/match.py |   |   |   |
+| tournament/models/match.py | &check; | &check; |   |
 | tournament/models/game_processor.py |   |   |   |
 | tournament/apps.py | &check; | &check; |   |
 | tournament/admin.py |   |   |   |
 | tournament/manage/swiss.py |   |   |   |
 | tournament/manage/group.py |   |   |   |
 | tournament/manage/bracket.py | &check; (partial) | &check; |   |
-| tournament/manage/match.py |   |   |   |
+| tournament/manage/match.py | partial (other match types) | partial |   |
 | tournament/urls.py | N/A | N/A | N/A |
 | tournament/views/event.py | &check; | &check; |   |
 | tournament/views/substitute.py |   |   |   |
