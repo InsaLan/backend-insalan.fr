@@ -105,3 +105,8 @@ class PrivateTournamentTestCase(TestCase):
             rewards="First place gets a trophy"
         )
         self.assertTrue(tournament.running)
+
+    def test_team_validation(self) -> None:
+        """Test that teams are validated as long as they're full"""
+        # use basetournament.team_meet_validation_criteria and team.validated
+        raise NotImplementedError

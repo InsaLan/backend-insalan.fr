@@ -18,7 +18,7 @@
 | tournament/models/name_validator.py |   |   |   |
 | tournament/models/payement_status.py | N/A | N/A | N/A |
 | tournament/models/bracket.py |   |   |   |
-| tournament/models/tournament.py |   |   |   |
+| tournament/models/tournament.py | &check; | &check; |   |
 | tournament/models/manager.py |   |   |   |
 | tournament/models/mailer.py |   |   |   |
 | tournament/models/match.py | &check; | &check; |   |

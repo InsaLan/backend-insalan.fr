@@ -345,6 +345,35 @@ class BaseTournamentTestCase(TestCase):
         tourney.rules = "C" * 50001
         tourney.full_clean()
 
+    def test_validate_teams(self) -> None:
+        """
+        Check that eligible teams are validated when calling validate_eligible_teams
+        Verify the number of eligible and validated teams
+        """
+        # use get_teams_ready_for_validation and get_validated_teams
+        raise NotImplementedError()
+
+    def test_update_treshold(self) -> None:
+        """
+        Check that teams are updated when a new treshold is reached and set in a tournament
+        """
+        # use try_expand_treshold and can_expand_treshold
+        raise NotImplementedError()
+
+    def test_update_treshold_not_enough_teams(self) -> None:
+        """
+        try to update treshold when there aren't enough teams
+        """
+        # use try_expand_treshold and can_expand_treshold
+        raise NotImplementedError()
+
+    def test_add_team_full_tournament(self) -> None:
+        """
+        try to get next treshold and add a new team on a full tournament
+        """
+        # use can_expand_treshold
+        raise NotImplementedError()
+
 class TournamentMeTests(APITestCase):
     """
     Test the tournament/me endpoint
@@ -483,7 +512,9 @@ class TournamentResultTestCase(APITestCase):
     """Tournament result endpoint Test Class"""
 
     def test_result_denied_not_logged(self) -> None:
-        """Check that APIs are refused to non-logged user"""
+        """
+        Check that APIs are refused to non-logged user
+        """
         raise NotImplementedError()
 
     def test_tournament_not_found(self) -> None:

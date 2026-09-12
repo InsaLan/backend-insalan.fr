@@ -32,7 +32,6 @@ class MatchTestCase(TestCase):
         game = Game.objects.create(name="Test Game")
         trnm = EventTournament.objects.create(game=game, event=event)
         stg = Stage.objects.create(name="Test Stage", tournament=trnm, index=1)
-        bracket = Bracket.objects.create(name="Test Bracket", stage=stg, bracket_type = BracketType.SINGLE, tournament=trnm)
         team_one: Team = Team.objects.create(
             name="La Team Test",
             tournament=trnm,
