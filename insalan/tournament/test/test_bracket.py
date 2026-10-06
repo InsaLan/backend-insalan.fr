@@ -116,7 +116,7 @@ class BracketEndpointTestCase(APITestCase):
         # delete /v1/tournament/bracket/{id}
         raise NotImplementedError()
 
-    def test_delete_bracket_match(self) -> None:
+    def test_delete_bracket(self) -> None:
         """
         Delete brackets from the API
         """
@@ -130,25 +130,39 @@ class BracketEndpointTestCase(APITestCase):
         # patch /v1/tournament/brackets/matchs/launch
         raise NotImplementedError()
 
+    def test_update_bracket_match_score_not_ongoing(self) -> None:
+        """
+        Try to update match score while said match is scheduled or already over
+        """
+        # patch /v1/tournament/bracket/{bracket_id}/match/{match_id}/score
+        raise NotImplementedError()
+
+    def test_update_bracket_match_score_not_in_match(self) -> None:
+        """
+        Try to update match score while user is not in the match
+        """
+        # patch /v1/tournament/bracket/{bracket_id}/match/{match_id}/score
+        raise NotImplementedError()
+
     def test_update_bracket_match_score(self) -> None:
         """
         Update brackets score from the API endpoint
         """
-        # patch /v1/tournament/bracket/{id}/score
+        # patch /v1/tournament/bracket/{bracket_id}/match/{match_id}/score
         raise NotImplementedError()
 
     def test_update_bracket_match_results(self) -> None:
         """
         Test the result API endpoint
         """
-        # post /v1/tournament/bracket/{id}/result
+        # post /v1/tournament/bracket/{bracket_id}/match/{match_id}/result
         raise NotImplementedError()
 
     def test_update_bracket_match_results_no_processor(self) -> None:
         """
         Try to use the result API endpoint on a bracket with no game processor
         """
-        # post /v1/tournament/bracket/{id}/result
+        # post /v1/tournament/bracket/{bracket_id}/match/{match_id}/result
         raise NotImplementedError()
 
 class BracketTestCase(TestCase):
@@ -218,6 +232,35 @@ class BracketTestCase(TestCase):
         Player.objects.create(team=team_one, user=user_one, name_in_game="playerOne")
         Player.objects.create(team=team_one, user=another_player, name_in_game="PlayerTwo")
         Player.objects.create(team=team_two, user=another_player, name_in_game="RandomKiller")
+
+
+    def test_get_infos(self) -> None:
+        """
+        Get general infos on the match
+        check tournament and match functions
+        """
+        # get_max_match_count, get_teams, get_teams_id, get_depth, get_tournament
+        # knockoutmatch.get_tournament
+        raise NotImplementedError()
+
+
+    def test_get_match_winner_not_complete(self) -> None:
+        """
+        Test that there is no winner returned when there is no single winner
+        """
+        raise NotImplementedError()
+
+    def test_get_match_winner_simple(self) -> None:
+        """
+        Get winner in a completed simple bracket
+        """
+        raise NotImplementedError()
+
+    def test_get_match_winner_double(self) -> None:
+        """
+        Get winner in a completed double bracket
+        """
+        raise NotImplementedError()
 
     def test_create_simple_matchs(self) -> None:
         """
