@@ -24,7 +24,7 @@ class BracketEndpointTestCase(APITestCase):
     """Bracket Endpoint Unit Test Class"""
 
     def setUp(self) -> None:
-        """Setup method for Player Unit Tests"""
+        """Setup method for Unit Tests"""
 
         # Basic setup for a one-tournamnent game event
         event = Event.objects.create(
@@ -88,7 +88,7 @@ class BracketEndpointTestCase(APITestCase):
         Player.objects.create(team=team_one, user=another_player, name_in_game="PlayerTwo")
         Player.objects.create(team=team_two, user=another_player, name_in_game="RandomKiller")
 
-    def test_change_match_not_admin(self) -> None:
+    def test_change_bracket_not_admin(self) -> None:
         """
         Check that the requests on APIs are refused to non admins
         """
@@ -169,7 +169,7 @@ class BracketTestCase(TestCase):
     """Bracket Unit Test Class"""
 
     def setUp(self) -> None:
-        """Setup method for Player Unit Tests"""
+        """Setup method for Unit Tests"""
 
         # Basic setup for a one-tournamnent game event
         event = Event.objects.create(

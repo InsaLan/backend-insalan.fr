@@ -7,13 +7,13 @@
 | tournament/models/event.py |   |   |   |
 | tournament/models/seat.py | N/A | N/A | N/A |
 | tournament/models/substitute.py |   |   |   |
-| tournament/models/swiss.py |   |   |   |
+| tournament/models/swiss.py | &check; | &check; | TODO |
 | tournament/models/game.py |   |   |   |
 | tournament/models/validators.py |   |   |   |
 | tournament/models/seat_slot.py | N/A | N/A | N/A |
 | tournament/models/team.py |   |   |   |
 | tournament/models/player.py |   |   |   |
-| tournament/models/group.py |   |   | TODO |
+| tournament/models/group.py | &check; | &check; | TODO |
 | tournament/models/stage.py | N/A | N/A | N/A |
 | tournament/models/name_validator.py |   |   |   |
 | tournament/models/payement_status.py | N/A | N/A | N/A |
@@ -25,14 +25,14 @@
 | tournament/models/game_processor.py |   |   |   |
 | tournament/apps.py | &check; | &check; |   |
 | tournament/admin.py |   |   |   |
-| tournament/manage/swiss.py |   |   | TODO |
-| tournament/manage/group.py |   |   | TODO |
+| tournament/manage/swiss.py | &check; | &check; | TODO |
+| tournament/manage/group.py | &check; | &check; | TODO |
 | tournament/manage/bracket.py | &check; (partial) | &check; | TODO |
 | tournament/manage/match.py | partial (other match types) | partial | TODO |
 | tournament/urls.py | N/A | N/A | N/A |
 | tournament/views/event.py | &check; | &check; |   |
 | tournament/views/substitute.py |   |   |   |
-| tournament/views/swiss.py |   |   | TODO |
+| tournament/views/swiss.py | &check; | &check; | TODO |
 | tournament/views/game.py |   |   |   |
 | tournament/views/team.py | &check; | &check; | TODO |
 | tournament/views/player.py | &check; | &check; |   |
