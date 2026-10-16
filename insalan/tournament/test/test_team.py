@@ -259,6 +259,14 @@ class TournamentTeamEndpoints(TestCase):
         # Player.objects.create(team=team_one, user=another_player)
         # Manager.objects.create(team=team_one, user=random_player)
 
+    def test_get_teams_list(self) -> None:
+        """Check the team list API"""
+        raise NotImplementedError()
+
+    def test_get_teams_detail(self) -> None:
+        """Check the team details API"""
+        raise NotImplementedError()
+
     def test_can_create_a_team_with_player(self) -> None:
         """Try to create a team with a player"""
         user: User = User.objects.get(username="validemail")
@@ -396,6 +404,10 @@ class TournamentTeamEndpoints(TestCase):
         )
 
         self.assertEqual(request.status_code, 403)
+
+    def test_multiple_teams_same_name(self) -> None:
+        """Try to create a team with an already used name"""
+        raise NotImplementedError()
 
     def test_can_patch_team_captain(self) -> None:
         """Test that we can patch a team"""
@@ -707,9 +719,11 @@ class TournamentTeamEndpoints(TestCase):
             name="Nom d'équipe 1",
             tournament=trnm2,
             password=make_password("password"),
+            validated=True,
         )
 
-        Player.objects.create(team=team, user=user, name_in_game="pseudo")
+        team.captain = Player.objects.create(team=team, user=user, name_in_game="pseudo")
+        team.save()
 
         # invalid slot
         request = self.client.patch(
@@ -754,7 +768,17 @@ class TournamentTeamEndpoints(TestCase):
         )
         self.assertEqual(request.status_code, 400)
 
+    def test_patch_player(self) -> None:
+        """Test Changes to player in team"""
+        raise NotImplementedError()
 
+    def test_patch_manager(self) -> None:
+        """Test Changes to manager in team"""
+        raise NotImplementedError()
+
+    def test_patch_substitute(self) -> None:
+        """Test Changes to substitute in team"""
+        raise NotImplementedError()
 
     def test_can_join_a_team_with_a_valid_email(self) -> None:
         """Try to join an existing team with a valid email"""
@@ -836,3 +860,45 @@ class TournamentTeamEndpoints(TestCase):
             format="json",
         )
         self.assertEqual(request.status_code, 403)
+
+    def test_cant_join_a_team_not_connected(self) -> None:
+        """Try to join a team without being authenticated"""
+        raise NotImplementedError()
+
+    def test_cant_join_a_team_wrong_password(self) -> None:
+        """Try to join a team without the password for the team/private tournament"""
+        raise NotImplementedError()
+
+    def test_cant_join_a_team_invalid_password(self) -> None:
+        """Try to join a team with invalid password"""
+        raise NotImplementedError()
+
+    def test_cant_join_a_team_bad_request(self) -> None:
+        """Try to join a team with invalid request params"""
+        raise NotImplementedError()
+
+    def test_delete_team(self) -> None:
+        """Test the delete method on team API"""
+        raise NotImplementedError()
+
+    def test_delete_user_registration_only_player(self) -> None:
+        """
+        Check that a team is deleted when its only user leaves
+        """
+        raise NotImplementedError()
+
+    def test_get_team_match(self) -> None:
+        """Check the matchs of team list API"""
+        raise NotImplementedError()
+
+    def test_get_teams_seeding(self) -> None:
+        """Check the team seeding list API"""
+        raise NotImplementedError()
+
+    def test_patch_teams_seeding(self) -> None:
+        """Test the team seeding patch function API"""
+        raise NotImplementedError()
+
+    def test_get_not_admin_teams_seeding(self) -> None:
+        """Try to patch admin team seedings when not admin"""
+        raise NotImplementedError()

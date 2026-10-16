@@ -345,6 +345,35 @@ class BaseTournamentTestCase(TestCase):
         tourney.rules = "C" * 50001
         tourney.full_clean()
 
+    def test_validate_teams(self) -> None:
+        """
+        Check that eligible teams are validated when calling validate_eligible_teams
+        Verify the number of eligible and validated teams
+        """
+        # use get_teams_ready_for_validation and get_validated_teams
+        raise NotImplementedError()
+
+    def test_update_treshold(self) -> None:
+        """
+        Check that teams are updated when a new treshold is reached and set in a tournament
+        """
+        # use try_expand_treshold and can_expand_treshold
+        raise NotImplementedError()
+
+    def test_update_treshold_not_enough_teams(self) -> None:
+        """
+        try to update treshold when there aren't enough teams
+        """
+        # use try_expand_treshold and can_expand_treshold
+        raise NotImplementedError()
+
+    def test_add_team_full_tournament(self) -> None:
+        """
+        try to get next treshold and add a new team on a full tournament
+        """
+        # use can_expand_treshold
+        raise NotImplementedError()
+
 class TournamentMeTests(APITestCase):
     """
     Test the tournament/me endpoint
@@ -434,6 +463,7 @@ class TournamentMeTests(APITestCase):
         self.assertEqual(response.data['player'][1]['team']['tournament']['name'],
                          self.tourneyobj_two.name)
         self.assertTrue('event' not in response.data['player'][1]['team']['tournament'])
+        raise ValidationError("Add a private tournament and test it")
 
     def test_get_tournament_me_manager(self) -> None:
         """
@@ -463,6 +493,13 @@ class TournamentMeTests(APITestCase):
         self.assertEqual(response.data['substitute'][0]['team']['tournament']['event']['name'],
                          self.evobj.name)
 
+    def test_get_tournament_ongoing_matches(self) -> None:
+        """
+        Test the tournament/me endpoint
+        """
+        # get /v1/tournament/me
+        raise NotImplementedError()
+
     def test_get_tournament_me_unauthenticated(self) -> None:
         """
         Test the tournament/me endpoint
@@ -470,3 +507,47 @@ class TournamentMeTests(APITestCase):
         response = self.client.get(reverse("tournament/me"))
 
         self.assertEqual(response.status_code, 403)
+
+class TournamentResultTestCase(APITestCase):
+    """Tournament result endpoint Test Class"""
+
+    def test_result_denied_not_logged(self) -> None:
+        """
+        Check that APIs are refused to non-logged user
+        """
+        raise NotImplementedError()
+
+    def test_tournament_not_found(self) -> None:
+        """
+        Check the result when there is no tournament found
+        """
+        # post /v1/tournament/tournament/{id}/result
+        raise NotImplementedError() # I mean that's just an http 404 check
+
+    def test_match_not_found(self) -> None:
+        """
+        Check the result when there is no valid match or game processor found
+        """
+        # post /v1/tournament/tournament/{id}/result
+        raise NotImplementedError()
+
+    def test_request_success_group(self) -> None:
+        """
+        Send a valid payload on a group match
+        """
+        # post /v1/tournament/tournament/{id}/result
+        raise NotImplementedError()
+
+    def test_request_success_bracket(self) -> None:
+        """
+        Send a valid payload on a bracket match
+        """
+        # post /v1/tournament/tournament/{id}/result
+        raise NotImplementedError()
+
+    def test_request_success_swiss(self) -> None:
+        """
+        Send a valid payload on a swiss match
+        """
+        # post /v1/tournament/tournament/{id}/result
+        raise NotImplementedError()

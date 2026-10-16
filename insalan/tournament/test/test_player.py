@@ -288,6 +288,11 @@ class PlayerTestCase(APITestCase):
 
         self.assertRaises(Player.DoesNotExist, Player.objects.get, id=play_obj.id)
 
+    def test_update_name(self) -> None:
+        """Check that a player gives a non null team"""
+        # I genuinely would like help with name validators I don't understand shit
+        raise NotImplementedError()
+
     def test_user_deletion(self) -> None:
         """Verify that a Player registration is deleted along with its user"""
         user_obj = User.objects.get(username="testplayer")
@@ -356,6 +361,24 @@ class PlayerTestCase(APITestCase):
         # check response
         self.assertEqual(request.status_code, 403)
 
+    def test_patch_user_dont_exist(self) -> None:
+        """
+        Try to modify a user that doesn't exist
+        """
+        raise NotImplementedError()
+
+    def test_patch_user_wrong_name(self) -> None:
+        """
+        Try to modify a user without the correct in-game name
+        """
+        raise NotImplementedError()
+
+    def test_patch_user_invalid_name(self) -> None:
+        """
+        Try to modify a user with a new invalid name
+        """
+        raise NotImplementedError()
+
     def test_delete_user(self) -> None:
         """
         Test the delete method of the Player API
@@ -397,3 +420,27 @@ class PlayerTestCase(APITestCase):
 
         # check response
         self.assertEqual(request.status_code, 403)
+
+    def test_delete_user_registration_paid(self) -> None:
+        """
+        Try to delete a player when registration is paid
+        """
+        raise NotImplementedError()
+
+    def test_get_registration(self) -> None:
+        """
+        Check registration in a tournament
+        """
+        raise NotImplementedError()
+
+    def test_get_registration_list(self) -> None:
+        """
+        Check registration list from either username or id
+        """
+        raise NotImplementedError()
+
+    def test_get_registration_list_no_user(self) -> None:
+        """
+        Check registration list from username when no user exists
+        """
+        raise NotImplementedError()
